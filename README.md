@@ -1,4 +1,4 @@
-BDSup2Sub--
+BDSup2Sub++
 ===========
 
-Port of the original BDSup2Sub to C++ and Qt.
+BDSup2Sub++ is a port of the original BDSup2Sub. It is a subtitle conversion tool for image based stream formats with scaling capabilities and some other nice features.
