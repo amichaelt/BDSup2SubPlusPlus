@@ -715,8 +715,6 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
 
 void SubtitleProcessor::determineFramePalette(int index)
 {
-    SubstreamDVD* substreamDVD;
-
     if ((inMode != InputMode::VOBSUB && inMode != InputMode::SUPIFO) || paletteMode != PaletteMode::KEEP_EXISTING)
     {
         // get the primary color from the source palette
@@ -770,12 +768,11 @@ void SubtitleProcessor::determineFramePalette(int index)
         subVobTrg->alpha = alphaDefault;
         subVobTrg->pal = paletteFrame;
 
-        substreamDVD = new SubDVD("", "", this);
-        trgPal = substreamDVD->decodePalette(subVobTrg, trgPalette, alphaCrop);
-        delete substreamDVD;
+        trgPal = SubstreamDVD::decodePalette(subVobTrg, trgPalette, alphaCrop);
     }
     else
     {
+        SubstreamDVD* substreamDVD;
         // use palette from loaded VobSub or SUP/IFO
         Palette* miniPal = new Palette(4, true);
         QVector<int> alpha;
