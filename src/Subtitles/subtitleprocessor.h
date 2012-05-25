@@ -29,7 +29,7 @@
 #include "palette.h"
 #include "types.h"
 
-static QVector<QVector<int>> resolutions = {
+static QVector<QVector<int> > resolutions = {
     {720, 480},
     {720, 576},
     {1280, 720},
@@ -37,7 +37,7 @@ static QVector<QVector<int>> resolutions = {
     {1920, 1080}
 };
 
-static QVector<QVector<QString>> languages = {{
+static QVector<QVector<QString> > languages = {{
     {"German",       "de", "deu"},
     {"English",      "en", "eng"},
     {"French",       "fr", "fra"},
@@ -245,6 +245,7 @@ class SubPictureDVD;
 class SubPicture;
 class QImage;
 class Bitmap;
+class Props;
 
 class SubtitleProcessor : public QObject
 {
@@ -309,6 +310,11 @@ public:
     int getTrgImgWidth(int index);
     int getTrgImgHeight(int index);
     bool getTrgExcluded(int index);
+    bool isCancelled() { return isActive; }
+    int getMergePTSdiff() { return mergePTSdiff; }
+    bool usesBT601() { return useBT601; }
+    bool getSwapCrCb() { return swapCrCb; }
+    void setFPSTrg(double trg);
 
 signals:
     void windowTitleChanged(const QString &newTitle);
@@ -324,24 +330,26 @@ public slots:
     void setCurrentProgress(int currentProgress);
     void readSubtitleStream();
     void moveAll();
+    void cancelLoading();
 
 private:
     Substream* substream = 0;
-    SubDVD* subDVD;
-    SupDVD* supDVD;
-    SupXML* supXML;
-    SupHD* supHD;
-    SupBD* supBD;
-    SubPictureDVD* subVobTrg;
-    Bitmap* trgBitmap;
-    Bitmap* trgBitmapUnpatched;
-    QVector<SubPicture*> subPictures;
-    Palette* defaultSourceDVDPalette;
-    Palette* currentSourceDVDPalette;
-    Palette* trgPal;
+    SubDVD* subDVD = 0;
+    SupDVD* supDVD = 0;
+    SupXML* supXML = 0;
+    SupHD* supHD = 0;
+    SupBD* supBD = 0;
+    SubPictureDVD* subVobTrg = 0;
+    Bitmap* trgBitmap = 0;
+    Bitmap* trgBitmapUnpatched = 0;
+    Palette* defaultSourceDVDPalette = 0;
+    Palette* currentSourceDVDPalette = 0;
+    Palette* trgPal = 0;
     Palette *defaultDVDPalette;
     Palette *currentDVDPalette;
+    Props* props = 0;
     QStringList recentFiles;
+    QVector<SubPicture*> subPictures = QVector<SubPicture*>();
     int maxProgress = 0, lastProgress = 0;
     int numberOfErrors, numberOfWarnings;
     int languageIdx = 0;
@@ -356,6 +364,7 @@ private:
     int moveOffsetY = 10;
     int moveOffsetX = 10;
     int numRecent = 5;
+    int mergePTSdiff = 18000;
     double minScale = 0.5;
     double maxScale = 2.0;
     static constexpr double fpsSrcDefault = FPS_24P;
@@ -367,6 +376,7 @@ private:
     static constexpr double freeScaleYdefault = 1.0;
     double freeScaleY = freeScaleYdefault;
     double cineBarFactor = 5.0/42;
+    bool swapCrCb = false;
     bool fpsSrcCertain = false;
     bool fpsSrcSet = false;
     bool useBT601 = false;
@@ -383,6 +393,8 @@ private:
     bool fixShortFrames = fixShortFramesDefault;
     bool scalingFilterSet = false;
     bool paletteModeSet = false;
+    bool keepFps = false;
+    bool fpsTrgSet = false;
     static constexpr PaletteMode paletteModeDefault = PaletteMode::CREATE_NEW;
     PaletteMode paletteMode = paletteModeDefault;
     RunType runType;
@@ -397,6 +409,7 @@ private:
     MoveModeX moveModeX = MoveModeX::KEEP;
     static constexpr ScalingFilters scalingFilterDefault = ScalingFilters::BILINEAR;
     ScalingFilters scalingFilter = scalingFilterDefault;
+    bool isActive = false;
 
     QString fileName;
     QVector<int> luminanceThreshold = { 210, 160 };

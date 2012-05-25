@@ -53,15 +53,15 @@ public:
     static QVector<int> RGB2YCbCr(int r, int g, int b, bool use601);
 
 private:
-    int size;
-    QVector<uchar> r;
-    QVector<uchar> g;
-    QVector<uchar> b;
-    QVector<uchar> a;
-    QVector<uchar> y;
-    QVector<uchar> cb;
-    QVector<uchar> cr;
-    bool useBT601;
+    int size = 0;
+    QVector<uchar> r = QVector<uchar>();
+    QVector<uchar> g = QVector<uchar>();
+    QVector<uchar> b = QVector<uchar>();
+    QVector<uchar> a = QVector<uchar>();
+    QVector<uchar> y = QVector<uchar>();
+    QVector<uchar> cb = QVector<uchar>();
+    QVector<uchar> cr = QVector<uchar>();
+    bool useBT601 = false;
 
     QVector<int> YCbCr2RGB(int y, int cb, int cr, bool useBT601);
 };

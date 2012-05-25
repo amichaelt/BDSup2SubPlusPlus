@@ -33,7 +33,7 @@ class SupDVD : public QObject, public Substream, public SubstreamDVD
     Q_OBJECT
 
 public:
-    SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* parent);
+    SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subtitleProcessor);
 
     Palette *getPalette();
     Bitmap *getBitmap();
@@ -65,9 +65,13 @@ signals:
     void currentProgressChanged(int currentProgress);
 
 private:
-    SubtitleProcessor* subtitleProcessor;
     QString supFileName;
     QString ifoFileName;
+    FileBuffer *fileBuffer = 0;
+    Palette *palette = 0;
+    Bitmap *bitmap = 0;
+
+    QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 
     const QVector<uchar> IFOheader = { 0x44, 0x56, 0x44, 0x56, 0x49, 0x44, 0x45, 0x4F, 0x2D, 0x56, 0x54, 0x53 };
 

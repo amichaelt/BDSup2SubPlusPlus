@@ -33,11 +33,13 @@
 #include <QVector>
 #include <QMessageBox>
 
-SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* parent) :
+SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor) :
     idxFile(idxFileName)
 {
-    subtitleProcessor = parent;
+    this->subtitleProcessor = subtitleProcessor;
     fileBuffer = new FileBuffer(subFileName);
+    palette = new Palette(4, true);
+    bitmap = new Bitmap(0, 0);
 }
 
 Palette *SubDVD::getPalette()
@@ -173,7 +175,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
     int ctrlSize = -1;
     int ctrlHeaderCopied = 0;
     QVector<uchar> ctrlHeader;
-    ImageObjectFragment rleFrag;
+    ImageObjectFragment* rleFrag;
     int length;
     int packHeaderSize;
     bool firstPackFound = false;
@@ -273,12 +275,12 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             //TODO: Add error handling
             throw 10;
         }
-        rleFrag = ImageObjectFragment();
-        rleFrag.imageBufferOfs = ofs;
-        rleFrag.imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
+        rleFrag = new ImageObjectFragment();
+        rleFrag->imageBufferOfs = ofs;
+        rleFrag->imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
         pic->rleFragments.push_back(rleFrag);
 
-        rleBufferFound += rleFrag.imagePacketSize;
+        rleBufferFound += rleFrag->imagePacketSize;
 
         if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
         {

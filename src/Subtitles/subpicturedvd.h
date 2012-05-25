@@ -31,19 +31,19 @@ public:
 
     void setOriginal();
 
-    long offset;
-    int rleSize;
-    int evenOfs;
-    int oddOfs;
-    QVector<ImageObjectFragment> rleFragments;
-    int originalWidth;
-    int originalHeight;
-    int originalX;
-    int originalY;
-    QVector<int> originalAlpha;
-    QVector<int> originalPal;
-    QVector<int> alpha;
-    QVector<int> pal;
+    long offset = 0;
+    int rleSize = 0;
+    int evenOfs = 0;
+    int oddOfs = 0;
+    QVector<ImageObjectFragment*> rleFragments = QVector<ImageObjectFragment*>();
+    int originalWidth = 0;
+    int originalHeight = 0;
+    int originalX = 0;
+    int originalY = 0;
+    QVector<int> originalAlpha = QVector<int>(4);
+    QVector<int> originalPal = QVector<int>(4);
+    QVector<int> alpha = QVector<int>(4);
+    QVector<int> pal = QVector<int>(4);
 };
 
 #endif // SUBPICTUREDVD_H

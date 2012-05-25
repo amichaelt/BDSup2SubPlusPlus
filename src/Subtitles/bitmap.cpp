@@ -53,7 +53,7 @@ Bitmap::Bitmap(int width, int height, int color) :
     clear(color);
 }
 
-QRect Bitmap::getBounds(Palette *palette, int alphaThreshold)
+QRect Bitmap::getBounds(Palette* palette, int alphaThreshold)
 {
     QVector<uchar> a = palette->getAlpha();
     int xMin, xMax, yMin, yMax;
@@ -136,7 +136,7 @@ Bitmap* Bitmap::crop(int x, int y, int width, int height)
     return bm;
 }
 
-int Bitmap::getPrimaryColorIndex(Palette *palette, int alphaThreshold)
+int Bitmap::getPrimaryColorIndex(Palette* palette, int alphaThreshold)
 {
     QVector<int> histogram(palette->getSize(), 0);
 

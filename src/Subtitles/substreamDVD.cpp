@@ -57,8 +57,8 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, Palette* palette, FileBuff
     int height = pic->originalHeight;
     int warnings = 0;
 
-    ImageObjectFragment fragment = pic->rleFragments.at(0);
-    long startOfs = fragment.imageBufferOfs;
+    ImageObjectFragment* fragment = pic->rleFragments.at(0);
+    long startOfs = fragment->imageBufferOfs;
 
     if (width > pic->width || height > pic->height)
     {
@@ -94,11 +94,11 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, Palette* palette, FileBuff
     {
         // copy data of all packet to one common buffer
         fragment = pic->rleFragments.at(p);
-        for (int i=0; i < fragment.imagePacketSize; ++i)
+        for (int i=0; i < fragment->imagePacketSize; ++i)
         {
-            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment.imageBufferOfs + i));
+            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i));
         }
-        index += fragment.imagePacketSize;
+        index += fragment->imagePacketSize;
     }
 
     QImage* bitmap = bm->getImage(palette);

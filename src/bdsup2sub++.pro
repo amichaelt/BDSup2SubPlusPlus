@@ -37,7 +37,12 @@ SOURCES += main.cpp\
     Filters/filters.cpp \
     Subtitles/palettebitmap.cpp \
     Tools/timeutil.cpp \
-    Subtitles/substreamDVD.cpp
+    Subtitles/suphd.cpp \
+    Subtitles/supbd.cpp \
+    Subtitles/subpicturebd.cpp \
+    Subtitles/imageobject.cpp \
+    Subtitles/paletteinfo.cpp \
+    Subtitles/substreamdvd.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -68,7 +73,12 @@ HEADERS  += bdsup2sub.h \
     conversiondialog.h \
     Filters/filters.h \
     Subtitles/palettebitmap.h \
-    Tools/timeutil.h
+    Tools/timeutil.h \
+    Subtitles/suphd.h \
+    Subtitles/supbd.h \
+    Subtitles/subpicturebd.h \
+    Subtitles/imageobject.h \
+    Subtitles/paletteinfo.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \

@@ -35,8 +35,8 @@ int FileBuffer::getDWord(long ofs)
         readBuffer(ofs);
     }
     int idx = (int)(ofs - offset);
-    return (buf[idx + 3] & 0xff) | ((buf[idx + 2] & 0xff) <<8) |
-          ((buf[idx + 1] & 0xff) <<16) | ((buf[idx] & 0xff) <<24);
+    return (buf[idx + 3] & 0xff) | ((buf[idx + 2] & 0xff) << 8) |
+          ((buf[idx + 1] & 0xff) <<16) | ((buf[idx] & 0xff) << 24);
 }
 
 int FileBuffer::getByte(long ofs)
@@ -55,7 +55,7 @@ int FileBuffer::getWord(long ofs)
         readBuffer(ofs);
     }
     int idx = (int)(ofs - offset);
-    return (buf[idx + 1] & 0xff) | ((buf[idx] & 0xff) <<8);
+    return (buf[idx + 1] & 0xff) | ((buf[idx] & 0xff) << 8);
 }
 
 void FileBuffer::getBytes(long ofs, QVector<uchar>& b, int length)

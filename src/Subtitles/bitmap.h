@@ -41,7 +41,7 @@ public:
     int getHeight() { return height; }
     Bitmap* crop(int x, int y, int width, int height);
     int getPrimaryColorIndex(Palette* palette, int alphaThreshold);
-    QImage* getImage(Palette *palette);
+    QImage* getImage(Palette* palette);
     Bitmap* convertLm(Palette* palette, int alphaThreshold, QVector<int> lumaThreshold);
     Bitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter);
     PaletteBitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter, bool dither);

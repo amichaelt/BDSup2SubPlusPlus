@@ -118,3 +118,10 @@ void EditPane::setOffsets(int x, int y)
         ofsY = y;
     }
 }
+
+void EditPane::setImage(QImage *image, int width, int height)
+{
+    img = image;
+    imgWidth = width;
+    imgHeight = height;
+}

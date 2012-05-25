@@ -35,7 +35,7 @@ class SubDVD : public QObject, public Substream, public SubstreamDVD
     Q_OBJECT
 
 public:
-    SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* parent);
+    SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor);
 
     Palette *getPalette();
     Bitmap *getBitmap();
@@ -71,9 +71,10 @@ signals:
     void currentProgressChanged(int currentProgress);
 
 private:
-    SubtitleProcessor* subtitleProcessor;
     int streamID = 0;
     QFile idxFile;
+
+    QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 
     void decode(SubPictureDVD* pic);
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage *trg, int trgOfs, int width, int maxPixels);

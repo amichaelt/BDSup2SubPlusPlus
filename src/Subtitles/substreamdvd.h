@@ -56,7 +56,6 @@ protected:
     int ofsYglob = 0;
     int delayGlob = 0;
     int languageIdx = 0;
-    int numForcedFrames = 0;
     int primaryColorIndex = 0;
     QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 

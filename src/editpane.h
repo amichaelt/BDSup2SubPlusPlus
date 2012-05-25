@@ -34,7 +34,7 @@ public:
     void setDimension(int width, int height) { this->width = width; this->height = height; }
     void setOffsets(int x, int y);
     void setCropOfsY(int ofs) { cropOfsY = ofs; }
-    void setImage(QImage* image, int width, int height) { img = image; imgWidth = width; imgHeight = height; }
+    void setImage(QImage* image, int width, int height);
     void setExcluded(bool excluded) { this->excluded = excluded; }
 
 private:

@@ -27,6 +27,8 @@
 #include "types.h"
 #include "subdvd.h"
 #include "supdvd.h"
+#include "supbd.h"
+#include "suphd.h"
 #include "substream.h"
 #include "subpicture.h"
 #include "subpicturedvd.h"
@@ -443,7 +445,8 @@ void SubtitleProcessor::readSubtitleStream()
 {
     emit windowTitleChanged(progNameVer + " - " + QDir::toNativeSeparators(fileName));
 
-    QString extension = QFileInfo(fileName).suffix().toLower();
+    QFileInfo fileInfo(fileName);
+    QString extension = fileInfo.suffix().toLower();
     bool isXML(extension == "xml"), isIDX(extension == "idx"), isIFO(extension == "ifo");
 
     QByteArray id = getFileID(fileName, 4);
@@ -455,7 +458,7 @@ void SubtitleProcessor::readSubtitleStream()
         return;
     }
 
-    maxProgress = QFileInfo(fileName).size();
+    maxProgress = fileInfo.size();
     lastProgress = 0;
 
 
@@ -473,7 +476,14 @@ void SubtitleProcessor::readSubtitleStream()
     }
     else
     {
-        readSup();
+        if (QFile(fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo").exists())
+        {
+            readDVDSubStream(streamID, false);
+        }
+        else
+        {
+            readSup();
+        }
     }
 
     emit progressDialogVisibilityChanged(false);
@@ -493,6 +503,11 @@ void SubtitleProcessor::moveAll()
 
     emit progressDialogVisibilityChanged(false);
     emit moveAllFinished();
+}
+
+void SubtitleProcessor::cancelLoading()
+{
+    isActive = false;
 }
 
 void SubtitleProcessor::moveAllToBounds()
@@ -700,6 +715,8 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
 
 void SubtitleProcessor::determineFramePalette(int index)
 {
+    SubstreamDVD* substreamDVD;
+
     if ((inMode != InputMode::VOBSUB && inMode != InputMode::SUPIFO) || paletteMode != PaletteMode::KEEP_EXISTING)
     {
         // get the primary color from the source palette
@@ -753,7 +770,9 @@ void SubtitleProcessor::determineFramePalette(int index)
         subVobTrg->alpha = alphaDefault;
         subVobTrg->pal = paletteFrame;
 
-        trgPal = SubstreamDVD::decodePalette(subVobTrg, trgPalette, alphaCrop);
+        substreamDVD = new SubDVD("", "", this);
+        trgPal = substreamDVD->decodePalette(subVobTrg, trgPalette, alphaCrop);
+        delete substreamDVD;
     }
     else
     {
@@ -761,7 +780,6 @@ void SubtitleProcessor::determineFramePalette(int index)
         Palette* miniPal = new Palette(4, true);
         QVector<int> alpha;
         QVector<int> paletteFrame;
-        SubstreamDVD* substreamDVD;
 
         if (inMode == InputMode::VOBSUB)
         {
@@ -954,6 +972,17 @@ bool SubtitleProcessor::getTrgExcluded(int index)
     return subPictures.at(index)->exclude;
 }
 
+void SubtitleProcessor::setFPSTrg(double trg)
+{
+    fpsTrg = trg;
+    delayPTS = (int)syncTimePTS(delayPTS, trg);
+    minTimePTS = (int)syncTimePTS(minTimePTS, trg);
+    if (props == 0)
+    {
+        fpsTrgSet = true;
+    }
+}
+
 void SubtitleProcessor::setMaxProgress(int maxProgress)
 {
     this->maxProgress = maxProgress;
@@ -977,6 +1006,7 @@ void SubtitleProcessor::readXml()
 
 void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
 {
+    //TODO: print message
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
@@ -986,6 +1016,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
     }
 
     SubstreamDVD* substreamDVD;
+    QFileInfo fileInfo(fileName);
 
     if (isVobSub)
     {
@@ -994,12 +1025,12 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         if (streamID == StreamID::DVDSUB)
         {
             subFileName = fileName;
-            idxFileName = QFileInfo(fileName).absolutePath() + "/" + QFileInfo(fileName).completeBaseName() + ".idx";
+            idxFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".idx";
         }
         else
         {
             idxFileName = fileName;
-            subFileName = QFileInfo(fileName).absolutePath() + "/" + QFileInfo(fileName).completeBaseName() + ".sub";
+            subFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sub";
         }
         subDVD = new SubDVD(subFileName, idxFileName, this);
         connect(subDVD, SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
@@ -1012,11 +1043,20 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
     }
     else
     {
-        QString ifoFileName(fileName);
-        QString supFileName(QFileInfo(fileName).absolutePath() + "/" + QFileInfo(fileName).completeBaseName() + ".sup");
-
+        QString ifoFileName;
+        QString supFileName;
+        if (fileInfo.suffix() == "sup")
+        {
+            ifoFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
+            supFileName = fileName;
+        }
+        else
+        {
+            ifoFileName = fileName;
+            supFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sup";
+        }
         supDVD = new SupDVD(supFileName, ifoFileName, this);
-        connect(supDVD, SIGNAL(maxProgressChanged(int)), this, SLOT(setProgressMax(int)));
+        connect(supDVD, SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
         connect(supDVD, SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
         supDVD->readIfo();
         supDVD->readAllSupFrames();
@@ -1087,6 +1127,83 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
 
 void SubtitleProcessor::readSup()
 {
-    //TODO: implement
-    throw 10;
+    //TODO: print message
+    numberOfErrors = 0;
+    numberOfWarnings = 0;
+
+    for (auto languageTriple : languages)
+    {
+        if (fileName.contains(languageTriple[0], Qt::CaseInsensitive))
+        {
+            languageIdx = languages.indexOf(languageTriple);
+            //TODO: print language found message
+            break;
+        }
+    }
+
+    if (substream != 0)
+    {
+        substream->close();
+    }
+
+    QByteArray id = getFileID(fileName, 2);
+
+    if (!id.isEmpty() && ((uchar)id[0] == 0x50 && (uchar)id[1] == 0x47))
+    {
+        supBD = new SupBD(fileName, this);
+        connect(supBD, SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
+        connect(supBD, SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+        supBD->readAllSupFrames();
+        substream = supBD;
+        supHD = 0;
+        inMode = InputMode::BDSUP;
+    }
+    else
+    {
+        supHD = new SupHD(fileName, this);
+        connect(supHD, SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
+        connect(supHD, SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+        supHD->readAllSupFrames();
+        substream = supHD;
+        supBD = 0;
+        inMode = InputMode::HDDVDSUP;
+    }
+
+    // decode first frame
+    substream->decode(0);
+    subVobTrg = new SubPictureDVD;
+
+    // automatically set luminance thresholds for VobSub conversion
+    int maxLum = substream->getPalette()->getY()[substream->getPrimaryColorIndex()] & 0xff;
+    if (maxLum > 30)
+    {
+        luminanceThreshold.replace(0, (maxLum * 2) / 3);
+        luminanceThreshold.replace(1, maxLum / 3);
+    }
+    else
+    {
+        luminanceThreshold.replace(0, 210);
+        luminanceThreshold.replace(1, 160);
+    }
+
+    // try to detect source frame rate
+    if (!fpsSrcSet) // CLI override
+    {
+        if (substream == supBD)
+        {
+            fpsSrc = supBD->getFps(0);
+            fpsSrcCertain = true;
+            if (keepFps)
+            {
+                setFPSTrg(fpsSrc);
+            }
+        }
+        else
+        {
+            // for HD-DVD we need to guess
+            useBT601 = false;
+            fpsSrcCertain = false;
+            fpsSrc = FPS_24P;
+        }
+    }
 }

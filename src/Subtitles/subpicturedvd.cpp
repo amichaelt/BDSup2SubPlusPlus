@@ -18,19 +18,7 @@
 
 #include "subpicturedvd.h"
 
-SubPictureDVD::SubPictureDVD() :
-    offset(0),
-    rleSize(0),
-    evenOfs(0),
-    oddOfs(0),
-    originalWidth(0),
-    originalHeight(0),
-    originalX(0),
-    originalY(0),
-    originalAlpha(4),
-    originalPal(4),
-    alpha(4),
-    pal(4)
+SubPictureDVD::SubPictureDVD()
 {
 }
 

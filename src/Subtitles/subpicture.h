@@ -30,10 +30,10 @@ public:
     SubPicture(const SubPicture& other);
 
     SubPicture* copy();
-    int getImageWidth();
-    int getImageHeight();
-    int getOfsX();
-    int getOfsY();
+    virtual int getImageWidth();
+    virtual int getImageHeight();
+    virtual int getOfsX();
+    virtual int getOfsY();
     void setImageWidth(int w);
     void setImageHeight(int h);
     void setOfsX(int ofs);

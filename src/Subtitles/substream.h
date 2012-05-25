@@ -19,11 +19,15 @@
 #ifndef SUBSTREAM_H
 #define SUBSTREAM_H
 
+#include <QVector>
+
 class Palette;
 class QImage;
 class Bitmap;
 class SubPicture;
 class SubPictureDVD;
+class FileBuffer;
+class SubtitleProcessor;
 
 class Substream
 {
@@ -43,7 +47,9 @@ public:
     virtual long getStartOffset(int index) = 0;
     virtual SubPicture *getSubPicture(int index) = 0;
 
-    Palette* decodePalette(SubPictureDVD *pic, Palette *palette, int alphaCrop);
+protected:
+    SubtitleProcessor* subtitleProcessor = 0;
+    int numForcedFrames = 0;
 };
 
 #endif // SUBSTREAM_H

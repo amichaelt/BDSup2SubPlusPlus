@@ -21,30 +21,28 @@
 #include "Tools/filebuffer.h"
 #include "imageobjectfragment.h"
 #include "subpicturedvd.h"
+#include "bitmap.h"
 
-SupDVD::SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* parent) :
+SupDVD::SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subtitleProcessor) :
     supFileName(supFileName),
     ifoFileName(ifoFileName)
 {
-    subtitleProcessor = parent;
+    this->subtitleProcessor = subtitleProcessor;
 }
 
 Palette *SupDVD::getPalette()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return palette;
 }
 
 Bitmap *SupDVD::getBitmap()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return bitmap;
 }
 
 QImage *SupDVD::getImage()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return bitmap->getImage(palette);
 }
 
 QImage *SupDVD::getImage(Bitmap *bitmap)
@@ -55,8 +53,7 @@ QImage *SupDVD::getImage(Bitmap *bitmap)
 
 int SupDVD::getPrimaryColorIndex()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return primaryColorIndex;
 }
 
 void SupDVD::decode(int index)
@@ -73,8 +70,7 @@ void SupDVD::decode(int index)
 
 int SupDVD::getNumFrames()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.size();
 }
 
 int SupDVD::getNumForcedFrames()
@@ -109,14 +105,12 @@ long SupDVD::getStartTime(int index)
 
 long SupDVD::getStartOffset(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->offset;
 }
 
 SubPicture *SupDVD::getSubPicture(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index);
 }
 
 QVector<int> SupDVD::getFrameAlpha(int index)
@@ -145,8 +139,7 @@ QVector<int> SupDVD::getOriginalFramePal(int index)
 
 Palette *SupDVD::getSrcPalette()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return srcPalette;
 }
 
 void SupDVD::setSrcPalette(Palette *palette)
@@ -157,8 +150,7 @@ void SupDVD::setSrcPalette(Palette *palette)
 
 int SupDVD::getLanguageIdx()
 {
-    //TODO: Finish implementing
-    throw 10;
+    return languageIdx;
 }
 
 void SupDVD::readIfo()
@@ -311,7 +303,7 @@ long SupDVD::readSupFrame(long ofs)
     int  ctrlOfsRel = 0;
     int  rleSize = 0;
     int  ctrlSize = -1;
-    ImageObjectFragment rleFrag;
+    ImageObjectFragment* rleFrag;
     int  length;
 
     // 2 uchars:  packet identifier 0x5350
@@ -342,10 +334,10 @@ long SupDVD::readSupFrame(long ofs)
     }
     ctrlOfs = ctrlOfsRel + ofs;			// absolute offset of control header
     ofs += 2;
-    pic->rleFragments = QVector<ImageObjectFragment>(1);
-    rleFrag = ImageObjectFragment();
-    rleFrag.imageBufferOfs = ofs;
-    rleFrag.imagePacketSize = rleSize;
+    pic->rleFragments = QVector<ImageObjectFragment*>();
+    rleFrag = new ImageObjectFragment();
+    rleFrag->imageBufferOfs = ofs;
+    rleFrag->imagePacketSize = rleSize;
     pic->rleFragments.push_back(rleFrag);
     pic->rleSize = rleSize;
 
