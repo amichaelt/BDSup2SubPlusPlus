@@ -71,10 +71,14 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
 
     int num = subtitleProcessor->getNumberOfFrames();
     ui->subtitleNumberComboBox->clear();
-    for (int i = 0; i < num; ++i)
+    ui->subtitleNumberComboBox->blockSignals(true);
+    subtitleNumberValidator = new QIntValidator(1, num, this);
+    for (int i = 1; i <= num; ++i)
     {
         ui->subtitleNumberComboBox->addItem(QString::number(i));
     }
+    ui->subtitleNumberComboBox->blockSignals(false);
+    ui->subtitleNumberComboBox->setValidator(subtitleNumberValidator);
     ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
     ui->alphaThresholdComboBox->setCurrentIndex(subtitleProcessor->getAlphaThreshold());
     ui->hiMedThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[0]);
@@ -169,6 +173,10 @@ void BDSup2Sub::fillComboBoxes()
     ui->alphaThresholdComboBox->setCurrentIndex(80);
     ui->medLowThresholdComboBox->setCurrentIndex(160);
     ui->hiMedThresholdComboBox->setCurrentIndex(210);
+
+    ui->alphaThresholdComboBox->setValidator(alphaThresholdValidator);
+    ui->medLowThresholdComboBox->setValidator(medLowThresholdValidator);
+    ui->hiMedThresholdComboBox->setValidator(hiMedThresholdValidator);
 }
 
 void BDSup2Sub::enableCoreComponents(bool enable)
@@ -218,9 +226,9 @@ void BDSup2Sub::enableVobSubMenuCombo()
 {
     bool enable;
 
-    if ((subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getOutputMode() == OutputMode::SUPIFO)
-            && ((subtitleProcessor->getInputMode() != InputMode::VOBSUB || subtitleProcessor->getInputMode() != InputMode::SUPIFO)
-                || subtitleProcessor->getPaletteMode() != PaletteMode::KEEP_EXISTING))
+    if ((subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getOutputMode() == OutputMode::SUPIFO) &&
+       ((subtitleProcessor->getInputMode() != InputMode::VOBSUB || subtitleProcessor->getInputMode() != InputMode::SUPIFO) ||
+         subtitleProcessor->getPaletteMode() != PaletteMode::KEEP_EXISTING))
     {
         enable = true;
     }
@@ -325,4 +333,16 @@ void BDSup2Sub::refreshTrgFrame(int index)
     QImage *image = subtitleProcessor->getTrgImage();
     ui->targetImage->setImage(image);
     ui->targetInfoLabel->setText(subtitleProcessor->getTrgInfoStr(index));
+}
+
+void BDSup2Sub::on_subtitleNumberComboBox_currentIndexChanged(int index)
+{
+    subIndex = index;
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshSrcFrame(subIndex);
+    refreshTrgFrame(subIndex);
+}
+
+void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &arg1)
+{
 }

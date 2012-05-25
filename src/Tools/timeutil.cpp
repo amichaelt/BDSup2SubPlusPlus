@@ -24,9 +24,31 @@ TimeUtil::TimeUtil()
 {
 }
 
+long TimeUtil::timeStrXmlToPTS(QString s, double fps)
+{
+    if (timePattern.indexIn(s) != -1)
+    {
+        QStringList m = timePattern.capturedTexts();
+        long hour = m[1].toInt();
+        long min = m[2].toInt();
+        long sec = m[3].toInt();
+        long frames = m[4].toInt();
+
+        long temp = hour * 60;
+        temp += min;
+        temp *= 60;
+        temp += sec;
+        temp *= 1000;
+        return (temp +(int)(((frames / fps) * 1000.0) + 0.5)) * 90;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
 long TimeUtil::timeStrToPTS(QString s)
 {
-    QRegExp timePattern("(\\d+):(\\d+):(\\d+)[:\\.](\\d+)");
     if (timePattern.indexIn(s) != -1)
     {
         QStringList m = timePattern.capturedTexts();

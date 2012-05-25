@@ -34,6 +34,7 @@ public:
     Bitmap(Bitmap* other);
     Bitmap(int width, int height);
     Bitmap(int width, int height, int color);
+    Bitmap(int width, int height, QImage* image) { this->width = width; this->height = height; this->img = image; }
 
     QRect getBounds(Palette* palette, int alphaThreshold);
     void clear(int color);

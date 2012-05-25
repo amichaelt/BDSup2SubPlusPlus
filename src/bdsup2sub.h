@@ -20,6 +20,7 @@
 #define BDSUP2SUB_H
 
 #include <QMainWindow>
+#include <QIntValidator>
 
 class SubtitleProcessor;
 class ProgressDialog;
@@ -55,6 +56,10 @@ private:
     QString savePath = "";
     SubtitleProcessor *subtitleProcessor = 0;
     int subIndex = 0;
+    QIntValidator *alphaThresholdValidator = new QIntValidator(0, 255, this);
+    QIntValidator *medLowThresholdValidator = new QIntValidator(0, 255, this);
+    QIntValidator *hiMedThresholdValidator = new QIntValidator(0, 255, this);
+    QIntValidator *subtitleNumberValidator;
 
     QString filter = tr("All Files (*.*);Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
     QString selectedFilter = tr("Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
@@ -71,6 +76,8 @@ private:
 
 private slots:
     void openFile();
+    void on_subtitleNumberComboBox_currentIndexChanged(int index);
+    void on_subtitleNumberComboBox_editTextChanged(const QString &arg1);
 };
 
 #endif // BDSUP2SUB_H

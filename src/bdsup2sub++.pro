@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui xml
 QMAKE_CXXFLAGS += -std=c++0x
 TARGET = bdsup2sub++
 TEMPLATE = app
@@ -42,7 +42,11 @@ SOURCES += main.cpp\
     Subtitles/subpicturebd.cpp \
     Subtitles/imageobject.cpp \
     Subtitles/paletteinfo.cpp \
-    Subtitles/substreamdvd.cpp
+    Subtitles/substreamdvd.cpp \
+    Subtitles/subpicturehd.cpp \
+    Tools/bitstream.cpp \
+    Subtitles/supxml.cpp \
+    Subtitles/subpicturexml.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -78,7 +82,11 @@ HEADERS  += bdsup2sub.h \
     Subtitles/supbd.h \
     Subtitles/subpicturebd.h \
     Subtitles/imageobject.h \
-    Subtitles/paletteinfo.h
+    Subtitles/paletteinfo.h \
+    Subtitles/subpicturehd.h \
+    Tools/bitstream.h \
+    Subtitles/supxml.h \
+    Subtitles/subpicturexml.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \

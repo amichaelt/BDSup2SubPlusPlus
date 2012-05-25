@@ -100,8 +100,7 @@ bool SubDVD::isForced(int index)
 
 void SubDVD::close()
 {
-    //TODO: Finish implementing
-    throw 10;
+    fileBuffer->close();
 }
 
 long SubDVD::getEndTime(int index)

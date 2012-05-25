@@ -20,6 +20,7 @@
 #define TYPES_H
 
 #include <QString>
+#include <QStringList>
 #include <QVector>
 
 const QString progName = "BDSup2Sub";
@@ -183,5 +184,20 @@ enum class RunType {
     /** move all captions */
     MOVEALL
 };
+
+/** Frames per seconds for 24p (23.976) */
+constexpr double FPS_24P  = 24000.0/1001;
+/** Frames per seconds for wrong 24P (23.975) */
+constexpr double FPS_23_975 = 23.975;
+/** Frames per seconds for 24Hz (24.0) */
+constexpr double FPS_24HZ = 24.0;
+/** Frames per seconds for PAL progressive (25.0) */
+constexpr double FPS_PAL  = 25.0;
+/** Frames per seconds for NTSC progressive (29.97) */
+constexpr double FPS_NTSC = 30000.0/1001;
+/** Frames per seconds for PAL interlaced (50.0) */
+constexpr double FPS_PAL_I  = 50.0;
+/** Frames per seconds for NTSC interlaced (59.94) */
+constexpr double FPS_NTSC_I = 60000.0/1001;
 
 #endif // TYPES_H

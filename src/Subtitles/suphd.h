@@ -6,6 +6,9 @@
 #include <QString>
 
 class SubtitleProcessor;
+class SubPictureHD;
+class QImage;
+class BitStream;
 
 class SupHD : public QObject, public Substream
 {
@@ -37,6 +40,17 @@ signals:
 
 private:
     QString supFileName;
+    QVector<SubPictureHD*> subPictures = QVector<SubPictureHD*>();
+    FileBuffer *fileBuffer = 0;
+    Palette *palette = 0;
+    Bitmap *bitmap = 0;
+    int primaryColorIndex = 0;
+
+    void decode(SubPictureHD* subPicture);
+    void decodeLine(QImage* trg, int trgOfs, int width, int maxPixels, BitStream* src);
+    Palette* decodePalette(SubPictureHD* subPicture);
+    Bitmap* decodeImage(SubPictureHD* subPicture, int transparentIndex);
+
 };
 
 #endif // SUPHD_H

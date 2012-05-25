@@ -99,7 +99,6 @@ void EditPane::paintEvent(QPaintEvent *event)
 
         painter.setPen(Qt::green);
         painter.drawRect(xi, yi, wi - 1, hi - 1);
-
         painter.drawImage(QRect(xi, yi, wi, hi), *img, img->rect());
     }
 
@@ -124,4 +123,5 @@ void EditPane::setImage(QImage *image, int width, int height)
     img = image;
     imgWidth = width;
     imgHeight = height;
+    update();
 }

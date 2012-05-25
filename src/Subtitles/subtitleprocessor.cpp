@@ -29,6 +29,7 @@
 #include "supdvd.h"
 #include "supbd.h"
 #include "suphd.h"
+#include "supxml.h"
 #include "substream.h"
 #include "subpicture.h"
 #include "subpicturedvd.h"
@@ -37,6 +38,7 @@
 #include "bitmap.h"
 #include "palettebitmap.h"
 #include "Tools/timeutil.h"
+#include <cmath>
 
 SubtitleProcessor::SubtitleProcessor()
 {
@@ -164,18 +166,18 @@ long SubtitleProcessor::syncTimePTS(long timeStamp, double fps)
 void SubtitleProcessor::close()
 {
     //TODO: fix when other classes are implemented
-    //if (supBD != 0)
-    //{
-    //    supBD->close();
-    //}
-    //if (supHD != 0)
-    //{
-    //    supHD->close();
-    //}
-    //if (supXML != 0)
-    //{
-    //    supXML->close();
-    //}
+    if (supBD != 0)
+    {
+        supBD->close();
+    }
+    if (supHD != 0)
+    {
+        supHD->close();
+    }
+    if (supXML != 0)
+    {
+        supXML->close();
+    }
     if (subDVD != 0)
     {
         subDVD->close();
@@ -980,6 +982,76 @@ void SubtitleProcessor::setFPSTrg(double trg)
     }
 }
 
+double SubtitleProcessor::getFPS(QString string)
+{
+    string = string.trimmed().toLower();
+    if (string == "pal"  || string == "25p" || string == "25")
+    {
+        return FPS_PAL;
+    }
+    if (string == "ntsc" || string == "30p" || string == "29.97" || string == "29.970")
+    {
+        return FPS_NTSC;
+    }
+    if (string == "24p"  || string == "23.976")
+    {
+        return FPS_24P;
+    }
+    if (string == "23.975")
+    {
+        return FPS_23_975;
+    }
+    if (string == "24")
+    {
+        return FPS_24HZ;
+    }
+    if (string == "50i"  || string == "50")
+    {
+        return FPS_PAL_I;
+    }
+    if (string == "60i"  || string == "59.94")
+    {
+        return FPS_NTSC_I;
+    }
+
+    bool ok;
+    double d = string.toDouble(&ok);
+    if (!ok)
+    {
+        return -1.0;
+    }
+
+    if (fabs(d - FPS_23_975) < 0.001)
+    {
+        return FPS_23_975;
+    }
+    if (fabs(d - FPS_24P) < 0.001)
+    {
+        return FPS_24P;
+    }
+    if (fabs(d - FPS_24HZ) < 0.001)
+    {
+        return FPS_24P;
+    }
+    if (fabs(d - FPS_PAL) < 0.001)
+    {
+        return FPS_PAL;
+    }
+    if (fabs(d - FPS_NTSC) < 0.001)
+    {
+        return FPS_NTSC;
+    }
+    if (fabs(d - FPS_NTSC_I) < 0.001)
+    {
+        return FPS_NTSC_I;
+    }
+    if (fabs(d - FPS_PAL_I) < 0.001)
+    {
+        return FPS_PAL_I;
+    }
+    return d;
+}
+
 void SubtitleProcessor::setMaxProgress(int maxProgress)
 {
     this->maxProgress = maxProgress;
@@ -997,8 +1069,60 @@ void SubtitleProcessor::setCurrentProgress(int currentProgress)
 
 void SubtitleProcessor::readXml()
 {
-    //TODO: implement
-    throw 10;
+    //TODO: print message
+    numberOfErrors = 0;
+    numberOfWarnings = 0;
+
+    if (substream != 0)
+    {
+        substream->close();
+    }
+
+    supXML = new SupXML(fileName, this);
+    connect(supXML, SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
+    connect(supXML, SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+    supXML->readAllImages();
+    substream = supXML;
+
+    inMode = InputMode::XML;
+
+    // decode first frame
+    substream->decode(0);
+    subVobTrg = new SubPictureDVD();
+
+    // automatically set luminance thresholds for VobSub conversion
+    int maxLum = substream->getPalette()->getY()[substream->getPrimaryColorIndex()] & 0xff;
+    if (maxLum > 30)
+    {
+        luminanceThreshold.replace(0, (maxLum * 2) / 3);
+        luminanceThreshold.replace(1, maxLum / 3);
+    }
+    else
+    {
+        luminanceThreshold.replace(0, 210);
+        luminanceThreshold.replace(1, 160);
+    }
+
+    // find language idx
+    for (int i = 0; i < languages.size(); ++i)
+    {
+        if (QString::compare(languages[i][2], supXML->getLanguage(), Qt::CaseInsensitive))
+        {
+            languageIdx = i;
+            break;
+        }
+    }
+
+    // set frame rate
+    if (!fpsSrcSet)      // CLI override
+    {
+        fpsSrc = supXML->getFps();
+        fpsSrcCertain = true;
+        if (keepFps)
+        {
+            setFPSTrg(fpsSrc);
+        }
+    }
 }
 
 void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
@@ -1007,7 +1131,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
-    if (substream != NULL)
+    if (substream != 0)
     {
         substream->close();
     }
@@ -1202,5 +1326,50 @@ void SubtitleProcessor::readSup()
             fpsSrcCertain = false;
             fpsSrc = FPS_24P;
         }
+    }
+}
+
+Resolution SubtitleProcessor::getResolution(QString string)
+{
+    if (string == "480i")
+    {
+        return Resolution::NTSC;
+    }
+    if (string == "576i")
+    {
+        return Resolution::PAL;
+    }
+    if (string == "720p")
+    {
+        return Resolution::HD_720;
+    }
+    if (string == "1440x1080")
+    {
+        return Resolution::HD_1440x1080;
+    }
+    return Resolution::HD_1080;
+}
+
+QVector<int> SubtitleProcessor::getResolutions(Resolution resolution)
+{
+    if (resolution == Resolution::NTSC)
+    {
+        return resolutions[0];
+    }
+    if (resolution == Resolution::PAL)
+    {
+        return resolutions[1];
+    }
+    if (resolution == Resolution::HD_720)
+    {
+        return resolutions[2];
+    }
+    if (resolution == Resolution::HD_1440x1080)
+    {
+        return resolutions[3];
+    }
+    if (resolution == Resolution::HD_1080)
+    {
+        return resolutions[4];
     }
 }

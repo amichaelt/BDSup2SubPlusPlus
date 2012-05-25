@@ -29,7 +29,21 @@
 #include "palette.h"
 #include "types.h"
 
-static QVector<QVector<int> > resolutions = {
+class Substream;
+class SubDVD;
+class SupDVD;
+class SupXML;
+class SupHD;
+class SupBD;
+class SubPictureDVD;
+class SubPicture;
+class QImage;
+class Bitmap;
+class Props;
+
+static QStringList resolutionNamesXml = { "480i", "576i", "720p", "1440x1080", "1080p" };
+
+static QVector<QVector<int>> resolutions = {
     {720, 480},
     {720, 576},
     {1280, 720},
@@ -220,33 +234,6 @@ static QVector<QVector<QString> > languages = {{
     {"Zulu",         "zu", "zul"}
 }};
 
-/** Frames per seconds for 24p (23.976) */
-constexpr double FPS_24P  = 24000.0/1001;
-/** Frames per seconds for wrong 24P (23.975) */
-constexpr double FPS_23_975 = 23.975;
-/** Frames per seconds for 24Hz (24.0) */
-constexpr double FPS_24HZ = 24.0;
-/** Frames per seconds for PAL progressive (25.0) */
-constexpr double FPS_PAL  = 25.0;
-/** Frames per seconds for NTSC progressive (29.97) */
-constexpr double FPS_NTSC = 30000.0/1001;
-/** Frames per seconds for PAL interlaced (50.0) */
-constexpr double FPS_PAL_I  = 50.0;
-/** Frames per seconds for NTSC interlaced (59.94) */
-constexpr double FPS_NTSC_I = 60000.0/1001;
-
-class Substream;
-class SubDVD;
-class SupDVD;
-class SupXML;
-class SupHD;
-class SupBD;
-class SubPictureDVD;
-class SubPicture;
-class QImage;
-class Bitmap;
-class Props;
-
 class SubtitleProcessor : public QObject
 {
     Q_OBJECT
@@ -315,6 +302,9 @@ public:
     bool usesBT601() { return useBT601; }
     bool getSwapCrCb() { return swapCrCb; }
     void setFPSTrg(double trg);
+    double getFPS(QString string);
+    Resolution getResolution(QString string);
+    QVector<int> getResolutions(Resolution resolution);
 
 signals:
     void windowTitleChanged(const QString &newTitle);
@@ -415,14 +405,6 @@ private:
     QVector<int> luminanceThreshold = { 210, 160 };
 
     QVector<int> alphaDefault = { 0, 0xf, 0xf, 0xf};
-
-    QVector<QVector<int>> resolutions = {
-        {720, 480},
-        {720, 576},
-        {1280, 720},
-        {1440, 1080},
-        {1920, 1080}
-    };
 
     void readXml();
     void readDVDSubStream(StreamID streamID, bool isVobSub);

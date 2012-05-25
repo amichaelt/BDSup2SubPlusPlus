@@ -21,6 +21,9 @@
 
 #include <QString>
 #include <QVector>
+#include <QRegExp>
+
+static QRegExp timePattern = QRegExp("(\\d+):(\\d+):(\\d+)[:\\.](\\d+)");
 
 class TimeUtil
 {
@@ -30,6 +33,7 @@ public:
     static long timeStrToPTS(QString s);
     static QString ptsToTimeStr(long pts);
     static QVector<int> msToTime(long ms);
+    static long timeStrXmlToPTS(QString s, double fps);
 };
 
 #endif // TIMEUTIL_H

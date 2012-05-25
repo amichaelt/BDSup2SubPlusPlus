@@ -31,6 +31,7 @@ ZoomableImageArea::ZoomableImageArea(QWidget *parent) :
 void ZoomableImageArea::setImage(QImage* image)
 {
     this->image = image;
+    update();
 }
 
 void ZoomableImageArea::setZoomScale(int scale)

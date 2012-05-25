@@ -67,9 +67,6 @@ signals:
 private:
     QString supFileName;
     QString ifoFileName;
-    FileBuffer *fileBuffer = 0;
-    Palette *palette = 0;
-    Bitmap *bitmap = 0;
 
     QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 

@@ -29,6 +29,7 @@ public:
     Palette();
     Palette(const Palette& other);
     Palette(const Palette* other);
+    Palette(int paletteSize) : Palette(paletteSize, false) { }
     Palette(int paletteSize, bool use601);
     Palette(QVector<uchar> r, QVector<uchar> g, QVector<uchar> b, QVector<uchar> a, bool use601);
 

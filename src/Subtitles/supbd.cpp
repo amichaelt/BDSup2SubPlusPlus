@@ -74,8 +74,7 @@ bool SupBD::isForced(int index)
 
 void SupBD::close()
 {
-    //TODO: implement
-    throw 10;
+    fileBuffer->close();
 }
 
 long SupBD::getEndTime(int index)
@@ -122,8 +121,13 @@ void SupBD::readAllSupFrames()
     bool paletteUpdate = false;
     CompositionState cs = CompositionState::INVALID;
 
-    while (index < bufsize  && !subtitleProcessor->isCancelled())
+    while (index < bufsize)
     {
+        if (subtitleProcessor->isCancelled())
+        {
+            //TODO: print message about user cancelled loading
+            throw 10;
+        }
         emit currentProgressChanged(index);
         segment = readSegment(index);
         QString out;
@@ -413,11 +417,6 @@ void SupBD::readAllSupFrames()
         }
         index += 13; // header size
         index += segment->size;
-    }
-
-    if (subtitleProcessor->isCancelled())
-    {
-        //TODO: print message about user cancelled loading
     }
 
     // check if last frame is valid
@@ -783,7 +782,8 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
 
     index = 0;
 
-    do {
+    do
+    {
         b = buf[index++] & 0xff;
         if (b == 0)
         {

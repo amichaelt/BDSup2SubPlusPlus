@@ -87,8 +87,7 @@ bool SupDVD::isForced(int index)
 
 void SupDVD::close()
 {
-    //TODO: Finish implementing
-    throw 10;
+    fileBuffer->close();
 }
 
 long SupDVD::getEndTime(int index)

@@ -78,7 +78,15 @@ int FileBuffer::getDWordLE(long ofs)
     }
     int idx = (int)(ofs - offset);
     return (buf.at(idx) & 0xff) | ((buf.at(idx + 1) & 0xff) << 8)
-        | ((buf.at(idx + 2) & 0xff) << 16) | ((buf.at(idx + 3) & 0xff) << 24);
+            | ((buf.at(idx + 2) & 0xff) << 16) | ((buf.at(idx + 3) & 0xff) << 24);
+}
+
+void FileBuffer::close()
+{
+    if (file.isOpen())
+    {
+        file.close();
+    }
 }
 
 void FileBuffer::readBuffer(long ofs)

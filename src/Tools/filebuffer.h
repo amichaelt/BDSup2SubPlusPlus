@@ -38,6 +38,7 @@ public:
     void getBytes(long ofs, QVector<uchar> &b, int length);
     long getSize() { return length; }
     int getDWordLE(long ofs);
+    void close();
 
 private:
     void readBuffer(long ofs);

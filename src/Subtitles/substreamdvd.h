@@ -60,7 +60,7 @@ protected:
     QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 
 private:
-    Bitmap* decodeImage(SubPictureDVD* pic, Palette* palette, FileBuffer *fileBuffer, int transIdx);
+    Bitmap* decodeImage(SubPictureDVD* pic, int transIdx);
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage* trg, int trgOfs, int width, int maxPixels);
 };
 

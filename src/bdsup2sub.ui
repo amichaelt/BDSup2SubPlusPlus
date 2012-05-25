@@ -108,6 +108,9 @@
              <height>20</height>
             </size>
            </property>
+           <property name="editable">
+            <bool>true</bool>
+           </property>
            <property name="maxVisibleItems">
             <number>8</number>
            </property>
@@ -137,6 +140,9 @@
              <width>90</width>
              <height>20</height>
             </size>
+           </property>
+           <property name="editable">
+            <bool>true</bool>
            </property>
            <property name="currentIndex">
             <number>-1</number>
@@ -171,6 +177,9 @@
              <height>20</height>
             </size>
            </property>
+           <property name="editable">
+            <bool>true</bool>
+           </property>
            <property name="maxVisibleItems">
             <number>8</number>
            </property>
@@ -200,6 +209,9 @@
              <width>90</width>
              <height>20</height>
             </size>
+           </property>
+           <property name="editable">
+            <bool>true</bool>
            </property>
            <property name="maxVisibleItems">
             <number>8</number>

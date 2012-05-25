@@ -51,7 +51,7 @@ Palette *SubstreamDVD::decodePalette(SubPictureDVD *pic, Palette *palette, int a
     return miniPalette;
 }
 
-Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, Palette* palette, FileBuffer *fileBuffer, int transIdx)
+Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 {
     int width = pic->originalWidth;
     int height = pic->originalHeight;
@@ -94,29 +94,27 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, Palette* palette, FileBuff
     {
         // copy data of all packet to one common buffer
         fragment = pic->rleFragments.at(p);
-        for (int i=0; i < fragment->imagePacketSize; ++i)
+        for (int i = 0; i < fragment->imagePacketSize; ++i)
         {
             buf.replace(index + i, (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i));
         }
         index += fragment->imagePacketSize;
     }
 
-    QImage* bitmap = bm->getImage(palette);
-    decodeLine(buf, pic->evenOfs, sizeEven, bitmap, 0, width,  width * ((height / 2) + (height & 1)));
-    decodeLine(buf, pic->oddOfs, sizeOdd, bitmap, width, width, (height / 2) * width);
+    decodeLine(buf, pic->evenOfs, sizeEven, bm->getImg(), 0, width,  width * ((height / 2) + (height & 1)));
+    decodeLine(buf, pic->oddOfs, sizeOdd, bm->getImg(), width + (bm->getImg()->bytesPerLine() - width), width, (height / 2) * width);
 
     if (warnings > 0)
     {
         //TODO: print warnings;
     }
-    bm->setImg(bitmap);
     return bm;
 }
 
 void SubstreamDVD::decode(SubPictureDVD *pic, SubtitleProcessor* subtitleProcessor)
 {
     palette = decodePalette(pic, srcPalette, subtitleProcessor->getAlphaCrop());
-    bitmap = decodeImage(pic, palette, fileBuffer, palette->getTransparentIndex());
+    bitmap = decodeImage(pic, palette->getTransparentIndex());
 
     QRect bounds = bitmap->getBounds(palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
@@ -224,11 +222,14 @@ void SubstreamDVD::decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage
         for (int i = 0; i < len; ++i)
         {
             pixels[trgOfs + x] = (uchar)col;
-            if (++x >= width) {
-                trgOfs += (2 * width); // lines are interlaced!
+            if (++x >= width)
+            {
+                trgOfs += (2 * (width + (trg->bytesPerLine() - width))); // lines are interlaced!
                 x = 0;
                 if ((index & 1) == 1)
+                {
                     index++;
+                }
             }
         }
     }
