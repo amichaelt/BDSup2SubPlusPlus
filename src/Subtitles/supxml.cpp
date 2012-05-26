@@ -1,9 +1,28 @@
+/*
+ * BDSup2Sub++ (C) 2012 Adam T.
+ * Based on code from BDSup2Sub by Copyright 2009 Volker Oth (0xdeadbeef)
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "supxml.h"
 #include "subtitleprocessor.h"
 #include "bitmap.h"
 #include "palette.h"
 #include "subpicturexml.h"
 #include "Tools/timeutil.h"
+#include "Tools/quantizefilter.h"
 #include <QImage>
 #include <QFileInfo>
 #include <QtXml/QXmlSimpleReader>
@@ -85,33 +104,32 @@ void SupXML::decode(int index)
     // if this failed, assume RGB image and quantize palette
     if (palette == 0)
     {
-//        // grab int array (ARGB)
-//        QVector<int> pixels(image->bytesPerLine() * height);
-//        image->getRGB(0, 0, width, height, pixels, 0, width);
-//        // quantize image
-//        QuantizeFilter qf = new QuantizeFilter();
-//        bitmap = new Bitmap(image.getWidth(), image.getHeight());
-//        int ct[] = qf.quantize(pixels, bitmap.getImg(), width, height, 255, false, false);
-//        int size = ct.length;
-//        if (size > 255)
-//        {
-//            //TODO: print warning
-//            size = 255;
-//        }
-//        // create palette
-//        palette = new Palette(256);
-//        for (int i = 0; i < size; ++i)
-//        {
-//            int alpha = (ct[i] >> 24) & 0xff;
-//            if (alpha >= subtitleProcessor->getAlphaCrop())
-//            {
-//                palette.setARGB(i, ct[i]);
-//            }
-//            else
-//            {
-//                palette.setARGB(i, 0);
-//            }
-//        }
+        // grab int array (ARGB)
+        QRgb* pixels = (QRgb*)image->bits();
+        // quantize image
+        QuantizeFilter qf;
+        bitmap = new Bitmap(image->width(), image->height());
+        QVector<int> ct = qf.quantize(pixels, bitmap->getImg()->bits(), width, height, 255, false, false);
+        int size = ct.size();
+        if (size > 255)
+        {
+            //TODO: print warning
+            size = 255;
+        }
+        // create palette
+        palette = new Palette(256);
+        for (int i = 0; i < size; ++i)
+        {
+            int alpha = qAlpha(ct[i]);
+            if (alpha >= subtitleProcessor->getAlphaCrop())
+            {
+                palette->setARGB(i, ct[i]);
+            }
+            else
+            {
+                palette->setARGB(i, 0);
+            }
+        }
     }
 
     primaryColorIndex = bitmap->getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());

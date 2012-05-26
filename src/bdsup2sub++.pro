@@ -46,7 +46,8 @@ SOURCES += main.cpp\
     Subtitles/subpicturehd.cpp \
     Tools/bitstream.cpp \
     Subtitles/supxml.cpp \
-    Subtitles/subpicturexml.cpp
+    Subtitles/subpicturexml.cpp \
+    Tools/quantizefilter.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -86,7 +87,8 @@ HEADERS  += bdsup2sub.h \
     Subtitles/subpicturehd.h \
     Tools/bitstream.h \
     Subtitles/supxml.h \
-    Subtitles/subpicturexml.h
+    Subtitles/subpicturexml.h \
+    Tools/quantizefilter.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \
