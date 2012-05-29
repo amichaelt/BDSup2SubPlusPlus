@@ -45,8 +45,6 @@ public:
                            int numColors, bool dither, bool serpentine);
     int clamp(int c);
 
-
-
 private:
     static constexpr int sum = 3 + 5 + 7 + 1;
     bool dither = false;
