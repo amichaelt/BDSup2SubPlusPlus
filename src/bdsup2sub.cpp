@@ -23,6 +23,7 @@
 #include "types.h"
 #include "conversiondialog.h"
 #include "progressdialog.h"
+#include "exportdialog.h"
 #include <QMessageBox>
 
 BDSup2Sub::BDSup2Sub(QWidget *parent) :
@@ -43,16 +44,12 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     fillComboBoxes();
 
     connect(ui->action_Load, SIGNAL(triggered()), this, SLOT(openFile()));
+    connect(ui->action_Save_Export, SIGNAL(triggered()), this, SLOT(saveFile()));
+    connect(ui->action_Close, SIGNAL(triggered()), this, SLOT(closeFile()));
 
     subtitleProcessor = new SubtitleProcessor;
-    connect(subtitleProcessor, SIGNAL(windowTitleChanged(QString)), this, SLOT(changeWindowTitle(QString)));
     progressDialog = new ProgressDialog(this);
-    connect(subtitleProcessor, SIGNAL(progressDialogTextChanged(QString)), progressDialog, SLOT(setText(QString)));
-    connect(subtitleProcessor, SIGNAL(progressDialogTitleChanged(QString)), progressDialog, SLOT(setWindowTitle(QString)));
-    connect(subtitleProcessor, SIGNAL(progressDialogValueChanged(int)), progressDialog, SLOT(setCurrentValue(int)));
-    connect(subtitleProcessor, SIGNAL(progressDialogVisibilityChanged(bool)), progressDialog, SLOT(setVisible(bool)));
-    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), this, SLOT(onLoadingSubtitleFileFinished()));
-    connect(subtitleProcessor, SIGNAL(moveAllFinished()), this, SLOT(convertSup()));
+    connectSubtitleProcessor();
 }
 
 BDSup2Sub::~BDSup2Sub()
@@ -86,7 +83,7 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
 
     if (subtitleProcessor->getCropOfsY() > 0)
     {
-        if (QMessageBox::question(this, "", "Reset Crop Offset?", QMessageBox::Yes, QMessageBox::No == QMessageBox::Yes))
+        if (QMessageBox::question(this, "", "Reset Crop Offset?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
         {
             subtitleProcessor->setCropOfsY(0);
         }
@@ -152,14 +149,32 @@ void BDSup2Sub::dropEvent(QDropEvent *event)
     {
         return;
     }
-
     QString fileName = urls.first().toLocalFile();
     if (fileName.isEmpty() || !QFileInfo(fileName).isFile())
     {
         return;
     }
+    closeFile();
+    connectSubtitleProcessor();
     loadPath = fileName;
     loadSubtitleFile();
+}
+
+void BDSup2Sub::connectSubtitleProcessor()
+{
+    if (subtitleProcessor != 0)
+    {
+        subtitleProcessor->close();
+        subtitleProcessor->moveToThread(QApplication::instance()->thread());
+        subtitleProcessor->disconnect();
+    }
+    connect(subtitleProcessor, SIGNAL(windowTitleChanged(QString)), this, SLOT(changeWindowTitle(QString)));
+    connect(subtitleProcessor, SIGNAL(progressDialogTextChanged(QString)), progressDialog, SLOT(setText(QString)));
+    connect(subtitleProcessor, SIGNAL(progressDialogTitleChanged(QString)), progressDialog, SLOT(setWindowTitle(QString)));
+    connect(subtitleProcessor, SIGNAL(progressDialogValueChanged(int)), progressDialog, SLOT(setCurrentValue(int)));
+    connect(subtitleProcessor, SIGNAL(progressDialogVisibilityChanged(bool)), progressDialog, SLOT(setVisible(bool)));
+    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), this, SLOT(onLoadingSubtitleFileFinished()));
+    connect(subtitleProcessor, SIGNAL(moveAllFinished()), this, SLOT(convertSup()));
 }
 
 void BDSup2Sub::fillComboBoxes()
@@ -256,8 +271,13 @@ void BDSup2Sub::enableVobSubMenuCombo()
 
 void BDSup2Sub::openFile()
 {
+    if (!loadPath.isEmpty())
+    {
+        closeFile();
+        connectSubtitleProcessor();
+    }
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open"),
-                                                   loadPath.isEmpty() ? QDir::currentPath() : loadPath,
+                                                    loadPath.isEmpty() ? QDir::currentPath() : QFileInfo(loadPath).absolutePath(),
                                                     filter,
                                                     &selectedFilter
                                                     );
@@ -269,11 +289,91 @@ void BDSup2Sub::openFile()
     loadSubtitleFile();
 }
 
+void BDSup2Sub::saveFile()
+{
+    bool showException = true;
+    QString path = savePath + "/" + saveFileName + "_exp.";
+    if (ui->outputFormatComboBox->currentText().contains("IDX"))
+    {
+        path += "idx";
+    }
+    else if (ui->outputFormatComboBox->currentText().contains("IFO"))
+    {
+        path += "ifo";
+    }
+    if (ui->outputFormatComboBox->currentText().contains("BD"))
+    {
+        path += "sup";
+    }
+    if (ui->outputFormatComboBox->currentText().contains("XML"))
+    {
+        path += "xml";
+    }
+    exportDialog = new ExportDialog(this, path, subtitleProcessor);
+    if (exportDialog->exec() != QDialog::Rejected)
+    {
+        QString fileName = exportDialog->getFileName();
+        QFileInfo fileInfo(fileName);
+        savePath = fileInfo.absolutePath();
+        saveFileName = fileInfo.completeBaseName();
+        saveFileName = saveFileName.replace(QRegExp("_exp$"), "");
+        QString fi, fs;
+
+        if (ui->outputFormatComboBox->currentText().contains("IDX"))
+        {
+            fi = savePath + "/" + fileInfo.completeBaseName() + ".idx";
+            fs = savePath + "/" + fileInfo.completeBaseName() + ".sub";
+        }
+        else if (ui->outputFormatComboBox->currentText().contains("IFO"))
+        {
+            fi = savePath + "/" + fileInfo.completeBaseName() + ".ifo";
+            fs = savePath + "/" + fileInfo.completeBaseName() + ".sup";
+        }
+        if (ui->outputFormatComboBox->currentText().contains("BD"))
+        {
+            fs = savePath + "/" + fileInfo.completeBaseName() + ".sup";
+            fi = fs;
+        }
+        if (ui->outputFormatComboBox->currentText().contains("XML"))
+        {
+            fs = savePath + "/" + fileInfo.completeBaseName() + ".xml";
+            fi = fs;
+        }
+        if (QFile(fi).exists() || QFile(fs).exists())
+        {
+            if ((QFile(fi).exists() && !QFileInfo(fi).isWritable()) ||
+                (QFile(fs).exists() && !QFileInfo(fs).isWritable()))
+            {
+                //TODO: error handling
+                throw 10;
+            }
+            if (QMessageBox::question(this, "", "Target exists! Overwrite?", QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
+            {
+                //TODO: error handling
+                throw 10;
+            }
+        }
+        connectSubtitleProcessor();
+        QThread *workerThread = new QThread;
+        subtitleProcessor->setLoadPath(fileName);
+        subtitleProcessor->moveToThread(workerThread);
+        connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(createSubtitleStream()));
+        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished()), workerThread, SLOT(quit()));
+        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished()), workerThread, SLOT(deleteLater()));
+        workerThread->start();
+    }
+}
+
+void BDSup2Sub::closeFile()
+{
+    closeSubtitle();
+}
+
 void BDSup2Sub::loadSubtitleFile()
 {
     subIndex = 0;
     saveFileName = QFileInfo(loadPath).completeBaseName();
-    savePath = QFileInfo(loadPath).absoluteDir().absolutePath();
+    savePath = QFileInfo(loadPath).absolutePath();
 
     enableCoreComponents(false);
     enableVobSubComponents(false);
@@ -290,16 +390,28 @@ void BDSup2Sub::loadSubtitleFile()
 
 void BDSup2Sub::closeSubtitle()
 {
+    ui->subtitleNumberComboBox->blockSignals(true);
     ui->subtitleNumberComboBox->clear();
+    ui->subtitleNumberComboBox->blockSignals(false);
     enableCoreComponents(false);
+    ui->action_Load->setEnabled(true);
     updateRecentMenu();
     ui->paletteComboBox->setEnabled(false);
     ui->alphaThresholdComboBox->setEnabled(false);
     ui->hiMedThresholdComboBox->setEnabled(false);
     ui->medLowThresholdComboBox->setEnabled(false);
+    ui->actionEdit_imported_DVD_Palette->setEnabled(false);
+    ui->actionEdit_DVD_Frame_Palette->setEnabled(false);
 
-    //TODO: finish implementing
-    throw 10;
+    ui->subtitleImage->setImage(0, 1, 1);
+    ui->subtitleImage->update();
+    ui->sourceImage->setImage(0);
+    ui->sourceImage->update();
+    ui->targetImage->setImage(0);
+    ui->targetImage->update();
+
+    ui->sourceInfoLabel->setText("");
+    ui->targetInfoLabel->setText("");
 }
 
 void BDSup2Sub::updateRecentMenu()
@@ -310,10 +422,23 @@ void BDSup2Sub::updateRecentMenu()
         ui->menu_Recent_Files->clear();
         for (auto recentFile : subtitleProcessor->getRecentFiles())
         {
-            ui->menu_Recent_Files->addAction(QDir::toNativeSeparators(recentFile));
+            ui->menu_Recent_Files->addAction(QDir::toNativeSeparators(recentFile), this, SLOT(onRecentItemClicked()));
         }
         ui->menu_Recent_Files->setEnabled(true);
     }
+}
+
+void BDSup2Sub::onRecentItemClicked()
+{
+    if (QObject::sender() == 0)
+    {
+        return;
+    }
+    QAction* action = (QAction*)QObject::sender();
+    loadPath = QFileInfo(action->text()).absoluteFilePath();
+    closeFile();
+    connectSubtitleProcessor();
+    loadSubtitleFile();
 }
 
 void BDSup2Sub::refreshSrcFrame(int index)
@@ -343,6 +468,30 @@ void BDSup2Sub::on_subtitleNumberComboBox_currentIndexChanged(int index)
     refreshTrgFrame(subIndex);
 }
 
-void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &arg1)
+void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &index)
 {
+    subIndex = index.toInt() - 1;
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshSrcFrame(subIndex);
+    refreshTrgFrame(subIndex);
+}
+
+void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(const QString &format)
+{
+    if (format.contains("IDX"))
+    {
+        subtitleProcessor->setOutputMode(OutputMode::VOBSUB);
+    }
+    else if (format.contains("IFO"))
+    {
+        subtitleProcessor->setOutputMode(OutputMode::SUPIFO);
+    }
+    else if (format.contains("SUP"))
+    {
+        subtitleProcessor->setOutputMode(OutputMode::BDSUP);
+    }
+    else
+    {
+        subtitleProcessor->setOutputMode(OutputMode::XML);
+    }
 }

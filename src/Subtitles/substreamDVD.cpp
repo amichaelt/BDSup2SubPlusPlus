@@ -51,6 +51,94 @@ Palette *SubstreamDVD::decodePalette(SubPictureDVD *pic, Palette *palette, int a
     return miniPalette;
 }
 
+QVector<uchar> SubstreamDVD::encodeLines(Bitmap *bitmap, bool even)
+{
+    int ofs = 0;
+    uchar color;
+    int len;
+    int y;
+    QVector<uchar> nibbles;
+
+    if (even)
+    {
+        y = 0;
+    }
+    else
+    {
+        y = 1;
+    }
+
+    for (; y < bitmap->getHeight(); y += 2)
+    {
+        uchar* pixels = bitmap->getImg()->scanLine(y);
+        ofs = 0;
+        for (int x = 0; x < bitmap->getWidth(); x += len, ofs += len)
+        {
+            color = pixels[ofs];
+            for (len = 1; x + len < bitmap->getWidth(); ++len)
+            {
+                if (pixels[ofs + len] != color)
+                {
+                    break;
+                }
+            }
+            if (len < 4)
+            {
+                nibbles.push_back((uchar)((len << 2) | (color & 3)));
+            }
+            else if (len < 0x10)
+            {
+                nibbles.push_back((uchar)(len >> 2));
+                nibbles.push_back((uchar)((len << 2) | (color & 3)));
+            }
+            else if (len < 0x40)
+            {
+                nibbles.push_back((uchar)0);
+                nibbles.push_back((uchar)(len >> 2));
+                nibbles.push_back((uchar)((len << 2) | (color & 3)));
+            }
+            else if ((x + len) == bitmap->getWidth())
+            {
+                nibbles.push_back((uchar)(0));
+                nibbles.push_back((uchar)(0));
+                nibbles.push_back((uchar)(0));
+                nibbles.push_back(color);
+            }
+            else
+            {
+                if (len > 0xff)
+                {
+                    len = 0xff;
+                }
+                nibbles.push_back((uchar)(0));
+                nibbles.push_back((uchar)(len >> 6));
+                nibbles.push_back((uchar)(len >> 2));
+                nibbles.push_back((uchar)((len << 2) | (color & 3)));
+            }
+        }
+        if ((nibbles.size() & 1) == 1)
+        {
+            nibbles.push_back((uchar)(0));
+        }
+    }
+    // end buffer with line feed
+    nibbles.push_back((uchar)(0));
+    nibbles.push_back((uchar)(0));
+    nibbles.push_back((uchar)(0));
+    nibbles.push_back((uchar)(0));
+
+    int size =  nibbles.size() / 2; // number of bytes
+    QVector<uchar> retval(size);
+    QVectorIterator<uchar> it(nibbles);
+    for (int i = 0; i < size; ++i)
+    {
+        int hi = (it.next() & 0xf);
+        int lo = (it.next() & 0xf);
+        retval[i] = (uchar)((hi << 4) | lo);
+    }
+    return retval;
+}
+
 Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 {
     int width = pic->originalWidth;

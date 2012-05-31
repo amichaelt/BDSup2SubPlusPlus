@@ -258,3 +258,12 @@ void Palette::setYCbCr(int index, int yn, int cbn, int crn)
     g.replace(index, (uchar)rgb[1]);
     b.replace(index, (uchar)rgb[2]);
 }
+
+QVector<int> Palette::getYCbCr(int index)
+{
+    QVector<int> yCbCr;
+    yCbCr.push_back(y[index] & 0xff);
+    yCbCr.push_back(cb[index] & 0xff);
+    yCbCr.push_back(cr[index] & 0xff);
+    return yCbCr;
+}

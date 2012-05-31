@@ -31,6 +31,8 @@ public:
     TimeUtil();
 
     static long timeStrToPTS(QString s);
+    static QString ptsToTimeStrXml(long pts, double fps);
+    static QString ptsToTimeStrIdx(long pts);
     static QString ptsToTimeStr(long pts);
     static QVector<int> msToTime(long ms);
     static long timeStrXmlToPTS(QString s, double fps);

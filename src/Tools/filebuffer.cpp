@@ -25,6 +25,11 @@ FileBuffer::FileBuffer(QString inFileName) :
     file(fileName)
 {
     length = file.size();
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        //TODO: add error handling
+        throw 10;
+    }
     readBuffer(offset);
 }
 
@@ -92,23 +97,13 @@ void FileBuffer::close()
 void FileBuffer::readBuffer(long ofs)
 {
     offset = ofs;
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        //TODO: add error handling
-        return;
-    }
     file.seek(offset);
     long l = length - offset;
     if (l < 0)
     {
         //TODO: add error handling;
-        return;
-    }
-    buf = file.read(l);
-    if (buf.isEmpty())
-    {
-        //TODO: add error handling;
         throw 10;
     }
+    buf = file.read(l);
     offsetEnd = (offset + buf.size()) - 1;
 }

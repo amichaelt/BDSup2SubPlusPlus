@@ -81,6 +81,8 @@ public:
     void readAllImages();
     QString getLanguage() { return language; }
     double getFps() { return fps; }
+    QString getPNGname(QString filename, int idx);
+    void writeXml(QString filename, QVector<SubPicture*> pics);
 
 signals:
     void maxProgressChanged(int maxProgress);

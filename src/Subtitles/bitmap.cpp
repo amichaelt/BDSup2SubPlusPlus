@@ -297,3 +297,44 @@ void Bitmap::setImg(QImage* newImage)
 {
     img = newImage;
 }
+
+int Bitmap::getHighestColorIndex(Palette *pal)
+{
+    // create histogram for palette
+    int maxIdx = 0;
+    for (int y = 0; y < img->height(); ++y)
+    {
+        uchar* pixels = img->scanLine(y);
+        for (int x = 0; x < img->width(); ++x)
+        {
+            int idx = pixels[x] & 0xff;
+            if (pal->getAlpha(idx) > 0)
+            {
+                if (idx > maxIdx)
+                {
+                    maxIdx = idx;
+                    if (maxIdx == 255)
+                    {
+                        goto breakOut;
+                    }
+                }
+            }
+        }
+    }
+    breakOut:
+    return maxIdx;
+}
+
+QImage *Bitmap::toARGB(Palette *pal)
+{
+    QImage* newImage = new QImage(img->width(), img->height(), QImage::Format_ARGB32);
+    for (int y = 0; y < newImage->height(); ++y)
+    {
+        uchar* pixels = img->scanLine(y);
+        QRgb* newPixels = (QRgb*)newImage->scanLine(y);
+        for (int x = 0; x < newImage->width(); ++x)
+        {
+            newPixels[x] = (uint)pal->getARGB(pixels[x] && 0xff);
+        }
+    }
+}

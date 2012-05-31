@@ -70,6 +70,24 @@ long TimeUtil::timeStrToPTS(QString s)
     }
 }
 
+QString TimeUtil::ptsToTimeStrXml(long pts, double fps)
+{
+    QVector<int> time = msToTime((pts + 45) / 90);
+    return QString("%1:%2:%3:%4").arg(QString::number(time[0]), 2, QChar('0'))
+                                 .arg(QString::number(time[1]), 2, QChar('0'))
+                                 .arg(QString::number(time[2]), 2, QChar('0'))
+                                 .arg(QString::number((int)(((fps * time[3]) / 1000.0) + 0.5)), 2, QChar('0'));
+}
+
+QString TimeUtil::ptsToTimeStrIdx(long pts)
+{
+    QVector<int> time = msToTime((pts + 45) / 90);
+    return QString("%1:%2:%3:%4").arg(QString::number(time[0]), 2, QChar('0'))
+                                 .arg(QString::number(time[1]), 2, QChar('0'))
+                                 .arg(QString::number(time[2]), 2, QChar('0'))
+                                 .arg(QString::number(time[3]), 3, QChar('0'));
+}
+
 QString TimeUtil::ptsToTimeStr(long pts)
 {
     QVector<int> time = msToTime((pts + 45) / 90);

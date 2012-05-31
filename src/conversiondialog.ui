@@ -45,7 +45,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QCheckBox" name="convertResolutionComboBox">
+       <widget class="QCheckBox" name="convertResolutionCheckBox">
         <property name="text">
          <string>Convert &amp;resolution</string>
         </property>

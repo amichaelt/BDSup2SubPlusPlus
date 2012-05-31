@@ -49,6 +49,7 @@ public:
     SubPicture *getSubPicture(int index);
 
     void readAllSupFrames();
+    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap* bm, Palette* pal);
     double getFps(int index);
 
 signals:
@@ -89,6 +90,8 @@ private:
     Palette* decodePalette(SubPictureBD* subPicture);
     Bitmap* decodeImage(SubPictureBD* subPicture, int transIdx);
     double getFpsFromID(int id);
+    QVector<uchar> encodeImage(Bitmap* bm);
+    int getFpsId(double fps);
 
     QString supFileName;
     QVector<SubPictureBD*> subPictures = QVector<SubPictureBD*>();
@@ -99,7 +102,7 @@ private:
 
 
 
-    const QVector<uchar> packetHeader =
+    QVector<uchar> packetHeader =
     {
         0x50, 0x47,                         // 0:  "PG"
         0x00, 0x00, 0x00, 0x00,             // 2:  PTS - presentation time stamp
@@ -108,7 +111,7 @@ private:
         0x00, 0x00,                         // 11: segment_length (bytes following till next PG)
     };
 
-    const QVector<uchar> headerPCSStart =
+    QVector<uchar> headerPCSStart =
     {
         0x00, 0x00, 0x00, 0x00,             // 0: video_width, video_height
         0x10,                               // 4: hi nibble: frame_rate (0x10=24p), lo nibble: reserved
@@ -123,7 +126,7 @@ private:
         0x00, 0x00, 0x00, 0x00              // 15: composition_object_horizontal_position, composition_object_vertical_position
     };
 
-    const QVector<uchar> headerPCSEnd =
+    QVector<uchar> headerPCSEnd =
     {
         0x00, 0x00, 0x00, 0x00,             // 0: video_width, video_height
         0x10,                               // 4: hi nibble: frame_rate (0x10=24p), lo nibble: reserved
@@ -135,7 +138,7 @@ private:
     };
 
 
-    const QVector<uchar> headerODSFirst =
+    QVector<uchar> headerODSFirst =
     {
         0x00, 0x00,                         // 0: object_id
         0x00,                               // 2: object_version_number
@@ -144,14 +147,14 @@ private:
         0x00, 0x00, 0x00, 0x00,             // 7: object_width, object_height
     };
 
-    const QVector<uchar> headerODSNext =
+    QVector<uchar> headerODSNext =
     {
         0x00, 0x00,                         // 0: object_id
         0x00,                               // 2: object_version_number
         0x40,                               // 3: first_in_sequence (0x80), last_in_sequence (0x40), 6bits reserved
     };
 
-    const QVector<uchar> headerWDS =
+    QVector<uchar> headerWDS =
     {
         0x01,                               // 0 : number of windows (currently assumed 1, 0..2 is legal)
         0x00,                               // 1 : window id (0..1)

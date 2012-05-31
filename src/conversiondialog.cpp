@@ -57,31 +57,7 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
     fpsSrcCertain = subtitleProcessor->getFpsSrcCertain();
     cancel = false;
 
-    ui->resolutionComboBox->setCurrentIndex((int)resolution);
-    ui->resolutionComboBox->setEnabled(changeResolution);
-    ui->convertResolutionComboBox->setChecked(changeResolution);
-
-    ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 5));
-    ui->changeFrameRateCheckBox->setChecked(changeFPS);
-    ui->sourceFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsSrc)));
-    ui->sourceFramerateComboBox->setEnabled(changeFPS);
-    ui->targetFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsTrg)));
-    ui->targetFramerateComboBox->setEnabled(true);
-    ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 5));
-    ui->minTimeLineEdit->setEnabled(fixShortFrames);
-    ui->fixTooShortFramesCheckBox->setEnabled(true);
-    ui->fixTooShortFramesCheckBox->setChecked(fixShortFrames);
-    ui->scaleCheckBox->setChecked(changeScale);
-    ui->scaleXLineEdit->setText(QString::number(scaleX, 'g', 5));
-    ui->scaleXLineEdit->setEnabled(changeScale);
-    ui->scaleYLineEdit->setText(QString::number(scaleY, 'g', 5));
-    ui->scaleYLineEdit->setEnabled(changeScale);
-
-    ui->forceFlagsComboBox->setCurrentIndex((int) forcedState);
-
-    //QPalette pal = ui->delayLineEdit->palette();
-    //pal.setColor(ui->delayLineEdit->backgroundRole(), Qt::blue);
-    //ui->delayLineEdit->setPalette(pal);
+    fillDialog();
 }
 
 ConversionDialog::~ConversionDialog()
@@ -102,4 +78,63 @@ void ConversionDialog::on_cancelButton_clicked()
 void ConversionDialog::on_okButton_clicked()
 {
     accept();
+
+    //TODO: finish implementing
+}
+
+void ConversionDialog::on_convertResolutionCheckBox_toggled(bool checked)
+{
+    ui->resolutionComboBox->setEnabled(checked);
+}
+
+void ConversionDialog::on_scaleCheckBox_toggled(bool checked)
+{
+    ui->scaleXLineEdit->setEnabled(checked);
+    ui->scaleYLineEdit->setEnabled(checked);
+}
+
+void ConversionDialog::on_fixTooShortFramesCheckBox_toggled(bool checked)
+{
+    ui->minTimeLineEdit->setEnabled(checked);
+}
+
+void ConversionDialog::on_changeFrameRateCheckBox_toggled(bool checked)
+{
+    ui->sourceFramerateComboBox->setEnabled(checked);
+}
+
+void ConversionDialog::on_resetButton_clicked()
+{
+    fpsTrg = fpsSrc;
+    delayPTS = subtitleProcessor->getDelayPTSDefault();
+    fixShortFrames = subtitleProcessor->getFixShortFramesDefault();
+    minTimePTS = subtitleProcessor->getMinTimePTSDefault();
+    changeScale = subtitleProcessor->getApplyFreeScaleDefault();
+    forcedState = SetState::KEEP;
+    fillDialog();
+}
+
+void ConversionDialog::fillDialog()
+{
+    ui->resolutionComboBox->setCurrentIndex((int)resolution);
+    ui->resolutionComboBox->setEnabled(changeResolution);
+    ui->convertResolutionCheckBox->setChecked(changeResolution);
+
+    ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 5));
+    ui->changeFrameRateCheckBox->setChecked(changeFPS);
+    ui->sourceFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsSrc)));
+    ui->sourceFramerateComboBox->setEnabled(changeFPS);
+    ui->targetFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsTrg)));
+    ui->targetFramerateComboBox->setEnabled(true);
+    ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 5));
+    ui->minTimeLineEdit->setEnabled(fixShortFrames);
+    ui->fixTooShortFramesCheckBox->setEnabled(true);
+    ui->fixTooShortFramesCheckBox->setChecked(fixShortFrames);
+    ui->scaleCheckBox->setChecked(changeScale);
+    ui->scaleXLineEdit->setText(QString::number(scaleX, 'g', 5));
+    ui->scaleXLineEdit->setEnabled(changeScale);
+    ui->scaleYLineEdit->setText(QString::number(scaleY, 'g', 5));
+    ui->scaleYLineEdit->setEnabled(changeScale);
+
+    ui->forceFlagsComboBox->setCurrentIndex((int) forcedState);
 }

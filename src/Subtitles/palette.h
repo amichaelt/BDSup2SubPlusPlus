@@ -45,11 +45,12 @@ public:
     QVector<uchar> getAlpha() { return a; }
     int getAlpha(int index) { return a[index]; }
     QVector<uchar> getY() { return y; }
-    QVector<uchar> getCB() { return cb; }
-    QVector<uchar> getCR() { return cr; }
+    QVector<uchar> getCb() { return cb; }
+    QVector<uchar> getCr() { return cr; }
     QVector<QRgb> getColorTable();
     int getTransparentIndex();
     void setYCbCr(int index, int yn, int cbn, int crn);
+    QVector<int> getYCbCr(int index);
 
     static QVector<int> RGB2YCbCr(int r, int g, int b, bool use601);
 

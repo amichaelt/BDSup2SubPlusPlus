@@ -26,6 +26,8 @@
 #include "imageobjectfragment.h"
 #include "bitmap.h"
 #include "types.h"
+#include "Tools/quantizefilter.h"
+#include "Tools/numberutil.h"
 
 #include <QImage>
 
@@ -109,7 +111,7 @@ long SupBD::getStartTime(int index)
 
 long SupBD::getStartOffset(int index)
 {
-    subPictures.at(index)->getImgObj()->fragmentList.at(0)->imageBufferOfs;
+    return subPictures.at(index)->getImgObj()->fragmentList.at(0)->imageBufferOfs;
 }
 
 SubPicture *SupBD::getSubPicture(int index)
@@ -455,6 +457,366 @@ void SupBD::readAllSupFrames()
         }
     }
     //TODO: print line
+}
+
+QVector<uchar> SupBD::encodeImage(Bitmap *bm)
+{
+    QVector<uchar> bytes;
+    uchar color;
+    int ofs;
+    int len;
+
+    for (int y = 0; y < bm->getHeight(); ++y)
+    {
+        uchar* pixels = bm->getImg()->scanLine(y);
+        ofs = 0;
+        int x;
+        for (x = 0; x < bm->getWidth(); x += len, ofs += len)
+        {
+            color = pixels[ofs];
+            for (len = 1; (x + len) < bm->getWidth(); ++len)
+            {
+                if (pixels[ofs + len] != color)
+                {
+                    break;
+                }
+            }
+            if (len <= 2 && color != 0)
+            {
+                // only a single occurrence -> add color
+                bytes.push_back(color);
+                if (len == 2)
+                {
+                    bytes.push_back(color);
+                }
+            }
+            else
+            {
+                if (len > 0x3fff)
+                {
+                    len = 0x3fff;
+                }
+                bytes.push_back(0); // rle id
+                if (color == 0 && len < 0x40)
+                {
+                    // 00 xx -> xx times 0
+                    bytes.push_back(len);
+                }
+                else if (color == 0)
+                {
+                    // 00 4x xx -> xxx zeroes
+                    bytes.push_back(0x40 | (len >> 8));
+                    bytes.push_back(len);
+                }
+                else if(len < 0x40)
+                {
+                    // 00 8x cc -> x times value cc
+                    bytes.push_back(0x80 | len);
+                    bytes.push_back(color);
+                }
+                else
+                {
+                    // 00 cx yy cc -> xyy times value cc
+                    bytes.push_back(0xc0 | (len >> 8));
+                    bytes.push_back(len);
+                    bytes.push_back(color);
+                }
+            }
+        }
+        if (x == bm->getWidth())
+        {
+            bytes.push_back(0); // rle id
+            bytes.push_back(0);
+        }
+    }
+    return bytes;
+}
+
+int SupBD::getFpsId(double fps)
+{
+    if (fps == FPS_24HZ)
+    {
+        return 0x20;
+    }
+    if (fps == FPS_PAL)
+    {
+        return 0x30;
+    }
+    if (fps == FPS_NTSC)
+    {
+        return 0x40;
+    }
+    if (fps == FPS_PAL_I)
+    {
+        return 0x60;
+    }
+    if (fps == FPS_NTSC_I)
+    {
+        return 0x70;
+    }
+    // assume FPS_24P (also for FPS_23_975)
+    return 0x10;
+}
+
+QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette *pal)
+{
+    // the last palette entry must be transparent
+    if (pal->getSize() > 255 && pal->getAlpha(255) > 0)
+    {
+        // quantize image
+        QuantizeFilter qf;
+        Bitmap* bmQ = new Bitmap(bm->getWidth(), bm->getHeight());
+        QVector<QRgb> ct = qf.quantize(bm->toARGB(pal), bmQ->getImg(), bm->getWidth(), bm->getHeight(), 255, false, false);
+        int size = ct.size();
+        if (size > 255)
+        {
+            size = 255;
+            //TODO: print warnings
+        }
+        else
+        {
+            //TODO: print line
+        }
+        // create palette
+        pal = new Palette(size);
+        for (int i = 0; i < size; ++i)
+            pal->setARGB(i, ct[i]);
+        // use new bitmap
+        bm = bmQ;
+    }
+
+    QVector<uchar> rleBuf = encodeImage(bm);
+
+    // for some obscure reason, a packet can be a maximum 0xfffc bytes
+    // since 13 bytes are needed for the header("PG", PTS, DTS, ID, SIZE)
+    // there are only 0xffef bytes available for the packet
+    // since the first ODS packet needs an additional 11 bytes for info
+    // and the following ODS packets need 4 additional bytes, the
+    // first package can store only 0xffe4 RLE buffer bytes and the
+    // following packets can store 0xffeb RLE buffer bytes
+    int numAddPackets;
+    if (rleBuf.size() <= 0xffe4)
+    {
+        numAddPackets = 0; // no additional packets needed;
+    }
+    else
+    {
+        numAddPackets = 1 + ((rleBuf.size() - 0xffe4) / 0xffeb);
+    }
+
+    // a typical frame consists of 8 packets. It can be enlonged by additional
+    // object frames
+    int palSize = bm->getHighestColorIndex(pal) + 1;
+    int size = packetHeader.size() * (8 + numAddPackets);
+    size += headerPCSStart.size() + headerPCSEnd.size();
+    size += (2 * headerWDS.size()) + headerODSFirst.size();
+    size += numAddPackets * headerODSNext.size();
+    size += 2 + (palSize * 5) /* PDS */;
+    size += rleBuf.size();
+
+    int yOfs = subPicture->getOfsY() - subtitleProcessor->getCropOfsY();
+    if (yOfs < 0)
+    {
+        yOfs = 0;
+    }
+    else
+    {
+        int yMax = (subPicture->height - subPicture->getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
+        if (yOfs > yMax)
+        {
+            yOfs = yMax;
+        }
+    }
+
+    int h = subPicture->height - (2 * subtitleProcessor->getCropOfsY());
+
+    QVector<uchar> buf(size);
+    int index = 0;
+
+    int fpsId = getFpsId(subtitleProcessor->getFPSTrg());
+
+    /* time (in 90kHz resolution) needed to initialize (clear) the screen buffer
+       based on the composition pixel rate of 256e6 bit/s - always rounded up */
+    int frameInitTime = (((subPicture->width * subPicture->height) * 9) + 3199) / 3200; // better use default height here
+    /* time (in 90kHz resolution) needed to initialize (clear) the window area
+       based on the composition pixel rate of 256e6 bit/s - always rounded up
+       Note: no cropping etc. -> window size == image size */
+    int windowInitTime = (((bm->getWidth() * bm->getHeight()) * 9) + 3199) / 3200;
+    /* time (in 90kHz resolution) needed to decode the image
+       based on the decoding pixel rate of 128e6 bit/s - always rounded up  */
+    int imageDecodeTime = (((bm->getWidth() * bm->getHeight()) * 9) + 1599) / 1600;
+    // write PCS start
+    packetHeader.replace(10, 0x16);                                             // ID
+    int dts = (int)subPicture->startTime - (frameInitTime + windowInitTime);
+    NumberUtil::setDWord(packetHeader, 2, (int)subPicture->startTime);				// PTS
+    NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
+    NumberUtil::setWord(packetHeader, 11, headerPCSStart.size());			// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+    NumberUtil::setWord(headerPCSStart, 0, subPicture->width);
+    NumberUtil::setWord(headerPCSStart, 2, h);								// cropped height
+    NumberUtil::setByte(headerPCSStart, 4, fpsId);
+    NumberUtil::setWord(headerPCSStart, 5, subPicture->compNum);
+    headerPCSStart.replace(14, (subPicture->isForced ? (uchar)0x40 : 0));
+    NumberUtil::setWord(headerPCSStart, 15, subPicture->getOfsX());
+    NumberUtil::setWord(headerPCSStart, 17, yOfs);
+    for (int i = 0; i < headerPCSStart.size(); ++i)
+    {
+        buf.replace(index++, headerPCSStart[i]);
+    }
+
+    // write WDS
+    packetHeader.replace(10, 0x17);											// ID
+    int timeStamp = (int)subPicture->startTime - windowInitTime;
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS)
+    NumberUtil::setWord(packetHeader, 11, headerWDS.size());				// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+    NumberUtil::setWord(headerWDS, 2, subPicture->getOfsX());
+    NumberUtil::setWord(headerWDS, 4, yOfs);
+    NumberUtil::setWord(headerWDS, 6, bm->getWidth());
+    NumberUtil::setWord(headerWDS, 8, bm->getHeight());
+    for (int i = 0; i < headerWDS.size(); ++i)
+    {
+        buf.replace(index++, headerWDS[i]);
+    }
+
+    // write PDS
+    packetHeader.replace(10, 0x14);											// ID
+    NumberUtil::setDWord(packetHeader, 2, dts);								// PTS (=DTS of PCS/WDS)
+    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
+    NumberUtil::setWord(packetHeader, 11, (2 + (palSize * 5)));					// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+    buf.replace(index++, 0);
+    buf.replace(index++, 0);
+    for (int i = 0; i < palSize; ++i)
+    {
+        buf.replace(index++, (uchar)i);											// index
+        buf.replace(index++, pal->getY()[i]);									// Y
+        buf.replace(index++, pal->getCr()[i]);									// Cr
+        buf.replace(index++, pal->getCb()[i]);									// Cb
+        buf.replace(index++, pal->getAlpha()[i]);								// Alpha
+    }
+
+    // write first OBJ
+    int bufSize = rleBuf.size();
+    int rleIndex = 0;
+    if (bufSize > 0xffe4)
+    {
+        bufSize = 0xffe4;
+    }
+    packetHeader.replace(10, 0x15);											// ID
+    timeStamp = dts + imageDecodeTime;
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS
+    NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
+    NumberUtil::setWord(packetHeader, 11, headerODSFirst.size() + bufSize);	// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+    int marker = ((numAddPackets == 0) ? 0xC0000000 : 0x80000000);
+    NumberUtil::setDWord(headerODSFirst, 3, marker | (rleBuf.size() + 4));
+    NumberUtil::setWord(headerODSFirst, 7, bm->getWidth());
+    NumberUtil::setWord(headerODSFirst, 9, bm->getHeight());
+    for (int i = 0; i < headerODSFirst.size(); ++i)
+    {
+        buf.replace(index++, headerODSFirst[i]);
+    }
+    for (int i=0; i<bufSize; i++)
+    {
+        buf.replace(index++, rleBuf[rleIndex++]);
+    }
+
+    // write additional OBJ packets
+    bufSize = rleBuf.size() - bufSize; // remaining bytes to write
+    for (int p = 0; p < numAddPackets; ++p)
+    {
+        int psize = bufSize;
+        if (psize > 0xffeb)
+        {
+            psize = 0xffeb;
+        }
+        packetHeader.replace(10, 0x15);										// ID (keep DTS & PTS)
+        NumberUtil::setWord(packetHeader, 11, headerODSNext.size() + psize);	// size
+        for (int i = 0; i < packetHeader.size(); ++i)
+        {
+            buf.replace(index++, packetHeader[i]);
+        }
+        for (int i = 0; i < headerODSNext.size(); ++i)
+        {
+            buf.replace(index++, headerODSNext[i]);
+        }
+        for (int i = 0; i < psize; ++i)
+        {
+            buf.replace(index++, rleBuf[rleIndex++]);
+        }
+        bufSize -= psize;
+    }
+
+    // write END
+    packetHeader.replace(10, 0x80);										// ID
+    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0) (keep PTS of ODS)
+    NumberUtil::setWord(packetHeader, 11, 0);								// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+
+    // write PCS end
+    packetHeader.replace(10, 0x16);											// ID
+    NumberUtil::setDWord(packetHeader, 2, (int)subPicture->endTime);				// PTS
+    dts = (int)subPicture->startTime - 1;
+    NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
+    NumberUtil::setWord(packetHeader, 11, headerPCSEnd.size());				// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+    NumberUtil::setWord(headerPCSEnd,0, subPicture->width);
+    NumberUtil::setWord(headerPCSEnd,2, h);									// cropped height
+    NumberUtil::setByte(headerPCSEnd,4, fpsId);
+    NumberUtil::setWord(headerPCSEnd,5, subPicture->compNum+1);
+    for (int i = 0; i < headerPCSEnd.size(); ++i)
+    {
+        buf.replace(index++, headerPCSEnd[i]);
+    }
+
+    // write WDS
+    packetHeader.replace(10, 0x17);											// ID
+    timeStamp = (int)subPicture->endTime - windowInitTime;
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS of PCS)
+    NumberUtil::setWord(packetHeader, 11, headerWDS.size());				// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+    NumberUtil::setWord(headerWDS, 2, subPicture->getOfsX());
+    NumberUtil::setWord(headerWDS, 4, yOfs);
+    NumberUtil::setWord(headerWDS, 6, bm->getWidth());
+    NumberUtil::setWord(headerWDS, 8, bm->getHeight());
+    for (int i = 0; i < headerWDS.size(); ++i)
+    {
+        buf.replace(index++, headerWDS[i]);
+    }
+
+    // write END
+    packetHeader.replace(10, 0x80);										// ID
+    NumberUtil::setDWord(packetHeader, 2, dts);								// PTS (DTS of end PCS)
+    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
+    NumberUtil::setWord(packetHeader, 11, 0);								// size
+    for (int i = 0; i < packetHeader.size(); ++i)
+    {
+        buf.replace(index++, packetHeader[i]);
+    }
+
+    return buf;
 }
 
 double SupBD::getFps(int index)
@@ -826,7 +1188,7 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
                     uchar* pixels = bm->getImg()->bits();
                     for (int i = 0; i < size; ++i)
                     {
-                        pixels[ofs++] = 0; /*(byte)b;*/
+                        pixels[ofs++] = 0; /*(uchar)b;*/
                     }
                     xpos += size;
                 }

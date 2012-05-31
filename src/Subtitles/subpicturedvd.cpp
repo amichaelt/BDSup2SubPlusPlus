@@ -32,3 +32,17 @@ void SubPictureDVD::setOriginal()
     originalAlpha = alpha;
     originalPal = pal;
 }
+
+void SubPictureDVD::copyInfo(SubPicture *subPicture)
+{
+    width = subPicture->width;
+    height = subPicture->height;
+    startTime = subPicture->startTime;
+    endTime = subPicture->endTime;
+    isForced = subPicture->isForced;
+    compNum = subPicture->compNum;
+    setImageWidth(subPicture->getImageWidth());
+    setImageHeight(subPicture->getImageHeight());
+    setOfsX(subPicture->getOfsX());
+    setOfsY(subPicture->getOfsY());
+}

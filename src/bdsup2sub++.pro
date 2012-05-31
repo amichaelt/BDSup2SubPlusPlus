@@ -47,7 +47,9 @@ SOURCES += main.cpp\
     Tools/bitstream.cpp \
     Subtitles/supxml.cpp \
     Subtitles/subpicturexml.cpp \
-    Tools/quantizefilter.cpp
+    Tools/quantizefilter.cpp \
+    exportdialog.cpp \
+    Tools/numberutil.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -88,11 +90,14 @@ HEADERS  += bdsup2sub.h \
     Tools/bitstream.h \
     Subtitles/supxml.h \
     Subtitles/subpicturexml.h \
-    Tools/quantizefilter.h
+    Tools/quantizefilter.h \
+    exportdialog.h \
+    Tools/numberutil.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \
-    conversiondialog.ui
+    conversiondialog.ui \
+    exportdialog.ui
 
 RESOURCES += \
     bdsup2sub.qrc

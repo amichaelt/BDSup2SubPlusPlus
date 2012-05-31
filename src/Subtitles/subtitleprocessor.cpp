@@ -463,6 +463,9 @@ void SubtitleProcessor::readSubtitleStream()
     maxProgress = fileInfo.size();
     lastProgress = 0;
 
+    emit progressDialogTitleChanged("Loading");
+    emit progressDialogTextChanged("Loading subtitle stream");
+    emit progressDialogVisibilityChanged(true);
 
     if (isXML || streamID == StreamID::XML)
     {
@@ -490,6 +493,245 @@ void SubtitleProcessor::readSubtitleStream()
 
     emit progressDialogVisibilityChanged(false);
     emit loadingSubtitleFinished();
+}
+
+void SubtitleProcessor::createSubtitleStream()
+{
+    maxProgress = substream->getNumFrames();
+    lastProgress = 0;
+
+    emit progressDialogTitleChanged("Exporting");
+    if (outMode == OutputMode::VOBSUB)
+    {
+        emit progressDialogTextChanged("Exporting SUB/IDX");
+    }
+    else if (outMode == OutputMode::BDSUP)
+    {
+        emit progressDialogTextChanged("Exporting SUP(BD)");
+    }
+    else if (outMode == OutputMode::XML)
+    {
+        emit progressDialogTextChanged("Exporting XML/PNG");
+    }
+    else
+    {
+        emit progressDialogTextChanged("Exporting SUP/IFO");
+    }
+    emit progressDialogVisibilityChanged(true);
+    writeSub(fileName);
+    emit progressDialogVisibilityChanged(false);
+    emit writingSubtitleFinished();
+}
+
+void SubtitleProcessor::writeSub(QString filename)
+{
+    QFile* out = 0;
+    QVector<int> offsets;
+    QVector<int> timestamps;
+    int frameNum = 0;
+    int maxNum;
+    QString fn = "";
+    bool deleteObject = false;
+
+    // handling of forced subtitles
+    if (exportForced)
+    {
+        maxNum = countForcedIncluded();
+    }
+    else
+    {
+        maxNum = countIncluded();
+    }
+
+    QFileInfo fileInfo(filename);
+    bool exists;
+
+    // handle file name extensions depending on mode
+    if (outMode == OutputMode::VOBSUB)
+    {
+        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sub";
+        out = new QFile(filename);
+        if (!out->open(QIODevice::WriteOnly))
+        {
+            //TODO: add error handling
+            throw 10;
+        }
+        exists = out->exists();
+    }
+    else if (outMode == OutputMode::SUPIFO || outMode == OutputMode::BDSUP)
+    {
+        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sup";
+        out = new QFile(filename);
+        if (!out->open(QIODevice::WriteOnly))
+        {
+            //TODO: add error handling
+            throw 10;
+        }
+    }
+    else
+    {
+        fn = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName();
+        filename = fn + ".xml";
+    }
+    //TODO: print line
+    numberOfErrors = 0;
+    numberOfWarnings = 0;
+
+    // main loop
+    int offset = 0;
+    for (int i = 0; i < substream->getNumFrames(); ++i)
+    {
+        // for threaded version
+        if (isCancelled())
+        {
+            //TODO: error handling
+            throw 10;
+        }
+        // for threaded version (progress bar);
+        setCurrentProgress(i);
+        //
+        if (!subPictures[i]->exclude && (!exportForced || subPictures[i]->isForced))
+        {
+            if (outMode == OutputMode::VOBSUB)
+            {
+                offsets.push_back(offset);
+                convertSup(i, (frameNum / 2) + 1, maxNum);
+                subVobTrg->copyInfo(subPictures[i]);
+                if (subDVD == 0)
+                {
+                    subDVD = new SubDVD("", "", this);
+                    deleteObject = true;
+                }
+                QVector<uchar> buf = subDVD->createSubFrame(subVobTrg, trgBitmap);
+                out->write(QByteArray((char*)buf.data(), buf.size()));
+                offset += buf.size();
+                timestamps.push_back((int)subPictures[i]->startTime);
+            }
+            else if (outMode == OutputMode::SUPIFO)
+            {
+                convertSup(i, (frameNum / 2) + 1, maxNum);
+                subVobTrg->copyInfo(subPictures[i]);
+                if (supDVD == 0)
+                {
+                    supDVD = new SupDVD("", "", this);
+                    deleteObject = true;
+                }
+                QVector<uchar> buf = supDVD->createSupFrame(subVobTrg, trgBitmap);
+                out->write(QByteArray((char*)buf.data(), buf.size()));
+            }
+            else if (outMode == OutputMode::BDSUP)
+            {
+                subPictures[i]->compNum = frameNum;
+                convertSup(i, (frameNum / 2) + 1, maxNum);
+                if (supBD == 0)
+                {
+                    supBD = new SupBD("", this);
+                    deleteObject = true;
+                }
+                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal);
+                out->write(QByteArray((char*)buf.data(), buf.size()));
+            }
+            else
+            {
+                // Xml
+                convertSup(i, (frameNum / 2) + 1, maxNum);
+                if (supXML == 0)
+                {
+                    supXML = new SupXML("", this);
+                    deleteObject = true;
+                }
+                QString fnp = supXML->getPNGname(fn, i + 1);
+                trgBitmap->getImage(trgPal)->save(fnp, "PNG");
+            }
+            frameNum += 2;
+        }
+    }
+    if (out != 0 && out->isOpen())
+    {
+        out->close();
+    }
+
+    bool importedDVDPalette;
+    if (inMode == InputMode::VOBSUB || inMode == InputMode::SUPIFO)
+    {
+        importedDVDPalette = true;
+    }
+    else
+    {
+        importedDVDPalette = false;
+    }
+
+    Palette* trgPallete = 0;
+    if (outMode == OutputMode::VOBSUB)
+    {
+        // VobSub - write IDX
+        /* return offets as array of ints */
+        QVector<int> ofs(offsets.size());
+        for (int i = 0; i < ofs.size(); ++i)
+        {
+            ofs.replace(i, offsets[i]);
+        }
+        QVector<int> ts(timestamps.size());
+        for (int i = 0; i < ts.size(); ++i)
+        {
+            ts.replace(i, timestamps[i]);
+        }
+        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".idx";
+        //TODO: print line
+        if (!importedDVDPalette || paletteMode != PaletteMode::KEEP_EXISTING)
+        {
+            trgPallete = currentDVDPalette;
+        }
+        else
+        {
+            trgPallete = currentSourceDVDPalette;
+        }
+        subDVD->writeIdx(filename, subPictures[0], ofs, ts, trgPallete);
+        if (deleteObject)
+        {
+            delete subDVD;
+        }
+    }
+    else if (outMode == OutputMode::XML)
+    {
+        //TODO: print line
+        supXML->writeXml(filename, subPictures);
+        if (deleteObject)
+        {
+            delete supXML;
+        }
+    }
+    else if (outMode == OutputMode::SUPIFO)
+    {
+        // SUP/IFO - write IFO
+        if (!importedDVDPalette || paletteMode != PaletteMode::KEEP_EXISTING)
+        {
+            trgPallete = currentDVDPalette;
+        }
+        else
+        {
+            trgPallete = currentSourceDVDPalette;
+        }
+        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
+        //TODO: print line
+        supDVD->writeIfo(filename, subPictures[0], trgPallete);
+        if (deleteObject)
+        {
+            delete supDVD;
+        }
+    }
+    else if (outMode == OutputMode::BDSUP && deleteObject)
+    {
+        delete supBD;
+    }
+
+    // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
+    if (trgPallete != 0 && writePGCEditPal)
+    {
+        QString fnp = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".txt";
+        //TODO: print line
+        writePGCEditPalette(fnp, trgPallete);
+    }
 }
 
 void SubtitleProcessor::moveAll()
@@ -888,13 +1130,10 @@ void SubtitleProcessor::addRecent(QString fileName)
 {
     if (recentFiles.indexOf(fileName) == -1)
     {
-        if (recentFiles.size() > 0 && recentFiles.size() < 5)
+        recentFiles.insert(recentFiles.begin(), fileName);
+        if (recentFiles.size() > 5)
         {
-            recentFiles.replaceInStrings(recentFiles.at(0), fileName);
-        }
-        else
-        {
-            recentFiles << fileName;
+            recentFiles.removeLast();
         }
     }
 }
@@ -1329,6 +1568,49 @@ void SubtitleProcessor::readSup()
     }
 }
 
+int SubtitleProcessor::countForcedIncluded()
+{
+    int n = 0;
+    for (auto subPicture : subPictures)
+    {
+        if (subPicture->isForced && !subPicture->exclude)
+        {
+            ++n;
+        }
+    }
+    return n;
+}
+
+int SubtitleProcessor::countIncluded()
+{
+    int n = 0;
+    for (auto subPicture : subPictures)
+    {
+        if (!subPicture->exclude)
+        {
+            ++n;
+        }
+    }
+    return n;
+}
+
+void SubtitleProcessor::writePGCEditPalette(QString filename, Palette *palette)
+{
+    QFile out(filename);
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        //TODO: error handling
+        throw 10;
+    }
+    out.write("# Palette file for PGCEdit - colors given as R,G,B components (0..255)\n");
+    for (int i = 0; i < palette->getSize(); ++i)
+    {
+        QVector<int> rgb = palette->getRGB(i);
+        out.write(QString("Color " + QString::number(i) + "=" + QString::number(rgb[0]) + ", " + QString::number(rgb[1]) + ", " + QString::number(rgb[2]) + "\n").toAscii());
+    }
+    out.close();
+}
+
 Resolution SubtitleProcessor::getResolution(QString string)
 {
     if (string == "480i")
@@ -1356,19 +1638,19 @@ QVector<int> SubtitleProcessor::getResolutions(Resolution resolution)
     {
         return resolutions[0];
     }
-    if (resolution == Resolution::PAL)
+    else if (resolution == Resolution::PAL)
     {
         return resolutions[1];
     }
-    if (resolution == Resolution::HD_720)
+    else if (resolution == Resolution::HD_720)
     {
         return resolutions[2];
     }
-    if (resolution == Resolution::HD_1440x1080)
+    else if (resolution == Resolution::HD_1440x1080)
     {
         return resolutions[3];
     }
-    if (resolution == Resolution::HD_1080)
+    else
     {
         return resolutions[4];
     }

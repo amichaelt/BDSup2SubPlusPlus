@@ -104,12 +104,10 @@ void SupXML::decode(int index)
     // if this failed, assume RGB image and quantize palette
     if (palette == 0)
     {
-        // grab int array (ARGB)
-        QRgb* pixels = (QRgb*)image->bits();
         // quantize image
         QuantizeFilter qf;
         bitmap = new Bitmap(image->width(), image->height());
-        QVector<int> ct = qf.quantize(pixels, bitmap->getImg()->bits(), width, height, 255, false, false);
+        QVector<QRgb> ct = qf.quantize(image, bitmap->getImg(), width, height, 255, false, false);
         int size = ct.size();
         if (size > 255)
         {
@@ -219,6 +217,74 @@ void SupXML::readAllImages()
     }
     //TODO: print message;
     int num = numForcedFrames;
+}
+
+QString SupXML::getPNGname(QString filename, int idx)
+{
+    QFileInfo info(filename);
+    return QString("%1/%2_%3.png").arg(info.absolutePath()).arg(info.completeBaseName()).arg(QString::number(idx), 4, QChar('0'));
+}
+
+void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
+{
+    double fps = subtitleProcessor->getFPSTrg();
+    double fpsXml = XmlFps(fps);
+    long t;
+    QFile out(filename);
+    QString name = QFileInfo(filename).completeBaseName();
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        //TODO: error handling
+        throw 10;
+    }
+    out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    out.write("<BDN Version=\"0.93\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"BD-03-006-0093b BDN File Format.xsd\">\n");
+    out.write("  <Description>\n");
+    out.write(QString("    <Name Title=\"" + name + "\" Content=\"\"/>\n").toAscii());
+    out.write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toAscii());
+    QString res = subtitleProcessor->getResolutionNameXml((int)subtitleProcessor->getOutputResolution());
+    out.write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 5) + "\" DropFrame=\"False\"/>\n").toAscii());
+    t = pics[0]->startTime;
+    if (fps != fpsXml)
+    {
+        t = ((t * 2000) + 1001) / 2002;
+    }
+    QString ts = TimeUtil::ptsToTimeStrXml(t, fpsXml);
+    t = pics[pics.size() - 1]->endTime;
+    if (fps != fpsXml)
+    {
+        t = ((t * 2000) + 1001) / 2002;
+    }
+    QString te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
+    out.write(QString("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + QString::number(pics.size()) + "\"/>\n").toAscii());
+    out.write("  </Description>\n");
+    out.write("  <Events>\n");
+    for (int idx = 0; idx < pics.size(); ++idx)
+    {
+        SubPicture* p = pics[idx];
+        t = p->startTime;
+        if (fps != fpsXml)
+        {
+            t = ((t * 2000) + 1001) / 2002;
+        }
+        ts = TimeUtil::ptsToTimeStrXml(t, fpsXml);
+        t = p->endTime;
+        if (fps != fpsXml)
+        {
+            t = ((t * 2000) + 1001) / 2002;
+        }
+        te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
+        QString forced = p->isForced ? "True": "False";
+        out.write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toAscii());
+
+        QString pname = QFileInfo(getPNGname(name, idx + 1)).fileName();
+        out.write(QString("      <Graphic Width=\"" + QString::number(p->getImageWidth()) + "\" Height=\"" + QString::number(p->getImageHeight()) +
+                          "\" X=\"" + QString::number(p->getOfsX()) + "\" Y=\"" + QString::number(p->getOfsY()) + "\">" + pname + "</Graphic>\n").toAscii());
+        out.write("    </Event>\n");
+    }
+    out.write("  </Events>\n");
+    out.write("</BDN>\n");
+    out.close();
 }
 
 double SupXML::XmlFps(double fps)

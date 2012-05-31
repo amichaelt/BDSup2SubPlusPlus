@@ -41,8 +41,12 @@ public:
     
 private slots:
     void on_cancelButton_clicked();
-
     void on_okButton_clicked();
+    void on_scaleCheckBox_toggled(bool checked);
+    void on_fixTooShortFramesCheckBox_toggled(bool checked);
+    void on_changeFrameRateCheckBox_toggled(bool checked);
+    void on_resetButton_clicked();
+    void on_convertResolutionCheckBox_toggled(bool checked);
 
 private:
     Ui::ConversionDialog *ui;
@@ -68,6 +72,8 @@ private:
     bool fpsSrcCertain;
     SetState forcedState;
     bool moveCaptions;
+
+    void fillDialog();
 };
 
 #endif // CONVERSIONDIALOG_H

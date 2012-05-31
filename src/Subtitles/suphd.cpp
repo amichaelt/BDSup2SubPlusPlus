@@ -244,6 +244,7 @@ void SupHD::readAllSupFrames()
         index = masterIndex + packetSize;
         subPictures.push_back(pic);
     }
+    emit currentProgressChanged(bufsize);
 }
 
 void SupHD::decode(SubPictureHD *subPicture)

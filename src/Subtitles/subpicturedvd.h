@@ -30,6 +30,7 @@ public:
     SubPictureDVD();
 
     void setOriginal();
+    void copyInfo(SubPicture* subPicture);
 
     long offset = 0;
     int rleSize = 0;

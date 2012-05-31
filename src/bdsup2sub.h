@@ -25,6 +25,7 @@
 class SubtitleProcessor;
 class ProgressDialog;
 class ConversionDialog;
+class ExportDialog;
 
 namespace Ui {
 class BDSup2Sub;
@@ -51,6 +52,7 @@ private:
     Ui::BDSup2Sub *ui;
     ProgressDialog *progressDialog = 0;
     ConversionDialog *conversionDialog = 0;
+    ExportDialog *exportDialog = 0;
     QString loadPath = "";
     QString saveFileName = "";
     QString savePath = "";
@@ -68,16 +70,21 @@ private:
     void enableCoreComponents(bool enable);
     void enableVobSubComponents(bool enable);
     void enableVobSubMenuCombo();
-    void loadSubtitleFile();
     void closeSubtitle();
     void updateRecentMenu();
     void refreshSrcFrame(int index);
     void refreshTrgFrame(int index);
+    void connectSubtitleProcessor();
+    void loadSubtitleFile();
 
 private slots:
     void openFile();
+    void saveFile();
+    void closeFile();
+    void onRecentItemClicked();
     void on_subtitleNumberComboBox_currentIndexChanged(int index);
-    void on_subtitleNumberComboBox_editTextChanged(const QString &arg1);
+    void on_subtitleNumberComboBox_editTextChanged(const QString &index);
+    void on_outputFormatComboBox_currentIndexChanged(const QString &format);
 };
 
 #endif // BDSUP2SUB_H

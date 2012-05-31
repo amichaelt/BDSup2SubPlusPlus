@@ -41,6 +41,7 @@ public:
     virtual int getLanguageIdx() = 0;
     void decode(SubPictureDVD* pic, SubtitleProcessor* subtitleProcessor);
     static Palette* decodePalette(SubPictureDVD *pic, Palette *palette, int alphaCrop);
+    QVector<uchar> encodeLines(Bitmap* bitmap, bool even);
 
 protected:
     Palette *srcPalette;

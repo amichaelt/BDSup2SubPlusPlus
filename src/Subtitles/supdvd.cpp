@@ -19,6 +19,7 @@
 #include "supdvd.h"
 #include "subtitleprocessor.h"
 #include "Tools/filebuffer.h"
+#include "Tools/numberutil.h"
 #include "imageobjectfragment.h"
 #include "subpicturedvd.h"
 #include "bitmap.h"
@@ -275,6 +276,76 @@ void SupDVD::readIfo()
     }
 }
 
+void SupDVD::writeIfo(QString filename, SubPicture *subPicture, Palette *palette)
+{
+    QVector<uchar> buf(0x1800);
+    int index = 0;
+
+    // video attributes
+    int vidAttr;
+    if (subPicture->height == 480)
+    {
+        vidAttr = 0x4f01; // NTSC
+    }
+    else
+    {
+        vidAttr = 0x5f01; // PAL
+    }
+
+    // VTSI_MAT
+
+    NumberUtil::setString(buf, index, "DVDVIDEO-VTS");
+    NumberUtil::setDWord(buf, index + 0x12, 0x00000004);            // last sector of title set
+    NumberUtil::setDWord(buf, index + 0x1C, 0x00000004);            // last sector of IFO
+    NumberUtil::setDWord(buf, index + 0x80, 0x000007ff);            // end byte address of VTS_MAT
+    NumberUtil::setDWord(buf, index + 0xC8, 0x00000001);            // start sector of Title Vob (*2048 -> 0x0800) -> PTT_SRPTI
+    NumberUtil::setDWord(buf, index + 0xCC, 0x00000002);            // start sector of Titles&Chapters table (*2048 -> 0x1000) -> VTS_PGCITI
+
+    NumberUtil::setWord(buf, index + 0x100, vidAttr);               // video attributes
+    NumberUtil::setWord(buf, index + 0x200, vidAttr);               // video attributes
+
+    QString l = subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][1];
+    NumberUtil::setWord(buf, index + 0x254, 1);                     // number of subtitle streams
+    NumberUtil::setByte(buf, index + 0x256, 1);                     // subtitle attributes
+    NumberUtil::setByte(buf, index + 0x258, l.at(0).toAscii());
+    NumberUtil::setByte(buf, index + 0x259, l.at(1).toAscii());
+
+    // PTT_SRPTI
+    index = 0x0800;
+    NumberUtil::setWord(buf, index, 0x0001);                        // Number of TTUs
+    NumberUtil::setWord(buf, index + 0x04, 0x000f);                 // End byte of PTT_SRPT table
+    NumberUtil::setDWord(buf, index + 0x04, 0x0000000C);            // TTU_1: starting byte
+    NumberUtil::setWord(buf, index + 0x0C, 0x0001);                 // PTT_1: program chain number PGCN
+    NumberUtil::setWord(buf, index + 0x0e, 0x0001);                 // PTT_1: program number PG
+
+    // VTS_PGCITI/VTS_PTT_SRPT
+    index = 0x1000;
+    NumberUtil::setWord(buf, index, 0x0001);                        // Number of VTS_PGCI_SRP (2 bytes, 2 bytes reserved)
+    NumberUtil::setDWord(buf, index + 0x04, 0x00000119);            // end byte of VTS_PGCI_SRP table (281)
+    NumberUtil::setDWord(buf, index + 0x08, 0x81000000);            // VTS_PGC_1_ category mask. entry PGC (0x80), title number 1 (0x01), Category 0,...
+    NumberUtil::setDWord(buf, index + 0x0C, 0x00000010);            // VTS_PGCI start byte (16)
+
+    // VTS_PGC_1
+    index = 0x1010;
+    NumberUtil::setByte(buf, index + 0x02, 0x01);                   // Number of Programs
+    NumberUtil::setByte(buf, index + 0x03, 0x01);                   // Number of Cells
+    for (int i = 0; i < 16; ++i)
+    {
+        QVector<int> ycbcr = palette->getYCbCr(i);
+        NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 1, ycbcr[0]);
+        NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 2, ycbcr[1]);
+        NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 3, ycbcr[2]);
+    }
+    QFile out(filename);
+    if (!out.open(QIODevice::WriteOnly))
+    {
+        //TODO: error handling
+        throw 10;
+    }
+    out.write((char*)buf.data(), buf.size());
+    out.close();
+}
+
 void SupDVD::readAllSupFrames()
 {
     long ofs = 0;
@@ -294,6 +365,131 @@ void SupDVD::readAllSupFrames()
 
         ofs = readSupFrame(ofs);
     } while (ofs < size);
+    emit currentProgressChanged(i);
+}
+
+QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
+{
+    /* create RLE buffers */
+    QVector<uchar> even = encodeLines(bitmap, true);
+    QVector<uchar> odd  = encodeLines(bitmap, false);
+    int tmp;
+
+    int forcedOfs;
+    int controlHeaderLen;
+    if (subPicture->isForced)
+    {
+        forcedOfs = 0;
+        controlHeader.replace(2, 0x01); // display
+        controlHeader.replace(3, 0x00); // forced
+        controlHeaderLen = controlHeader.size();
+
+    }
+    else
+    {
+        forcedOfs = 1;
+        controlHeader.replace(2, 0x00); // part of offset
+        controlHeader.replace(3, 0x01); // display
+        controlHeaderLen = controlHeader.size() - 1;
+    }
+
+    // fill out all info but the offets (determined later)
+    int sizeRLE = even.size() + odd.size();
+    int bufSize = 10 + 4 + controlHeaderLen + sizeRLE;
+    QVector<uchar> buf(bufSize);
+
+    // write header
+    buf.replace(0, 0x53);
+    buf.replace(1, 0x50);
+    // write PTS (4 bytes of 8 bytes used) - little endian!
+    int pts = (int)subPicture->startTime;
+    buf.replace(5, (uchar)(pts >> 24));
+    buf.replace(4, (uchar)(pts >> 16));
+    buf.replace(3, (uchar)(pts >> 8));
+    buf.replace(2, (uchar)pts);
+
+    // write packet size
+    tmp = controlHeaderLen + sizeRLE + 4; // 4 for the size and the offset
+    buf.replace(10, (uchar)(tmp >> 8));
+    buf.replace(11, (uchar)(tmp));
+
+    // write offset to control header +
+    tmp = sizeRLE + 2; // 2 for the offset
+    buf.replace(12, (uchar)(tmp >> 8));
+    buf.replace(13, (uchar)(tmp));
+
+    // copy rle buffers
+    int ofs = 14;
+    for (int i = 0; i < even.size(); ++i)
+    {
+        buf.replace(ofs++, even[i]);
+    }
+    for (int i = 0; i < odd.size(); ++i)
+    {
+        buf.replace(ofs++, odd[i]);
+    }
+
+    /* create control header */
+    /* palette (store reversed) */
+    controlHeader.replace(1 + 4, (uchar)(((subPicture->pal[3] & 0xf) << 4) | (subPicture->pal[2] & 0x0f)));
+    controlHeader.replace(1 + 5, (uchar)(((subPicture->pal[1] & 0xf) << 4) | (subPicture->pal[0] & 0x0f)));
+    /* alpha (store reversed) */
+    controlHeader.replace(1 + 7, (uchar)(((subPicture->alpha[3] & 0xf) << 4) | (subPicture->alpha[2] & 0x0f)));
+    controlHeader.replace(1 + 8, (uchar)(((subPicture->alpha[1] & 0xf) << 4) | (subPicture->alpha[0] & 0x0f)));
+
+    /* coordinates of subtitle */
+    controlHeader.replace(1 + 10, (uchar)((subPicture->getOfsX() >> 4) & 0xff));
+    tmp = subPicture->getOfsX()+bitmap->getWidth()-1;
+    controlHeader.replace(1 + 11, (uchar)(((subPicture->getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
+    controlHeader.replace(1 + 12, (uchar)(tmp & 0xff));
+
+    int yOfs = subPicture->getOfsY() - subtitleProcessor->getCropOfsY();
+    if (yOfs < 0)
+    {
+        yOfs = 0;
+    }
+    else
+    {
+        int yMax = (subPicture->height - subPicture->getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
+        if (yOfs > yMax)
+        {
+            yOfs = yMax;
+        }
+    }
+
+    controlHeader.replace(1 + 13, (uchar)((yOfs >> 4) & 0xff));
+    tmp = (yOfs + bitmap->getHeight()) - 1;
+    controlHeader.replace(1 + 14, (uchar)(((yOfs & 0xf) << 4) | ((tmp >> 8) & 0xf)));
+    controlHeader.replace(1 + 15, (uchar)(tmp & 0xff));
+
+    /* offset to even lines in rle buffer */
+    controlHeader.replace(1 + 17, 0x00); /* 2 bytes subpicture size and 2 bytes control header ofs */
+    controlHeader.replace(1 + 18, 0x04); /* note: SubtitleCreator uses 6 and adds 0x0000 in between */
+
+    /* offset to odd lines in rle buffer */
+    tmp = even.size() + controlHeader[1 + 18];
+    controlHeader.replace(1 + 19, (uchar)((tmp >> 8) & 0xff));
+    controlHeader.replace(1 + 20, (uchar)(tmp & 0xff));
+
+    /* display duration in frames */
+    tmp = (int)((subPicture->endTime-subPicture->startTime) / 1024); // 11.378ms resolution????
+    controlHeader.replace(1 + 22, (uchar)((tmp >> 8) & 0xff));
+    controlHeader.replace(1 + 23, (uchar)(tmp & 0xff));
+
+    /* offset to end sequence - 22 is the offset of the end sequence */
+    tmp = sizeRLE + 22 + (subPicture->isForced ? 1 : 0) + 4;
+    controlHeader.replace(forcedOfs + 0, (uchar)((tmp >> 8) & 0xff));
+    controlHeader.replace(forcedOfs + 1, (uchar)(tmp & 0xff));
+    controlHeader.replace(1 + 24, (uchar)((tmp >> 8) & 0xff));
+    controlHeader.replace(1 + 25, (uchar)(tmp & 0xff));
+
+    // write control header
+    for (int i = 0; i < controlHeaderLen; ++i)
+    {
+        buf.replace(ofs++, controlHeader[forcedOfs + i]);
+    }
+
+    return buf;
 }
 
 long SupDVD::readSupFrame(long ofs)

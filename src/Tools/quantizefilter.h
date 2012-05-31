@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <QVector>
 #include <QColor>
+#include <QImage>
 
 /**
  * Floyd-Steinberg dithering matrix.
@@ -32,16 +33,53 @@ static QVector<int> matrix = {
 
 class QuantizeFilter
 {
-public:
-    QuantizeFilter();
+    class OctTreeQuantizer
+    {
+        struct OctTreeNode
+        {
+            int children = 0;
+            int level = 0;
+            OctTreeNode* parent = 0;
+            QVector<OctTreeNode*> leaf = QVector<OctTreeNode*>(16);
+            bool isLeaf = false;
+            int count = 0;
+            int totalAlpha = 0;
+            int totalRed = 0;
+            int totalGreen = 0;
+            int totalBlue = 0;
+            int index = 0;
+        };
 
+    public:
+        void setup(int numColors);
+        void addPixels(QImage* image);
+        int getIndexForColor(QRgb argb);
+        QVector<QRgb> buildColorTable();
+        void buildColorTable(QVector<QRgb> inPixels, QVector<QRgb>& table);
+
+    private:
+        static constexpr int MAX_LEVEL = 5;
+        int nodes = 0;
+        OctTreeNode* root = new OctTreeNode;
+        int maximumColors = 256;
+        int reduceColors = 512;
+        int colors = 0;
+        QVector<QVector<OctTreeNode*> > colorList = QVector<QVector<OctTreeNode*> >(MAX_LEVEL + 1);
+
+        void insertColor(QRgb rgb);
+        void reduceTree(int numColors);
+        int buildColorTable(OctTreeNode* node, QVector<QRgb>& table, int index);
+
+    };
+
+public:
     void setNumColors(int numColors);
     int getNumColors() { return numColors; }
     void setDither(bool dither) { this->dither = dither; }
     bool getDither() { return dither; }
     void setSerpentine(bool serpentine) { this->serpentine = serpentine; }
     bool getSerpentine() { return serpentine; }
-    QVector<int> quantize(QRgb* inPixels, uchar* outPixels, int width, int height,
+    QVector<QRgb> quantize(QImage *inImage, QImage *outImage, int width, int height,
                            int numColors, bool dither, bool serpentine);
     int clamp(int c);
 

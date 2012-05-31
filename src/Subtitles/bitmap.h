@@ -53,6 +53,8 @@ public:
     void fillRect(int x, int y, int width, int height, int color);
     QImage* getImg();
     void setImg(QImage* newImage);
+    int getHighestColorIndex(Palette* pal);
+    QImage* toARGB(Palette* pal);
 
 private:
     int width, height;

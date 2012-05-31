@@ -256,6 +256,7 @@ public:
     int getCropOfsY() { return cropOfsY; }
     int setCropOfsY(int ofs) { return cropOfsY = ofs; }
     OutputMode getOutputMode() { return outMode; }
+    void setOutputMode(OutputMode mode) { outMode = mode; }
     InputMode getInputMode() { return inMode; }
     bool getMoveCaptions() { return moveCaptions; }
     bool getConvertResolution() { return convertResolution; }
@@ -263,12 +264,16 @@ public:
     Resolution getOutputResolution() { return resolutionTrg; }
     SubPicture* getSubPictureSrc(int index);
     int getDelayPTS() { return delayPTS; }
+    int getDelayPTSDefault() { return delayPTSdefault; }
     long syncTimePTS(long timeStamp, double fps);
     int getMinTimePTS() { return minTimePTS; }
+    int getMinTimePTSDefault() { return minTimePTSdefault; }
     double getFPSTrg() { return fpsTrg; }
     bool getConvertFPS() { return convertFPS; }
     bool getApplyFreeScale() { return applyFreeScale; }
+    bool getApplyFreeScaleDefault() { return applyFreeScaleDefault; }
     bool getFixShortFrames() { return fixShortFrames; }
+    bool getFixShortFramesDefault() { return fixShortFramesDefault; }
     double getFPSSrc() { return fpsSrc; }
     double getFreeScaleX() { return freeScaleX; }
     double getFreeScaleY() { return freeScaleY; }
@@ -305,6 +310,10 @@ public:
     double getFPS(QString string);
     Resolution getResolution(QString string);
     QVector<int> getResolutions(Resolution resolution);
+    void writeSub(QString filename);
+    int getLanguageIdx() { return languageIdx; }
+    void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
+    QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
 
 signals:
     void windowTitleChanged(const QString &newTitle);
@@ -313,12 +322,14 @@ signals:
     void progressDialogValueChanged(int value);
     void progressDialogVisibilityChanged(bool visible);
     void loadingSubtitleFinished();
+    void writingSubtitleFinished();
     void moveAllFinished();
 
 public slots:
     void setMaxProgress(int maxProgress);
     void setCurrentProgress(int currentProgress);
     void readSubtitleStream();
+    void createSubtitleStream();
     void moveAll();
     void cancelLoading();
 
@@ -373,6 +384,7 @@ private:
     bool fixZeroAlpha = false;
     bool moveCaptions = false;
     bool cliMode = false;
+    bool exportForced = false;
     static constexpr bool applyFreeScaleDefault = false;
     bool applyFreeScale = applyFreeScaleDefault;
     static constexpr bool convertFPSdefault = false;
@@ -385,6 +397,7 @@ private:
     bool paletteModeSet = false;
     bool keepFps = false;
     bool fpsTrgSet = false;
+    bool writePGCEditPal = false;
     static constexpr PaletteMode paletteModeDefault = PaletteMode::CREATE_NEW;
     PaletteMode paletteMode = paletteModeDefault;
     RunType runType;
@@ -409,6 +422,9 @@ private:
     void readXml();
     void readDVDSubStream(StreamID streamID, bool isVobSub);
     void readSup();
+    int countForcedIncluded();
+    int countIncluded();
+    void writePGCEditPalette(QString filename, Palette* palette);
 };
 
 #endif // SUBTITLEPROCESSOR_H

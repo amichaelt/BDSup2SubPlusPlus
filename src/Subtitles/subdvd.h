@@ -63,8 +63,10 @@ public:
     Bitmap* decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
 
     void readIdx();
+    void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette* palette);
     void readSubFrame(SubPictureDVD* pic, long endOfs);
     void readAllSubFrames();
+    QVector<uchar> createSubFrame(SubPictureDVD* subPicture, Bitmap* bitmap);
 
 signals:
     void maxProgressChanged(int maxProgress);
@@ -79,14 +81,14 @@ private:
     void decode(SubPictureDVD* pic);
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage *trg, int trgOfs, int width, int maxPixels);
 
-    const QVector<uchar> packHeader = {
+    QVector<uchar> packHeader = {
         0x00, 0x00, 0x01, 0xba,                         // 0:  0x000001ba - packet ID
         0x44, 0x02, 0xc4, 0x82, 0x04, 0xa9,             // 4:  system clock reference
         0x01, 0x89, 0xc3,                               // 10: multiplexer rate
         0xf8,                                           // 13: stuffing info
     };
 
-    const QVector<uchar> headerFirst = {               // header only in first packet
+    QVector<uchar> headerFirst = {                      // header only in first packet
         0x00, 0x00, 0x01, 0xbd,                         // 0: 0x000001bd - sub ID
         0x00, 0x00,                                     // 4: packet length
         0x81, 0x80,                                     // 6:  packet type
@@ -97,7 +99,7 @@ private:
         0x00, 0x00,                                     // 17: offset to control header
     };
 
-    const QVector<uchar> headerNext = {                // header in following packets
+    QVector<uchar> headerNext = {                       // header in following packets
         0x00, 0x00, 0x01, 0xbd,                         // 0: 0x000001bd - sub ID
         0x00, 0x00,                                     // 4: packet length
         0x81, 0x00,                                     // 6: packet type
@@ -105,7 +107,7 @@ private:
         0x20                                            // 9: Stream ID
     };
 
-    const QVector<uchar> controlHeader = {
+    QVector<uchar> controlHeader = {
         0x00,                                           //  dummy byte (for shifting when forced)
         0x00, 0x00,                                     //  0: offset to end sequence
         0x01,                                           //  2: CMD 1: start displaying
