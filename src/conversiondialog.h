@@ -24,6 +24,8 @@
 #include <QDialog>
 
 class SubtitleProcessor;
+class QDoubleValidator;
+class QRegExpValidator;
 
 namespace Ui {
 class ConversionDialog;
@@ -47,6 +49,14 @@ private slots:
     void on_changeFrameRateCheckBox_toggled(bool checked);
     void on_resetButton_clicked();
     void on_convertResolutionCheckBox_toggled(bool checked);
+    void on_applyMoveAllSettingsCheckBox_toggled(bool checked);
+    void on_resolutionComboBox_currentIndexChanged(int index);
+    void on_sourceFramerateComboBox_editTextChanged(const QString &arg1);
+    void on_targetFramerateComboBox_editTextChanged(const QString &arg1);
+    void on_scaleXLineEdit_textChanged(const QString &arg1);
+    void on_scaleYLineEdit_textChanged(const QString &arg1);
+    void on_delayLineEdit_textChanged(const QString &arg1);
+    void on_minTimeLineEdit_textChanged(const QString &arg1);
 
 private:
     Ui::ConversionDialog *ui;
@@ -55,22 +65,27 @@ private:
     QColor errBackground = QColor(0xffe1acac);
     QColor warnBackground = QColor(0xffffffc0);
     QColor okBackground = QColor(0xff000000);
+    QRegExpValidator* fpsSrcValidator;
+    QRegExpValidator* fpsTrgValidator;
+    QDoubleValidator* scaleXValidator;
+    QDoubleValidator* scaleYValidator;
+    QDoubleValidator* delayPTSValidator;
+    QDoubleValidator* minTimePTSValidator;
 
     Resolution resolution;
     int delayPTS;
-    int minTimePTS;
+    int minTimePTS = 520;
     bool changeFPS;
     bool changeResolution;
     bool fixShortFrames;
     double fpsSrc;
     double fpsTrg;
-    bool cancel;
     bool isReady = false;
     bool changeScale;
-    double scaleX;
-    double scaleY;
+    double scaleX = 1;
+    double scaleY = 1;
     bool fpsSrcCertain;
-    SetState forcedState;
+    SetState forcedState = SetState::KEEP;
     bool moveCaptions;
 
     void fillDialog();

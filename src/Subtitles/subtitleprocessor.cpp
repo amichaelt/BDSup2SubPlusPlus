@@ -343,6 +343,204 @@ void SubtitleProcessor::scanSubtitles()
     }
 }
 
+void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgOld, int delayOld, bool convertFpsOld, double fsXOld, double fsYOld)
+{
+    SubPicture* picOld;
+    SubPicture* picSrc;
+    double factTS = 1.0;
+    double factX;
+    double factY;
+    double fsXNew = 1.0, fsYNew = 1.0;
+
+    if (applyFreeScale)
+    {
+        fsXNew = freeScaleX;
+        fsYNew = freeScaleY;
+    }
+
+    if (convertFPS && !convertFpsOld)
+    {
+        factTS = fpsSrc / fpsTrg;
+    }
+    else if (!convertFPS && convertFpsOld)
+    {
+        factTS = fpsTrgOld / fpsSrc;
+    }
+    else if (convertFPS && convertFpsOld && (fpsTrg != fpsTrgOld))
+    {
+        factTS = fpsTrgOld / fpsTrg;
+    }
+    else
+    {
+        factTS = 1.0;
+    }
+
+    // change target resolution to source resolution if no conversion is needed
+    if (!convertResolution && getNumberOfFrames() > 0)
+    {
+        resolutionTrg = getResolution(getSubPictureSrc(0)->width, getSubPictureSrc(0)->height);
+    }
+
+    if (oldResolution != resolutionTrg)
+    {
+        QVector<int> rOld = getResolution(oldResolution);
+        QVector<int> rNew = getResolution(resolutionTrg);
+        factX = (double)rNew[0] / (double)rOld[0];
+        factY = (double)rNew[1] / (double)rOld[1];
+    }
+    else
+    {
+        factX = 1.0;
+        factY = 1.0;
+    }
+
+    // first run: clone source subpics, apply speedup/down,
+    for (int i = 0; i < subPictures.size(); ++i)
+    {
+        picOld = subPictures[i];
+        picSrc = substream->getSubPicture(i);
+        subPictures[i] = picOld->copy();
+
+        // set forced flag
+        switch ((int)forceAll)
+        {
+        case (int)SetState::SET:
+        {
+            subPictures[i]->isForced = true;
+        } break;
+        case (int)SetState::CLEAR:
+        {
+            subPictures[i]->isForced = false;
+        } break;
+        }
+
+        long ts = picOld->startTime;
+        long te = picOld->endTime;
+        // copy time stamps and apply speedup/speeddown
+        if (factTS == 1.0)
+        {
+            subPictures[i]->startTime = (ts - delayOld) + delayPTS;
+            subPictures[i]->endTime = (te - delayOld) + delayPTS;
+        }
+        else
+        {
+            subPictures[i]->startTime= (long)(((ts * factTS) + 0.5) - delayOld) + delayPTS;
+            subPictures[i]->endTime = (long)(((te * factTS) + 0.5) - delayOld) + delayPTS;
+        }
+        // synchronize to target frame rate
+        subPictures[i]->startTime = syncTimePTS(subPictures[i]->startTime, fpsTrg);
+        subPictures[i]->endTime = syncTimePTS(subPictures[i]->endTime, fpsTrg);
+        // adjust image sizes and offsets
+        // determine scaling factors
+        double scaleX;
+        double scaleY;
+        if (convertResolution)
+        {
+            subPictures[i]->width = getResolution(resolutionTrg)[0];
+            subPictures[i]->height = getResolution(resolutionTrg)[1];
+            scaleX = (double)subPictures[i]->width / picSrc->width;
+            scaleY = (double)subPictures[i]->height / picSrc->height;
+        }
+        else
+        {
+            subPictures[i]->width = picSrc->width;
+            subPictures[i]->height = picSrc->height;
+            scaleX = 1.0;
+            scaleY = 1.0;
+        }
+
+        int w = (int)(((picSrc->getImageWidth() * scaleX) * fsXNew) + 0.5);
+        if (w < minDim)
+        {
+            w = picSrc->getImageWidth();
+        }
+        else if (w > subPictures[i]->width)
+        {
+            w = subPictures[i]->width;
+            fsXNew = ((double)w / (double)picSrc->getImageWidth()) / scaleX;
+        }
+        int h = (int)(((picSrc->getImageHeight() * scaleY) * fsYNew) + 0.5);
+        if (h < minDim)
+        {
+            h = picSrc->getImageHeight();
+        }
+        else if (h > subPictures[i]->height)
+        {
+            h = subPictures[i]->height;
+            fsYNew = ((double)h / (double)picSrc->getImageHeight()) / scaleY;
+        }
+
+        subPictures[i]->setImageWidth(w);
+        subPictures[i]->setImageHeight(h);
+
+        // correct ratio change
+        int xOfs = (int)((picOld->getOfsX() * factX) + 0.5);
+        if (fsXNew != fsXOld)
+        {
+            int spaceTrgOld = (int)(((picOld->width - picOld->getImageWidth()) * factX) + 0.5);
+            int spaceTrg = subPictures[i]->width - w;
+            xOfs += (spaceTrg - spaceTrgOld) / 2;
+        }
+        if (xOfs < 0)
+        {
+            xOfs = 0;
+        }
+        else if ((xOfs + w) > subPictures[i]->width)
+        {
+            xOfs = subPictures[i]->width - w;
+        }
+        subPictures[i]->setOfsX(xOfs);
+
+        int yOfs = (int)((picOld->getOfsY() * factY) + 0.5);
+        if (fsYNew != fsYOld)
+        {
+            int spaceTrgOld = (int)(((picOld->height - picOld->getImageHeight()) * factY) + 0.5);
+            int spaceTrg = subPictures[i]->height - h;
+            yOfs += (spaceTrg - spaceTrgOld) / 2;
+        }
+        if (yOfs < 0)
+        {
+            yOfs = 0;
+        }
+        if ((yOfs + h) > subPictures[i]->height)
+        {
+            yOfs = subPictures[i]->height - h;
+        }
+        subPictures[i]->setOfsY(yOfs);
+
+        // fix erase patches
+        double fx = (factX * fsXNew) / fsXOld;
+        double fy = (factY * fsYNew) / fsYOld;
+        for (auto ep : subPictures[i]->erasePatch)
+        {
+            ep->x = (int)((ep->x * fx) + 0.5);
+            ep->y = (int)((ep->y * fy) + 0.5);
+            ep->w = (int)((ep->w * fx) + 0.5);
+            ep->h = (int)((ep->h * fy) + 0.5);
+        }
+    }
+
+    // 2nd run: validate times (not fully necessary, but to avoid overlap due to truncation
+    SubPicture* subPicPrev = 0;
+    SubPicture* subPicNext;
+
+    for (int i = 0; i < subPictures.size(); ++i)
+    {
+        if (i < subPictures.size() - 1)
+        {
+            subPicNext = subPictures[i + 1];
+        }
+        else
+        {
+            subPicNext = 0;
+        }
+
+        picOld = subPictures[i];
+        validateTimes(i, subPictures[i], subPicNext, subPicPrev);
+        subPicPrev = picOld;
+    }
+}
+
 QVector<int> SubtitleProcessor::getResolution(Resolution resolution)
 {
     return resolutions.at((int) resolution);
@@ -731,6 +929,19 @@ void SubtitleProcessor::writeSub(QString filename)
         QString fnp = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".txt";
         //TODO: print line
         writePGCEditPalette(fnp, trgPallete);
+    }
+}
+
+double SubtitleProcessor::getDefaultFPS(Resolution resolution)
+{
+    switch ((int)resolution)
+    {
+        case 0:
+            return FPS_NTSC;
+        case 1:
+            return FPS_PAL;
+        default:
+            return FPS_24P;
     }
 }
 

@@ -119,7 +119,7 @@ QVector<QRgb> QuantizeFilter::quantize(QImage *inImage, QImage *outImage, int wi
     }
 
     // create palette
-    QHash<QRgb, int> p;
+    QVector<QRgb> p;
 
     for (int y = 0; y < inImage->height(); ++y)
     {
@@ -139,18 +139,18 @@ QVector<QRgb> QuantizeFilter::quantize(QImage *inImage, QImage *outImage, int wi
             int idx = p.size();
             if (p.contains(color))
             {
-                int idxEx = p.value(color);
+                int idxEx = p.indexOf(color);
                 idx = idxEx;
             }
             else
             {
-                p.insert(color, idx);
+                p.insert(idx, color);
             }
             outPixels[x] = (uchar)(idx);
         }
     }
 
-    return p.keys().toVector();
+    return p;
 }
 
 int QuantizeFilter::clamp(int c)

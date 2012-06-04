@@ -241,6 +241,9 @@ class SubtitleProcessor : public QObject
 public:
     SubtitleProcessor();
 
+    double minScale = 0.5;
+    double maxScale = 2.0;
+
     QByteArray getFileID(QString fileName, int numberOfBytes);
     StreamID getStreamID(QByteArray id);
     QVector<QVector<QString>>& getLanguages() { return languages; }
@@ -259,29 +262,44 @@ public:
     void setOutputMode(OutputMode mode) { outMode = mode; }
     InputMode getInputMode() { return inMode; }
     bool getMoveCaptions() { return moveCaptions; }
+    void setMoveCaptions(bool value) { moveCaptions = value; }
     bool getConvertResolution() { return convertResolution; }
+    void setConvertResolution(bool value) { convertResolution = value; }
     Resolution getResolution(int width, int height);
     Resolution getOutputResolution() { return resolutionTrg; }
+    void setOutputResolution(Resolution value) { resolutionTrg = value; }
     SubPicture* getSubPictureSrc(int index);
     int getDelayPTS() { return delayPTS; }
+    void setDelayPTS(int value) { delayPTS = value; }
     int getDelayPTSDefault() { return delayPTSdefault; }
     long syncTimePTS(long timeStamp, double fps);
     int getMinTimePTS() { return minTimePTS; }
+    void setMinTimePTS(int value) { minTimePTS = value; }
     int getMinTimePTSDefault() { return minTimePTSdefault; }
     double getFPSTrg() { return fpsTrg; }
     bool getConvertFPS() { return convertFPS; }
+    void setConvertFPS(bool value) { convertFPS = value; }
     bool getApplyFreeScale() { return applyFreeScale; }
+    void setApplyFreeScale(bool value) { applyFreeScale = value; }
     bool getApplyFreeScaleDefault() { return applyFreeScaleDefault; }
     bool getFixShortFrames() { return fixShortFrames; }
+    void setFixShortFrames(bool value) { fixShortFrames = value; }
     bool getFixShortFramesDefault() { return fixShortFramesDefault; }
     double getFPSSrc() { return fpsSrc; }
+    void setFPSSrc(double value) { fpsSrc = value; }
     double getFreeScaleX() { return freeScaleX; }
     double getFreeScaleY() { return freeScaleY; }
+    SetState getForceAll() { return forceAll; }
+    void setForceAll(SetState value) { forceAll = value; }
+    void setFreeScale(double x, double y) { freeScaleX = x; freeScaleY = y; }
     bool getFpsSrcCertain() { return fpsSrcCertain; }
     void close();
     void scanSubtitles();
+    void reScanSubtitles(Resolution oldResolution, double fpsTrgOld, int delayOld,
+                         bool convertFpsOld, double fsXOld, double fsYOld);
     QVector<int> getResolution(Resolution resolution);
-    void validateTimes(int index, SubPicture* subPicture, SubPicture* subPictureNext, SubPicture* subPicturePrevious);
+    void validateTimes(int index, SubPicture* subPicture, SubPicture* subPictureNext,
+                       SubPicture* subPicturePrevious);
     void moveAllToBounds();
     void convertSup(int index, int displayNumber, int displayMax);
     void convertSup(int index, int displayNumber, int displayMax, bool skipScaling);
@@ -294,6 +312,7 @@ public:
     QString getTrgInfoStr(int index);
     QStringList getRecentFiles() { return recentFiles; }
     PaletteMode getPaletteMode() { return paletteMode; }
+    void setPaletteMode(PaletteMode value) { paletteMode = value; }
     int getTrgWidth(int index);
     int getTrgHeight(int index);
     int getTrgOfsX(int index);
@@ -306,6 +325,8 @@ public:
     int getMergePTSdiff() { return mergePTSdiff; }
     bool usesBT601() { return useBT601; }
     bool getSwapCrCb() { return swapCrCb; }
+    ScalingFilters getScalingFilter() { return scalingFilter; }
+    void setScalingFilter(ScalingFilters value) { scalingFilterSet = true; scalingFilter = value; }
     void setFPSTrg(double trg);
     double getFPS(QString string);
     Resolution getResolution(QString string);
@@ -314,6 +335,8 @@ public:
     int getLanguageIdx() { return languageIdx; }
     void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
     QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
+    bool getKeepFps() { return keepFps; }
+    double getDefaultFPS(Resolution resolution);
 
 signals:
     void windowTitleChanged(const QString &newTitle);
@@ -366,8 +389,6 @@ private:
     int moveOffsetX = 10;
     int numRecent = 5;
     int mergePTSdiff = 18000;
-    double minScale = 0.5;
-    double maxScale = 2.0;
     static constexpr double fpsSrcDefault = FPS_24P;
     double fpsSrc = fpsSrcDefault;
     static constexpr double fpsTrgDefault = FPS_PAL;

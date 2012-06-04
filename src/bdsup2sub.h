@@ -63,7 +63,7 @@ private:
     QIntValidator *hiMedThresholdValidator = new QIntValidator(0, 255, this);
     QIntValidator *subtitleNumberValidator;
 
-    QString filter = tr("All Files (*.*);Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
+    QString filter = tr("All Files (*.*);;Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
     QString selectedFilter = tr("Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
 
     void fillComboBoxes();
@@ -85,6 +85,10 @@ private slots:
     void on_subtitleNumberComboBox_currentIndexChanged(int index);
     void on_subtitleNumberComboBox_editTextChanged(const QString &index);
     void on_outputFormatComboBox_currentIndexChanged(const QString &format);
+    void openConversionSettings();
+    void on_outputFormatComboBox_currentIndexChanged(int index);
+    void on_paletteComboBox_currentIndexChanged(int index);
+    void on_filterComboBox_currentIndexChanged(int index);
 };
 
 #endif // BDSUP2SUB_H

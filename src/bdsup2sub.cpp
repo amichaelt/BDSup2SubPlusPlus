@@ -46,6 +46,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     connect(ui->action_Load, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->action_Save_Export, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->action_Close, SIGNAL(triggered()), this, SLOT(closeFile()));
+    connect(ui->action_Conversion_Settings, SIGNAL(triggered()), this, SLOT(openConversionSettings()));
 
     subtitleProcessor = new SubtitleProcessor;
     progressDialog = new ProgressDialog(this);
@@ -89,6 +90,10 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
         }
     }
 
+    if (conversionDialog != 0)
+    {
+        delete conversionDialog;
+    }
     conversionDialog = new ConversionDialog(this, subtitleProcessor);
     conversionDialog->enableOptionMove(subtitleProcessor->getMoveCaptions());
     if (conversionDialog->exec() != QDialog::Rejected)
@@ -104,10 +109,7 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
 
             workerThread->start();
         }
-        else
-        {
-            convertSup();
-        }
+        convertSup();
     }
     else
     {
@@ -125,7 +127,7 @@ void BDSup2Sub::convertSup()
 
     enableCoreComponents(true);
 
-    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO);
+    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
     {
         enableVobSubComponents(true);
     }
@@ -209,6 +211,7 @@ void BDSup2Sub::enableCoreComponents(bool enable)
 
 void BDSup2Sub::enableVobSubComponents(bool enable)
 {
+    ui->paletteComboBox->blockSignals(true);
     ui->paletteComboBox->clear();
     ui->paletteComboBox->addItem("keep existing");
     ui->paletteComboBox->addItem("create new");
@@ -235,6 +238,7 @@ void BDSup2Sub::enableVobSubComponents(bool enable)
     }
 
     enableVobSubMenuCombo();
+    ui->paletteComboBox->blockSignals(false);
 }
 
 void BDSup2Sub::enableVobSubMenuCombo()
@@ -494,4 +498,62 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(const QString &forma
     {
         subtitleProcessor->setOutputMode(OutputMode::XML);
     }
+}
+
+void BDSup2Sub::openConversionSettings()
+{
+    if (conversionDialog != 0)
+    {
+        delete conversionDialog;
+    }
+
+    Resolution oldResolution = subtitleProcessor->getOutputResolution();
+    double fpsTrgOld = subtitleProcessor->getFPSTrg();
+    bool changeFpsOld = subtitleProcessor->getConvertFPS();
+    int delayOld = subtitleProcessor->getDelayPTS();
+    double fsXOld = 1.0, fsYOld = 1.0;
+    if (subtitleProcessor->getApplyFreeScale())
+    {
+        fsXOld = subtitleProcessor->getFreeScaleX();
+        fsYOld = subtitleProcessor->getFreeScaleY();
+    }
+
+    conversionDialog = new ConversionDialog(this, subtitleProcessor);
+    conversionDialog->enableOptionMove(subtitleProcessor->getMoveCaptions());
+    if (conversionDialog->exec() != QDialog::Rejected)
+    {
+        subtitleProcessor->reScanSubtitles(oldResolution, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        refreshTrgFrame(subIndex);
+    }
+}
+
+void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
+{
+    subtitleProcessor->setOutputMode((OutputMode)index);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+
+    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
+    {
+        enableVobSubComponents(true);
+    }
+    else
+    {
+        enableVobSubComponents(false);
+    }
+}
+
+void BDSup2Sub::on_paletteComboBox_currentIndexChanged(int index)
+{
+    subtitleProcessor->setPaletteMode((PaletteMode)index);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+}
+
+void BDSup2Sub::on_filterComboBox_currentIndexChanged(int index)
+{
+    subtitleProcessor->setScalingFilter((ScalingFilters)index);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
 }

@@ -27,8 +27,8 @@ private slots:
 
 private:
     Ui::ExportDialog *ui;
-    QString filter = tr("All Files (*.*);(.");
-    QString selectedFilter = tr("(.");
+    QString filter = tr("All Files (*.*);;(*.");
+    QString selectedFilter = tr("(*.");
     QString saveFileName;
     SubtitleProcessor* subtitleProcessor;
     int languageIdx;
