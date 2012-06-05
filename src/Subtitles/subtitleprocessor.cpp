@@ -96,6 +96,15 @@ int SubtitleProcessor::getNumberOfFrames()
     return substream->getNumFrames();
 }
 
+int SubtitleProcessor::getNumForcedFrames()
+{
+    if (substream == 0)
+    {
+        return 0;
+    }
+    return substream->getNumForcedFrames();
+}
+
 QImage *SubtitleProcessor::getSrcImage()
 {
     return substream->getImage();
@@ -105,6 +114,24 @@ QImage *SubtitleProcessor::getSrcImage(int index)
 {
     substream->decode(index);
     return substream->getImage();
+}
+
+QImage *SubtitleProcessor::getTrgImagePatched(SubPicture *subPicture)
+{
+    if (!subPicture->erasePatch.isEmpty())
+    {
+        Bitmap* trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
+        int color = trgPal->getTransparentIndex();
+        for (auto erasePatch : subPicture->erasePatch)
+        {
+            trgBitmapPatched->fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, color);
+        }
+        return trgBitmapPatched->getImage(trgPal);
+    }
+    else
+    {
+        return trgBitmapUnpatched->getImage(trgPal);
+    }
 }
 
 Resolution SubtitleProcessor::getResolution(int width, int height)
@@ -135,6 +162,11 @@ Resolution SubtitleProcessor::getResolution(int width, int height)
 SubPicture *SubtitleProcessor::getSubPictureSrc(int index)
 {
     return substream->getSubPicture(index);
+}
+
+SubPicture *SubtitleProcessor::getSubPictureTrg(int index)
+{
+    return subPictures.at(index);
 }
 
 long SubtitleProcessor::syncTimePTS(long timeStamp, double fps)

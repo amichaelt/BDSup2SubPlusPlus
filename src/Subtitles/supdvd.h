@@ -35,14 +35,14 @@ class SupDVD : public QObject, public Substream, public SubstreamDVD
 public:
     SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subtitleProcessor);
 
-    Palette *getPalette();
-    Bitmap *getBitmap();
+    Palette *getPalette() { return palette; }
+    Bitmap *getBitmap() { return bitmap; }
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex();
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
     int getNumFrames();
-    int getNumForcedFrames();
+    int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
     void close();
     long getEndTime(int index);
@@ -53,9 +53,9 @@ public:
     QVector<int> getFramePal(int index);
     QVector<int> getOriginalFrameAlpha(int index);
     QVector<int> getOriginalFramePal(int index);
-    Palette *getSrcPalette();
+    Palette *getSrcPalette() { return srcPalette; }
     void setSrcPalette(Palette *palette);
-    int getLanguageIdx();
+    int getLanguageIdx() { return languageIdx; }
 
     void readIfo();
     void writeIfo(QString filename, SubPicture *subPicture, Palette *palette);

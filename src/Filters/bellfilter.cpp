@@ -22,11 +22,6 @@ BellFilter::BellFilter()
 {
 }
 
-float BellFilter::getRadius()
-{
-    return 1.5f;
-}
-
 float BellFilter::value(float value)
 {
     if (value < 0.0f)

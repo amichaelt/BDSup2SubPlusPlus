@@ -258,3 +258,20 @@ void ConversionDialog::on_minTimeLineEdit_textChanged(const QString &arg1)
         minTimePTS = (int)subtitleProcessor->syncTimePTS((long)(arg1.toDouble() * 90), fpsTrg);
     }
 }
+
+void ConversionDialog::on_forceFlagsComboBox_currentIndexChanged(int index)
+{
+    forcedState = (SetState)index;
+}
+
+void ConversionDialog::on_storeButton_clicked()
+{
+    //TODO: implement
+    throw 10;
+}
+
+void ConversionDialog::on_restoreButton_clicked()
+{
+    //TODO: implement
+    throw 10;
+}

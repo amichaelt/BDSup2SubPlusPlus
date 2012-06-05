@@ -251,10 +251,18 @@ public:
     int getAlphaCrop() { return alphaCrop; }
     bool getFixZeroAlpha() { return fixZeroAlpha; }
     int getAlphaThreshold() { return alphaThreshold; }
+    void setAlphaThreshold(int value) { alphaThreshold = value; }
+    bool getWritePGCEditPal() { return writePGCEditPal; }
+    void setWritePGCEditPal(bool value) { writePGCEditPal = value; }
     int getNumberOfFrames();
+    int getNumForcedFrames();
+    bool getExportForced() { return exportForced; }
+    void setExportForced(bool value) { exportForced = value; }
     QVector<int> getLuminanceThreshold() { return luminanceThreshold; }
+    void setLuminanceThreshold(QVector<int> value) { luminanceThreshold = value; }
     QImage* getSrcImage();
     QImage* getSrcImage(int index);
+    QImage* getTrgImagePatched(SubPicture* subPicture);
     void setLoadPath(QString loadPath) { fileName = loadPath; }
     int getCropOfsY() { return cropOfsY; }
     int setCropOfsY(int ofs) { return cropOfsY = ofs; }
@@ -269,6 +277,7 @@ public:
     Resolution getOutputResolution() { return resolutionTrg; }
     void setOutputResolution(Resolution value) { resolutionTrg = value; }
     SubPicture* getSubPictureSrc(int index);
+    SubPicture* getSubPictureTrg(int index);
     int getDelayPTS() { return delayPTS; }
     void setDelayPTS(int value) { delayPTS = value; }
     int getDelayPTSDefault() { return delayPTSdefault; }

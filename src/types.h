@@ -23,9 +23,9 @@
 #include <QStringList>
 #include <QVector>
 
-const QString progName = "BDSup2Sub";
-const QString progNameVer = progName + " 4.0.1";
-const QString authorDate = "0xdeadbeef, mjuhasz 06-01-2012.";
+const QString progName = "BDSup2Sub++";
+const QString progNameVer = progName + " 1.0.0";
+const QString authorDate = "0xdeadbeef, mjuhasz, Adam T.";
 
 const QVector<uchar> defaultPalR = {
     0x00, 0xf0, 0xcc, 0x99,

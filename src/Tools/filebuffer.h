@@ -36,7 +36,7 @@ public:
     int getByte(long ofs);
     int getWord(long ofs);
     void getBytes(long ofs, QVector<uchar> &b, int length);
-    long getSize() { return length; }
+     long getSize() { return length; }
     int getDWordLE(long ofs);
     void close();
 

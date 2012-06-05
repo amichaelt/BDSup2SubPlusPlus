@@ -42,15 +42,21 @@ public:
     void enableOptionMove(bool enable);
     
 private slots:
-    void on_cancelButton_clicked();
     void on_okButton_clicked();
-    void on_scaleCheckBox_toggled(bool checked);
-    void on_fixTooShortFramesCheckBox_toggled(bool checked);
-    void on_changeFrameRateCheckBox_toggled(bool checked);
+    void on_cancelButton_clicked();
+    void on_storeButton_clicked();
+    void on_restoreButton_clicked();
     void on_resetButton_clicked();
+
     void on_convertResolutionCheckBox_toggled(bool checked);
     void on_applyMoveAllSettingsCheckBox_toggled(bool checked);
+    void on_changeFrameRateCheckBox_toggled(bool checked);
+    void on_scaleCheckBox_toggled(bool checked);
+    void on_fixTooShortFramesCheckBox_toggled(bool checked);
+
     void on_resolutionComboBox_currentIndexChanged(int index);
+    void on_forceFlagsComboBox_currentIndexChanged(int index);
+
     void on_sourceFramerateComboBox_editTextChanged(const QString &arg1);
     void on_targetFramerateComboBox_editTextChanged(const QString &arg1);
     void on_scaleXLineEdit_textChanged(const QString &arg1);

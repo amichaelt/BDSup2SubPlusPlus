@@ -26,7 +26,7 @@ class MitchellFilter : public Filter
 public:
     MitchellFilter();
 
-    float getRadius();
+    float getRadius() { return 2.0f; }
     float value(float value);
 
 private:

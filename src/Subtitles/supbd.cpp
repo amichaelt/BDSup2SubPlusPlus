@@ -37,16 +37,6 @@ SupBD::SupBD(QString fileName, SubtitleProcessor* subtitleProcessor) :
     this->subtitleProcessor = subtitleProcessor;
 }
 
-Palette *SupBD::getPalette()
-{
-    return palette;
-}
-
-Bitmap *SupBD::getBitmap()
-{
-    return bitmap;
-}
-
 QImage *SupBD::getImage()
 {
     return bitmap->getImage(palette);
@@ -55,11 +45,6 @@ QImage *SupBD::getImage()
 QImage *SupBD::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(palette);
-}
-
-int SupBD::getPrimaryColorIndex()
-{
-    return primaryColorIndex;
 }
 
 void SupBD::decode(int index)
@@ -78,12 +63,6 @@ void SupBD::decode(int index)
 int SupBD::getNumFrames()
 {
     return subPictures.size();
-}
-
-int SupBD::getNumForcedFrames()
-{
-    //TODO: implement
-    throw 10;
 }
 
 bool SupBD::isForced(int index)
@@ -818,6 +797,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
 
     return buf;
 }
+
 
 double SupBD::getFps(int index)
 {

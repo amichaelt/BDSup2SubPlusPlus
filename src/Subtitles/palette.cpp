@@ -211,6 +211,7 @@ void Palette::setARGB(int index, unsigned int inColor)
     setAlpha(index, qAlpha(inColor));
 }
 
+
 int Palette::getARGB(int index)
 {
     return qRgba(r[index] & 0xff, g[index] & 0xff, b[index] & 0xff, a[index] & 0xff);

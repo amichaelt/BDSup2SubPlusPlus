@@ -33,14 +33,14 @@ class SupBD : public QObject, public Substream
 public:
     SupBD(QString fileName, SubtitleProcessor* subtitleProcessor);
 
-    Palette *getPalette();
-    Bitmap *getBitmap();
+    Palette *getPalette() { return palette; }
+    Bitmap *getBitmap() { return bitmap; }
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex();
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
     int getNumFrames();
-    int getNumForcedFrames();
+    int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
     void close();
     long getEndTime(int index);

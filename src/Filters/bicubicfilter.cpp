@@ -27,11 +27,6 @@ BiCubicFilter::BiCubicFilter(float a)
     this->a = a;
 }
 
-float BiCubicFilter::getRadius()
-{
-    return 2.0f;
-}
-
 float BiCubicFilter::value(float value)
 {
     if (value == 0)

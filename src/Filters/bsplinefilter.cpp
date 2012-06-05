@@ -22,11 +22,6 @@ BSplineFilter::BSplineFilter()
 {
 }
 
-float BSplineFilter::getRadius()
-{
-    return 2.0f;
-}
-
 float BSplineFilter::value(float value)
 {
     if (value < 0.0f)

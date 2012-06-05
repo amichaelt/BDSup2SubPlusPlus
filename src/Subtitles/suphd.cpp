@@ -31,16 +31,6 @@ SupHD::SupHD(QString fileName, SubtitleProcessor *subtitleProcessor) :
     this->subtitleProcessor = subtitleProcessor;
 }
 
-Palette *SupHD::getPalette()
-{
-    return palette;
-}
-
-Bitmap *SupHD::getBitmap()
-{
-    return bitmap;
-}
-
 QImage *SupHD::getImage()
 {
     return bitmap->getImage(palette);
@@ -49,11 +39,6 @@ QImage *SupHD::getImage()
 QImage *SupHD::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(palette);
-}
-
-int SupHD::getPrimaryColorIndex()
-{
-    return primaryColorIndex;
 }
 
 void SupHD::decode(int index)
@@ -72,16 +57,6 @@ void SupHD::decode(int index)
 int SupHD::getNumFrames()
 {
     return subPictures.size();
-}
-
-int SupHD::getNumForcedFrames()
-{
-    return 0;
-}
-
-bool SupHD::isForced(int index)
-{
-    return false;
 }
 
 void SupHD::close()

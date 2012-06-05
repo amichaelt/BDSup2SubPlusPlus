@@ -35,15 +35,15 @@ class SupHD : public QObject, public Substream
 public:
     SupHD(QString fileName, SubtitleProcessor* subtitleProcessor);
 
-    Palette *getPalette();
-    Bitmap *getBitmap();
+    Palette *getPalette() { return palette; }
+    Bitmap *getBitmap() { return bitmap; }
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex();
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
     int getNumFrames();
-    int getNumForcedFrames();
-    bool isForced(int index);
+    int getNumForcedFrames() { return 0; }
+    bool isForced(int index) { return false; }
     void close();
     long getEndTime(int index);
     long getStartTime(int index);

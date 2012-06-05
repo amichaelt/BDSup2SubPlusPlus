@@ -22,11 +22,6 @@ Lanczos3Filter::Lanczos3Filter() : PI_FLOAT(std::atan(1.0) * 4)
 {
 }
 
-float Lanczos3Filter::getRadius()
-{
-    return 3.0f;
-}
-
 float Lanczos3Filter::value(float value)
 {
     if (value == 0)

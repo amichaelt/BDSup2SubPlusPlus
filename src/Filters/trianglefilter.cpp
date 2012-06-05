@@ -22,11 +22,6 @@ TriangleFilter::TriangleFilter()
 {
 }
 
-float TriangleFilter::getRadius()
-{
-    return 1.0f;
-}
-
 float TriangleFilter::value(float value)
 {
     if (value < 0.0f)

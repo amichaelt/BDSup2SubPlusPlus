@@ -26,7 +26,7 @@ class BellFilter : public Filter
 public:
     BellFilter();
 
-    float getRadius();
+    float getRadius() { return 1.5f; }
     float value(float value);
 };
 

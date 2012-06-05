@@ -31,16 +31,6 @@ SupDVD::SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subt
     this->subtitleProcessor = subtitleProcessor;
 }
 
-Palette *SupDVD::getPalette()
-{
-    return palette;
-}
-
-Bitmap *SupDVD::getBitmap()
-{
-    return bitmap;
-}
-
 QImage *SupDVD::getImage()
 {
     return bitmap->getImage(palette);
@@ -50,11 +40,6 @@ QImage *SupDVD::getImage(Bitmap *bitmap)
 {
     //TODO: Finish implementing
     throw 10;
-}
-
-int SupDVD::getPrimaryColorIndex()
-{
-    return primaryColorIndex;
 }
 
 void SupDVD::decode(int index)
@@ -72,12 +57,6 @@ void SupDVD::decode(int index)
 int SupDVD::getNumFrames()
 {
     return subPictures.size();
-}
-
-int SupDVD::getNumForcedFrames()
-{
-    //TODO: Finish implementing
-    throw 10;
 }
 
 bool SupDVD::isForced(int index)
@@ -137,20 +116,10 @@ QVector<int> SupDVD::getOriginalFramePal(int index)
     throw 10;
 }
 
-Palette *SupDVD::getSrcPalette()
-{
-    return srcPalette;
-}
-
 void SupDVD::setSrcPalette(Palette *palette)
 {
     //TODO: Finish implementing
     throw 10;
-}
-
-int SupDVD::getLanguageIdx()
-{
-    return languageIdx;
 }
 
 void SupDVD::readIfo()

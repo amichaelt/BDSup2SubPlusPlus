@@ -21,11 +21,13 @@
 
 #include <QMainWindow>
 #include <QIntValidator>
+#include <QColor>
 
 class SubtitleProcessor;
 class ProgressDialog;
 class ConversionDialog;
 class ExportDialog;
+class EditDialog;
 
 namespace Ui {
 class BDSup2Sub;
@@ -53,6 +55,7 @@ private:
     ProgressDialog *progressDialog = 0;
     ConversionDialog *conversionDialog = 0;
     ExportDialog *exportDialog = 0;
+    EditDialog *editDialog = 0;
     QString loadPath = "";
     QString saveFileName = "";
     QString savePath = "";
@@ -62,6 +65,8 @@ private:
     QIntValidator *medLowThresholdValidator = new QIntValidator(0, 255, this);
     QIntValidator *hiMedThresholdValidator = new QIntValidator(0, 255, this);
     QIntValidator *subtitleNumberValidator;
+    QPalette* errorBackground;
+    QPalette* okBackground;
 
     QString filter = tr("All Files (*.*);;Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
     QString selectedFilter = tr("Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
@@ -82,6 +87,7 @@ private slots:
     void saveFile();
     void closeFile();
     void onRecentItemClicked();
+    void onEditPaneClicked(QMouseEvent *event);
     void on_subtitleNumberComboBox_currentIndexChanged(int index);
     void on_subtitleNumberComboBox_editTextChanged(const QString &index);
     void on_outputFormatComboBox_currentIndexChanged(const QString &format);
@@ -89,6 +95,12 @@ private slots:
     void on_outputFormatComboBox_currentIndexChanged(int index);
     void on_paletteComboBox_currentIndexChanged(int index);
     void on_filterComboBox_currentIndexChanged(int index);
+    void on_hiMedThresholdComboBox_currentIndexChanged(int index);
+    void on_hiMedThresholdComboBox_editTextChanged(const QString &arg1);
+    void on_medLowThresholdComboBox_currentIndexChanged(int index);
+    void on_medLowThresholdComboBox_editTextChanged(const QString &arg1);
+    void on_alphaThresholdComboBox_currentIndexChanged(int index);
+    void on_alphaThresholdComboBox_editTextChanged(const QString &arg1);
 };
 
 #endif // BDSUP2SUB_H

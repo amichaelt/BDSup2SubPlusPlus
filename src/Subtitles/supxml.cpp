@@ -38,16 +38,6 @@ SupXML::SupXML(QString fileName, SubtitleProcessor* subtitleProcessor) :
     fpsXml = XmlFps(fps);
 }
 
-Palette *SupXML::getPalette()
-{
-    return palette;
-}
-
-Bitmap *SupXML::getBitmap()
-{
-    return bitmap;
-}
-
 QImage *SupXML::getImage()
 {
     return bitmap->getImage(palette);
@@ -56,11 +46,6 @@ QImage *SupXML::getImage()
 QImage *SupXML::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(palette);
-}
-
-int SupXML::getPrimaryColorIndex()
-{
-    return primaryColorIndex;
 }
 
 void SupXML::decode(int index)
@@ -163,11 +148,6 @@ int SupXML::getNumFrames()
     return subPictures.size();
 }
 
-int SupXML::getNumForcedFrames()
-{
-    return numForcedFrames;
-}
-
 bool SupXML::isForced(int index)
 {
     return subPictures.at(index)->isForced;
@@ -189,11 +169,6 @@ long SupXML::getEndTime(int index)
 long SupXML::getStartTime(int index)
 {
     return subPictures.at(index)->startTime;
-}
-
-long SupXML::getStartOffset(int index)
-{
-    return 0;
 }
 
 SubPicture *SupXML::getSubPicture(int index)
@@ -308,11 +283,13 @@ double SupXML::XmlFps(double fps)
     return fps;
 }
 
+
 bool SupXML::XmlHandler::characters(const QString &ch)
 {
     txt += ch;
     return true;
 }
+
 
 bool SupXML::XmlHandler::endElement(const QString &namespaceURI, const QString &localName, const QString &qName)
 {

@@ -19,26 +19,33 @@
 #include "bdsup2sub.h"
 #include "ui_bdsup2sub.h"
 #include "Subtitles/subtitleprocessor.h"
-#include <QPixmap>
 #include "types.h"
 #include "conversiondialog.h"
 #include "progressdialog.h"
 #include "exportdialog.h"
+#include "editdialog.h"
+
 #include <QMessageBox>
+#include <QPixmap>
 
 BDSup2Sub::BDSup2Sub(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::BDSup2Sub)
 {
     ui->setupUi(this);
+
+    okBackground = new QPalette(ui->subtitleNumberComboBox->palette());
+    errorBackground = new QPalette();
+    errorBackground->setColor(QPalette::Base, QColor(0xffe1acac));
+
     this->setWindowTitle(progNameVer);
 
     QFont font("Monospace", 9);
     font.setStyleHint(QFont::TypeWriter);
     ui->consoleOutput->setFont(font);
 
-    ui->consoleOutput->insertPlainText("BDSup2Sub 4.0.1 - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
-    ui->consoleOutput->insertPlainText("0xdeadbeef, mjuhasz 06-01-2012.\n");
+    ui->consoleOutput->insertPlainText(progNameVer + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
+    ui->consoleOutput->insertPlainText(authorDate + "\n");
     ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n");
 
     fillComboBoxes();
@@ -47,6 +54,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     connect(ui->action_Save_Export, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->action_Close, SIGNAL(triggered()), this, SLOT(closeFile()));
     connect(ui->action_Conversion_Settings, SIGNAL(triggered()), this, SLOT(openConversionSettings()));
+    connect(ui->subtitleImage, SIGNAL(onMouseClicked(QMouseEvent*)), this, SLOT(onEditPaneClicked(QMouseEvent*)));
 
     subtitleProcessor = new SubtitleProcessor;
     progressDialog = new ProgressDialog(this);
@@ -75,12 +83,18 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
     {
         ui->subtitleNumberComboBox->addItem(QString::number(i));
     }
-    ui->subtitleNumberComboBox->blockSignals(false);
     ui->subtitleNumberComboBox->setValidator(subtitleNumberValidator);
     ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
+    ui->subtitleNumberComboBox->blockSignals(false);
+    ui->alphaThresholdComboBox->blockSignals(true);
+    ui->medLowThresholdComboBox->blockSignals(true);
+    ui->hiMedThresholdComboBox->blockSignals(true);
     ui->alphaThresholdComboBox->setCurrentIndex(subtitleProcessor->getAlphaThreshold());
     ui->hiMedThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[0]);
     ui->medLowThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[1]);
+    ui->alphaThresholdComboBox->blockSignals(false);
+    ui->medLowThresholdComboBox->blockSignals(false);
+    ui->hiMedThresholdComboBox->blockSignals(false);
 
     if (subtitleProcessor->getCropOfsY() > 0)
     {
@@ -90,10 +104,6 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
         }
     }
 
-    if (conversionDialog != 0)
-    {
-        delete conversionDialog;
-    }
     conversionDialog = new ConversionDialog(this, subtitleProcessor);
     conversionDialog->enableOptionMove(subtitleProcessor->getMoveCaptions());
     if (conversionDialog->exec() != QDialog::Rejected)
@@ -117,6 +127,7 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
         //TODO: print warning about unsupported file
         subtitleProcessor->close();
     }
+    delete conversionDialog;
 }
 
 void BDSup2Sub::convertSup()
@@ -181,6 +192,9 @@ void BDSup2Sub::connectSubtitleProcessor()
 
 void BDSup2Sub::fillComboBoxes()
 {
+    ui->alphaThresholdComboBox->blockSignals(true);
+    ui->medLowThresholdComboBox->blockSignals(true);
+    ui->hiMedThresholdComboBox->blockSignals(true);
     for (int i = 0; i < 256; ++i)
     {
         ui->alphaThresholdComboBox->addItem(QString::number(i));
@@ -194,6 +208,9 @@ void BDSup2Sub::fillComboBoxes()
     ui->alphaThresholdComboBox->setValidator(alphaThresholdValidator);
     ui->medLowThresholdComboBox->setValidator(medLowThresholdValidator);
     ui->hiMedThresholdComboBox->setValidator(hiMedThresholdValidator);
+    ui->alphaThresholdComboBox->blockSignals(false);
+    ui->medLowThresholdComboBox->blockSignals(false);
+    ui->hiMedThresholdComboBox->blockSignals(false);
 }
 
 void BDSup2Sub::enableCoreComponents(bool enable)
@@ -317,6 +334,7 @@ void BDSup2Sub::saveFile()
     if (exportDialog->exec() != QDialog::Rejected)
     {
         QString fileName = exportDialog->getFileName();
+        delete exportDialog;
         QFileInfo fileInfo(fileName);
         savePath = fileInfo.absolutePath();
         saveFileName = fileInfo.completeBaseName();
@@ -445,6 +463,22 @@ void BDSup2Sub::onRecentItemClicked()
     loadSubtitleFile();
 }
 
+void BDSup2Sub::onEditPaneClicked(QMouseEvent *event)
+{
+    if (subtitleProcessor->getNumberOfFrames() > 0 && event->button() == Qt::LeftButton)
+    {
+        editDialog = new EditDialog(this, subtitleProcessor);
+        editDialog->setIndex(subIndex);
+        editDialog->exec();
+        subIndex = editDialog->getIndex();
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        refreshSrcFrame(subIndex);
+        refreshTrgFrame(subIndex);
+        ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
+        delete editDialog;
+    }
+}
+
 void BDSup2Sub::refreshSrcFrame(int index)
 {
     QImage* image = subtitleProcessor->getSrcImage();
@@ -474,10 +508,19 @@ void BDSup2Sub::on_subtitleNumberComboBox_currentIndexChanged(int index)
 
 void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &index)
 {
+    if (index.isEmpty() || index.isNull())
+    {
+        ui->subtitleNumberComboBox->setPalette(*errorBackground);
+        return;
+    }
+    ui->subtitleNumberComboBox->setPalette(*okBackground);
+
+    ui->subtitleNumberComboBox->blockSignals(true);
     subIndex = index.toInt() - 1;
     subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
     refreshSrcFrame(subIndex);
     refreshTrgFrame(subIndex);
+    ui->subtitleNumberComboBox->blockSignals(false);
 }
 
 void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(const QString &format)
@@ -502,11 +545,6 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(const QString &forma
 
 void BDSup2Sub::openConversionSettings()
 {
-    if (conversionDialog != 0)
-    {
-        delete conversionDialog;
-    }
-
     Resolution oldResolution = subtitleProcessor->getOutputResolution();
     double fpsTrgOld = subtitleProcessor->getFPSTrg();
     bool changeFpsOld = subtitleProcessor->getConvertFPS();
@@ -526,6 +564,7 @@ void BDSup2Sub::openConversionSettings()
         subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
         refreshTrgFrame(subIndex);
     }
+    delete conversionDialog;
 }
 
 void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
@@ -556,4 +595,115 @@ void BDSup2Sub::on_filterComboBox_currentIndexChanged(int index)
     subtitleProcessor->setScalingFilter((ScalingFilters)index);
     subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
     refreshTrgFrame(subIndex);
+}
+
+void BDSup2Sub::on_hiMedThresholdComboBox_currentIndexChanged(int index)
+{
+    int idx = index;
+    QVector<int> lumaThreshold = subtitleProcessor->getLuminanceThreshold();
+
+    if (idx <= lumaThreshold[1])
+    {
+        idx = lumaThreshold[1] + 1;
+    }
+
+    if (idx < 0)
+    {
+        idx = 0;
+    }
+    if (idx > 255)
+    {
+        idx = 255;
+    }
+
+    lumaThreshold[0] = idx;
+    subtitleProcessor->setLuminanceThreshold(lumaThreshold);
+    ui->hiMedThresholdComboBox->blockSignals(true);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+    ui->hiMedThresholdComboBox->blockSignals(false);
+    ui->hiMedThresholdComboBox->setCurrentIndex(idx);
+}
+
+void BDSup2Sub::on_hiMedThresholdComboBox_editTextChanged(const QString &arg1)
+{
+    QVector<int> lumaThreshold = subtitleProcessor->getLuminanceThreshold();
+    if (arg1.isEmpty() || arg1.isNull() || arg1.toInt() <= lumaThreshold[1])
+    {
+        ui->hiMedThresholdComboBox->setPalette(*errorBackground);
+        return;
+    }
+    ui->hiMedThresholdComboBox->setPalette(*okBackground);
+    ui->hiMedThresholdComboBox->blockSignals(true);
+    lumaThreshold[0] = arg1.toInt();
+    subtitleProcessor->setLuminanceThreshold(lumaThreshold);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+    ui->hiMedThresholdComboBox->blockSignals(false);
+}
+
+void BDSup2Sub::on_medLowThresholdComboBox_currentIndexChanged(int index)
+{
+    int idx = index;
+    QVector<int> lumaThreshold = subtitleProcessor->getLuminanceThreshold();
+    if (idx >= lumaThreshold[0])
+    {
+        idx = lumaThreshold[0] - 1;
+    }
+
+    if (idx < 0)
+    {
+        idx = 0;
+    }
+    if (idx > 255)
+    {
+        idx = 255;
+    }
+
+    lumaThreshold[1] = idx;
+    subtitleProcessor->setLuminanceThreshold(lumaThreshold);
+    ui->medLowThresholdComboBox->blockSignals(true);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+    ui->medLowThresholdComboBox->blockSignals(false);
+    ui->medLowThresholdComboBox->setCurrentIndex(idx);
+}
+
+void BDSup2Sub::on_medLowThresholdComboBox_editTextChanged(const QString &arg1)
+{
+    QVector<int> lumaThreshold = subtitleProcessor->getLuminanceThreshold();
+    if (arg1.isEmpty() || arg1.isNull() || arg1.toInt() >= lumaThreshold[0])
+    {
+        ui->medLowThresholdComboBox->setPalette(*errorBackground);
+        return;
+    }
+    ui->medLowThresholdComboBox->setPalette(*okBackground);
+    ui->medLowThresholdComboBox->blockSignals(true);
+    lumaThreshold[1] = arg1.toInt();
+    subtitleProcessor->setLuminanceThreshold(lumaThreshold);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+    ui->medLowThresholdComboBox->blockSignals(false);
+}
+
+void BDSup2Sub::on_alphaThresholdComboBox_currentIndexChanged(int index)
+{
+    subtitleProcessor->setAlphaThreshold(index);
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+}
+
+void BDSup2Sub::on_alphaThresholdComboBox_editTextChanged(const QString &arg1)
+{
+    if (arg1.isEmpty() || arg1.isNull())
+    {
+        ui->alphaThresholdComboBox->setPalette(*errorBackground);
+        return;
+    }
+    ui->alphaThresholdComboBox->setPalette(*okBackground);
+    ui->alphaThresholdComboBox->blockSignals(true);
+    subtitleProcessor->setAlphaThreshold(arg1.toInt());
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshTrgFrame(subIndex);
+    ui->alphaThresholdComboBox->blockSignals(false);
 }

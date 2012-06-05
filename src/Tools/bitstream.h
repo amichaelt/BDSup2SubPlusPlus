@@ -26,7 +26,7 @@ class BitStream
 public:
     BitStream(QVector<uchar> buffer);
 
-    int bitsLeft();
+    int bitsLeft() { return (8 * (buf.size() - byteOfs)) - (8 - bits); }
     int readBits(int n);
     void syncToByte();
 

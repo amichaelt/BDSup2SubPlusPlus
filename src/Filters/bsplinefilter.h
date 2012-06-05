@@ -26,7 +26,7 @@ class BSplineFilter : public Filter
 public:
     BSplineFilter();
 
-    float getRadius();
+    float getRadius() { return 2.0f; }
     float value(float value);
 };
 

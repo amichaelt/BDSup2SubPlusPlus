@@ -22,11 +22,6 @@ HermiteFilter::HermiteFilter()
 {
 }
 
-float HermiteFilter::getRadius()
-{
-    return 1.0f;
-}
-
 float HermiteFilter::value(float value)
 {
     if (value < 0.0f)

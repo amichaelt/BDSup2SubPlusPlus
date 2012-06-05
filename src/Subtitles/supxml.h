@@ -63,24 +63,24 @@ class SupXML : public QObject, public Substream
 public:
     SupXML(QString fileName, SubtitleProcessor* subtitleProcessor);
 
-    Palette *getPalette();
-    Bitmap *getBitmap();
+    Palette *getPalette() { return palette; }
+    Bitmap *getBitmap() { return bitmap; }
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex();
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
     int getNumFrames();
-    int getNumForcedFrames();
+    int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
     void close();
     long getEndTime(int index);
     long getStartTime(int index);
-    long getStartOffset(int index);
+    long getStartOffset(int index) { return 0; }
     SubPicture *getSubPicture(int index);
 
     void readAllImages();
-    QString getLanguage() { return language; }
-    double getFps() { return fps; }
+     QString getLanguage() { return language; }
+     double getFps() { return fps; }
     QString getPNGname(QString filename, int idx);
     void writeXml(QString filename, QVector<SubPicture*> pics);
 

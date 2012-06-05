@@ -25,10 +25,11 @@ class EditPane : public QLabel
 {
     Q_OBJECT
 public:
-    explicit EditPane(bool isLayoutPane, QWidget *parent = 0);
-    explicit EditPane(QWidget *parent = 0);
+    explicit EditPane(QWidget *parent = 0, bool isLabel = true);
 
     void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void paintEvent(QPaintEvent *event);
 
     void setDimension(int width, int height) { this->width = width; this->height = height; }
@@ -36,6 +37,10 @@ public:
     void setCropOfsY(int ofs) { cropOfsY = ofs; }
     void setImage(QImage* image, int width, int height);
     void setExcluded(bool excluded) { this->excluded = excluded; }
+    void setAllowSelection(bool value) { allowSelection = value; }
+
+signals:
+    void onMouseClicked(QMouseEvent *event);
 
 private:
     QImage* img = 0;
@@ -43,8 +48,8 @@ private:
     QColor color2 = Qt::black;
     int width = 1920;
     int height = 1080;
-    int ofsX;
-    int ofsY;
+    int ofsX = 0;
+    int ofsY = 0;
     int imgWidth = 0;
     int imgHeight = 0;
     double screenRatioIn = 21.0 / 9;
@@ -52,23 +57,20 @@ private:
     static constexpr double screenRatio = 16.0 / 9;
     int cropOfsY = 0;
     int inset = 2;
-    bool layoutPane;
+    bool validSelection;
+    bool isLabel = true;
     int selectStartX = -1;
-    int selectEndX;
-    int selectStartY;
-    int selectEndY;
+    int selectEndX = 0;
+    int selectStartY = 0;
+    int selectEndY = 0;
     bool allowSelection = false;
-    bool leftButtonPressed;
-    bool excluded;
-    double xScaleCaption;
-    double yScaleCaption;
-    int yCrop;
+    bool leftButtonPressed = false;
+    bool excluded = false;
+    double xScaleCaption = false;
+    double yScaleCaption = false;
+    int yCrop = 0;
 
     void Initialize(bool isLayoutPane);
-    
-signals:
-    
-public slots:
     
 };
 

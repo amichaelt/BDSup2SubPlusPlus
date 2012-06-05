@@ -73,12 +73,12 @@ class QuantizeFilter
     };
 
 public:
-    void setNumColors(int numColors);
-    int getNumColors() { return numColors; }
-    void setDither(bool dither) { this->dither = dither; }
-    bool getDither() { return dither; }
-    void setSerpentine(bool serpentine) { this->serpentine = serpentine; }
-    bool getSerpentine() { return serpentine; }
+     void setNumColors(int numColors);
+     int getNumColors() { return numColors; }
+     void setDither(bool dither) { this->dither = dither; }
+     bool getDither() { return dither; }
+     void setSerpentine(bool serpentine) { this->serpentine = serpentine; }
+     bool getSerpentine() { return serpentine; }
     QVector<QRgb> quantize(QImage *inImage, QImage *outImage, int width, int height,
                            int numColors, bool dither, bool serpentine);
     int clamp(int c);

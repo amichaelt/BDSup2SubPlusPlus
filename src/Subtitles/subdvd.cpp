@@ -42,16 +42,6 @@ SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subt
     bitmap = new Bitmap(0, 0);
 }
 
-Palette *SubDVD::getPalette()
-{
-    return palette;
-}
-
-Bitmap *SubDVD::getBitmap()
-{
-    return bitmap;
-}
-
 QImage *SubDVD::getImage()
 {
     return bitmap->getImage(palette);
@@ -61,11 +51,6 @@ QImage *SubDVD::getImage(Bitmap *bitmap)
 {
     //TODO: Finish implementing
     throw 10;
-}
-
-int SubDVD::getPrimaryColorIndex()
-{
-    return primaryColorIndex;
 }
 
 void SubDVD::decode(int index)
@@ -84,12 +69,6 @@ void SubDVD::decode(int index)
 int SubDVD::getNumFrames()
 {
     return subPictures.size();
-}
-
-int SubDVD::getNumForcedFrames()
-{
-    //TODO: Finish implementing
-    throw 10;
 }
 
 bool SubDVD::isForced(int index)
@@ -130,6 +109,7 @@ QVector<int> SubDVD::getFrameAlpha(int index)
     return subPictures.at(index)->alpha;
 }
 
+
 QVector<int> SubDVD::getFramePal(int index)
 {
     return subPictures.at(index)->pal;
@@ -147,20 +127,10 @@ QVector<int> SubDVD::getOriginalFramePal(int index)
     throw 10;
 }
 
-Palette *SubDVD::getSrcPalette()
-{
-    return srcPalette;
-}
-
 void SubDVD::setSrcPalette(Palette *palette)
 {
     //TODO: Finish implementing
     throw 10;
-}
-
-int SubDVD::getLanguageIdx()
-{
-    return languageIdx;
 }
 
 void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)

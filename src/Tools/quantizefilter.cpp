@@ -21,6 +21,7 @@
 #include <QHash>
 #include <QList>
 
+
 void QuantizeFilter::setNumColors(int numColors)
 {
     this->numColors = std::min(std::max(numColors, 8), 256);

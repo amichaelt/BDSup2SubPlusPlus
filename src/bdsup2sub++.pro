@@ -49,7 +49,8 @@ SOURCES += main.cpp\
     Subtitles/subpicturexml.cpp \
     Tools/quantizefilter.cpp \
     exportdialog.cpp \
-    Tools/numberutil.cpp
+    Tools/numberutil.cpp \
+    editdialog.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -92,12 +93,14 @@ HEADERS  += bdsup2sub.h \
     Subtitles/subpicturexml.h \
     Tools/quantizefilter.h \
     exportdialog.h \
-    Tools/numberutil.h
+    Tools/numberutil.h \
+    editdialog.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \
     conversiondialog.ui \
-    exportdialog.ui
+    exportdialog.ui \
+    editdialog.ui
 
 RESOURCES += \
     bdsup2sub.qrc

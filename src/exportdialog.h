@@ -22,8 +22,11 @@ private slots:
     void on_cancelButton_clicked();
     void on_saveButton_clicked();
     void on_browseButton_clicked();
+    void on_fileNameLineEdit_textChanged(const QString &inFileName);
+    void on_exportPGCEditFormatCheckBox_toggled(bool checked);
+    void on_exportForcedOnlyCheckBox_toggled(bool checked);
 
-    void on_fileNameLineEdit_textChanged(const QString &arg1);
+    void on_languageComboBox_currentIndexChanged(int index);
 
 private:
     Ui::ExportDialog *ui;
@@ -32,6 +35,8 @@ private:
     QString saveFileName;
     SubtitleProcessor* subtitleProcessor;
     int languageIdx;
+    bool exportForced;
+    bool writePGCPal;
 };
 
 #endif // EXPORTDIALOG_H

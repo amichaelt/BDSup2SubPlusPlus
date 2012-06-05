@@ -26,11 +26,6 @@ BitStream::BitStream(QVector<uchar> buffer) :
 {
 }
 
-int BitStream::bitsLeft()
-{
-    return (8 * (buf.size() - byteOfs)) - (8 - bits);
-}
-
 int BitStream::readBits(int n)
 {
     int retval = 0;
