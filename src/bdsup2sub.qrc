@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/new/resources">
         <file>bdsup2sub.ico</file>
+        <file>help.htm</file>
+        <file>help.ini</file>
     </qresource>
 </RCC>

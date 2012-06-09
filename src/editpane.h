@@ -38,9 +38,14 @@ public:
     void setImage(QImage* image, int width, int height);
     void setExcluded(bool excluded) { this->excluded = excluded; }
     void setAllowSelection(bool value) { allowSelection = value; }
+    void setIsLabel(bool value) { isLabel = value; }
+    QVector<int> getSelection();
+    void removeSelection() { if (allowSelection && validSelection) { validSelection = false; } }
+    void setScreenRatio(double ratio) { screenRatioIn = ratio; cineBarFactor = (1.0 - (screenRatio / screenRatioIn)) / 2.0; }
 
 signals:
     void onMouseClicked(QMouseEvent *event);
+    void selectionPerformed(bool validSelection);
 
 private:
     QImage* img = 0;
@@ -57,7 +62,7 @@ private:
     static constexpr double screenRatio = 16.0 / 9;
     int cropOfsY = 0;
     int inset = 2;
-    bool validSelection;
+    bool validSelection = false;
     bool isLabel = true;
     int selectStartX = -1;
     int selectEndX = 0;
@@ -66,8 +71,8 @@ private:
     bool allowSelection = false;
     bool leftButtonPressed = false;
     bool excluded = false;
-    double xScaleCaption = false;
-    double yScaleCaption = false;
+    double xScaleCaption = 0;
+    double yScaleCaption = 0;
     int yCrop = 0;
 
     void Initialize(bool isLayoutPane);

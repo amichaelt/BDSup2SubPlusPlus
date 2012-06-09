@@ -51,7 +51,7 @@ class SupXML : public QObject, public Substream
 
         XmlState state;
         QString txt;
-        bool valid;
+        bool valid = false;
         SubPictureXML* subPicture;
         SupXML* parent;
 

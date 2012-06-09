@@ -96,7 +96,7 @@ void SupXML::decode(int index)
         int size = ct.size();
         if (size > 255)
         {
-            //TODO: print warning
+            subtitleProcessor->printWarning("Quantizer failed.\n");
             size = 255;
         }
         // create palette
@@ -190,8 +190,8 @@ void SupXML::readAllImages()
         //TODO: error handling
         throw 10;
     }
-    //TODO: print message;
-    int num = numForcedFrames;
+
+    subtitleProcessor->print(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
 }
 
 QString SupXML::getPNGname(QString filename, int idx)
@@ -218,7 +218,7 @@ void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
     out.write(QString("    <Name Title=\"" + name + "\" Content=\"\"/>\n").toAscii());
     out.write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toAscii());
     QString res = subtitleProcessor->getResolutionNameXml((int)subtitleProcessor->getOutputResolution());
-    out.write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 5) + "\" DropFrame=\"False\"/>\n").toAscii());
+    out.write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 6) + "\" DropFrame=\"False\"/>\n").toAscii());
     t = pics[0]->startTime;
     if (fps != fpsXml)
     {
@@ -309,7 +309,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
 
     if (state != SupXML::XmlHandler::XmlState::BDN && !valid)
     {
-        //TODO: print error;
+        parent->subtitleProcessor->printError("BDN tag missing\n");
     }
 
     txt = QString("");
@@ -318,13 +318,13 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
     {
     case (int)SupXML::XmlHandler::XmlState::UNKNOWN:
     {
-        //TODO: print error
+         parent->subtitleProcessor->printError(QString("Unknown tag %1\n").arg(qName));
     } break;
     case (int)SupXML::XmlHandler::XmlState::BDN:
     {
         if (valid)
         {
-            //TODO: print error
+            parent->subtitleProcessor->printError("BDN must be used only once\n");
         }
         else
         {
@@ -337,7 +337,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         if (!at.isEmpty())
         {
             parent->title = at;
-            //TODO: print message
+            parent->subtitleProcessor->print(QString("Title: %1\n").arg(parent->title));
         }
     } break;
     case (int)SupXML::XmlHandler::XmlState::LANGUAGE:
@@ -346,7 +346,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         if (!at.isEmpty())
         {
             parent->language = at;
-            //TODO: print message
+            parent->subtitleProcessor->print(QString("Language: %1\n").arg(parent->language));
         }
     } break;
     case (int)SupXML::XmlHandler::XmlState::FORMAT:
@@ -356,7 +356,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         {
             parent->fps = parent->subtitleProcessor->getFPS(at);
             parent->fpsXml = parent->XmlFps(parent->fps);
-            //TODO: print message
+            parent->subtitleProcessor->print(QString("fps: %1\n").arg(QString::number(parent->fps, 'g', 6)));
         }
         at = atts.value("VideoFormat");
         if (!at.isEmpty())
@@ -367,7 +367,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
                 res = res.replace('p', 'i');
             }
             parent->resolution = parent->subtitleProcessor->getResolution(res);
-            //TODO: print message
+            parent->subtitleProcessor->print(QString("Language: %1\n").arg(res));
         }
     } break;
     case (int)SupXML::XmlHandler::XmlState::EVENTS:
@@ -393,7 +393,9 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         subPicture = new SubPictureXML();
         parent->subPictures.push_back(subPicture);
         int num  = parent->subPictures.size();
-        //TODO: print message
+
+        parent->subtitleProcessor->printX(QString("#%1\n").arg(QString::number(num)));
+
         emit parent->currentProgressChanged(num);
         at = atts.value("InTC");
         if (!at.isEmpty())
@@ -402,7 +404,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
             if (subPicture->startTime == -1)
             {
                 subPicture->startTime = 0;
-                //TODO: print warning
+                parent->subtitleProcessor->printWarning(QString("Invalid start time %1\n").arg(at));
             }
         }
         at = atts.value("OutTC");
@@ -412,7 +414,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
             if (subPicture->endTime == -1)
             {
                 subPicture->endTime = 0;
-                //TODO: print warning
+                parent->subtitleProcessor->printWarning(QString("Invalid end time %1\n").arg(at));
             }
         }
         if (parent->fps != parent->fpsXml)

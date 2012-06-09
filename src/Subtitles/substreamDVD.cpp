@@ -150,7 +150,10 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 
     if (width > pic->width || height > pic->height)
     {
-        //TODO: print warning
+        Core.printWarn(QString("Subpicture too large: %1x%2 at offset %3\n")
+                       .arg(QString::number(w))
+                       .arg(QString::number(h))
+                       .arg(QString::number(startOfs, 16), 8, QChar('0')));
     }
 
     Bitmap* bm = new Bitmap(width, height, transIdx);
@@ -194,7 +197,8 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 
     if (warnings > 0)
     {
-        //TODO: print warnings;
+        Core.printWarn(QString("problems during RLE decoding of picture at offset %1\n")
+                       .arg(QString::number(startOfs, 16), 8, QChar('0')));
     }
     return bm;
 }

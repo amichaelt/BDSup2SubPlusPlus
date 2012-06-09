@@ -26,7 +26,7 @@ TimeUtil::TimeUtil()
 
 long TimeUtil::timeStrXmlToPTS(QString s, double fps)
 {
-    if (timePattern.indexIn(s) != -1)
+    if (timePattern.exactMatch(s) && timePattern.indexIn(s) != -1)
     {
         QStringList m = timePattern.capturedTexts();
         long hour = m[1].toInt();
@@ -49,7 +49,7 @@ long TimeUtil::timeStrXmlToPTS(QString s, double fps)
 
 long TimeUtil::timeStrToPTS(QString s)
 {
-    if (timePattern.indexIn(s) != -1)
+    if (timePattern.exactMatch(s) && timePattern.indexIn(s) != -1)
     {
         QStringList m = timePattern.capturedTexts();
         long hour = m[1].toInt();

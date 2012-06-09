@@ -239,18 +239,36 @@ class SubtitleProcessor : public QObject
     Q_OBJECT
 
 public:
-    SubtitleProcessor();
+    SubtitleProcessor(QWidget* parent = 0);
 
     double minScale = 0.5;
     double maxScale = 2.0;
+
+    QWidget* parent;
 
     QByteArray getFileID(QString fileName, int numberOfBytes);
     StreamID getStreamID(QByteArray id);
     QVector<QVector<QString>>& getLanguages() { return languages; }
     Palette* getDefaultDVDPalette() { return defaultDVDPalette; }
+    Palette* getCurrentDVDPalette() { return currentDVDPalette; }
+    Palette* getCurrentSrcDVDPalette() { return currentSourceDVDPalette; }
+    void setCurrentSrcDVDPalette(Palette* value) { currentSourceDVDPalette = value; }
+    Palette* getDefaultSrcDVDPalette() { return defaultSourceDVDPalette; }
+    void setCineBarFactor(int value) { cineBarFactor = value; }
+    int getMoveOffsetX() { return moveOffsetX; }
+    void setMoveOffsetX(int value) { moveOffsetX = value; }
+    int getMoveOffsetY() { return moveOffsetY; }
+    void setMoveOffsetY(int value) { moveOffsetY = value; }
+    MoveModeX getMoveModeX() { return moveModeX; }
+    void setMoveModeX(MoveModeX value) { moveModeX = value; }
+    MoveModeY getMoveModeY() { return moveModeY; }
+    void setMoveModeY(MoveModeY value) { moveModeY = value; }
     int getAlphaCrop() { return alphaCrop; }
     bool getFixZeroAlpha() { return fixZeroAlpha; }
+    void setFixZeroAlpha(bool value) { fixZeroAlpha = value; }
     int getAlphaThreshold() { return alphaThreshold; }
+    bool getVerbatim() { return verbatim; }
+    void setVerbatim(bool value) { verbatim = value; }
     void setAlphaThreshold(int value) { alphaThreshold = value; }
     bool getWritePGCEditPal() { return writePGCEditPal; }
     void setWritePGCEditPal(bool value) { writePGCEditPal = value; }
@@ -258,6 +276,10 @@ public:
     int getNumForcedFrames();
     bool getExportForced() { return exportForced; }
     void setExportForced(bool value) { exportForced = value; }
+    QVector<int>& getFrameAlpha(int index);
+    QVector<int>& getOriginalFrameAlpha(int index);
+    QVector<int>& getFramePal(int index);
+    QVector<int>& getOriginalFramePal(int index);
     QVector<int> getLuminanceThreshold() { return luminanceThreshold; }
     void setLuminanceThreshold(QVector<int> value) { luminanceThreshold = value; }
     QImage* getSrcImage();
@@ -334,6 +356,7 @@ public:
     int getMergePTSdiff() { return mergePTSdiff; }
     bool usesBT601() { return useBT601; }
     bool getSwapCrCb() { return swapCrCb; }
+    void setSwapCrCb(bool value) { swapCrCb = value; }
     ScalingFilters getScalingFilter() { return scalingFilter; }
     void setScalingFilter(ScalingFilters value) { scalingFilterSet = true; scalingFilter = value; }
     void setFPSTrg(double trg);
@@ -346,16 +369,21 @@ public:
     QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
     bool getKeepFps() { return keepFps; }
     double getDefaultFPS(Resolution resolution);
+    int getErrors() { return numberOfErrors; }
+    void resetErrors() { numberOfErrors = 0; }
+    int getWarnings() { return numberOfWarnings; }
+    void resetWarnings() { numberOfWarnings = 0; }
 
 signals:
     void windowTitleChanged(const QString &newTitle);
-    void progressDialogTitleChanged(QString newTime);
-    void progressDialogTextChanged(QString newText);
+    void progressDialogTitleChanged(const QString &newTitle);
+    void progressDialogTextChanged(const QString &newText);
     void progressDialogValueChanged(int value);
     void progressDialogVisibilityChanged(bool visible);
     void loadingSubtitleFinished();
     void writingSubtitleFinished();
     void moveAllFinished();
+    void printText(const QString &message);
 
 public slots:
     void setMaxProgress(int maxProgress);
@@ -364,6 +392,10 @@ public slots:
     void createSubtitleStream();
     void moveAll();
     void cancelLoading();
+    void print(const QString &message);
+    void printX(const QString &message);
+    void printError(const QString &message);
+    void printWarning(const QString &message);
 
 private:
     Substream* substream = 0;
@@ -415,6 +447,7 @@ private:
     bool moveCaptions = false;
     bool cliMode = false;
     bool exportForced = false;
+    bool verbatim = false;
     static constexpr bool applyFreeScaleDefault = false;
     bool applyFreeScale = applyFreeScaleDefault;
     static constexpr bool convertFPSdefault = false;

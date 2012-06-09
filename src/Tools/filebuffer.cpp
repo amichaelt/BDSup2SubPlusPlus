@@ -27,7 +27,7 @@ FileBuffer::FileBuffer(QString inFileName) :
     length = file.size();
     if (!file.open(QIODevice::ReadOnly))
     {
-        //TODO: add error handling
+        //TODO: error handling
         throw 10;
     }
     readBuffer(offset);
@@ -101,7 +101,7 @@ void FileBuffer::readBuffer(long ofs)
     long l = length - offset;
     if (l < 0)
     {
-        //TODO: add error handling;
+        //TODO: error handling;
         throw 10;
     }
     buf = file.read(l);

@@ -28,8 +28,10 @@ void EditPane::mousePressEvent(QMouseEvent *event)
 {
     if (allowSelection && event->button() == Qt::LeftButton)
     {
-        selectStartX = (int)((event->pos().x() / xScaleCaption) + 0.5);
-        selectStartY = (int)((event->pos().y() / yScaleCaption) + 0.5);
+        int xPos = event->pos().x();// - pixmapXPos;
+        int yPos = event->pos().y();// - pixmapYPos;
+        selectStartX = (int)((xPos / xScaleCaption) + 0.5);
+        selectStartY = (int)((yPos / yScaleCaption) + 0.5);
         leftButtonPressed = true;
         validSelection = false;
     }
@@ -39,14 +41,17 @@ void EditPane::mouseReleaseEvent(QMouseEvent *event)
 {
     if (allowSelection && event->button() == Qt::LeftButton)
     {
-        selectEndX = (int)((event->pos().x() / xScaleCaption) + 0.5);
-        selectEndY = (int)((event->pos().y() / yScaleCaption) + 0.5);
+        int xPos = event->pos().x();// - pixmapXPos;
+        int yPos = event->pos().y();// - pixmapYPos;
+        selectEndX = (int)((xPos / xScaleCaption) + 0.5);
+        selectEndY = (int)((yPos / yScaleCaption) + 0.5);
         leftButtonPressed = false;
         if (selectStartX >= 0 && selectEndX > selectStartX && selectEndY > selectStartY)
         {
             validSelection = true;
         }
         update();
+        emit selectionPerformed(validSelection);
     }
     else
     {
@@ -58,8 +63,10 @@ void EditPane::mouseMoveEvent(QMouseEvent *event)
 {
     if (leftButtonPressed)
     {
-        selectEndX = (int)((event->pos().x() / xScaleCaption) + 0.5);
-        selectEndY = (int)((event->pos().y() / yScaleCaption) + 0.5);
+        int xPos = event->pos().x();// - pixmapXPos;
+        int yPos = event->pos().y();// - pixmapYPos;
+        selectEndX = (int)((xPos / xScaleCaption) + 0.5);
+        selectEndY = (int)((yPos / yScaleCaption) + 0.5);
         if (selectStartX >= 0 && selectEndX > selectStartX && selectEndY > selectStartY)
         {
             validSelection = true;
@@ -70,20 +77,19 @@ void EditPane::mouseMoveEvent(QMouseEvent *event)
 
 void EditPane::paintEvent(QPaintEvent *event)
 {
-    //TODO: finish implementing
     int w, h;
     int x1, y1, rectWidth, rectHeight;
 
-    w = size().width();
-    h = size().height();
+    w = this->size().width();
+    h = this->size().height();
 
     if (isLabel)
     {
-        rectWidth = w - 4;
+        rectWidth = w - (2 * this->margin());
         rectHeight = ((rectWidth * 9) + 8) / 16;
         if (rectHeight > h)
         {
-            rectHeight = h - 2;
+            rectHeight = h - this->margin();
             rectWidth = ((rectHeight * 32) + 8) / 18;
         }
         y1 = ((h - rectHeight) + 1) / 2;
@@ -97,10 +103,10 @@ void EditPane::paintEvent(QPaintEvent *event)
         y1 = 0;
     }
 
-    int cinemascopeBarHeight = (rectHeight * (5.0 / 42)) + 0.5;
+    int cinemascopeBarHeight = (rectHeight * cineBarFactor) + 0.5;
 
     QPainter painter(this);
-    QLinearGradient gradient(0, 0, rectWidth, rectHeight);
+    QLinearGradient gradient(x1, y1, rectWidth, rectHeight);
     gradient.setColorAt(0, Qt::blue);
     gradient.setColorAt(1, Qt::black);
     painter.fillRect(x1, y1 + cinemascopeBarHeight, rectWidth, rectHeight - cinemascopeBarHeight, gradient);
@@ -140,8 +146,8 @@ void EditPane::paintEvent(QPaintEvent *event)
 
         if (validSelection && !leftButtonPressed)
         {
-            if (selectStartX >= imgWidth + ofsX || selectEndX <= ofsX ||
-                selectStartY >= imgHeight + yCrop || selectEndY < yCrop)
+            if (selectStartX >= (imgWidth + ofsX) || selectEndX <= ofsX ||
+                selectStartY >= (imgHeight + yCrop) || selectEndY < yCrop)
             {
                 validSelection = false;
             }
@@ -178,8 +184,11 @@ void EditPane::paintEvent(QPaintEvent *event)
         if (validSelection)
         {
             painter.setPen(Qt::yellow);
-            painter.drawRect((int)((selectStartX * sx) + 0.5), (int)((selectStartY * sy) + 0.5),
-                             (int)(((selectEndX - selectStartX) * sx) + 0.5), (int)(((selectEndY - selectStartY) * sy) + 0.5));
+            int topX = (int)((selectStartX * sx) + 0.5);
+            int topY = (int)((selectStartY * sy) + 0.5);
+            int drawWidth = (int)(((selectEndX - selectStartX) * sx) + 0.5);
+            int drawHeight = (int)(((selectEndY - selectStartY) * sy) + 0.5);
+            painter.drawRect(topX, topY, drawWidth, drawHeight);
         }
 
         if (excluded)
@@ -210,4 +219,18 @@ void EditPane::setImage(QImage *image, int width, int height)
     imgWidth = width;
     imgHeight = height;
     update();
+}
+
+QVector<int> EditPane::getSelection()
+{
+    QVector<int> selectionCoordinates;
+    if (!allowSelection || !validSelection)
+    {
+        return selectionCoordinates;
+    }
+    selectionCoordinates.push_back(selectStartX - ofsX);
+    selectionCoordinates.push_back(selectStartY - yCrop);
+    selectionCoordinates.push_back(selectEndX - ofsX);
+    selectionCoordinates.push_back(selectEndY - yCrop);
+    return selectionCoordinates;
 }

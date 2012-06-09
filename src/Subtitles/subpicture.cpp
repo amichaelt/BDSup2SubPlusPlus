@@ -35,6 +35,40 @@ SubPicture::SubPicture() :
 {
 }
 
+SubPicture::SubPicture(const SubPicture &other) :
+    width(other.width),
+    height(other.height),
+    startTime(other.startTime),
+    endTime(other.endTime),
+    isForced(other.isForced),
+    compNum(other.compNum),
+    wasDecoded(other.wasDecoded),
+    exclude(other.exclude),
+    erasePatch(other.erasePatch),
+    imageWidth(other.imageWidth),
+    imageHeight(other.imageHeight),
+    xOfs(other.xOfs),
+    yOfs(other.yOfs)
+{
+}
+
+SubPicture::SubPicture(const SubPicture *other) :
+    width(other->width),
+    height(other->height),
+    startTime(other->startTime),
+    endTime(other->endTime),
+    isForced(other->isForced),
+    compNum(other->compNum),
+    wasDecoded(other->wasDecoded),
+    exclude(other->exclude),
+    erasePatch(other->erasePatch),
+    imageWidth(other->imageWidth),
+    imageHeight(other->imageHeight),
+    xOfs(other->xOfs),
+    yOfs(other->yOfs)
+{
+}
+
 SubPicture* SubPicture::copy()
 {
     SubPicture* sp = new SubPicture;

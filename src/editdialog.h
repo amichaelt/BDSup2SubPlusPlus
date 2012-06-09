@@ -7,6 +7,8 @@ class SubtitleProcessor;
 class SubPicture;
 class QImage;
 class QDoubleValidator;
+class QIntValidator;
+class QRegExpValidator;
 class QPalette;
 
 namespace Ui {
@@ -23,6 +25,7 @@ public:
     
     void setIndex(int value);
     int getIndex() { return index; }
+    void keyPressEvent(QKeyEvent *event);
 
 private slots:
     void on_minButton_clicked();
@@ -40,11 +43,22 @@ private slots:
     void on_excludeCheckBox_toggled(bool checked);
     void on_forcedCaptionCheckBox_toggled(bool checked);
 
+    void on_verticalSlider_valueChanged(int value);
+    void on_horizontalSlider_valueChanged(int value);
+
     void on_startTimeLineEdit_textChanged(const QString &arg1);
     void on_endTimeLineEdit_textChanged(const QString &arg1);
     void on_durationLineEdit_textChanged(const QString &arg1);
     void on_xOffsetLineEdit_textChanged(const QString &arg1);
     void on_yOffsetLineEdit_textChanged(const QString &arg1);
+
+    void on_startTimeLineEdit_editingFinished();
+    void on_endTimeLineEdit_editingFinished();
+    void on_durationLineEdit_editingFinished();
+    void on_xOffsetLineEdit_editingFinished();
+    void on_yOffsetLineEdit_editingFinished();
+
+    void onSelectionPerformed(bool validSelection);
 
 private:
     Ui::EditDialog *ui;
@@ -53,7 +67,11 @@ private:
     SubPicture* subPicture;
     SubPicture* subPictureNext = 0;
     SubPicture* subPicturePrevious = 0;
-    QDoubleValidator* startTimeValidator;
+    QDoubleValidator* durationValidator;
+    QIntValidator* xOffsetValidator;
+    QIntValidator* yOffsetValidator;
+    QRegExpValidator* startTimeValidator;
+    QRegExpValidator* endTimeValidator;
     QPalette* errorBackground;
     QPalette* warnBackground;
     QPalette* okBackground;
@@ -63,8 +81,10 @@ private:
     int minimumHeight = 432;
     bool enableSliders = false;
     bool edited = false;
+    bool isReady = false;
 
     void setEdited(bool edited);
+    void store();
 };
 
 #endif // EDITDIALOG_H

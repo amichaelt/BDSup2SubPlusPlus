@@ -67,8 +67,7 @@ int SupBD::getNumFrames()
 
 bool SupBD::isForced(int index)
 {
-    //TODO: implement
-    throw 10;
+    return subPictures.at(index)->isForced;
 }
 
 void SupBD::close()
@@ -78,14 +77,12 @@ void SupBD::close()
 
 long SupBD::getEndTime(int index)
 {
-    //TODO: implement
-    throw 10;
+    return subPictures.at(index)->endTime;
 }
 
 long SupBD::getStartTime(int index)
 {
-    //TODO: implement
-    throw 10;
+    return subPictures.at(index)->startTime;
 }
 
 long SupBD::getStartOffset(int index)
@@ -145,7 +142,8 @@ void SupBD::readAllSupFrames()
                     int ps = parsePDS(segment, pic, so);
                     if (ps >= 0)
                     {
-                        //TODO: print line
+                        Core.print(out+", "+so[0]+"\n");
+
                         if (ps > 0) // don't count empty palettes
                         {
                             pdsCtr++;
@@ -153,17 +151,19 @@ void SupBD::readAllSupFrames()
                     }
                     else
                     {
-                        //TODO: print lines
+                        Core.print(out+"\n");
+                        Core.printWarn(so[0]+"\n");
                     }
                 }
                 else
                 {
-                    //TODO: print lines
+                    Core.print(out+"\n");
+                    Core.printWarn("missing PTS start -> ignored\n");
                 }
             }
             else
             {
-                //TODO: print line
+                Core.print(out+", comp # unchanged -> ignored\n");
             }
         } break;
         case 0x15:
@@ -185,21 +185,24 @@ void SupBD::readAllSupFrames()
                         {
                             out += ", "+so;
                         }
-                        //TODO: print line
+
+                        Core.print(out+", img size: "+pic.getImageWidth()+"*"+pic.getImageHeight()+"\n");
                     }
                     else
                     {
-                        //TODO: print lines
+                        Core.print(out+"\n");
+                        Core.printWarn("missing PTS start -> ignored\n");
                     }
                 }
                 else
                 {
-                    //TODO: print lines
+                    Core.print(out+"\n");
+                    Core.printWarn("palette update only -> ignored\n");
                 }
             }
             else
             {
-                //TODO: print line
+                Core.print(out+", comp # unchanged -> ignored\n");
             }
         } break;
         case 0x16:
@@ -218,14 +221,15 @@ void SupBD::readAllSupFrames()
             }
             if (cs == CompositionState::INVALID)
             {
-                //TODO: print line
+                Core.printWarn("Illegal composition state at offset "+ToolBox.hex(index,8)+"\n");
             }
             else if (cs == CompositionState::EPOCH_START)
             {
                 // new frame
                 if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0))
                 {
-                    //TODO: print line
+                    Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
+
                     subPictures.remove(subPictures.size()-1);
                     compNumOld = compNum-1;
                     if (subPictures.size() > 0)
@@ -244,7 +248,8 @@ void SupBD::readAllSupFrames()
                 pic = new SubPictureBD();
                 subPictures.push_back(pic); // add to list
                 pic->startTime = segment->timestamp;
-                //TODO: print line
+
+                Core.printX("#> "+(subPictures.size())+" ("+ToolBox.ptsToTimeStr(pic.startTime)+")\n");
 
                 so = QString("");
                 parsePCS(segment, pic, so);
@@ -260,7 +265,7 @@ void SupBD::readAllSupFrames()
                                                                                   .arg(pic->isForced ? "true" : "false");
                 if (!so.isNull())
                 {
-                    out+=", "+so+"\n";
+                    out+= ", " + so + "\n";
                 }
                 else
                 {
@@ -273,13 +278,14 @@ void SupBD::readAllSupFrames()
                 odsCtrOld = 0;
                 pdsCtrOld = 0;
                 picTmp = 0;
-                //TODO: print line
+
+                Core.print(out);
             }
             else
             {
                 if (pic == 0)
                 {
-                    //TODO: print line
+                    Core.printWarn("missing start of epoch at offset "+ToolBox.hex(index,8)+"\n");
                     break;
                 }
                 out = QString("PCS ofs:%1, ").arg(QString::number(index, 16), 8, QChar('0'));
@@ -316,7 +322,8 @@ void SupBD::readAllSupFrames()
                 }
                 out += QString(", pal update: %1\n").arg(paletteUpdate ? "true" : "false");
                 out += QString("PTS: %1\n").arg(TimeUtil::ptsToTimeStr(segment->timestamp));
-                //TODO: print line
+
+                Core.print(out);
             }
         } break;
         case 0x17:
@@ -326,16 +333,19 @@ void SupBD::readAllSupFrames()
             if (pic != 0)
             {
                 parseWDS(segment, pic);
-                //TODO: print line
+
+                Core.print(out+", dim: "+pic.winWidth+"*"+pic.winHeight+"\n");
             }
             else
             {
-                //TODO: print lines
+                Core.print(out+"\n");
+                Core.printWarn("Missing PTS start -> ignored\n");
             }
         } break;
         case 0x80:
         {
-            //TODO: print line
+            Core.print("END ofs:"+ToolBox.hex(index,8)+"\n");
+
             // decide whether to store this last composition section as caption or merge it
             if (cs == CompositionState::EPOCH_START)
             {
@@ -355,7 +365,8 @@ void SupBD::readAllSupFrames()
                     {
                         picLast = 0;
                     }
-                    //TODO: print line
+
+                    Core.printX("#< caption merged\n");
                 }
             }
             else
@@ -374,13 +385,15 @@ void SupBD::readAllSupFrames()
                     // last PCS should be stored as separate caption
                     if (odsCtr - odsCtrOld > 1 || pdsCtr - pdsCtrOld > 1)
                     {
-                        //TODO: print line
+                        Core.printWarn("multiple PDS/ODS definitions: result may be erratic\n");
                     }
                     // replace pic with picTmp (deepCopy created before new PCS)
                     subPictures.replace(subPictures.size() - 1, picTmp); // replace in list
                     picLast = picTmp;
                     subPictures.push_back(pic); // add to list
-                    //TODO: print line
+
+                    Core.printX("#< "+(subPictures.size())+" ("+ToolBox.ptsToTimeStr(pic.startTime)+")\n");
+
                     odsCtrOld = odsCtr;
                 }
                 else
@@ -397,12 +410,12 @@ void SupBD::readAllSupFrames()
                         }
                         if (pdsCtr > pdsCtrOld || paletteUpdate)
                         {
-                            //TODO: print line
+                            Core.printWarn("palette animation: result may be erratic\n");
                         }
                     }
                     else
                     {
-                        //TODO: print line
+                        Core.printWarn("end without at least one epoch start\n");
                     }
                 }
             }
@@ -411,7 +424,7 @@ void SupBD::readAllSupFrames()
         } break;
         default:
         {
-            //TODO: print warning
+            Core.printWarn("<unknown> "+ToolBox.hex(segment.type,2)+" ofs:"+ToolBox.hex(index,8)+"\n");
         } break;
         }
         index += 13; // header size
@@ -421,7 +434,8 @@ void SupBD::readAllSupFrames()
     // check if last frame is valid
     if (subPictures.size() > 0 && (odsCtr == 0 || pdsCtr == 0))
     {
-        //TODO: print line
+        Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
+
         subPictures.remove(subPictures.size()-1);
     }
 
@@ -435,7 +449,8 @@ void SupBD::readAllSupFrames()
             numForcedFrames++;
         }
     }
-    //TODO: print line
+
+    Core.printX("\nDetected "+numForcedFrames+" forced captions.\n");
 }
 
 QVector<uchar> SupBD::encodeImage(Bitmap *bm)
@@ -550,16 +565,19 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
         if (size > 255)
         {
             size = 255;
-            //TODO: print warnings
+            Core.print("Palette had to be reduced from "+pal.getSize()+" to "+size+" entries.\n");
+            Core.printWarn("Quantizer failed.\n");
         }
         else
         {
-            //TODO: print line
+            Core.print("Palette had to be reduced from "+pal.getSize()+" to "+size+" entries.\n");
         }
         // create palette
         pal = new Palette(size);
         for (int i = 0; i < size; ++i)
+        {
             pal->setARGB(i, ct[i]);
+        }
         // use new bitmap
         bm = bmQ;
     }
@@ -972,7 +990,7 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD* subPicture, QString msg)
         }
         else
         {
-            //TODO: print line
+            Core.printWarn("Invalid image size - ignored\n");
             return false;
         }
     }
@@ -1099,7 +1117,7 @@ Palette *SupBD::decodePalette(SubPictureBD *subPicture)
     }
     if (fadeOut)
     {
-        //TODO: print warning
+        Core.printWarn("fade out detected -> patched palette\n");
     }
     return palette;
 }

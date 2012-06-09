@@ -23,6 +23,7 @@
 
 #include <QDialog>
 
+class QPalette;
 class SubtitleProcessor;
 class QDoubleValidator;
 class QRegExpValidator;
@@ -40,6 +41,7 @@ public:
     ~ConversionDialog();
 
     void enableOptionMove(bool enable);
+    void keyPressEvent(QKeyEvent *event);
     
 private slots:
     void on_okButton_clicked();
@@ -56,27 +58,35 @@ private slots:
 
     void on_resolutionComboBox_currentIndexChanged(int index);
     void on_forceFlagsComboBox_currentIndexChanged(int index);
+    void on_sourceFramerateComboBox_currentIndexChanged(const QString &arg1);
+    void on_targetFramerateComboBox_currentIndexChanged(const QString &arg1);
 
-    void on_sourceFramerateComboBox_editTextChanged(const QString &arg1);
-    void on_targetFramerateComboBox_editTextChanged(const QString &arg1);
     void on_scaleXLineEdit_textChanged(const QString &arg1);
     void on_scaleYLineEdit_textChanged(const QString &arg1);
     void on_delayLineEdit_textChanged(const QString &arg1);
     void on_minTimeLineEdit_textChanged(const QString &arg1);
+    void on_sourceFramerateComboBox_editTextChanged(const QString &arg1);
+    void on_targetFramerateComboBox_editTextChanged(const QString &arg1);
+
+    void on_scaleXLineEdit_editingFinished();
+    void on_scaleYLineEdit_editingFinished();
+    void on_delayLineEdit_editingFinished();
+    void on_minTimeLineEdit_editingFinished();
 
 private:
     Ui::ConversionDialog *ui;
     SubtitleProcessor *subtitleProcessor;
 
-    QColor errBackground = QColor(0xffe1acac);
-    QColor warnBackground = QColor(0xffffffc0);
-    QColor okBackground = QColor(0xff000000);
     QRegExpValidator* fpsSrcValidator;
     QRegExpValidator* fpsTrgValidator;
     QDoubleValidator* scaleXValidator;
     QDoubleValidator* scaleYValidator;
     QDoubleValidator* delayPTSValidator;
     QDoubleValidator* minTimePTSValidator;
+
+    QPalette* errorBackground;
+    QPalette* warnBackground;
+    QPalette* okBackground;
 
     Resolution resolution;
     int delayPTS;
@@ -95,6 +105,8 @@ private:
     bool moveCaptions;
 
     void fillDialog();
+    void on_sourceFramerateComboBox_editingFinished();
+    void on_targetFramerateComboBox_editingFinished();
 };
 
 #endif // CONVERSIONDIALOG_H

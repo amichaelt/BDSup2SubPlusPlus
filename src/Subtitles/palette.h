@@ -38,15 +38,17 @@ public:
     QVector<int> getRGB(int index);
     void setARGB(int index, unsigned int inColor);
     int getARGB(int index);
-     int getSize() { return size; }
-     QVector<uchar> getR() { return r; }
-     QVector<uchar> getG() { return g; }
-     QVector<uchar> getB() { return b; }
-     QVector<uchar> getAlpha() { return a; }
-     int getAlpha(int index) { return a[index]; }
-     QVector<uchar> getY() { return y; }
-     QVector<uchar> getCb() { return cb; }
-     QVector<uchar> getCr() { return cr; }
+    int getSize() { return size; }
+    QColor getColor(int index) { return QColor(r[index] & 0xff, g[index] & 0xff, b[index] & 0xff, a[index] & 0xff); }
+    void setColor(int index, QColor color) { setRGB(index, color.red(), color.green(), color.blue()); setAlpha(index, color.alpha()); }
+    QVector<uchar> getR() { return r; }
+    QVector<uchar> getG() { return g; }
+    QVector<uchar> getB() { return b; }
+    QVector<uchar> getAlpha() { return a; }
+    int getAlpha(int index) { return a[index]; }
+    QVector<uchar> getY() { return y; }
+    QVector<uchar> getCb() { return cb; }
+    QVector<uchar> getCr() { return cr; }
     QVector<QRgb> getColorTable();
     int getTransparentIndex();
     void setYCbCr(int index, int yn, int cbn, int crn);

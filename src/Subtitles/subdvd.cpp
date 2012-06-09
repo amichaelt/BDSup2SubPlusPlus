@@ -49,8 +49,7 @@ QImage *SubDVD::getImage()
 
 QImage *SubDVD::getImage(Bitmap *bitmap)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return bitmap->getImage(palette);
 }
 
 void SubDVD::decode(int index)
@@ -73,8 +72,7 @@ int SubDVD::getNumFrames()
 
 bool SubDVD::isForced(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->isForced;
 }
 
 void SubDVD::close()
@@ -84,14 +82,12 @@ void SubDVD::close()
 
 long SubDVD::getEndTime(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->endTime;
 }
 
 long SubDVD::getStartTime(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->startTime;
 }
 
 long SubDVD::getStartOffset(int index)
@@ -104,33 +100,24 @@ SubPicture *SubDVD::getSubPicture(int index)
     return subPictures.at(index);
 }
 
-QVector<int> SubDVD::getFrameAlpha(int index)
+QVector<int>& SubDVD::getFrameAlpha(int index)
 {
     return subPictures.at(index)->alpha;
 }
 
-
-QVector<int> SubDVD::getFramePal(int index)
+QVector<int>& SubDVD::getFramePal(int index)
 {
     return subPictures.at(index)->pal;
 }
 
-QVector<int> SubDVD::getOriginalFrameAlpha(int index)
+QVector<int>& SubDVD::getOriginalFrameAlpha(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->originalAlpha;
 }
 
-QVector<int> SubDVD::getOriginalFramePal(int index)
+QVector<int>& SubDVD::getOriginalFramePal(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
-}
-
-void SubDVD::setSrcPalette(Palette *palette)
-{
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->originalPal;
 }
 
 void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
@@ -154,26 +141,30 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         long startOfs = ofs;
         if (fileBuffer->getDWord(ofs) != 0x000001ba)
         {
-            //TODO: print error message
+            //TODO: error handling
             throw 10;
         }
+
         // 6 bytes:  system clock reference
         // 3 bytes:  multiplexer rate
         // 1 byte:   stuffing info
         int stuffOfs = fileBuffer->getByte(ofs += 13) & 7;
+
         // 4 bytes:  sub packet ID 0x000001bd
         if (fileBuffer->getDWord(ofs += (1 + stuffOfs)) != 0x000001bd)
         {
-            //TODO: print error message
+            //TODO: error handling
             throw 10;
         }
         // 2 bytes:  packet length (number of bytes after this entry)
         length = fileBuffer->getWord(ofs += 4);
         nextOfs = ofs + 2 + length;
+
         // 2 bytes:  packet type
         ofs += 2;
         packHeaderSize = (int)(ofs - startOfs);
         bool firstPack = ((fileBuffer->getByte(++ofs) & 0x80) == 0x80);
+
         // 1 byte    pts length
         int ptsLength = fileBuffer->getByte(ofs += 1);
         ofs += (1 + ptsLength); // skip PTS and stream ID
@@ -184,7 +175,8 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             if ((nextOfs % 0x800) != 0)
             {
                 ofs = ((nextOfs / 0x800) + 1) * 0x800;
-                //TODO: print error message
+
+                Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
             }
             else
             {
@@ -220,7 +212,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             }
             else
             {
-                //TODO: print warning message
+                Core.printWarn("Invalid fragment skipped at ofs "+ToolBox.hex(startOfs, 8)+"\n");
             }
         }
 
@@ -241,7 +233,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         }
         catch (int e)
         {
-            //TODO: Add error handling
+            //TODO: error handling
             throw 10;
         }
         rleFrag = new ImageObjectFragment();
@@ -254,7 +246,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
         {
             ofs = ((nextOfs / 0x800) + 1) * 0x800;
-            //TODO: print error message
+
+            Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
+
             rleBufferFound += ofs-nextOfs;
         }
         else
@@ -265,7 +259,8 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
     if (ctrlHeaderCopied != ctrlSize)
     {
-        //TODO: print warning to console
+        Core.printWarn("Control buffer size inconsistent.\n");
+
         for (int i = ctrlHeaderCopied; i < ctrlSize; ++i)
         {
             ctrlHeader.replace(i, 0xff);
@@ -274,7 +269,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
     if (rleBufferFound != rleSize)
     {
-        //TODO: print warning to console
+        Core.printWarn("RLE buffer size inconsistent.\n");
     }
 
     pic->rleSize = rleBufferFound;
@@ -284,14 +279,15 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
     int delay = -1;
     bool ColAlphaUpdate = false;
 
-    //TODO: print message to console
+    Core.print("SP_DCSQT at ofs: "+ToolBox.hex(ctrlOfs,8)+"\n");
 
     int b;
     int index = 0;
     int endSeqOfs = (((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - ctrlOfsRel) - 2;
     if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
     {
-        //TODO: print warning
+        Core.printWarn("Invalid end sequence offset -> no end time\n");
+
         endSeqOfs = ctrlSize;
     }
 
@@ -316,7 +312,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             b = ctrlHeader[index++] & 0xff;
             pic->pal.replace(1, (b >> 4));
             pic->pal.replace(0, (b & 0x0f));
-            //TODO: print message
+
+            Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
+
         } break;
         case 4: // alpha info
         {
@@ -330,7 +328,8 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             {
                 alphaSum += pic->alpha[i] & 0xff;
             }
-            //TODO: print message
+
+            Core.print("Alpha:     "+pic.alpha[0]+", "+pic.alpha[1]+", "+pic.alpha[2]+", "+pic.alpha[3]+"\n");
         } break;
         case 5: // coordinates
         {
@@ -340,7 +339,11 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
             pic->setOfsY(ofsYglob + yOfs);
             pic->setImageHeight((((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff)) - yOfs) + 1);
-            //TODO: print message
+
+            Core.print("Area info:"+" ("
+                                            +pic.getOfsX()+", "+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth()-1)+", "
+                                            +(pic.getOfsY()+pic.getImageHeight()-1)+")\n");
+
             index += 6;
         } break;
         case 6: // offset to RLE buffer
@@ -348,7 +351,8 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             pic->evenOfs = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4;
             pic->oddOfs = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
             index += 4;
-            //TODO: print message
+
+            Core.print("RLE ofs:   "+ToolBox.hex(pic.evenOfs, 4)+", "+ToolBox.hex(pic.oddOfs, 4)+"\n");
         } break;
         case 7: // color/alpha update
         {
@@ -384,7 +388,8 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             endSeqOfs = (((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - ctrlOfsRel) - 2;
             if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
             {
-                //TODO: print warning
+                Core.printWarn("Invalid end sequence offset -> no end time\n");
+
                 endSeqOfs = ctrlSize;
             }
             index += 4;
@@ -392,8 +397,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         case 0xff: // end sequence
              goto parse_ctrl;
         default:
-            //TODO: print warning
-            break;
+        {
+            Core.printWarn("Unknown control sequence "+ToolBox.hex(cmd,2)+" skipped\n");
+        } break;
         }
     }
     parse_ctrl:
@@ -412,7 +418,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         }
         if (ctrlSeqCount > 2)
         {
-            //TODO: print warning
+            Core.printWarn("Control sequence(s) ignored - result may be erratic.");
         }
         pic->endTime = pic->startTime + delay;
     }
@@ -423,7 +429,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
     if (ColAlphaUpdate)
     {
-        //TODO: print warning
+        Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
     }
 
     if (alphaSum == 0)
@@ -434,11 +440,12 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             {
                 pic->alpha.replace(i, lastAlpha[i]);
             }
-            //TODO: print warning
+
+            Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
         }
         else
         {
-            //TODO: print warning
+            Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
         }
     }
 
@@ -452,7 +459,9 @@ void SubDVD::readAllSubFrames()
     for (int i = 0; i < subPictures.size(); ++i)
     {
         emit currentProgressChanged(i);
-        //TODO: log progress in console
+
+        Core.printX("# "+(i+1)+"\n");
+
         long nextOfs;
         if (i < subPictures.size() - 1)
         {
@@ -467,7 +476,7 @@ void SubDVD::readAllSubFrames()
 
     emit currentProgressChanged(subPictures.size());
 
-    //TODO: print number of frames in console
+    Core.printX("\nDetected "+numForcedFrames+" forced captions.\n");
 }
 
 QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
@@ -782,7 +791,7 @@ void SubDVD::readIdx()
         int position = inString.indexOf(':');
         if (position == -1 || (inString.size() - position) <= 1)
         {
-            //TODO: add error reporting
+            Core.printErr("Illegal key: "+s+"\n");
             continue;
         }
         QString key(inString.left(position).trimmed().toLower());
@@ -795,21 +804,21 @@ void SubDVD::readIdx()
             keyValue = value.split("x", QString::SkipEmptyParts);
             if (keyValue.isEmpty() || keyValue.size() <= 1)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             temp = keyValue[0].toInt();
             if (temp < 2)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             screenWidth = temp;
             temp = keyValue[1].toInt();
             if (temp < 2)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             screenHeight = temp;
             continue;
@@ -821,21 +830,21 @@ void SubDVD::readIdx()
             keyValue = value.split(",", QString::SkipEmptyParts);
             if (keyValue.isEmpty() || keyValue.size() <= 1)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             temp = keyValue[0].toInt();
             if (temp < 0)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             ofsXglob = temp;
             temp =keyValue[1].toInt();
             if (temp < 0)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             ofsYglob = temp;
             continue;
@@ -881,8 +890,8 @@ void SubDVD::readIdx()
             }
             if (temp < 0)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             delayGlob = temp * 90; //ms -> 90khz
             continue;
@@ -900,8 +909,8 @@ void SubDVD::readIdx()
             QStringList paletteValues = value.split(",");
             if (paletteValues.isEmpty() || paletteValues.size() < 1 || paletteValues.size() > 16)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             for (int i = 0; i < paletteValues.size(); ++i)
             {
@@ -910,8 +919,8 @@ void SubDVD::readIdx()
                 temp = paletteValues[i].trimmed().toInt(&ok, 16);
                 if (!ok)
                 {
-                    //TODO: add error reporting
-                    return;
+                    //TODO: error handling
+                    throw 10;
                 }
                 color = temp;
                 srcPalette->setARGB(i, color);
@@ -931,8 +940,8 @@ void SubDVD::readIdx()
             temp = value.toInt();
             if (temp < 0)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             langIdx = temp;
             continue;
@@ -946,7 +955,7 @@ void SubDVD::readIdx()
             id = vals[0];
             if (id.size() != 2)
             {
-                //TODO: add error reporting
+                Core.printWarn("Illegal language id: "+id+"\n");
                 continue;
             }
             bool found = false;
@@ -963,24 +972,24 @@ void SubDVD::readIdx()
             }
             if (!found)
             {
-                //TODO: add error reporting
+                Core.printWarn("Illegal language id: "+id+"\n");
             }
             vals = value.split(':', QString::SkipEmptyParts);
             if (vals[0].toLower() == "index")
             {
-                //TODO: add error reporting
+                Core.printErr("Missing index key: "+val+"\n");
                 continue;
             }
             temp = vals[1].toInt();
             if (temp < 0)
             {
-                //TODO: add error reporting
-                return;
+                //TODO: error handling
+                throw 10;
             }
             if (temp != langIdx)
             {
                 ignore = true;
-                //TODO: add error reporting
+                Core.printWarn("Language id "+id+"(index:"+v+") inactive -> ignored\n");
             }
             else
             {
@@ -999,29 +1008,29 @@ void SubDVD::readIdx()
                 QStringList vals = value.split(',', QString::SkipEmptyParts);
                 if (vals.isEmpty() || vals.size() <= 1)
                 {
-                    //TODO: add error reporting
-                    return;
+                    //TODO: error handling
+                    throw 10;
                 }
                 vs = vals[0];
                 long time = TimeUtil::timeStrToPTS(vs);
                 if (time < 0)
                 {
-                    //TODO: add error reporting
-                    return;
+                    //TODO: error handling
+                    throw 10;
                 }
                 vs = vals[1].trimmed().toLower();
                 vals = vs.split(':', QString::SkipEmptyParts);
                 if (vals.isEmpty() || vals.size() <= 1)
                 {
-                    //TODO: add error reporting
-                    return;
+                    //TODO: error handling
+                    throw 10;
                 }
                 bool ok;
                 long hex = vals[1].trimmed().toLong(&ok, 16);
                 if (!ok)
                 {
-                    //TODO: add error reporting
-                    return;
+                    //TODO: error handling
+                    throw 10;
                 }
                 SubPictureDVD* pic = new SubPictureDVD;
                 pic->offset = hex;

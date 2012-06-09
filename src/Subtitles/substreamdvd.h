@@ -32,10 +32,10 @@ class SubstreamDVD
 {
 public:
     SubstreamDVD();
-    virtual QVector<int> getFrameAlpha(int index) = 0;
-    virtual QVector<int> getFramePal(int index) = 0;
-    virtual QVector<int> getOriginalFrameAlpha(int index) = 0;
-    virtual QVector<int> getOriginalFramePal(int index) = 0;
+    virtual QVector<int>& getFrameAlpha(int index) = 0;
+    virtual QVector<int>& getFramePal(int index) = 0;
+    virtual QVector<int>& getOriginalFrameAlpha(int index) = 0;
+    virtual QVector<int>& getOriginalFramePal(int index) = 0;
     virtual Palette *getSrcPalette() = 0;
     virtual void setSrcPalette(Palette *palette) = 0;
     virtual int getLanguageIdx() = 0;

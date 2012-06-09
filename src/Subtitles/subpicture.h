@@ -28,6 +28,7 @@ class SubPicture
 public:
     SubPicture();
     SubPicture(const SubPicture& other);
+    SubPicture(const SubPicture* other);
 
     SubPicture* copy();
     virtual int getImageWidth() { return imageWidth; }
@@ -47,7 +48,7 @@ public:
     int compNum;
     bool wasDecoded;
     bool exclude;
-    QVector<ErasePatch*> erasePatch;
+    QVector<ErasePatch*> erasePatch = QVector<ErasePatch*>();
 
 private:
     int imageWidth;

@@ -108,6 +108,9 @@
              <height>20</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Set subtitle number</string>
+           </property>
            <property name="editable">
             <bool>true</bool>
            </property>
@@ -140,6 +143,9 @@
              <width>90</width>
              <height>20</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>Set alpha threshold</string>
            </property>
            <property name="editable">
             <bool>true</bool>
@@ -177,6 +183,9 @@
              <height>20</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Set low/medium luminance threshold</string>
+           </property>
            <property name="editable">
             <bool>true</bool>
            </property>
@@ -209,6 +218,9 @@
              <width>90</width>
              <height>20</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>Set medium/high luminance threshold</string>
            </property>
            <property name="editable">
             <bool>true</bool>
@@ -293,6 +305,9 @@
              <height>20</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Select palette mode</string>
+           </property>
            <property name="currentIndex">
             <number>1</number>
            </property>
@@ -337,6 +352,9 @@
              <width>74</width>
              <height>20</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>Select filter for scaling</string>
            </property>
            <property name="maxVisibleItems">
             <number>8</number>
@@ -452,7 +470,7 @@
          <x>0</x>
          <y>0</y>
          <width>788</width>
-         <height>149</height>
+         <height>142</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -521,7 +539,7 @@
          <x>0</x>
          <y>0</y>
          <width>788</width>
-         <height>150</height>
+         <height>141</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -594,7 +612,7 @@
      <x>0</x>
      <y>0</y>
      <width>790</width>
-     <height>21</height>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -720,16 +738,25 @@
    </property>
   </action>
   <action name="action_Swap_Cr_Cb">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>&amp;Swap Cr/Cb</string>
    </property>
   </action>
   <action name="action_Fix_invisible_frames">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>&amp;Fix invisible frames</string>
    </property>
   </action>
   <action name="action_Verbatim_Output">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>&amp;Verbatim Output</string>
    </property>
@@ -748,14 +775,14 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>ZoomableImageArea</class>
-   <extends>QLabel</extends>
-   <header>zoomableimagearea.h</header>
-  </customwidget>
-  <customwidget>
    <class>EditPane</class>
    <extends>QLabel</extends>
    <header location="global">editpane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ZoomableImageArea</class>
+   <extends>QLabel</extends>
+   <header>zoomableimagearea.h</header>
   </customwidget>
  </customwidgets>
  <resources>

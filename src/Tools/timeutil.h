@@ -36,6 +36,7 @@ public:
     static QString ptsToTimeStr(long pts);
     static QVector<int> msToTime(long ms);
     static long timeStrXmlToPTS(QString s, double fps);
+    static QRegExp getTimePattern() { return timePattern; }
 };
 
 #endif // TIMEUTIL_H

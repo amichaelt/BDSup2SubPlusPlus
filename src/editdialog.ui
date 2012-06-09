@@ -22,7 +22,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string/>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>
@@ -31,6 +31,9 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout_6" rowstretch="0,2,0,0,0">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <property name="leftMargin">
     <number>2</number>
    </property>
@@ -120,7 +123,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>47</width>
+          <width>0</width>
           <height>21</height>
          </size>
         </property>
@@ -363,6 +366,9 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Set start time of subtitle</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -409,6 +415,9 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Set end time of subtitle</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -442,6 +451,9 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Set display duration of subtitle in milliseconds</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -456,8 +468,14 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Set minimum duration</string>
+          </property>
           <property name="text">
            <string>Mi&amp;n</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -469,8 +487,14 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Set maximum duration</string>
+          </property>
           <property name="text">
            <string>&amp;Max</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -529,6 +553,9 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Set X coordinate of upper left corner of subtitle</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -543,8 +570,14 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Center subpicture horizontally</string>
+            </property>
             <property name="text">
              <string>&amp;Center</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -590,6 +623,9 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Set Y coordinate of upper left corner of subtitle</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -610,8 +646,14 @@
               <height>16777215</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Move to upper cinemascope bar</string>
+            </property>
             <property name="text">
              <string>&amp;Top</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -623,8 +665,14 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Move to lower cinemascope bar</string>
+            </property>
             <property name="text">
              <string>&amp;Bottom</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -722,6 +770,9 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="toolTip">
+         <string>Add erase patch to make the selected area transparent</string>
+        </property>
         <property name="text">
          <string>&amp;Erase</string>
         </property>
@@ -732,6 +783,9 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="toolTip">
+         <string>Remove one erase patch from the stack (undo one delete step)</string>
+        </property>
         <property name="text">
          <string>&amp;Undo Erase</string>
         </property>
@@ -741,6 +795,9 @@
        <widget class="QPushButton" name="undoAllErasePatchesButton">
         <property name="enabled">
          <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Remove all erase patches from the stack (undo all delete steps)</string>
         </property>
         <property name="text">
          <string>Undo &amp;All</string>
@@ -779,8 +836,14 @@
          <height>0</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Lose changes and return</string>
+       </property>
        <property name="text">
         <string>&amp;Cancel</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -805,8 +868,14 @@
          <height>0</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Save changes and continue editing</string>
+       </property>
        <property name="text">
         <string>&amp;Save Changes</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -831,8 +900,14 @@
          <height>0</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Save changes and return</string>
+       </property>
        <property name="text">
         <string>&amp;Ok</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

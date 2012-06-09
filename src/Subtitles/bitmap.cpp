@@ -28,16 +28,16 @@
 
 Bitmap::Bitmap(Bitmap &other) :
     width(other.width),
-    height(other.height),
-    img(other.img)
+    height(other.height)
 {
+    img = new QImage(other.img->copy());
 }
 
 Bitmap::Bitmap(Bitmap *other) :
     width(other->width),
-    height(other->height),
-    img(other->img)
+    height(other->height)
 {
+    img = new QImage(other->img->copy());
 }
 
 Bitmap::Bitmap(int width, int height) :
@@ -733,10 +733,10 @@ void Bitmap::fillRect(int x, int y, int width, int height, int color)
 {
     uchar b = (uchar)color;
 
-    for (int i = y; i < height; ++i)
+    for (int i = y; i < (y + height); ++i)
     {
         uchar* pixels = img->scanLine(i);
-        for (int j = x; j < width; ++j)
+        for (int j = x; j < (x + width); ++j)
         {
             pixels[j] = b;
         }

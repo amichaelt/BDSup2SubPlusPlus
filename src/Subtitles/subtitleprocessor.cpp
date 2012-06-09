@@ -40,8 +40,9 @@
 #include "Tools/timeutil.h"
 #include <cmath>
 
-SubtitleProcessor::SubtitleProcessor()
+SubtitleProcessor::SubtitleProcessor(QWidget* parent)
 {
+    this->parent = parent;
     defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
     currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 }
@@ -103,6 +104,42 @@ int SubtitleProcessor::getNumForcedFrames()
         return 0;
     }
     return substream->getNumForcedFrames();
+}
+
+QVector<int>& SubtitleProcessor::getFrameAlpha(int index)
+{
+    if (inMode == InputMode::VOBSUB)
+    {
+        return subDVD->getFrameAlpha(index);
+    }
+    return supDVD->getFrameAlpha(index);
+}
+
+QVector<int>& SubtitleProcessor::getOriginalFrameAlpha(int index)
+{
+    if (inMode == InputMode::VOBSUB)
+    {
+        return subDVD->getOriginalFrameAlpha(index);
+    }
+    return supDVD->getOriginalFrameAlpha(index);
+}
+
+QVector<int>& SubtitleProcessor::getFramePal(int index)
+{
+    if (inMode == InputMode::VOBSUB)
+    {
+        return subDVD->getFramePal(index);
+    }
+    return supDVD->getFramePal(index);
+}
+
+QVector<int>& SubtitleProcessor::getOriginalFramePal(int index)
+{
+    if (inMode == InputMode::VOBSUB)
+    {
+        return subDVD->getOriginalFramePal(index);
+    }
+    return supDVD->getOriginalFramePal(index);
 }
 
 QImage *SubtitleProcessor::getSrcImage()
@@ -197,7 +234,6 @@ long SubtitleProcessor::syncTimePTS(long timeStamp, double fps)
 
 void SubtitleProcessor::close()
 {
-    //TODO: fix when other classes are implemented
     if (supBD != 0)
     {
         supBD->close();
@@ -599,7 +635,8 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
 
     if (ts < te_last)
     {
-        //TODO: print warning
+        printWarn("start time of frame "+idx+" < end of last frame -> fixed\n");
+
         ts = te_last;
     }
 
@@ -628,11 +665,11 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
     {
         if (te == 0)
         {
-            //TODO: print warning
+            printWarn("missing end time of frame "+idx+" -> fixed\n");
         }
         else
         {
-            //TODO: print warning
+            printWarn("end time of frame "+idx+" <= start time -> fixed\n");
         }
         te = ts + delay;
         if (te > ts_next)
@@ -642,7 +679,7 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
     }
     else if (te > ts_next)
     {
-        //TODO: print warning
+        printWarn("end time of frame "+idx+" > start time of next frame -> fixed\n");
         te = ts_next;
     }
 
@@ -655,11 +692,11 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
             {
                 te = ts_next;
             }
-            //TODO: print warning
+            printWarn("duration of frame "+idx+" was shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms -> fixed\n");
         }
         else
         {
-            //TODO: print warning
+            printWarn("duration of frame "+idx+" is shorter than "+(ToolBox.formatDouble(minTimePTS/90.0))+"ms\n");
         }
     }
 
@@ -686,15 +723,15 @@ void SubtitleProcessor::readSubtitleStream()
 
     if (!isXML && !isIDX && !isIFO && streamID == StreamID::UNKNOWN)
     {
-        //TODO: add error handling
-        return;
+        //TODO: error handling
+        throw 10;
     }
 
     maxProgress = fileInfo.size();
     lastProgress = 0;
 
-    emit progressDialogTitleChanged("Loading");
-    emit progressDialogTextChanged("Loading subtitle stream");
+    emit progressDialogTitleChanged(QString("Loading"));
+    emit progressDialogTextChanged(QString("Loading subtitle stream"));
     emit progressDialogVisibilityChanged(true);
 
     if (isXML || streamID == StreamID::XML)
@@ -783,7 +820,7 @@ void SubtitleProcessor::writeSub(QString filename)
         out = new QFile(filename);
         if (!out->open(QIODevice::WriteOnly))
         {
-            //TODO: add error handling
+            //TODO: error handling
             throw 10;
         }
         exists = out->exists();
@@ -794,7 +831,7 @@ void SubtitleProcessor::writeSub(QString filename)
         out = new QFile(filename);
         if (!out->open(QIODevice::WriteOnly))
         {
-            //TODO: add error handling
+            //TODO: error handling
             throw 10;
         }
     }
@@ -803,7 +840,9 @@ void SubtitleProcessor::writeSub(QString filename)
         fn = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName();
         filename = fn + ".xml";
     }
-    //TODO: print line
+
+    printX("\nWriting "+fname+"\n");
+
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
@@ -811,15 +850,13 @@ void SubtitleProcessor::writeSub(QString filename)
     int offset = 0;
     for (int i = 0; i < substream->getNumFrames(); ++i)
     {
-        // for threaded version
         if (isCancelled())
         {
             //TODO: error handling
             throw 10;
         }
-        // for threaded version (progress bar);
         setCurrentProgress(i);
-        //
+
         if (!subPictures[i]->exclude && (!exportForced || subPictures[i]->isForced))
         {
             if (outMode == OutputMode::VOBSUB)
@@ -907,7 +944,9 @@ void SubtitleProcessor::writeSub(QString filename)
             ts.replace(i, timestamps[i]);
         }
         filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".idx";
-        //TODO: print line
+
+        printX("\nWriting "+fname+"\n");
+
         if (!importedDVDPalette || paletteMode != PaletteMode::KEEP_EXISTING)
         {
             trgPallete = currentDVDPalette;
@@ -924,7 +963,8 @@ void SubtitleProcessor::writeSub(QString filename)
     }
     else if (outMode == OutputMode::XML)
     {
-        //TODO: print line
+        printX("\nWriting "+fname+"\n");
+
         supXML->writeXml(filename, subPictures);
         if (deleteObject)
         {
@@ -943,7 +983,9 @@ void SubtitleProcessor::writeSub(QString filename)
             trgPallete = currentSourceDVDPalette;
         }
         filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
-        //TODO: print line
+
+        printX("\nWriting "+fname+"\n");
+
         supDVD->writeIfo(filename, subPictures[0], trgPallete);
         if (deleteObject)
         {
@@ -959,7 +1001,9 @@ void SubtitleProcessor::writeSub(QString filename)
     if (trgPallete != 0 && writePGCEditPal)
     {
         QString fnp = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".txt";
-        //TODO: print line
+
+        printX("\nWriting "+fnp+"\n");
+
         writePGCEditPalette(fnp, trgPallete);
     }
 }
@@ -997,6 +1041,56 @@ void SubtitleProcessor::cancelLoading()
     isActive = false;
 }
 
+void SubtitleProcessor::print(const QString &message)
+{
+    if (verbatim && parent != 0)
+    {
+        emit printText(message);
+    }
+    else
+    {
+        //TODO: print to stdout when using CLI
+    }
+}
+
+void SubtitleProcessor::printX(const QString &message)
+{
+    if (parent != 0)
+    {
+        emit printText(message);
+    }
+    else
+    {
+        //TODO: print to stdout when using CLI
+    }
+}
+
+void SubtitleProcessor::printError(const QString &message)
+{
+    ++numberOfErrors;
+    if (parent != 0)
+    {
+        emit printText(QString("ERROR: " + message));
+    }
+    else
+    {
+        //TODO: print to stdout when using CLI
+    }
+}
+
+void SubtitleProcessor::printWarning(const QString &message)
+{
+    ++numberOfWarnings;
+    if (parent != 0)
+    {
+        emit printText(QString("WARNING: " + message));
+    }
+    else
+    {
+        //TODO: print to stdout when using CLI
+    }
+}
+
 void SubtitleProcessor::moveAllToBounds()
 {
     QString sy("");
@@ -1031,11 +1125,11 @@ void SubtitleProcessor::moveAllToBounds()
         {
             s += " and to the " + sx;
         }
-        //TODO: add printing
+        print(s+".\n");
     }
     else if (!sx.isEmpty())
     {
-        //TODO: add printing
+        print(s+"to the "+sx+".\n");
     }
     if (!cliMode)
     {
@@ -1063,7 +1157,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
     int startOfs = (int)substream->getStartOffset(index);
     SubPicture* subPic = substream->getSubPicture(index);
 
-    //TODO: print decoding message
+    printX("Decoding frame "+displayNum+"/"+displayMax+((substream == supXml)?"\n":(" at offset "+ToolBox.hex(startOfs,8)+"\n")));
 
     substream->decode(index);
     width = subPic->getImageWidth();
@@ -1381,10 +1475,110 @@ void SubtitleProcessor::addRecent(QString fileName)
     }
 }
 
-void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX moveModeX, MoveModeY moveModeY, int cropOffsetY)
+void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX mmx, MoveModeY mmy, int cropOffsetY)
 {
-    //TODO: finish implementing
-    throw 10;
+    int barHeight = (int)((picture->height * barFactor) + 0.5);
+    int y1 = picture->getOfsY();
+    int h = picture->height;
+    int w = picture->width;
+    int hi = picture->getImageHeight();
+    int wi = picture->getImageWidth();
+    int y2 = y1 + hi;
+    CaptionType c;
+
+    if (mmy != MoveModeY::KEEP)
+    {
+        // move vertically
+        if (y1 < h / 2 && y2 < h / 2)
+        {
+            c = CaptionType::UP;
+        }
+        else if (y1 > h / 2 && y2 > h / 2)
+        {
+            c = CaptionType::DOWN;
+        }
+        else
+        {
+            c = CaptionType::FULL;
+        }
+
+        switch ((int)c)
+        {
+        case (int)CaptionType::FULL:
+        {
+            // maybe add scaling later, but for now: do nothing
+            printWarn("Caption "+idx+" not moved (too large)\n");
+        } break;
+        case (int)CaptionType::UP:
+        {
+            if (mmy == MoveModeY::INSIDE)
+            {
+                picture->setOfsY(barHeight + offsetY);
+            }
+            else
+            {
+                picture->setOfsY(offsetY);
+            }
+
+            print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
+        } break;
+        case (int)CaptionType::DOWN:
+        {
+            if (mmy == MoveModeY::INSIDE)
+            {
+                picture->setOfsY((((h - barHeight) - offsetY)) - hi);
+            }
+            else
+            {
+                picture->setOfsY((h - offsetY) - hi);
+            }
+            print("Caption "+idx+" moved to y position "+pic.getOfsY()+"\n");
+        } break;
+        }
+
+        if (picture->getOfsY() < cropOffsetY)
+        {
+            picture->getOfsY();
+        }
+        else
+        {
+            int yMax = (picture->height - picture->getImageHeight()) - cropOffsetY;
+            if (picture->getOfsY() > yMax)
+            {
+                picture->setOfsY(yMax);
+            }
+        }
+    }
+    // move horizontally
+    switch ((int)mmx)
+    {
+    case (int)MoveModeX::LEFT:
+    {
+        if ((w - wi) >= offsetX)
+        {
+            picture->setOfsX(offsetX);
+        }
+        else
+        {
+            picture->setOfsX((w-wi)/2);
+        }
+    } break;
+    case (int)MoveModeX::RIGHT:
+    {
+        if ((w - wi) >= offsetX)
+        {
+            picture->setOfsX((w - wi) - offsetX);
+        }
+        else
+        {
+            picture->setOfsX((w - wi) / 2);
+        }
+    } break;
+    case (int)MoveModeX::CENTER:
+    {
+        picture->setOfsX((w - wi) / 2);
+    } break;
+    }
 }
 
 QString SubtitleProcessor::getSrcInfoStr(int index)
@@ -1551,7 +1745,7 @@ void SubtitleProcessor::setCurrentProgress(int currentProgress)
 
 void SubtitleProcessor::readXml()
 {
-    //TODO: print message
+    printX(QString("Loading %1\n").arg(fileName));
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
@@ -1609,7 +1803,7 @@ void SubtitleProcessor::readXml()
 
 void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
 {
-    //TODO: print message
+    printX(QString("Loading %1\n").arg(fileName));
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
@@ -1730,7 +1924,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
 
 void SubtitleProcessor::readSup()
 {
-    //TODO: print message
+    printX(QString("Loading %1\n").arg(fileName));
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
@@ -1739,7 +1933,8 @@ void SubtitleProcessor::readSup()
         if (fileName.contains(languageTriple[0], Qt::CaseInsensitive))
         {
             languageIdx = languages.indexOf(languageTriple);
-            //TODO: print language found message
+
+            printX("Selected language '"+languages[i][0]+" ("+languages[i][1]+")' by filename\n");
             break;
         }
     }

@@ -38,8 +38,7 @@ QImage *SupDVD::getImage()
 
 QImage *SupDVD::getImage(Bitmap *bitmap)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return bitmap->getImage(palette);
 }
 
 void SupDVD::decode(int index)
@@ -50,7 +49,8 @@ void SupDVD::decode(int index)
     }
     else
     {
-        //TODO: print error
+        //TODO: error handling
+        throw 10;
     }
 }
 
@@ -61,8 +61,7 @@ int SupDVD::getNumFrames()
 
 bool SupDVD::isForced(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->isForced;
 }
 
 void SupDVD::close()
@@ -72,14 +71,12 @@ void SupDVD::close()
 
 long SupDVD::getEndTime(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->endTime;
 }
 
 long SupDVD::getStartTime(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->startTime;
 }
 
 long SupDVD::getStartOffset(int index)
@@ -92,34 +89,24 @@ SubPicture *SupDVD::getSubPicture(int index)
     return subPictures.at(index);
 }
 
-QVector<int> SupDVD::getFrameAlpha(int index)
+QVector<int>& SupDVD::getFrameAlpha(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->alpha;
 }
 
-QVector<int> SupDVD::getFramePal(int index)
+QVector<int>& SupDVD::getFramePal(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->pal;
 }
 
-QVector<int> SupDVD::getOriginalFrameAlpha(int index)
+QVector<int>& SupDVD::getOriginalFrameAlpha(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->originalAlpha;
 }
 
-QVector<int> SupDVD::getOriginalFramePal(int index)
+QVector<int>& SupDVD::getOriginalFramePal(int index)
 {
-    //TODO: Finish implementing
-    throw 10;
-}
-
-void SupDVD::setSrcPalette(Palette *palette)
-{
-    //TODO: Finish implementing
-    throw 10;
+    return subPictures.at(index)->originalPal;
 }
 
 void SupDVD::readIfo()
@@ -194,7 +181,9 @@ void SupDVD::readIfo()
         } break;
         }
     }
-    //TODO: print message
+
+    subtitleProcessor->print(QString("Resolution: %1x%2\n").arg(QString::number(screenWidth))
+                                                           .arg(QString::number(screenHeight)));
 
     // get start offset of Titles&Chapters table
     long VTS_PGCITI_ofs = fileBuffer->getDWord(0xCC) * 2048;
@@ -218,21 +207,22 @@ void SupDVD::readIfo()
         }
         if (!found)
         {
-            //TODO: print warning
+            subtitleProcessor->printWarning(QString("Illegal language id: %1\n").arg(language));
         }
         else
         {
-            //TODO: print message
+            subtitleProcessor->print(QString("Set language to: %1\n").arg(language));
         }
     }
     else
     {
-        //TODO: print message
+        subtitleProcessor->printWarning(QString("Missing language id.\n"));
     }
 
     // PTT_SRPTI
     VTS_PGCITI_ofs += fileBuffer->getDWord(VTS_PGCITI_ofs+0x0C);
-    //TODO: print message
+
+    subtitleProcessor->print(QString("Reading palette from offset: %1\n").arg(QString::number(VTS_PGCITI_ofs, 16), 8, QChar('0')));
 
     // assume palette in VTS_PGC_1
     long index = VTS_PGCITI_ofs;
@@ -326,15 +316,17 @@ void SupDVD::readAllSupFrames()
     int i = 0;
     do
     {
-        //TODO: print current subtitle
-        ++i;
+        subtitleProcessor->printX(QString("# %1\n").arg(++i));
+
         emit currentProgressChanged(i);
 
-        //TODO: print offset
+        subtitleProcessor->print(QString("Ofs: %1\n").arg(QString::number(ofs, 16), 8, QChar('0')));
 
         ofs = readSupFrame(ofs);
     } while (ofs < size);
     emit currentProgressChanged(i);
+
+    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
 }
 
 QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
@@ -474,7 +466,7 @@ long SupDVD::readSupFrame(long ofs)
     long startOfs = ofs;
     if (fileBuffer->getWord(ofs) != 0x5350)
     {
-        //TODO: add error handling
+        //TODO: error handling
         throw 10;
     }
     // 8 uchars PTS:  system clock reference, but use only the first 4
@@ -493,7 +485,7 @@ long SupDVD::readSupFrame(long ofs)
     ctrlSize = (length - ctrlOfsRel) - 2;		// calculate size of control header
     if (ctrlSize < 0)
     {
-        //TODO: add error handling
+        //TODO: error handling
         throw 10;
     }
     ctrlOfs = ctrlOfsRel + ofs;			// absolute offset of control header
@@ -513,7 +505,7 @@ long SupDVD::readSupFrame(long ofs)
     int delay = -1;
     bool ColAlphaUpdate = false;
 
-    //TODO: print message
+    subtitleProcessor->print(QString("SP_DCSQT at ofs: %1\n").arg(QString::number(ctrlOfs, 16), 8, QChar('0')));
 
     // copy control header in buffer (to be more compatible with VobSub)
     QVector<uchar> ctrlHeader(ctrlSize);
@@ -528,7 +520,8 @@ long SupDVD::readSupFrame(long ofs)
     int endSeqOfs = (((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - ctrlOfsRel) - 2;
     if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
     {
-        //TODO: print warning
+        Core.printWarn("Invalid end sequence offset -> no end time\n");
+
         endSeqOfs = ctrlSize;
     }
     index += 2;
@@ -552,7 +545,8 @@ long SupDVD::readSupFrame(long ofs)
             b = ctrlHeader[index++] & 0xff;
             pic->pal.replace(1, (b >> 4));
             pic->pal.replace(0, b & 0x0f);
-            //TODO: print message
+
+            Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
         } break;
         case 4: // alpha info
         {
@@ -566,7 +560,12 @@ long SupDVD::readSupFrame(long ofs)
             {
                 alphaSum += pic->alpha[i] & 0xff;
             }
-            //TODO: print message
+
+            subtitleProcessor->print(QString("Alpha:     %1, %2, %3, %4\n")
+                                     .arg(QString::number(pic->alpha[0]))
+                                     .arg(QString::number(pic->alpha[1]))
+                                     .arg(QString::number(pic->alpha[2]))
+                                     .arg(QString::number(pic->alpha[3])));
         } break;
         case 5: // coordinates
         {
@@ -578,7 +577,12 @@ long SupDVD::readSupFrame(long ofs)
             pic->setOfsY(ofsYglob + yOfs);
             pic->setImageHeight((((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | ((ctrlHeader[index + 5] & 0xff))) - yOfs) + 1);
 
-            //TODO: print message
+            subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
+                                     .arg(QString::number(pic->getOfsX()))
+                                     .arg(QString::number(pic->getOfsY()))
+                                     .arg(QString::number((pic->getOfsX() + pic->getImageWidth()) - 1))
+                                     .arg(QString::number((pic->getOfsY() + pic->getImageHeight()) - 1)));
+
             index += 6;
         } break;
         case 6: // offset to RLE buffer
@@ -586,7 +590,10 @@ long SupDVD::readSupFrame(long ofs)
             pic->evenOfs = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4;
             pic->oddOfs  = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
             index += 4;
-            //TODO: print message
+
+            subtitleProcessor->print(QString("RLE ofs:   %1, %2\n")
+                                     .arg(QString::number(pic->evenOfs, 16), 4, QChar('0'))
+                                     .arg(QString::number(pic->oddOfs, 16), 4, QChar('0')));
         } break;
         case 7: // color/alpha update
         {
@@ -626,7 +633,8 @@ long SupDVD::readSupFrame(long ofs)
             endSeqOfs = (((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - ctrlOfsRel) - 2;
             if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
             {
-                //TODO: print warning
+                subtitleProcessor->printWarning(QString("Invalid end sequence offset -> no end time\n"));
+
                 endSeqOfs = ctrlSize;
             }
             index += 4;
@@ -635,7 +643,8 @@ long SupDVD::readSupFrame(long ofs)
             goto parse_ctrl;
         default:
         {
-            //TODO: print warning
+            subtitleProcessor->printWarning(QString("Unknown control sequence %1 skipped\n")
+                                            .arg(QString::number(cmd, 16), 2, QChar('0')));
         } break;
         }
     }
@@ -656,7 +665,7 @@ long SupDVD::readSupFrame(long ofs)
         }
         if (ctrlSeqCount > 2)
         {
-            //TODO: print warning
+            subtitleProcessor->printWarning(QString("Control sequence(s) ignored - result may be erratic.\n"));
         }
         pic->endTime = pic->startTime + delay;
     }
@@ -669,7 +678,7 @@ long SupDVD::readSupFrame(long ofs)
 
     if (ColAlphaUpdate)
     {
-        //TODO: print warning
+        subtitleProcessor->printWarning(QString("Palette update/alpha fading detected - result may be erratic.\n"));
     }
 
     if (alphaSum == 0)
@@ -680,11 +689,12 @@ long SupDVD::readSupFrame(long ofs)
             {
                 pic->alpha[i] = lastAlpha[i];
             }
-            //TODO: print warning
+
+            subtitleProcessor->printWarning(QString("Invisible caption due to zero alpha - used alpha info of last caption.\n"));
         }
         else
         {
-            //TODO: print warning
+            subtitleProcessor->printWarning(QString("Invisible caption due to zero alpha (not fixed due to user setting).\n"));
         }
     }
 

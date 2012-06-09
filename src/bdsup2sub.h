@@ -20,8 +20,8 @@
 #define BDSUP2SUB_H
 
 #include <QMainWindow>
-#include <QIntValidator>
 #include <QColor>
+#include <QIntValidator>
 
 class SubtitleProcessor;
 class ProgressDialog;
@@ -53,12 +53,10 @@ protected:
 private:
     Ui::BDSup2Sub *ui;
     ProgressDialog *progressDialog = 0;
-    ConversionDialog *conversionDialog = 0;
-    ExportDialog *exportDialog = 0;
-    EditDialog *editDialog = 0;
     QString loadPath = "";
     QString saveFileName = "";
     QString savePath = "";
+    QString colorPath = "";
     SubtitleProcessor *subtitleProcessor = 0;
     int subIndex = 0;
     QIntValidator *alphaThresholdValidator = new QIntValidator(0, 255, this);
@@ -81,13 +79,25 @@ private:
     void refreshTrgFrame(int index);
     void connectSubtitleProcessor();
     void loadSubtitleFile();
+    void warningDialog();
 
 private slots:
+    void print(const QString &message);
     void openFile();
     void saveFile();
     void closeFile();
     void onRecentItemClicked();
     void onEditPaneClicked(QMouseEvent *event);
+    void loadEditPane();
+    void loadHelpDialog();
+    void swapCrCb_toggled(bool checked);
+    void fixInvisibleFrames_toggled(bool checked);
+    void verbatimOutput_toggled(bool checked);
+    void editDefaultDVDPalette_triggered();
+    void editImportedDVDPalette_triggered();
+    void editDVDFramePalette_triggered();
+    void moveAllCaptions_triggered();
+    void resetCropOffset_triggered();
     void on_subtitleNumberComboBox_currentIndexChanged(int index);
     void on_subtitleNumberComboBox_editTextChanged(const QString &index);
     void on_outputFormatComboBox_currentIndexChanged(const QString &format);

@@ -23,6 +23,8 @@
 
 #include <QDoubleValidator>
 #include <QRegExpValidator>
+#include <QPalette>
+#include <QKeyEvent>
 
 ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleProcessor) :
     QDialog(parent),
@@ -36,10 +38,10 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
     QRegExp regex("[0-9]+([.][0-9]+)?|pal|25p|ntsc|30p|24p|50i|60i");
     fpsSrcValidator = new QRegExpValidator(regex);
     fpsTrgValidator = new QRegExpValidator(regex);
-    scaleXValidator = new QDoubleValidator(subtitleProcessor->minScale, subtitleProcessor->maxScale, 9);
-    scaleYValidator = new QDoubleValidator(subtitleProcessor->minScale, subtitleProcessor->maxScale, 9);
-    delayPTSValidator = new QDoubleValidator();
-    minTimePTSValidator = new QDoubleValidator();
+    scaleXValidator = new QDoubleValidator;
+    scaleYValidator = new QDoubleValidator;
+    delayPTSValidator = new QDoubleValidator;
+    minTimePTSValidator = new QDoubleValidator;
 
     ui->sourceFramerateComboBox->setValidator(fpsSrcValidator);
     ui->sourceFramerateComboBox->setCompleter(0);
@@ -76,6 +78,13 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
     scaleY = subtitleProcessor->getFreeScaleY();
     fpsSrcCertain = subtitleProcessor->getFpsSrcCertain();
     forcedState = subtitleProcessor->getForceAll();
+
+    okBackground = new QPalette(ui->scaleXLineEdit->palette());
+    errorBackground = new QPalette();
+    errorBackground->setColor(QPalette::Base, QColor(0xffe1acac));
+    warnBackground = new QPalette();
+    warnBackground->setColor(QPalette::Base, QColor(0xffffffc0));
+
     fillDialog();
 }
 
@@ -87,6 +96,38 @@ ConversionDialog::~ConversionDialog()
 void ConversionDialog::enableOptionMove(bool enable)
 {
     ui->applyMoveAllSettingsCheckBox->setEnabled(enable);
+}
+
+void ConversionDialog::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+    {
+        if (ui->delayLineEdit->hasFocus())
+        {
+            on_delayLineEdit_editingFinished();
+        }
+        if (ui->minTimeLineEdit->hasFocus())
+        {
+            on_minTimeLineEdit_editingFinished();
+        }
+        if (ui->scaleXLineEdit->hasFocus())
+        {
+            on_scaleXLineEdit_editingFinished();
+        }
+        if (ui->scaleYLineEdit->hasFocus())
+        {
+            on_scaleYLineEdit_editingFinished();
+        }
+        if (ui->sourceFramerateComboBox->hasFocus())
+        {
+            on_sourceFramerateComboBox_editingFinished();
+        }
+        if (ui->targetFramerateComboBox->hasFocus())
+        {
+            on_targetFramerateComboBox_editingFinished();
+        }
+    }
+    QDialog::keyPressEvent(event);
 }
 
 void ConversionDialog::on_cancelButton_clicked()
@@ -170,20 +211,20 @@ void ConversionDialog::fillDialog()
     ui->resolutionComboBox->setEnabled(changeResolution);
     ui->convertResolutionCheckBox->setChecked(changeResolution);
 
-    ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 5));
+    ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 6));
     ui->changeFrameRateCheckBox->setChecked(changeFPS);
     ui->sourceFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsSrc)));
     ui->sourceFramerateComboBox->setEnabled(changeFPS);
     ui->targetFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsTrg)));
     ui->targetFramerateComboBox->setEnabled(true);
-    ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 5));
+    ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 6));
     ui->minTimeLineEdit->setEnabled(fixShortFrames);
     ui->fixTooShortFramesCheckBox->setEnabled(true);
     ui->fixTooShortFramesCheckBox->setChecked(fixShortFrames);
     ui->scaleCheckBox->setChecked(changeScale);
-    ui->scaleXLineEdit->setText(QString::number(scaleX, 'g', 5));
+    ui->scaleXLineEdit->setText(QString::number(scaleX, 'g', 6));
     ui->scaleXLineEdit->setEnabled(changeScale);
-    ui->scaleYLineEdit->setText(QString::number(scaleY, 'g', 5));
+    ui->scaleYLineEdit->setText(QString::number(scaleY, 'g', 6));
     ui->scaleYLineEdit->setEnabled(changeScale);
 
     ui->forceFlagsComboBox->setCurrentIndex((int) forcedState);
@@ -199,58 +240,74 @@ void ConversionDialog::on_resolutionComboBox_currentIndexChanged(int index)
     }
 }
 
-void ConversionDialog::on_sourceFramerateComboBox_editTextChanged(const QString &arg1)
-{
-    QString temp(arg1);
-    int pos = 0;
-    if (ui->sourceFramerateComboBox->validator()->validate(temp, pos) == QValidator::Acceptable)
-    {
-        fpsSrc = arg1.toDouble();
-    }
-}
-
-void ConversionDialog::on_targetFramerateComboBox_editTextChanged(const QString &arg1)
-{
-    QString temp(arg1);
-    int pos = 0;
-    if (ui->targetFramerateComboBox->validator()->validate(temp, pos) == QValidator::Acceptable)
-    {
-        fpsTrg = subtitleProcessor->getFPS(arg1);
-    }
-}
-
 void ConversionDialog::on_scaleXLineEdit_textChanged(const QString &arg1)
 {
-    QString temp(arg1);
-    int pos = 0;
-    if (ui->scaleXLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
+    if (arg1.isNull() || arg1.isEmpty())
     {
-        scaleX = subtitleProcessor->getFPS(arg1);
+        ui->scaleXLineEdit->setPalette(*errorBackground);
+        return;
+    }
+    double d = arg1.toDouble();
+    if (d >= subtitleProcessor->minScale && d <= subtitleProcessor->maxScale)
+    {
+        scaleX = d;
+        ui->scaleXLineEdit->setPalette(*okBackground);
+    }
+    else
+    {
+        ui->scaleXLineEdit->setPalette(*errorBackground);
     }
 }
 
 void ConversionDialog::on_scaleYLineEdit_textChanged(const QString &arg1)
 {
-    QString temp(arg1);
-    int pos = 0;
-    if (ui->scaleYLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
+    if (arg1.isNull() || arg1.isEmpty())
     {
-        scaleY = arg1.toDouble();
+        ui->scaleYLineEdit->setPalette(*errorBackground);
+        return;
+    }
+    double d = arg1.toDouble();
+    if (d >= subtitleProcessor->minScale && d <= subtitleProcessor->maxScale)
+    {
+        scaleY = d;
+        ui->scaleYLineEdit->setPalette(*okBackground);
+    }
+    else
+    {
+        ui->scaleYLineEdit->setPalette(*errorBackground);
     }
 }
 
 void ConversionDialog::on_delayLineEdit_textChanged(const QString &arg1)
 {
+    if (arg1.isNull() || arg1.isEmpty())
+    {
+        ui->delayLineEdit->setPalette(*errorBackground);
+        return;
+    }
     QString temp(arg1);
     int pos = 0;
     if (ui->delayLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
     {
         delayPTS = (int)subtitleProcessor->syncTimePTS((long)(arg1.toDouble() * 90), fpsTrg);
+        if (temp != QString::number(delayPTS / 90.0, 'g', 6))
+        {
+            ui->delayLineEdit->setPalette(*warnBackground);
+        }
+        else
+        {
+            ui->delayLineEdit->setPalette(*okBackground);
+        }
     }
 }
 
 void ConversionDialog::on_minTimeLineEdit_textChanged(const QString &arg1)
 {
+    if (arg1.isNull() || arg1.isEmpty())
+    {
+        ui->minTimeLineEdit->setPalette(*errorBackground);
+        return;
+    }
     QString temp(arg1);
     int pos = 0;
     if (ui->minTimeLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
@@ -274,4 +331,148 @@ void ConversionDialog::on_restoreButton_clicked()
 {
     //TODO: implement
     throw 10;
+}
+
+void ConversionDialog::on_scaleXLineEdit_editingFinished()
+{
+    QString text = ui->scaleXLineEdit->text();
+    int pos = 0;
+    if (ui->scaleXLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
+    {
+        double d = text.toDouble();
+        if (d < 0.5f)
+        {
+            d = 0.5;
+        }
+        else if (d > 2.0f)
+        {
+            d = 2.0;
+        }
+        scaleX = d;
+    }
+    ui->scaleXLineEdit->setText(QString::number(scaleX));
+    ui->scaleXLineEdit->setPalette(*okBackground);
+}
+
+void ConversionDialog::on_scaleYLineEdit_editingFinished()
+{
+    QString text = ui->scaleYLineEdit->text();
+    int pos = 0;
+    if (ui->scaleYLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
+    {
+        double d = text.toDouble();
+        if (d < 0.5f)
+        {
+            d = 0.5;
+        }
+        else if (d > 2.0f)
+        {
+            d = 2.0;
+        }
+        scaleY = d;
+    }
+    ui->scaleYLineEdit->setText(QString::number(scaleY));
+    ui->scaleYLineEdit->setPalette(*okBackground);
+}
+
+void ConversionDialog::on_delayLineEdit_editingFinished()
+{
+    QString text = ui->delayLineEdit->text();
+    int pos = 0;
+    if (ui->delayLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
+    {
+        delayPTS = (int) subtitleProcessor->syncTimePTS(text.toDouble() * 90, fpsTrg);
+    }
+    ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 6));
+    ui->delayLineEdit->setPalette(*okBackground);
+}
+
+void ConversionDialog::on_minTimeLineEdit_editingFinished()
+{
+    QString text = ui->minTimeLineEdit->text();
+    int pos = 0;
+    if (ui->minTimeLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
+    {
+        minTimePTS = (int) subtitleProcessor->syncTimePTS(text.toDouble() * 90, fpsTrg);
+    }
+    ui->delayLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 6));
+    ui->delayLineEdit->setPalette(*okBackground);
+}
+
+void ConversionDialog::on_sourceFramerateComboBox_currentIndexChanged(const QString &arg1)
+{
+    on_sourceFramerateComboBox_editingFinished();
+}
+
+void ConversionDialog::on_sourceFramerateComboBox_editTextChanged(const QString &arg1)
+{
+    double d = subtitleProcessor->getFPS(arg1);
+    if (d > 0)
+    {
+        ui->sourceFramerateComboBox->setPalette(*okBackground);
+        fpsSrc = d;
+    }
+    else
+    {
+        ui->sourceFramerateComboBox->setPalette(*errorBackground);
+    }
+    fpsSrcCertain = false;
+}
+
+void ConversionDialog::on_sourceFramerateComboBox_editingFinished()
+{
+    double d = subtitleProcessor->getFPS(ui->sourceFramerateComboBox->currentText());
+    if (d > 0)
+    {
+        fpsSrc = d;
+    }
+    ui->sourceFramerateComboBox->setEditText(QString::number(fpsSrc, 'g', 6));
+    ui->sourceFramerateComboBox->setPalette(*okBackground);
+    fpsSrcCertain = false;
+}
+
+void ConversionDialog::on_targetFramerateComboBox_currentIndexChanged(const QString &arg1)
+{
+    on_targetFramerateComboBox_editingFinished();
+}
+
+void ConversionDialog::on_targetFramerateComboBox_editTextChanged(const QString &arg1)
+{
+    double d = subtitleProcessor->getFPS(arg1);
+    if (d > 0)
+    {
+        int newDelayPTS = (int)subtitleProcessor->syncTimePTS(delayPTS, fpsTrg);
+        int newMinTimePTS = (int)subtitleProcessor->syncTimePTS(minTimePTS, fpsTrg);
+        if (delayPTS != newDelayPTS || minTimePTS != newMinTimePTS)
+        {
+            ui->targetFramerateComboBox->setPalette(*warnBackground);
+        }
+        else
+        {
+            ui->targetFramerateComboBox->setPalette(*okBackground);
+        }
+        fpsTrg = d;
+    }
+    else
+    {
+        ui->targetFramerateComboBox->setPalette(*errorBackground);
+    }
+}
+
+void ConversionDialog::on_targetFramerateComboBox_editingFinished()
+{
+    QString text = ui->targetFramerateComboBox->currentText();
+    double d = subtitleProcessor->getFPS(text);
+    if (d > 0)
+    {
+        fpsTrg = d;
+    }
+    ui->targetFramerateComboBox->setEditText(QString::number(fpsTrg, 'g', 6));
+    ui->targetFramerateComboBox->setPalette(*okBackground);
+
+    delayPTS = (int)subtitleProcessor->syncTimePTS(delayPTS, fpsTrg);
+    ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 6));
+
+    minTimePTS = (int)subtitleProcessor->syncTimePTS(minTimePTS, fpsTrg);
+    ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 6));
 }

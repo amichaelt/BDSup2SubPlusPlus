@@ -52,6 +52,16 @@ const QVector<uchar> defaultAlpha = {
     0x00, 0x00, 0x00, 0x00,
 };
 
+/** Enumeration of caption types (used for moving captions) */
+enum class CaptionType {
+    /** caption in upper half of the screen */
+    UP,
+    /** caption in lower half of the screen */
+    DOWN,
+    /** caption covering more or less the whole screen */
+    FULL
+};
+
 /** Enumeration for set/clear/keep states */
 enum class SetState {
     /** keep (no change) */

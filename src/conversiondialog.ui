@@ -10,6 +10,12 @@
     <height>350</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>500</width>
+    <height>350</height>
+   </size>
+  </property>
   <property name="font">
    <font>
     <family>Tahoma</family>
@@ -23,6 +29,9 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <property name="horizontalSpacing">
     <number>6</number>
    </property>
@@ -46,6 +55,9 @@
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QCheckBox" name="convertResolutionCheckBox">
+        <property name="toolTip">
+         <string>Convert resolution</string>
+        </property>
         <property name="text">
          <string>Convert &amp;resolution</string>
         </property>
@@ -76,6 +88,9 @@
             <width>150</width>
             <height>20</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>Select the target resolution</string>
           </property>
           <item>
            <property name="text">
@@ -126,6 +141,9 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="toolTip">
+         <string>Apply settings for moving captions</string>
+        </property>
         <property name="text">
          <string>Apply 'move all' settings</string>
         </property>
@@ -148,6 +166,9 @@
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
        <widget class="QCheckBox" name="changeFrameRateCheckBox">
+        <property name="toolTip">
+         <string>Convert frame rate from FPS Source to FPS target</string>
+        </property>
         <property name="text">
          <string>Change &amp;frame rate</string>
         </property>
@@ -178,6 +199,9 @@
             <width>150</width>
             <height>20</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>Set the source frame rate (only needed for frame rate conversion)</string>
           </property>
           <property name="editable">
            <bool>true</bool>
@@ -323,12 +347,19 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QLineEdit" name="delayLineEdit"/>
+         <widget class="QLineEdit" name="delayLineEdit">
+          <property name="toolTip">
+           <string>Set global delay (in milliseconds) added to all timestamps</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
       <item>
        <widget class="QCheckBox" name="fixTooShortFramesCheckBox">
+        <property name="toolTip">
+         <string>Force a minimum display duration of 'Min Time'</string>
+        </property>
         <property name="text">
          <string>Fix too &amp;short frames</string>
         </property>
@@ -353,6 +384,9 @@
          <widget class="QLineEdit" name="minTimeLineEdit">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Set minimum display time for a subtitle</string>
           </property>
           <property name="text">
            <string>520</string>
@@ -409,6 +443,9 @@
         <height>20</height>
        </size>
       </property>
+      <property name="toolTip">
+       <string>Select the target resolution</string>
+      </property>
       <item>
        <property name="text">
         <string>keep</string>
@@ -447,8 +484,14 @@
         <height>22</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>Store current settings as default</string>
+      </property>
       <property name="text">
        <string>St&amp;ore</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="restoreButton">
@@ -460,8 +503,14 @@
         <height>22</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>Restore last default settings</string>
+      </property>
       <property name="text">
        <string>R&amp;estore</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="resetButton">
@@ -473,8 +522,14 @@
         <height>22</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>Reset defaults</string>
+      </property>
       <property name="text">
        <string>Rese&amp;t</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
       </property>
      </widget>
     </widget>
@@ -502,8 +557,14 @@
       </property>
       <item>
        <widget class="QPushButton" name="cancelButton">
+        <property name="toolTip">
+         <string>Lose all changes and use the default values</string>
+        </property>
         <property name="text">
          <string>&amp;Cancel</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -522,8 +583,14 @@
       </item>
       <item>
        <widget class="QPushButton" name="okButton">
+        <property name="toolTip">
+         <string>Use current values and continue</string>
+        </property>
         <property name="text">
          <string>&amp;Ok</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -562,6 +629,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="scaleCheckBox">
+        <property name="toolTip">
+         <string>Allow free scaling of subtitles in X and Y direction</string>
+        </property>
         <property name="text">
          <string>&amp;Apply free scaling</string>
         </property>
@@ -569,9 +639,6 @@
       </item>
       <item>
        <layout class="QFormLayout" name="formLayout">
-        <property name="horizontalSpacing">
-         <number>0</number>
-        </property>
         <property name="verticalSpacing">
          <number>0</number>
         </property>
@@ -593,6 +660,9 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string>Set free scaling factor in X direction</string>
+          </property>
           <property name="text">
            <string>1</string>
           </property>
@@ -605,9 +675,6 @@
         <property name="fieldGrowthPolicy">
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
-        <property name="horizontalSpacing">
-         <number>0</number>
-        </property>
         <property name="verticalSpacing">
          <number>0</number>
         </property>
@@ -615,6 +682,9 @@
          <widget class="QLineEdit" name="scaleYLineEdit">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Set free scaling factor in Y direction</string>
           </property>
           <property name="text">
            <string>1</string>

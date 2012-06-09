@@ -50,7 +50,11 @@ SOURCES += main.cpp\
     Tools/quantizefilter.cpp \
     exportdialog.cpp \
     Tools/numberutil.cpp \
-    editdialog.cpp
+    editdialog.cpp \
+    helpdialog.cpp \
+    colordialog.cpp \
+    framepalettedialog.cpp \
+    movedialog.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -94,13 +98,21 @@ HEADERS  += bdsup2sub.h \
     Tools/quantizefilter.h \
     exportdialog.h \
     Tools/numberutil.h \
-    editdialog.h
+    editdialog.h \
+    helpdialog.h \
+    colordialog.h \
+    framepalettedialog.h \
+    movedialog.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \
     conversiondialog.ui \
     exportdialog.ui \
-    editdialog.ui
+    editdialog.ui \
+    helpdialog.ui \
+    colordialog.ui \
+    framepalettedialog.ui \
+    movedialog.ui
 
 RESOURCES += \
     bdsup2sub.qrc

@@ -346,7 +346,7 @@ void QuantizeFilter::OctTreeQuantizer::reduceTree(int numColors)
     for (int level = MAX_LEVEL - 1; level >= 0; --level)
     {
         QVector<OctTreeNode*> v = colorList[level];
-        if (!v.isEmpty() && v.size() > 0)
+        if (!v.isEmpty())
         {
             for (int j = 0; j < v.size(); j++)
             {

@@ -51,12 +51,12 @@ public:
     long getStartTime(int index);
     long getStartOffset(int index);
     SubPicture *getSubPicture(int index);
-    QVector<int> getFrameAlpha(int index);
-    QVector<int> getFramePal(int index);
-    QVector<int> getOriginalFrameAlpha(int index);
-    QVector<int> getOriginalFramePal(int index);
+    QVector<int>& getFrameAlpha(int index);
+    QVector<int>& getFramePal(int index);
+    QVector<int>& getOriginalFrameAlpha(int index);
+    QVector<int>& getOriginalFramePal(int index);
     Palette *getSrcPalette() { return srcPalette; }
-    void setSrcPalette(Palette *palette);
+    void setSrcPalette(Palette *palette) { srcPalette = palette; }
     int getLanguageIdx() { return languageIdx; }
 
     Palette* decodePalette(SubPictureDVD* pic, Palette* palette);

@@ -24,6 +24,10 @@
 #include "progressdialog.h"
 #include "exportdialog.h"
 #include "editdialog.h"
+#include "helpdialog.h"
+#include "colordialog.h"
+#include "framepalettedialog.h"
+#include "movedialog.h"
 
 #include <QMessageBox>
 #include <QPixmap>
@@ -46,17 +50,31 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
 
     ui->consoleOutput->insertPlainText(progNameVer + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
     ui->consoleOutput->insertPlainText(authorDate + "\n");
-    ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n");
+    ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
+
+    subtitleProcessor = new SubtitleProcessor(this);
 
     fillComboBoxes();
+
+    ui->action_Verbatim_Output->setChecked(subtitleProcessor->getVerbatim());
+    ui->action_Fix_invisible_frames->setChecked(subtitleProcessor->getFixZeroAlpha());
 
     connect(ui->action_Load, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->action_Save_Export, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->action_Close, SIGNAL(triggered()), this, SLOT(closeFile()));
     connect(ui->action_Conversion_Settings, SIGNAL(triggered()), this, SLOT(openConversionSettings()));
     connect(ui->subtitleImage, SIGNAL(onMouseClicked(QMouseEvent*)), this, SLOT(onEditPaneClicked(QMouseEvent*)));
+    connect(ui->action_Edit_Frame, SIGNAL(triggered()), this, SLOT(loadEditPane()));
+    connect(ui->action_Help, SIGNAL(triggered()), this, SLOT(loadHelpDialog()));
+    connect(ui->action_Swap_Cr_Cb, SIGNAL(toggled(bool)), this, SLOT(swapCrCb_toggled(bool)));
+    connect(ui->action_Verbatim_Output, SIGNAL(toggled(bool)), this, SLOT(verbatimOutput_toggled(bool)));
+    connect(ui->action_Fix_invisible_frames, SIGNAL(toggled(bool)), this, SLOT(fixInvisibleFrames_toggled(bool)));
+    connect(ui->actionEdit_default_DVD_Palette, SIGNAL(triggered()), this, SLOT(editDefaultDVDPalette_triggered()));
+    connect(ui->actionEdit_imported_DVD_Palette, SIGNAL(triggered()), this, SLOT(editImportedDVDPalette_triggered()));
+    connect(ui->actionEdit_DVD_Frame_Palette, SIGNAL(triggered()), this, SLOT(editDVDFramePalette_triggered()));
+    connect(ui->action_Move_all_captions, SIGNAL(triggered()), this, SLOT(moveAllCaptions_triggered()));
+    connect(ui->action_Reset_crop_offset, SIGNAL(triggered()), this, SLOT(resetCropOffset_triggered()));
 
-    subtitleProcessor = new SubtitleProcessor;
     progressDialog = new ProgressDialog(this);
     connectSubtitleProcessor();
 }
@@ -73,7 +91,7 @@ void BDSup2Sub::changeWindowTitle(QString newTitle)
 
 void BDSup2Sub::onLoadingSubtitleFileFinished()
 {
-    //TODO: warning dialog
+    warningDialog();
 
     int num = subtitleProcessor->getNumberOfFrames();
     ui->subtitleNumberComboBox->clear();
@@ -104,9 +122,9 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
         }
     }
 
-    conversionDialog = new ConversionDialog(this, subtitleProcessor);
-    conversionDialog->enableOptionMove(subtitleProcessor->getMoveCaptions());
-    if (conversionDialog->exec() != QDialog::Rejected)
+    ConversionDialog conversionDialog(this, subtitleProcessor);
+    conversionDialog.enableOptionMove(subtitleProcessor->getMoveCaptions());
+    if (conversionDialog.exec() != QDialog::Rejected)
     {
         subtitleProcessor->scanSubtitles();
         if (subtitleProcessor->getMoveCaptions())
@@ -127,7 +145,6 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
         //TODO: print warning about unsupported file
         subtitleProcessor->close();
     }
-    delete conversionDialog;
 }
 
 void BDSup2Sub::convertSup()
@@ -188,6 +205,7 @@ void BDSup2Sub::connectSubtitleProcessor()
     connect(subtitleProcessor, SIGNAL(progressDialogVisibilityChanged(bool)), progressDialog, SLOT(setVisible(bool)));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), this, SLOT(onLoadingSubtitleFileFinished()));
     connect(subtitleProcessor, SIGNAL(moveAllFinished()), this, SLOT(convertSup()));
+    connect(subtitleProcessor, SIGNAL(printText(QString)), this, SLOT(print(QString)));
 }
 
 void BDSup2Sub::fillComboBoxes()
@@ -201,9 +219,13 @@ void BDSup2Sub::fillComboBoxes()
         ui->medLowThresholdComboBox->addItem(QString::number(i));
         ui->hiMedThresholdComboBox->addItem(QString::number(i));
     }
-    ui->alphaThresholdComboBox->setCurrentIndex(80);
-    ui->medLowThresholdComboBox->setCurrentIndex(160);
-    ui->hiMedThresholdComboBox->setCurrentIndex(210);
+    ui->alphaThresholdComboBox->setCurrentIndex(subtitleProcessor->getAlphaThreshold());
+    ui->medLowThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[0]);
+    ui->hiMedThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[1]);
+
+    ui->outputFormatComboBox->setCurrentIndex((int)subtitleProcessor->getOutputMode());
+    ui->filterComboBox->setCurrentIndex((int)subtitleProcessor->getScalingFilter());
+    ui->paletteComboBox->setCurrentIndex((int)subtitleProcessor->getPaletteMode());
 
     ui->alphaThresholdComboBox->setValidator(alphaThresholdValidator);
     ui->medLowThresholdComboBox->setValidator(medLowThresholdValidator);
@@ -330,11 +352,10 @@ void BDSup2Sub::saveFile()
     {
         path += "xml";
     }
-    exportDialog = new ExportDialog(this, path, subtitleProcessor);
-    if (exportDialog->exec() != QDialog::Rejected)
+    ExportDialog exportDialog(this, path, subtitleProcessor);
+    if (exportDialog.exec() != QDialog::Rejected)
     {
-        QString fileName = exportDialog->getFileName();
-        delete exportDialog;
+        QString fileName = exportDialog.getFileName();
         QFileInfo fileInfo(fileName);
         savePath = fileInfo.absolutePath();
         saveFileName = fileInfo.completeBaseName();
@@ -410,6 +431,62 @@ void BDSup2Sub::loadSubtitleFile()
     workerThread->start();
 }
 
+void BDSup2Sub::warningDialog()
+{
+    int warnings = subtitleProcessor->getWarnings();
+    subtitleProcessor->resetWarnings();
+    int errors = subtitleProcessor->getErrors();
+    subtitleProcessor->resetErrors();
+
+    if (warnings + errors > 0)
+    {
+        QString message;
+        if (warnings > 0)
+        {
+            if (warnings == 1)
+            {
+                message += QString(QString::number(warnings) + " warning");
+            }
+            else
+            {
+                message += QString(QString::number(warnings) + " warnings");
+            }
+        }
+        if (warnings > 0 && errors > 0)
+        {
+            message += " and ";
+        }
+        if (errors > 0)
+        {
+            if (errors == 1)
+            {
+                message += QString(QString::number(errors) + " error");
+            }
+            else
+            {
+                message += QString(QString::number(errors) + " errors");
+            }
+        }
+
+        if (warnings + errors < 3)
+        {
+            message = "There was " + message;
+        }
+        else
+        {
+            message = "There were " + message;
+        }
+
+        QMessageBox::warning(this, "Warnings!", QString(message + "\nCheck the log for details"));
+    }
+}
+
+void BDSup2Sub::print(const QString &message)
+{
+    ui->consoleOutput->insertPlainText(message);
+    ui->consoleOutput->moveCursor(QTextCursor::End);
+}
+
 void BDSup2Sub::closeSubtitle()
 {
     ui->subtitleNumberComboBox->blockSignals(true);
@@ -467,16 +544,162 @@ void BDSup2Sub::onEditPaneClicked(QMouseEvent *event)
 {
     if (subtitleProcessor->getNumberOfFrames() > 0 && event->button() == Qt::LeftButton)
     {
-        editDialog = new EditDialog(this, subtitleProcessor);
-        editDialog->setIndex(subIndex);
-        editDialog->exec();
-        subIndex = editDialog->getIndex();
+        loadEditPane();
+    }
+}
+
+void BDSup2Sub::loadEditPane()
+{
+    EditDialog editDialog(this, subtitleProcessor);
+    editDialog.setIndex(subIndex);
+    editDialog.exec();
+    subIndex = editDialog.getIndex();
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshSrcFrame(subIndex);
+    refreshTrgFrame(subIndex);
+    ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
+}
+
+void BDSup2Sub::loadHelpDialog()
+{
+    HelpDialog helpDialog(this);
+    helpDialog.exec();
+}
+
+void BDSup2Sub::swapCrCb_toggled(bool checked)
+{
+    subtitleProcessor->setSwapCrCb(checked);
+    if (subtitleProcessor->getNumberOfFrames() > 0)
+    {
         subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
         refreshSrcFrame(subIndex);
         refreshTrgFrame(subIndex);
-        ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
-        delete editDialog;
     }
+}
+
+void BDSup2Sub::fixInvisibleFrames_toggled(bool checked)
+{
+    subtitleProcessor->setFixZeroAlpha(checked);
+}
+
+void BDSup2Sub::verbatimOutput_toggled(bool checked)
+{
+    subtitleProcessor->setVerbatim(checked);
+}
+
+void BDSup2Sub::editDefaultDVDPalette_triggered()
+{
+    ColorDialog colorDialog(this, subtitleProcessor);
+    QStringList colorNames = { "white", "light gray", "dark gray",
+                               "Color 1 light", "Color 1 dark",
+                               "Color 2 light", "Color 2 dark",
+                               "Color 3 light", "Color 3 dark",
+                               "Color 4 light", "Color 4 dark",
+                               "Color 5 light", "Color 5 dark",
+                               "Color 6 light", "Color 6 dark"
+                             };
+
+    QVector<QColor> colors;
+    QVector<QColor> defaultColors;
+
+    for (int i = 0; i < 15; ++i)
+    {
+        colors.push_back(subtitleProcessor->getCurrentDVDPalette()->getColor(i + 1));
+        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette()->getColor(i + 1));
+    }
+
+    colorDialog.setParameters(colorNames, colors, defaultColors);
+    colorDialog.setPath(colorPath);
+    if (colorDialog.exec() != QDialog::Rejected)
+    {
+        colors = colorDialog.getColors();
+        colorPath = colorDialog.getPath();
+        for (int i = 0; i < colors.size(); ++i)
+        {
+            subtitleProcessor->getCurrentDVDPalette()->setColor(i + 1, colors[i]);
+        }
+        if (subtitleProcessor->getNumberOfFrames() > 0)
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            refreshTrgFrame(subIndex);
+        }
+    }
+}
+
+void BDSup2Sub::editImportedDVDPalette_triggered()
+{
+    ColorDialog colorDialog(this, subtitleProcessor);
+    QStringList colorNames = { "Color 0", "Color 1", "Color 2", "Color 3",
+                               "Color 4", "Color 5", "Color 6", "Color 7",
+                               "Color 8", "Color 9", "Color 10", "Color 11",
+                               "Color 12", "Color 13", "Color 14", "Color 15"
+                             };
+
+    QVector<QColor> colors;
+    QVector<QColor> defaultColors;
+
+    for (int i = 0; i < 15; ++i)
+    {
+        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette()->getColor(i + 1));
+        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette()->getColor(i + 1));
+    }
+
+    colorDialog.setParameters(colorNames, colors, defaultColors);
+    colorDialog.setPath(colorPath);
+    if (colorDialog.exec() != QDialog::Rejected)
+    {
+        colors = colorDialog.getColors();
+        colorPath = colorDialog.getPath();
+        Palette* palette = new Palette(colors.size(), true);
+        for (int i = 0; i < colors.size(); ++i)
+        {
+            palette->setColor(i, colors[i]);
+        }
+        subtitleProcessor->setCurrentSrcDVDPalette(palette);
+        if (subtitleProcessor->getNumberOfFrames() > 0)
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            refreshSrcFrame(subIndex);
+            refreshTrgFrame(subIndex);
+        }
+    }
+}
+
+void BDSup2Sub::editDVDFramePalette_triggered()
+{
+    FramePaletteDialog framePaletteDialog(this, subtitleProcessor);
+    framePaletteDialog.setIndex(subIndex);
+    framePaletteDialog.exec();
+    if (subtitleProcessor->getNumberOfFrames() > 0)
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        refreshSrcFrame(subIndex);
+        refreshTrgFrame(subIndex);
+    }
+}
+
+void BDSup2Sub::moveAllCaptions_triggered()
+{
+    MoveDialog moveDialog(this, subtitleProcessor);
+    moveDialog.setIndex(subIndex);
+    moveDialog.exec();
+    if (subtitleProcessor->getMoveCaptions())
+    {
+        subtitleProcessor->moveAll();
+    }
+    subIndex = moveDialog.getIndex();
+    ui->subtitleImage->setScreenRatio(moveDialog.getTrgRatio());
+    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    refreshSrcFrame(subIndex);
+    refreshTrgFrame(subIndex);
+    ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
+}
+
+void BDSup2Sub::resetCropOffset_triggered()
+{
+    subtitleProcessor->setCropOfsY(0);
+    ui->subtitleImage->setCropOfsY(0);
+    ui->subtitleImage->update();
 }
 
 void BDSup2Sub::refreshSrcFrame(int index)
@@ -556,15 +779,14 @@ void BDSup2Sub::openConversionSettings()
         fsYOld = subtitleProcessor->getFreeScaleY();
     }
 
-    conversionDialog = new ConversionDialog(this, subtitleProcessor);
-    conversionDialog->enableOptionMove(subtitleProcessor->getMoveCaptions());
-    if (conversionDialog->exec() != QDialog::Rejected)
+    ConversionDialog conversionDialog(this, subtitleProcessor);
+    conversionDialog.enableOptionMove(subtitleProcessor->getMoveCaptions());
+    if (conversionDialog.exec() != QDialog::Rejected)
     {
         subtitleProcessor->reScanSubtitles(oldResolution, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
         subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
         refreshTrgFrame(subIndex);
     }
-    delete conversionDialog;
 }
 
 void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
