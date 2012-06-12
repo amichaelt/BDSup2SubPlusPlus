@@ -48,7 +48,6 @@ public:
     virtual SubPicture *getSubPicture(int index) = 0;
 
 protected:
-    SubtitleProcessor* subtitleProcessor = 0;
     int numForcedFrames = 0;
 };
 

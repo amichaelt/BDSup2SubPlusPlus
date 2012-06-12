@@ -27,6 +27,19 @@ const QString progName = "BDSup2Sub++";
 const QString progNameVer = progName + " 1.0.0";
 const QString authorDate = "0xdeadbeef, mjuhasz, Adam T.";
 
+const QStringList params = {
+    "res", "atr", "ltr1", "ltr2", "lang", "pal", "forced",
+    "fps" , "dly", "tmin", "swap","movin", "movout", "cropy",
+    "palmode", "verbatim", "filter", "tmerge", "scale", "acrop",
+    "exppal", "fixinv", "movex", "forceall"
+};
+
+const QStringList scalingFilters = {
+    "Bilinear", "Triangle", "Bicubic", "Bell", "B-Spline", "Hermite", "Lanczos3", "Mitchell"
+};
+
+const QStringList modes = { "SUB/IDX", "SUP/IFO", "SUP(BD)", "XML/PNG"};
+
 const QVector<uchar> defaultPalR = {
     0x00, 0xf0, 0xcc, 0x99,
     0x33, 0x11, 0xfa, 0xbb,
@@ -52,8 +65,63 @@ const QVector<uchar> defaultAlpha = {
     0x00, 0x00, 0x00, 0x00,
 };
 
+enum class Parameters
+{
+    /** Define target resolution */
+    RESOLUTION,
+    /** Define alpha threshold */
+    ALPHATHR,
+    /** Define low/med luminance threshold */
+    LUMTHR1,
+    /** Define med/high luminance threshold */
+    LUMTHR2,
+    /** Define VobSub language */
+    LANGUAGE,
+    /** Load palette from file */
+    PALETTE,
+    /** Export only forced captions */
+    FORCED,
+    /** Define (source and) target frame rate */
+    FPS,
+    /** Define delay to add to all time stamps */
+    DELAY,
+    /** Define minimum display time for captions */
+    MIN_TIME,
+    /** Swap Cr/Cb components when loading a SUP */
+    SWAP_CR_CB,
+    /** Move captions inside given area */
+    MOVE_INSIDE,
+    /** Move captions outside given area */
+    MOVE_OUTSIDE,
+    /** Crop the upper n lines */
+    CROP_Y,
+    /** Palette creation mode */
+    PALETTE_MODE,
+    /** Verbatim text mode */
+    VERBATIM,
+    /** Scaling filter */
+    FILTER,
+    /** Scaling filter */
+    TMERGE,
+    /** Free scaling */
+    SCALE,
+    /** Alpha cropping threshold */
+    ALPHA_CROP,
+    /** Export target palette in PGCEdit text format */
+    EXPORT_PAL,
+    /** No fixing of zero alpha values (SUB/IDX and SUP/IFO import) */
+    FIX_ZERO_ALPHA,
+    /** move captions horizontally */
+    MOVE_X,
+    /** set/clear forced flag for all captions */
+    FORCE_ALL,
+    /** Unknown parameter */
+    UNKNOWN
+};
+
 /** Enumeration of caption types (used for moving captions) */
-enum class CaptionType {
+enum class CaptionType
+{
     /** caption in upper half of the screen */
     UP,
     /** caption in lower half of the screen */
@@ -63,7 +131,8 @@ enum class CaptionType {
 };
 
 /** Enumeration for set/clear/keep states */
-enum class SetState {
+enum class SetState
+{
     /** keep (no change) */
     KEEP,
     /** set */
@@ -72,7 +141,8 @@ enum class SetState {
     CLEAR
 };
 
-enum class Resolution {
+enum class Resolution
+{
     /** NTSC: 720x480 */
     NTSC,
     /** PAL: 720x576 */
@@ -85,7 +155,8 @@ enum class Resolution {
     HD_1080
 };
 
-enum class InputMode {
+enum class InputMode
+{
     /** DVD SUB/IDX (VobSub) stream */
     VOBSUB,
     /** Blu-Ray SUP stream */
@@ -99,7 +170,8 @@ enum class InputMode {
 };
 
 /** Enumeration of output modes */
-enum class OutputMode {
+enum class OutputMode
+{
     /** DVD SUB/IDX (VobSub) stream */
     VOBSUB,
     /** DVD SUP/IFO stream */
@@ -111,7 +183,8 @@ enum class OutputMode {
 };
 
 /** Enumeration of modes for moving of captions in Y direction */
-enum class MoveModeY {
+enum class MoveModeY
+{
     /** keep position - don't move */
     KEEP,
     /** move inside bounds */
@@ -121,7 +194,8 @@ enum class MoveModeY {
 };
 
 /** Enumeration of modes for moving of captions in X direction */
-enum class MoveModeX {
+enum class MoveModeX
+{
     /** keep position - don't move */
     KEEP,
     /** move to center */
@@ -132,7 +206,8 @@ enum class MoveModeX {
     RIGHT,
 };
 
-enum class ScalingFilters {
+enum class ScalingFilters
+{
     /** Bilinear filter */
     BILINEAR,
     /** Triangle filter */
@@ -151,11 +226,12 @@ enum class ScalingFilters {
     MITCHELL,
 };
 
-enum class PaletteMode {
+enum class PaletteMode
+{
     /** keep existing palette */
     KEEP_EXISTING,
     /** create new */
-    CREATE_NEW,
+    NEW,
     /** create new dithered */
     CREATE_DITHERED
 };
@@ -178,7 +254,8 @@ enum class StreamID
     UNKNOWN
 };
 
-enum class RunType {
+enum class RunType
+{
     /** read a SUP stream */
     READSUP,
     /** read a SUP stream */

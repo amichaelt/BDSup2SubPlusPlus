@@ -51,6 +51,14 @@ static QVector<QVector<int>> resolutions = {
     {1920, 1080}
 };
 
+static QStringList resolutionNames = {
+    "NTSC (720x480)",
+    "PAL (720x576)",
+    "720p (1280x720)",
+    "1080p- (1440x1080)",
+    "1080p (1920x1080)"
+};
+
 static QVector<QVector<QString> > languages = {{
     {"German",       "de", "deu"},
     {"English",      "en", "eng"},
@@ -264,6 +272,7 @@ public:
     MoveModeY getMoveModeY() { return moveModeY; }
     void setMoveModeY(MoveModeY value) { moveModeY = value; }
     int getAlphaCrop() { return alphaCrop; }
+    void setAlphaCrop(int value) { alphaCrop = value; }
     bool getFixZeroAlpha() { return fixZeroAlpha; }
     void setFixZeroAlpha(bool value) { fixZeroAlpha = value; }
     int getAlphaThreshold() { return alphaThreshold; }
@@ -274,6 +283,7 @@ public:
     void setWritePGCEditPal(bool value) { writePGCEditPal = value; }
     int getNumberOfFrames();
     int getNumForcedFrames();
+    void setCliMode(bool value) { cliMode = value; }
     bool getExportForced() { return exportForced; }
     void setExportForced(bool value) { exportForced = value; }
     QVector<int>& getFrameAlpha(int index);
@@ -325,6 +335,7 @@ public:
     void setFreeScale(double x, double y) { freeScaleX = x; freeScaleY = y; }
     bool getFpsSrcCertain() { return fpsSrcCertain; }
     void close();
+    void exit();
     void scanSubtitles();
     void reScanSubtitles(Resolution oldResolution, double fpsTrgOld, int delayOld,
                          bool convertFpsOld, double fsXOld, double fsYOld);
@@ -354,6 +365,7 @@ public:
     bool getTrgExcluded(int index);
     bool isCancelled() { return isActive; }
     int getMergePTSdiff() { return mergePTSdiff; }
+    void setMergePTSdiff(int value) { mergePTSdiff = value; }
     bool usesBT601() { return useBT601; }
     bool getSwapCrCb() { return swapCrCb; }
     void setSwapCrCb(bool value) { swapCrCb = value; }
@@ -362,17 +374,23 @@ public:
     void setFPSTrg(double trg);
     double getFPS(QString string);
     Resolution getResolution(QString string);
+    QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     QVector<int> getResolutions(Resolution resolution);
     void writeSub(QString filename);
     int getLanguageIdx() { return languageIdx; }
     void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
     QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
     bool getKeepFps() { return keepFps; }
+    void setKeepFps(bool value) { keepFps = value; }
     double getDefaultFPS(Resolution resolution);
     int getErrors() { return numberOfErrors; }
     void resetErrors() { numberOfErrors = 0; }
     int getWarnings() { return numberOfWarnings; }
     void resetWarnings() { numberOfWarnings = 0; }
+
+    void readXml();
+    void readDVDSubStream(StreamID streamID, bool isVobSub);
+    void readSup();
 
 signals:
     void windowTitleChanged(const QString &newTitle);
@@ -381,7 +399,7 @@ signals:
     void progressDialogValueChanged(int value);
     void progressDialogVisibilityChanged(bool visible);
     void loadingSubtitleFinished();
-    void writingSubtitleFinished();
+    void writingSubtitleFinished(const QString& errorString);
     void moveAllFinished();
     void printText(const QString &message);
 
@@ -461,7 +479,7 @@ private:
     bool keepFps = false;
     bool fpsTrgSet = false;
     bool writePGCEditPal = false;
-    static constexpr PaletteMode paletteModeDefault = PaletteMode::CREATE_NEW;
+    static constexpr PaletteMode paletteModeDefault = PaletteMode::NEW;
     PaletteMode paletteMode = paletteModeDefault;
     RunType runType;
     static constexpr OutputMode outModeDefault = OutputMode::VOBSUB;
@@ -481,10 +499,6 @@ private:
     QVector<int> luminanceThreshold = { 210, 160 };
 
     QVector<int> alphaDefault = { 0, 0xf, 0xf, 0xf};
-
-    void readXml();
-    void readDVDSubStream(StreamID streamID, bool isVobSub);
-    void readSup();
     int countForcedIncluded();
     int countIncluded();
     void writePGCEditPalette(QString filename, Palette* palette);

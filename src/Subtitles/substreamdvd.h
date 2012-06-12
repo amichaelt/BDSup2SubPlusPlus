@@ -48,6 +48,7 @@ protected:
     FileBuffer *fileBuffer = 0;
     Palette *palette = 0;
     Bitmap *bitmap = 0;
+    SubtitleProcessor* subtitleProcessor = 0;
 
     QVector<int> lastAlpha = { 0, 0xf, 0xf, 0xf };
 

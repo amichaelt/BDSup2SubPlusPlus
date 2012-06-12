@@ -6,6 +6,7 @@
 #include <QPixmap>
 #include <QPainter>
 #include <QStandardItemModel>
+#include <QFileDialog>
 
 ColorDialog::ColorDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
     QDialog(parent),
@@ -75,14 +76,30 @@ void ColorDialog::on_restoreDefaultColorsButton_clicked()
 
 void ColorDialog::on_savePaletteButton_clicked()
 {
-    //TODO: implement
-    throw 10;
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save"),
+                                                    colorPath == "" ? QDir::currentPath() :
+                                                                      QFileInfo(colorPath).absolutePath(),
+                                                    filter,
+                                                    &selectedFilter);
+
+    if (filePath.isEmpty() || filePath.isNull()) return;
+
+    colorPath = filePath;
+    //TODO: implement props
 }
 
 void ColorDialog::on_loadPaletteButton_clicked()
 {
-    //TODO: implement
-    throw 10;
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Save"),
+                                                    colorPath == "" ? QDir::currentPath() :
+                                                                      QFileInfo(colorPath).absolutePath(),
+                                                    filter,
+                                                    &selectedFilter);
+
+    if (filePath.isNull() || filePath.isEmpty()) return;
+
+    colorPath = filePath;
+    //TODO: implement props
 }
 
 void ColorDialog::on_cancelButton_clicked()

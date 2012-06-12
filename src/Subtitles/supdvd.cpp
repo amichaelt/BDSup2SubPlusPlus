@@ -111,7 +111,15 @@ QVector<int>& SupDVD::getOriginalFramePal(int index)
 
 void SupDVD::readIfo()
 {
-    fileBuffer = new FileBuffer(ifoFileName);
+    try
+    {
+        fileBuffer = new FileBuffer(ifoFileName);
+    }
+    catch(QString e)
+    {
+        throw e;
+    }
+
     QVector<uchar> header(IFOheader.size());
 
     fileBuffer->getBytes(0, header, IFOheader.size());
@@ -307,8 +315,16 @@ void SupDVD::writeIfo(QString filename, SubPicture *subPicture, Palette *palette
 
 void SupDVD::readAllSupFrames()
 {
+    try
+    {
+        fileBuffer = new FileBuffer(supFileName);
+    }
+    catch(QString e)
+    {
+        throw e;
+    }
+
     long ofs = 0;
-    fileBuffer = new FileBuffer(supFileName);
     long size = fileBuffer->getSize();
 
     emit maxProgressChanged(size);
@@ -520,7 +536,7 @@ long SupDVD::readSupFrame(long ofs)
     int endSeqOfs = (((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - ctrlOfsRel) - 2;
     if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
     {
-        Core.printWarn("Invalid end sequence offset -> no end time\n");
+        subtitleProcessor->printWarning("Invalid end sequence offset -> no end time\n");
 
         endSeqOfs = ctrlSize;
     }
@@ -546,7 +562,11 @@ long SupDVD::readSupFrame(long ofs)
             pic->pal.replace(1, (b >> 4));
             pic->pal.replace(0, b & 0x0f);
 
-            Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
+            subtitleProcessor->print(QString("Palette:   %1, %2, %3, %4\n")
+                                     .arg(QString::number(pic->pal[0]))
+                                     .arg(QString::number(pic->pal[1]))
+                                     .arg(QString::number(pic->pal[2]))
+                                     .arg(QString::number(pic->pal[3])));
         } break;
         case 4: // alpha info
         {

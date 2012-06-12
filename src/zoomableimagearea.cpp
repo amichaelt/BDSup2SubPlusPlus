@@ -31,33 +31,69 @@ ZoomableImageArea::ZoomableImageArea(QWidget *parent) :
 void ZoomableImageArea::setImage(QImage* image)
 {
     this->image = image;
-    update();
+    if (zoomScale == 0)
+    {
+        setZoomScale(1);
+    }
+    else
+    {
+        setZoomScale(zoomScale);
+    }
 }
 
 void ZoomableImageArea::setZoomScale(int scale)
 {
-    if (scale != zoomScale && (image != 0 && !image->isNull()))
+    if (scale != zoomScale)
     {
-        QRect currentSize = image->rect();
-        scaleSize = QRect(currentSize.topLeft(), QSize(currentSize.width() * scale, currentSize.height() * scale));
         zoomScale = scale;
-        update();
+    }
+    if (image != 0 && !image->isNull())
+    {
+        QRect target = image->rect();
+        if (zoomScale == 1)
+        {
+            drawPixmap = new QPixmap(this->width(), this->height());
+            drawPixmap->fill();
+        }
+        else
+        {
+            target.setWidth(image->width() * zoomScale);
+            target.setHeight(image->height() * zoomScale);
+
+            int drawHeight = target.height() > originalSize.height() ? target.height() : originalSize.height();
+            int drawWidth = target.width() > originalSize.width() ? target.width() : originalSize.width();
+            drawPixmap = new QPixmap(drawWidth, drawHeight);
+            drawPixmap->fill();
+        }
+        painter->begin(drawPixmap);
+        QLinearGradient gradient(0, 0, drawPixmap->width(), drawPixmap->height());
+        gradient.setColorAt(0, Qt::blue);
+        gradient.setColorAt(1, Qt::black);
+        painter->fillRect(0, 0, drawPixmap->width(), drawPixmap->height(), gradient);
+        painter->drawImage(target, *image, image->rect());
+        painter->end();
+        this->setPixmap(*drawPixmap);
     }
 }
 
 void ZoomableImageArea::paintEvent(QPaintEvent *event)
 {
-    //TODO: add scaling code
-    painter->begin(this);
-    QLinearGradient gradient(0, 0, this->width(), this->height());
-    gradient.setColorAt(0, Qt::blue);
-    gradient.setColorAt(1, Qt::black);
-    painter->fillRect(0, 0, this->width(), this->height(), gradient);
-    if (image != 0 && !image->isNull())
+    if (image == 0)
     {
-        painter->drawImage(0, 0, *image);
+        painter->begin(this);
+        QLinearGradient gradient(0, 0, this->width(), this->height());
+        gradient.setColorAt(0, Qt::blue);
+        gradient.setColorAt(1, Qt::black);
+        painter->fillRect(0, 0, this->width(), this->height(), gradient);
+        painter->end();
+        originalSize = this->size();
     }
-    painter->end();
+    else
+    {
+        painter->begin(this);
+        painter->drawPixmap(0, 0, *drawPixmap);
+        painter->end();
+    }
 }
 
 void ZoomableImageArea::mousePressEvent(QMouseEvent *event)

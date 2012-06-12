@@ -99,8 +99,7 @@ private:
     Palette *palette = 0;
     Bitmap *bitmap = 0;
     int primaryColorIndex = 0;
-
-
+    SubtitleProcessor* subtitleProcessor = 0;
 
     QVector<uchar> packetHeader =
     {

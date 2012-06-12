@@ -41,14 +41,18 @@ public:
     explicit BDSup2Sub(QWidget *parent = 0);
     ~BDSup2Sub();
 
+    bool execCLI();
+
 public slots:
     void changeWindowTitle(QString newTitle);
     void onLoadingSubtitleFileFinished();
+    void onWritingSubtitleFileFinished(const QString& errorString);
     void convertSup();
     
 protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
+    void showEvent(QShowEvent *event);
 
 private:
     Ui::BDSup2Sub *ui;
@@ -79,13 +83,16 @@ private:
     void refreshTrgFrame(int index);
     void connectSubtitleProcessor();
     void loadSubtitleFile();
+    QString getWarningMessage();
     void warningDialog();
+    void printWarnings();
+    void Redirect_console();
 
 private slots:
-    void print(const QString &message);
     void openFile();
     void saveFile();
     void closeFile();
+    void print(const QString &message);
     void onRecentItemClicked();
     void onEditPaneClicked(QMouseEvent *event);
     void loadEditPane();

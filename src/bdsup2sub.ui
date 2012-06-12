@@ -470,7 +470,7 @@
          <x>0</x>
          <y>0</y>
          <width>788</width>
-         <height>142</height>
+         <height>149</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -484,6 +484,9 @@
          <widget class="ZoomableImageArea" name="sourceImage">
           <property name="text">
            <string/>
+          </property>
+          <property name="scaledContents">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -539,7 +542,7 @@
          <x>0</x>
          <y>0</y>
          <width>788</width>
-         <height>141</height>
+         <height>150</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -553,6 +556,9 @@
          <widget class="ZoomableImageArea" name="targetImage">
           <property name="text">
            <string/>
+          </property>
+          <property name="scaledContents">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -576,7 +582,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QTextEdit" name="consoleOutput">
+        <widget class="QPlainTextEdit" name="consoleOutput">
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
@@ -612,7 +618,7 @@
      <x>0</x>
      <y>0</y>
      <width>790</width>
-     <height>31</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">

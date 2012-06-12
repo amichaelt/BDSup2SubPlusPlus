@@ -18,12 +18,23 @@
 
 #include <QtGui/QApplication>
 #include "bdsup2sub.h"
+#ifdef Q_WS_WIN
+#include <windows.h>
+#endif
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     BDSup2Sub w;
-    w.show();
-    
+
+    bool isGUI = argc < 2;
+
+    if (isGUI || !w.execCLI())
+    {
+#ifdef Q_WS_WIN
+        FreeConsole();
+#endif
+        w.show();
+    }
     return a.exec();
 }

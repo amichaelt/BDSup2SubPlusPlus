@@ -5,6 +5,8 @@
 #-------------------------------------------------
 
 QT       += core gui xml
+CONFIG += qt \
+console
 QMAKE_CXXFLAGS += -std=c++0x
 TARGET = bdsup2sub++
 TEMPLATE = app
@@ -54,7 +56,8 @@ SOURCES += main.cpp\
     helpdialog.cpp \
     colordialog.cpp \
     framepalettedialog.cpp \
-    movedialog.cpp
+    movedialog.cpp \
+    Tools/hr_time.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -102,7 +105,8 @@ HEADERS  += bdsup2sub.h \
     helpdialog.h \
     colordialog.h \
     framepalettedialog.h \
-    movedialog.h
+    movedialog.h \
+    Tools/hr_time.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \

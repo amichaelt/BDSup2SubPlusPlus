@@ -90,20 +90,16 @@ void ExportDialog::on_browseButton_clicked()
                                                     ui->fileNameLineEdit->text(),
                                                     filter,
                                                     &selectedFilter);
+
+    if (fileName.isNull() || fileName.isEmpty()) return;
+
     ui->fileNameLineEdit->setText(QDir::toNativeSeparators(fileName));
     saveFileName = fileName;
 }
 
 void ExportDialog::on_fileNameLineEdit_textChanged(const QString &inFileName)
 {
-    QFile temp(inFileName);
-    if (!temp.open(QIODevice::WriteOnly))
-    {
-        saveFileName = "";
-        return;
-    }
     saveFileName = inFileName;
-    temp.close();
 }
 
 void ExportDialog::on_exportPGCEditFormatCheckBox_toggled(bool checked)

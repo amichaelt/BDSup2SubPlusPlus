@@ -72,7 +72,10 @@ bool SupBD::isForced(int index)
 
 void SupBD::close()
 {
-    fileBuffer->close();
+    if (fileBuffer != 0)
+    {
+        fileBuffer->close();
+    }
 }
 
 long SupBD::getEndTime(int index)
@@ -98,8 +101,16 @@ SubPicture *SupBD::getSubPicture(int index)
 
 void SupBD::readAllSupFrames()
 {
+    try
+    {
+        fileBuffer = new FileBuffer(supFileName);
+    }
+    catch(QString e)
+    {
+        throw e;
+    }
+
     int index = 0;
-    fileBuffer = new FileBuffer(supFileName);
     int bufsize = (int)fileBuffer->getSize();
     SupBD::SupSegment* segment;
     SubPictureBD* pic = 0;
@@ -117,324 +128,355 @@ void SupBD::readAllSupFrames()
     bool paletteUpdate = false;
     CompositionState cs = CompositionState::INVALID;
 
-    while (index < bufsize)
+    try
     {
-        if (subtitleProcessor->isCancelled())
+        while (index < bufsize)
         {
-            //TODO: print message about user cancelled loading
-            throw 10;
-        }
-        emit currentProgressChanged(index);
-        segment = readSegment(index);
-        QString out;
-        QString so; // hack to return string
-        switch (segment->type)
-        {
-        case 0x14:
-        {
-            out = QString("PDS ofs:%1, size:%2").arg(QString::number(index, 16), 8, QChar('0'))
-                                                .arg(QString::number(segment->size, 16), 4, QChar('0'));
-            if (compNum != compNumOld)
+            if (subtitleProcessor->isCancelled())
             {
-                if (pic != 0)
+                if (subPictures.size() == 0)
                 {
-                    so = QString("");
-                    int ps = parsePDS(segment, pic, so);
-                    if (ps >= 0)
-                    {
-                        Core.print(out+", "+so[0]+"\n");
-
-                        if (ps > 0) // don't count empty palettes
-                        {
-                            pdsCtr++;
-                        }
-                    }
-                    else
-                    {
-                        Core.print(out+"\n");
-                        Core.printWarn(so[0]+"\n");
-                    }
+                    throw 10;
                 }
-                else
-                {
-                    Core.print(out+"\n");
-                    Core.printWarn("missing PTS start -> ignored\n");
-                }
+                subtitleProcessor->printError(QString("Cancelled by user!\n"));
+                subtitleProcessor->print(QString("Probably not all captions imported due to error.\n"));
+                return;
             }
-            else
+            emit currentProgressChanged(index);
+            segment = readSegment(index);
+            QString out;
+            QString so; // hack to return string
+            switch (segment->type)
             {
-                Core.print(out+", comp # unchanged -> ignored\n");
-            }
-        } break;
-        case 0x15:
-        {
-            out = QString("ODS ofs:%1, size%2").arg(QString::number(index, 16), 8, QChar('0'))
-                                               .arg(QString::number(segment->size, 16), 4, QChar('0'));
-            if (compNum != compNumOld)
+            case 0x14:
             {
-                if (!paletteUpdate)
+                out = QString("PDS ofs:%1, size:%2").arg(QString::number(index, 16), 8, QChar('0'))
+                                                    .arg(QString::number(segment->size, 16), 4, QChar('0'));
+                if (compNum != compNumOld)
                 {
                     if (pic != 0)
                     {
                         so = QString("");
-                        if (parseODS(segment, pic, so))
+                        int ps = parsePDS(segment, pic, so);
+                        if (ps >= 0)
                         {
-                            odsCtr++;
-                        }
-                        if (!so.isNull())
-                        {
-                            out += ", "+so;
-                        }
+                            subtitleProcessor->print(QString("%1, %2\n").arg(out).arg(so));
 
-                        Core.print(out+", img size: "+pic.getImageWidth()+"*"+pic.getImageHeight()+"\n");
+                            if (ps > 0) // don't count empty palettes
+                            {
+                                pdsCtr++;
+                            }
+                        }
+                        else
+                        {
+                            subtitleProcessor->print(QString(out + "\n"));
+                            subtitleProcessor->printWarning(QString(so + "\n"));
+                        }
                     }
                     else
                     {
-                        Core.print(out+"\n");
-                        Core.printWarn("missing PTS start -> ignored\n");
+                        subtitleProcessor->print(out + "\n");
+                        subtitleProcessor->printWarning(QString("missing PTS start -> ignored\n"));
                     }
                 }
                 else
                 {
-                    Core.print(out+"\n");
-                    Core.printWarn("palette update only -> ignored\n");
+                    subtitleProcessor->print(QString(out + ", comp # unchanged -> ignored\n"));
                 }
-            }
-            else
+            } break;
+            case 0x15:
             {
-                Core.print(out+", comp # unchanged -> ignored\n");
-            }
-        } break;
-        case 0x16:
-        {
-            compNum = fileBuffer->getWord(segment->offset + 5);
-            cs = getCompositionState(segment);
-            paletteUpdate = fileBuffer->getByte(segment->offset + 8) == 0x80;
-            ptsPCS = segment->timestamp;
-            if (segment->size >= 0x13)
-            {
-                compCount = 1; // could be also 2, but we'll ignore this for the moment
-            }
-            else
-            {
-                compCount = 0;
-            }
-            if (cs == CompositionState::INVALID)
-            {
-                Core.printWarn("Illegal composition state at offset "+ToolBox.hex(index,8)+"\n");
-            }
-            else if (cs == CompositionState::EPOCH_START)
-            {
-                // new frame
-                if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0))
-                {
-                    Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
-
-                    subPictures.remove(subPictures.size()-1);
-                    compNumOld = compNum-1;
-                    if (subPictures.size() > 0)
-                    {
-                        picLast = subPictures.at(subPictures.size()-1);
-                    }
-                    else
-                    {
-                        picLast = 0;
-                    }
-                }
-                else
-                {
-                    picLast = pic;
-                }
-                pic = new SubPictureBD();
-                subPictures.push_back(pic); // add to list
-                pic->startTime = segment->timestamp;
-
-                Core.printX("#> "+(subPictures.size())+" ("+ToolBox.ptsToTimeStr(pic.startTime)+")\n");
-
-                so = QString("");
-                parsePCS(segment, pic, so);
-                // fix end time stamp of previous pic if still missing
-                if (picLast != 0 && picLast->endTime == 0)
-                {
-                    picLast->endTime = pic->startTime;
-                }
-
-                out = QString("PCS ofs:%1, START, size:%2, comp#: %3, forced: %4").arg(QString::number(index, 16), 8, QChar('0'))
-                                                                                  .arg(QString::number(segment->size, 16), 4, QChar('0'))
-                                                                                  .arg(QString::number(compNum))
-                                                                                  .arg(pic->isForced ? "true" : "false");
-                if (!so.isNull())
-                {
-                    out+= ", " + so + "\n";
-                }
-                else
-                {
-                    out+="\n";
-                }
-                out += QString("PTS start: %1").arg(TimeUtil::ptsToTimeStr(pic->startTime));
-                out += QString(", screen size: %1*%2\n").arg(QString::number(pic->width)).arg(QString::number(pic->height));
-                odsCtr = 0;
-                pdsCtr = 0;
-                odsCtrOld = 0;
-                pdsCtrOld = 0;
-                picTmp = 0;
-
-                Core.print(out);
-            }
-            else
-            {
-                if (pic == 0)
-                {
-                    Core.printWarn("missing start of epoch at offset "+ToolBox.hex(index,8)+"\n");
-                    break;
-                }
-                out = QString("PCS ofs:%1, ").arg(QString::number(index, 16), 8, QChar('0'));
-                switch ((int)cs)
-                {
-                case (int)CompositionState::EPOCH_CONTINUE:
-                {
-                    out += QString("CONT, ");
-                } break;
-                case (int)CompositionState::ACQU_POINT:
-                {
-                    out += QString("ACQU, ");
-                } break;
-                case (int)CompositionState::NORMAL:
-                {
-                    out += QString("NORM, ");
-                } break;
-                }
-                out += QString(" size: %1, comp#: %2, forced: %3").arg(QString::number(segment->size, 16), 4, QChar('0'))
-                                                                  .arg(QString::number(compNum))
-                                                                  .arg(pic->isForced ? "true" : "false");
+                out = QString("ODS ofs:%1, size%2").arg(QString::number(index, 16), 8, QChar('0'))
+                                                   .arg(QString::number(segment->size, 16), 4, QChar('0'));
                 if (compNum != compNumOld)
                 {
-                    so = QString("");
-                    // store state to be able to revert to it
-                    picTmp = new SubPictureBD(pic);
-                    picTmp->endTime = ptsPCS;
-                    // create new pic
-                    parsePCS(segment, pic, so);
-                }
-                if (!so.isNull())
-                {
-                    out+=", "+so;
-                }
-                out += QString(", pal update: %1\n").arg(paletteUpdate ? "true" : "false");
-                out += QString("PTS: %1\n").arg(TimeUtil::ptsToTimeStr(segment->timestamp));
-
-                Core.print(out);
-            }
-        } break;
-        case 0x17:
-        {
-            out = QString("WDS ofs:%1, size:%2").arg(QString::number(index, 16), 8, QChar('0'))
-                                                .arg(QString::number(segment->size, 16), 4, QChar('0'));
-            if (pic != 0)
-            {
-                parseWDS(segment, pic);
-
-                Core.print(out+", dim: "+pic.winWidth+"*"+pic.winHeight+"\n");
-            }
-            else
-            {
-                Core.print(out+"\n");
-                Core.printWarn("Missing PTS start -> ignored\n");
-            }
-        } break;
-        case 0x80:
-        {
-            Core.print("END ofs:"+ToolBox.hex(index,8)+"\n");
-
-            // decide whether to store this last composition section as caption or merge it
-            if (cs == CompositionState::EPOCH_START)
-            {
-                if (compCount>0 && odsCtr>odsCtrOld
-                                && compNum != compNumOld
-                                && picMergable(picLast, pic))
-                {
-                    // the last start epoch did not contain any (new) content
-                    // and should be merged to the previous frame
-                    subPictures.remove(subPictures.size() - 1);
-                    pic = picLast;
-                    if (subPictures.size() > 0)
+                    if (!paletteUpdate)
                     {
-                        picLast = subPictures.at(subPictures.size()-1);
+                        if (pic != 0)
+                        {
+                            so = QString("");
+                            if (parseODS(segment, pic, so))
+                            {
+                                odsCtr++;
+                            }
+                            if (!so.isNull())
+                            {
+                                out += ", "+so;
+                            }
+
+                            subtitleProcessor->print(QString("%1, img size: %2*%3\n")
+                                                     .arg(out)
+                                                     .arg(QString::number(pic->getImageWidth()))
+                                                     .arg(QString::number(pic->getImageHeight())));
+                        }
+                        else
+                        {
+                            subtitleProcessor->print(QString(out + "\n"));
+                            subtitleProcessor->printWarning(QString("missing PTS start -> ignored\n"));
+                        }
                     }
                     else
                     {
-                        picLast = 0;
+                        subtitleProcessor->print(QString(out + "\n"));
+                        subtitleProcessor->printWarning(QString("palette update only -> ignored\n"));
                     }
-
-                    Core.printX("#< caption merged\n");
-                }
-            }
-            else
-            {
-                long startTime = 0;
-                if (pic != 0)
-                {
-                    startTime = pic->startTime;  // store
-                    pic->startTime = ptsPCS;    // set for testing merge
-                }
-
-                if (compCount>0 && odsCtr>odsCtrOld
-                                && compNum != compNumOld
-                                && !picMergable(picTmp, pic))
-                {
-                    // last PCS should be stored as separate caption
-                    if (odsCtr - odsCtrOld > 1 || pdsCtr - pdsCtrOld > 1)
-                    {
-                        Core.printWarn("multiple PDS/ODS definitions: result may be erratic\n");
-                    }
-                    // replace pic with picTmp (deepCopy created before new PCS)
-                    subPictures.replace(subPictures.size() - 1, picTmp); // replace in list
-                    picLast = picTmp;
-                    subPictures.push_back(pic); // add to list
-
-                    Core.printX("#< "+(subPictures.size())+" ("+ToolBox.ptsToTimeStr(pic.startTime)+")\n");
-
-                    odsCtrOld = odsCtr;
                 }
                 else
                 {
-                    if (pic != 0)
+                    subtitleProcessor->print(QString(out + ", comp # unchanged -> ignored\n"));
+                }
+            } break;
+            case 0x16:
+            {
+                compNum = fileBuffer->getWord(segment->offset + 5);
+                cs = getCompositionState(segment);
+                paletteUpdate = fileBuffer->getByte(segment->offset + 8) == 0x80;
+                ptsPCS = segment->timestamp;
+                if (segment->size >= 0x13)
+                {
+                    compCount = 1; // could be also 2, but we'll ignore this for the moment
+                }
+                else
+                {
+                    compCount = 0;
+                }
+                if (cs == CompositionState::INVALID)
+                {
+                    subtitleProcessor->printWarning(QString("Illegal composition state at offset %1\n")
+                                                    .arg(QString::number(index, 16), 8, QChar('0')));
+                }
+                else if (cs == CompositionState::EPOCH_START)
+                {
+                    // new frame
+                    if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0))
                     {
-                        // merge with previous pic
-                        pic->startTime = startTime; // restore
-                        pic->endTime = ptsPCS;
-                        // for the unlikely case that forced flag changed during one captions
-                        if (picTmp != 0 && picTmp->isForced)
+                        subtitleProcessor->printWarning(QString("missing PDS/ODS: last epoch is discarded\n"));
+
+                        subPictures.remove(subPictures.size()-1);
+                        compNumOld = compNum - 1;
+                        if (subPictures.size() > 0)
                         {
-                            pic->isForced = true;
+                            picLast = subPictures.at(subPictures.size()-1);
                         }
-                        if (pdsCtr > pdsCtrOld || paletteUpdate)
+                        else
                         {
-                            Core.printWarn("palette animation: result may be erratic\n");
+                            picLast = 0;
                         }
                     }
                     else
                     {
-                        Core.printWarn("end without at least one epoch start\n");
+                        picLast = pic;
+                    }
+                    pic = new SubPictureBD();
+                    subPictures.push_back(pic); // add to list
+                    pic->startTime = segment->timestamp;
+
+                    subtitleProcessor->printX(QString("#> %1 (%2)\n")
+                                              .arg(QString::number(subPictures.size()))
+                                              .arg(TimeUtil::ptsToTimeStr(pic->startTime)));
+
+                    so = QString("");
+                    parsePCS(segment, pic, so);
+                    // fix end time stamp of previous pic if still missing
+                    if (picLast != 0 && picLast->endTime == 0)
+                    {
+                        picLast->endTime = pic->startTime;
+                    }
+
+                    out = QString("PCS ofs:%1, START, size:%2, comp#: %3, forced: %4").arg(QString::number(index, 16), 8, QChar('0'))
+                                                                                      .arg(QString::number(segment->size, 16), 4, QChar('0'))
+                                                                                      .arg(QString::number(compNum))
+                                                                                      .arg(pic->isForced ? "true" : "false");
+                    if (!so.isNull())
+                    {
+                        out+= ", " + so + "\n";
+                    }
+                    else
+                    {
+                        out+="\n";
+                    }
+                    out += QString("PTS start: %1").arg(TimeUtil::ptsToTimeStr(pic->startTime));
+                    out += QString(", screen size: %1*%2\n").arg(QString::number(pic->width)).arg(QString::number(pic->height));
+                    odsCtr = 0;
+                    pdsCtr = 0;
+                    odsCtrOld = 0;
+                    pdsCtrOld = 0;
+                    picTmp = 0;
+
+                    subtitleProcessor->print(out);
+                }
+                else
+                {
+                    if (pic == 0)
+                    {
+                        subtitleProcessor->printWarning(QString("missing start of epoch at offset %1\n")
+                                                        .arg(QString::number(index, 16), 8, QChar('0')));
+                        break;
+                    }
+                    out = QString("PCS ofs:%1, ").arg(QString::number(index, 16), 8, QChar('0'));
+                    switch ((int)cs)
+                    {
+                    case (int)CompositionState::EPOCH_CONTINUE:
+                    {
+                        out += QString("CONT, ");
+                    } break;
+                    case (int)CompositionState::ACQU_POINT:
+                    {
+                        out += QString("ACQU, ");
+                    } break;
+                    case (int)CompositionState::NORMAL:
+                    {
+                        out += QString("NORM, ");
+                    } break;
+                    }
+                    out += QString(" size: %1, comp#: %2, forced: %3").arg(QString::number(segment->size, 16), 4, QChar('0'))
+                                                                      .arg(QString::number(compNum))
+                                                                      .arg(pic->isForced ? "true" : "false");
+                    if (compNum != compNumOld)
+                    {
+                        so = QString("");
+                        // store state to be able to revert to it
+                        picTmp = new SubPictureBD(pic);
+                        picTmp->endTime = ptsPCS;
+                        // create new pic
+                        parsePCS(segment, pic, so);
+                    }
+                    if (!so.isNull())
+                    {
+                        out+=", "+so;
+                    }
+                    out += QString(", pal update: %1\n").arg(paletteUpdate ? "true" : "false");
+                    out += QString("PTS: %1\n").arg(TimeUtil::ptsToTimeStr(segment->timestamp));
+
+                    subtitleProcessor->print(out);
+                }
+            } break;
+            case 0x17:
+            {
+                out = QString("WDS ofs:%1, size:%2").arg(QString::number(index, 16), 8, QChar('0'))
+                                                    .arg(QString::number(segment->size, 16), 4, QChar('0'));
+                if (pic != 0)
+                {
+                    parseWDS(segment, pic);
+
+                    subtitleProcessor->print(QString("%1, dim: %2*%3\n")
+                                             .arg(out)
+                                             .arg(QString::number(pic->winWidth))
+                                             .arg(QString::number(pic->winHeight)));
+                }
+                else
+                {
+                    subtitleProcessor->print(QString(out + "\n"));
+                    subtitleProcessor->printWarning(QString("Missing PTS start -> ignored\n"));
+                }
+            } break;
+            case 0x80:
+            {
+                subtitleProcessor->print(QString("END ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));
+
+                // decide whether to store this last composition section as caption or merge it
+                if (cs == CompositionState::EPOCH_START)
+                {
+                    if (compCount>0 && odsCtr>odsCtrOld
+                                    && compNum != compNumOld
+                                    && picMergable(picLast, pic))
+                    {
+                        // the last start epoch did not contain any (new) content
+                        // and should be merged to the previous frame
+                        subPictures.remove(subPictures.size() - 1);
+                        pic = picLast;
+                        if (subPictures.size() > 0)
+                        {
+                            picLast = subPictures.at(subPictures.size()-1);
+                        }
+                        else
+                        {
+                            picLast = 0;
+                        }
+
+                        subtitleProcessor->printX(QString("#< caption merged\n"));
                     }
                 }
+                else
+                {
+                    long startTime = 0;
+                    if (pic != 0)
+                    {
+                        startTime = pic->startTime;  // store
+                        pic->startTime = ptsPCS;    // set for testing merge
+                    }
+
+                    if (compCount>0 && odsCtr>odsCtrOld
+                                    && compNum != compNumOld
+                                    && !picMergable(picTmp, pic))
+                    {
+                        // last PCS should be stored as separate caption
+                        if (odsCtr - odsCtrOld > 1 || pdsCtr - pdsCtrOld > 1)
+                        {
+                            subtitleProcessor->printWarning(QString("multiple PDS/ODS definitions: result may be erratic\n"));
+                        }
+                        // replace pic with picTmp (deepCopy created before new PCS)
+                        subPictures.replace(subPictures.size() - 1, picTmp); // replace in list
+                        picLast = picTmp;
+                        subPictures.push_back(pic); // add to list
+
+                        subtitleProcessor->printX(QString("#< %1 (%2)\n")
+                                                  .arg(QString::number(subPictures.size()))
+                                                  .arg(TimeUtil::ptsToTimeStr(pic->startTime)));
+
+                        odsCtrOld = odsCtr;
+                    }
+                    else
+                    {
+                        if (pic != 0)
+                        {
+                            // merge with previous pic
+                            pic->startTime = startTime; // restore
+                            pic->endTime = ptsPCS;
+                            // for the unlikely case that forced flag changed during one captions
+                            if (picTmp != 0 && picTmp->isForced)
+                            {
+                                pic->isForced = true;
+                            }
+                            if (pdsCtr > pdsCtrOld || paletteUpdate)
+                            {
+                                subtitleProcessor->printWarning(QString("palette animation: result may be erratic\n"));
+                            }
+                        }
+                        else
+                        {
+                            subtitleProcessor->printWarning(QString("end without at least one epoch start\n"));
+                        }
+                    }
+                }
+                pdsCtrOld = pdsCtr;
+                compNumOld = compNum;
+            } break;
+            default:
+            {
+                subtitleProcessor->printWarning(QString("<unknown> %1 ofs: %2\n")
+                                                .arg(QString::number(segment->type, 16), 2, QChar('0'))
+                                                .arg(QString::number(index, 16), 8, QChar('0')));
+            } break;
             }
-            pdsCtrOld = pdsCtr;
-            compNumOld = compNum;
-        } break;
-        default:
-        {
-            Core.printWarn("<unknown> "+ToolBox.hex(segment.type,2)+" ofs:"+ToolBox.hex(index,8)+"\n");
-        } break;
+            index += 13; // header size
+            index += segment->size;
         }
-        index += 13; // header size
-        index += segment->size;
+    }
+    catch (QString e)
+    {
+        if (subPictures.size() == 0)
+        {
+            throw e;
+        }
+        subtitleProcessor->printError(QString(e + "\n"));
+        subtitleProcessor->print(QString("Probably not all caption imported due to error.\n"));
     }
 
     // check if last frame is valid
     if (subPictures.size() > 0 && (odsCtr == 0 || pdsCtr == 0))
     {
-        Core.printWarn("missing PDS/ODS: last epoch is discarded\n");
+        subtitleProcessor->printWarning(QString("missing PDS/ODS: last epoch is discarded\n"));
 
         subPictures.remove(subPictures.size()-1);
     }
@@ -450,7 +492,8 @@ void SupBD::readAllSupFrames()
         }
     }
 
-    Core.printX("\nDetected "+numForcedFrames+" forced captions.\n");
+    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n")
+                              .arg(QString::number(numForcedFrames)));
 }
 
 QVector<uchar> SupBD::encodeImage(Bitmap *bm)
@@ -562,15 +605,16 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
         Bitmap* bmQ = new Bitmap(bm->getWidth(), bm->getHeight());
         QVector<QRgb> ct = qf.quantize(bm->toARGB(pal), bmQ->getImg(), bm->getWidth(), bm->getHeight(), 255, false, false);
         int size = ct.size();
+
+        subtitleProcessor->print(QString("Palette had to be reduced from %1 to %2 entries.\n")
+                                 .arg(QString::number(pal->getSize()))
+                                 .arg(QString::number(size)));
+
         if (size > 255)
         {
             size = 255;
-            Core.print("Palette had to be reduced from "+pal.getSize()+" to "+size+" entries.\n");
-            Core.printWarn("Quantizer failed.\n");
-        }
-        else
-        {
-            Core.print("Palette had to be reduced from "+pal.getSize()+" to "+size+" entries.\n");
+
+            subtitleProcessor->printWarning(QString("Quantizer failed.\n"));
         }
         // create palette
         pal = new Palette(size);
@@ -827,8 +871,7 @@ SupBD::SupSegment *SupBD::readSegment(int offset)
     SupSegment* segment = new SupSegment;
     if (fileBuffer->getWord(offset) != 0x5047)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("PG missing at index ").arg(QString::number(offset, 16), 8, QChar('0'));
     }
     segment->timestamp = fileBuffer->getDWord(offset += 2); // read PTS
     offset += 4; /* ignore DTS */
@@ -990,7 +1033,7 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD* subPicture, QString msg)
         }
         else
         {
-            Core.printWarn("Invalid image size - ignored\n");
+            subtitleProcessor->printWarning(QString("Invalid image size - ignored\n"));
             return false;
         }
     }
@@ -1038,15 +1081,25 @@ SupBD::CompositionState SupBD::getCompositionState(SupBD::SupSegment *segment)
     switch (type)
     {
     case 0x00:
+    {
         return CompositionState::NORMAL;
+    }
     case 0x40:
+    {
         return CompositionState::ACQU_POINT;
+    }
     case 0x80:
+    {
         return CompositionState::EPOCH_START;
+    }
     case 0xC0:
+    {
         return CompositionState::EPOCH_CONTINUE;
+    }
     default:
+    {
         return CompositionState::INVALID;
+    }
     }
 }
 
@@ -1117,7 +1170,7 @@ Palette *SupBD::decodePalette(SubPictureBD *subPicture)
     }
     if (fadeOut)
     {
-        Core.printWarn("fade out detected -> patched palette\n");
+        subtitleProcessor->printWarning(QString("fade out detected -> patched palette\n"));
     }
     return palette;
 }
@@ -1132,8 +1185,10 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
 
     if (w > subPicture->width || h > subPicture->height)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Subpicture too large: %1x%2 at offset %3")
+                .arg(QString::number(w))
+                .arg(QString::number(h))
+                .arg(QString::number(startOfs, 16), 8, QChar('0'));
     }
 
     Bitmap* bm = new Bitmap(w, h, transparentIndex);
@@ -1144,99 +1199,106 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
     int size = 0;
     int xpos = 0;
 
-    // just for multi-packet support, copy all of the image data in one common buffer
-    QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj()->bufferSize);
-    index = 0;
-    for (int p = 0; p < subPicture->getImgObj()->fragmentList.size(); ++p)
+    try
     {
-        // copy data of all packet to one common buffer
-        fragment = subPicture->getImgObj()->fragmentList.at(p);
-        for (int i = 0; i < fragment->imagePacketSize; ++i)
+        // just for multi-packet support, copy all of the image data in one common buffer
+        QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj()->bufferSize);
+        index = 0;
+        for (int p = 0; p < subPicture->getImgObj()->fragmentList.size(); ++p)
         {
-            buf[index + i] = (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i);
+            // copy data of all packet to one common buffer
+            fragment = subPicture->getImgObj()->fragmentList.at(p);
+            for (int i = 0; i < fragment->imagePacketSize; ++i)
+            {
+                buf[index + i] = (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i);
+            }
+            index += fragment->imagePacketSize;
         }
-        index += fragment->imagePacketSize;
-    }
 
-    index = 0;
+        index = 0;
 
-    do
-    {
-        b = buf[index++] & 0xff;
-        if (b == 0)
+        do
         {
             b = buf[index++] & 0xff;
             if (b == 0)
             {
-                // next line
-                ofs = (ofs / (w + (bm->getImg()->bytesPerLine() - w))) * (w + (bm->getImg()->bytesPerLine() - w));
-                if (xpos < (w + (bm->getImg()->bytesPerLine() - w)))
+                b = buf[index++] & 0xff;
+                if (b == 0)
                 {
-                    ofs += (w + (bm->getImg()->bytesPerLine() - w));
-                }
-                xpos = 0;
-            }
-            else
-            {
-                if ((b & 0xC0) == 0x40)
-                {
-                    // 00 4x xx -> xxx zeroes
-                    size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
-
-                    uchar* pixels = bm->getImg()->bits();
-                    for (int i = 0; i < size; ++i)
+                    // next line
+                    ofs = (ofs / (w + (bm->getImg()->bytesPerLine() - w))) * (w + (bm->getImg()->bytesPerLine() - w));
+                    if (xpos < (w + (bm->getImg()->bytesPerLine() - w)))
                     {
-                        pixels[ofs++] = 0; /*(uchar)b;*/
+                        ofs += (w + (bm->getImg()->bytesPerLine() - w));
                     }
-                    xpos += size;
-                }
-                else if ((b & 0xC0) == 0x80)
-                {
-                    // 00 8x yy -> x times value y
-                    size = (b - 0x80);
-                    b = buf[index++] & 0xff;
-
-                    uchar* pixels = bm->getImg()->bits();
-                    for (int i = 0; i < size; ++i)
-                    {
-                        pixels[ofs++] = (uchar)b;
-                    }
-                    xpos += size;
-                }
-                else if  ((b & 0xC0) != 0)
-                {
-                    // 00 cx yy zz -> xyy times value z
-                    size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
-                    b = buf[index++] & 0xff;
-
-                    uchar* pixels = bm->getImg()->bits();
-                    for (int i = 0; i < size; ++i)
-                    {
-                        pixels[ofs++] = (uchar)b;
-                    }
-                    xpos += size;
+                    xpos = 0;
                 }
                 else
                 {
-                    uchar* pixels = bm->getImg()->bits();
-                    // 00 xx -> xx times 0
-                    for (int i = 0; i < b; ++i)
+                    if ((b & 0xC0) == 0x40)
                     {
-                        pixels[ofs++] = 0;
+                        // 00 4x xx -> xxx zeroes
+                        size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
+
+                        uchar* pixels = bm->getImg()->bits();
+                        for (int i = 0; i < size; ++i)
+                        {
+                            pixels[ofs++] = 0; /*(uchar)b;*/
+                        }
+                        xpos += size;
                     }
-                    xpos += b;
+                    else if ((b & 0xC0) == 0x80)
+                    {
+                        // 00 8x yy -> x times value y
+                        size = (b - 0x80);
+                        b = buf[index++] & 0xff;
+
+                        uchar* pixels = bm->getImg()->bits();
+                        for (int i = 0; i < size; ++i)
+                        {
+                            pixels[ofs++] = (uchar)b;
+                        }
+                        xpos += size;
+                    }
+                    else if  ((b & 0xC0) != 0)
+                    {
+                        // 00 cx yy zz -> xyy times value z
+                        size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
+                        b = buf[index++] & 0xff;
+
+                        uchar* pixels = bm->getImg()->bits();
+                        for (int i = 0; i < size; ++i)
+                        {
+                            pixels[ofs++] = (uchar)b;
+                        }
+                        xpos += size;
+                    }
+                    else
+                    {
+                        uchar* pixels = bm->getImg()->bits();
+                        // 00 xx -> xx times 0
+                        for (int i = 0; i < b; ++i)
+                        {
+                            pixels[ofs++] = 0;
+                        }
+                        xpos += b;
+                    }
                 }
             }
-        }
-        else
-        {
-            uchar* pixels = bm->getImg()->bits();
-            pixels[ofs++] = (uchar)b;
-            xpos++;
-        }
-    } while (index < buf.size());
+            else
+            {
+                uchar* pixels = bm->getImg()->bits();
+                pixels[ofs++] = (uchar)b;
+                xpos++;
+            }
+        } while (index < buf.size());
 
-    return bm;
+        return bm;
+    }
+    catch (QString e)
+    {
+        throw e;
+    }
 }
 
 double SupBD::getFpsFromID(int id)

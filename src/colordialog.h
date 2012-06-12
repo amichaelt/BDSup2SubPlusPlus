@@ -42,6 +42,9 @@ private:
     QStringList colorNames;
     QString colorPath;
 
+    QString filter = tr("All Files (*.*);;(*.ini)");
+    QString selectedFilter = tr("(*.ini)");
+
     void changeColor(const QModelIndex &index);
 };
 

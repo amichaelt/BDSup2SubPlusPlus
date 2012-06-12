@@ -103,6 +103,7 @@ private:
     int numToImport = 0;
     double fps = FPS_24P;
     double fpsXml;
+    SubtitleProcessor* subtitleProcessor = 0;
 
     double XmlFps(double fps);
 };

@@ -75,6 +75,8 @@ signals:
 private:
     int streamID = 0;
     QFile idxFile;
+    QString idxFileName;
+    QString subFileName;
 
     QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 

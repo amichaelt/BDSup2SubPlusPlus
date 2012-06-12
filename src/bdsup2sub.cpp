@@ -29,8 +29,16 @@
 #include "framepalettedialog.h"
 #include "movedialog.h"
 
+#ifdef Q_WS_WIN
+#include "windows.h"
+#include "io.h"
+#include "fcntl.h"
+#endif
+
 #include <QMessageBox>
 #include <QPixmap>
+#include <QFileInfoList>
+#include <QFileInfo>
 
 BDSup2Sub::BDSup2Sub(QWidget *parent) :
     QMainWindow(parent),
@@ -142,8 +150,20 @@ void BDSup2Sub::onLoadingSubtitleFileFinished()
     else
     {
         closeSubtitle();
-        //TODO: print warning about unsupported file
+        print("Loading cancelled by user.");
         subtitleProcessor->close();
+    }
+}
+
+void BDSup2Sub::onWritingSubtitleFileFinished(const QString& errorString)
+{
+    if (!errorString.isEmpty())
+    {
+        QMessageBox::warning(this, "Error!", errorString);
+    }
+    else
+    {
+        warningDialog();
     }
 }
 
@@ -190,6 +210,20 @@ void BDSup2Sub::dropEvent(QDropEvent *event)
     loadSubtitleFile();
 }
 
+void BDSup2Sub::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    if (loadPath != "")
+    {
+        if (!QFile(loadPath).isReadable())
+        {
+            QMessageBox::warning(this, "File not found!", QString("File '%1' does not exist\n").arg(loadPath));
+            return;
+        }
+        loadSubtitleFile();
+    }
+}
+
 void BDSup2Sub::connectSubtitleProcessor()
 {
     if (subtitleProcessor != 0)
@@ -204,6 +238,7 @@ void BDSup2Sub::connectSubtitleProcessor()
     connect(subtitleProcessor, SIGNAL(progressDialogValueChanged(int)), progressDialog, SLOT(setCurrentValue(int)));
     connect(subtitleProcessor, SIGNAL(progressDialogVisibilityChanged(bool)), progressDialog, SLOT(setVisible(bool)));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), this, SLOT(onLoadingSubtitleFileFinished()));
+    connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), this, SLOT(onWritingSubtitleFileFinished(QString)));
     connect(subtitleProcessor, SIGNAL(moveAllFinished()), this, SLOT(convertSup()));
     connect(subtitleProcessor, SIGNAL(printText(QString)), this, SLOT(print(QString)));
 }
@@ -264,7 +299,7 @@ void BDSup2Sub::enableVobSubComponents(bool enable)
     }
     else
     {
-        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::CREATE_NEW);
+        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::NEW);
     }
 
     if (!enable || subtitleProcessor->getInputMode() == InputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
@@ -334,7 +369,6 @@ void BDSup2Sub::openFile()
 
 void BDSup2Sub::saveFile()
 {
-    bool showException = true;
     QString path = savePath + "/" + saveFileName + "_exp.";
     if (ui->outputFormatComboBox->currentText().contains("IDX"))
     {
@@ -387,13 +421,12 @@ void BDSup2Sub::saveFile()
             if ((QFile(fi).exists() && !QFileInfo(fi).isWritable()) ||
                 (QFile(fs).exists() && !QFileInfo(fs).isWritable()))
             {
-                //TODO: error handling
-                throw 10;
+                return;
             }
-            if (QMessageBox::question(this, "", "Target exists! Overwrite?", QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
+            if (QMessageBox::question(this, "", "Target exists! Overwrite?",
+                                      QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
             {
-                //TODO: error handling
-                throw 10;
+                return;
             }
         }
         connectSubtitleProcessor();
@@ -401,8 +434,9 @@ void BDSup2Sub::saveFile()
         subtitleProcessor->setLoadPath(fileName);
         subtitleProcessor->moveToThread(workerThread);
         connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(createSubtitleStream()));
-        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished()), workerThread, SLOT(quit()));
-        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished()), workerThread, SLOT(deleteLater()));
+        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), workerThread, SLOT(quit()));
+        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
+
         workerThread->start();
     }
 }
@@ -431,16 +465,17 @@ void BDSup2Sub::loadSubtitleFile()
     workerThread->start();
 }
 
-void BDSup2Sub::warningDialog()
+QString BDSup2Sub::getWarningMessage()
 {
     int warnings = subtitleProcessor->getWarnings();
     subtitleProcessor->resetWarnings();
     int errors = subtitleProcessor->getErrors();
     subtitleProcessor->resetErrors();
 
+    QString message;
+
     if (warnings + errors > 0)
     {
-        QString message;
         if (warnings > 0)
         {
             if (warnings == 1)
@@ -476,9 +511,1077 @@ void BDSup2Sub::warningDialog()
         {
             message = "There were " + message;
         }
+    }
+    return message;
+}
 
+void BDSup2Sub::warningDialog()
+{
+    QString message = getWarningMessage();
+    if (!message.isNull() || !message.isEmpty())
+    {
         QMessageBox::warning(this, "Warnings!", QString(message + "\nCheck the log for details"));
     }
+}
+
+void BDSup2Sub::printWarnings()
+{
+    QString message = getWarningMessage();
+    if (!message.isNull() || !message.isEmpty())
+    {
+        fprintf(stdout, QString(message + "\n").toAscii());
+    }
+}
+
+bool BDSup2Sub::execCLI()
+{
+    Redirect_console();
+
+    QStringList args = QCoreApplication::arguments();
+    QStringList al(args[0]);
+
+    if (args.size() == 2)
+    {
+        int extCnt = 0;
+        int pos = 0;
+        QString a = args[1].toLower();
+        do
+        {
+            int p = a.indexOf(".sup", pos);
+            if (p == -1)
+            {
+                p = a.indexOf(".sub", pos);
+            }
+            if (p == -1)
+            {
+                p = a.indexOf(".idx", pos);
+            }
+            if (p == -1)
+            {
+                p = a.indexOf(".xml", pos);
+            }
+            if (p != -1)
+            {
+                pos = p + 4;
+                extCnt++;
+            }
+            else
+            {
+                pos = -1;
+            }
+        } while (pos != -1 && pos < a.length());
+
+        if (args[1].indexOf('/') >= 0 ||
+           (args[1].indexOf(' ') >= 0 && extCnt > 1))
+        {
+            bool inside = false;
+            QString s = args[1].trimmed();
+            QString sb;
+
+            for (int i = 0; i < s.length(); ++i)
+            {
+                char c = s.at(i).toAscii();
+                switch (c)
+                {
+                case ' ':
+                {
+                    if (inside)
+                    {
+                        sb.append(" ");
+                    }
+                    else
+                    {
+                        if (sb.length() > 0)
+                        {
+                            al.push_back(sb);
+                        }
+                        sb = QString();
+                        for (int j = i + 1; j < s.length(); ++j)
+                        {
+                            c = s.at(j).toAscii();
+                            if (c != ' ')
+                            {
+                                i = j - 1;
+                                break;
+                            }
+                        }
+                    }
+                } break;
+                case '\'':
+                {
+                    inside = !inside;
+                } break;
+                default:
+                {
+                    sb.append(c);
+                }
+                }
+            }
+            if (inside)
+            {
+                fprintf(stdout, "ERROR: Missing closing single quote");
+                exit(1);
+            }
+            if (sb.length() > 0)
+            {
+                al.push_back(sb);
+            }
+            args = al;
+        }
+    }
+
+    if (args.size() == 2 && (args[1] == "/?" || args[1].toLower() == "/help"))
+    {
+        // output help
+        fprintf(stdout, (QString("%1 - %2\n").arg(progNameVer).arg(authorDate)).toAscii());
+        fprintf(stdout, "Syntax:\n");
+        fprintf(stdout, "BDSup2Sub <in> <out> [options]\n");
+        fprintf(stdout, "Options:\n");
+        fprintf(stdout, "    /res:<n>         : set resolution to 480, 576, 720 or 1080 - default 576\n");
+        fprintf(stdout, "                       Predefined values: keep, ntsc=480, pal=576, 1440x1080\n");
+        fprintf(stdout, "    /fps:<t>         : synchronize target frame rate to <t> - default: auto\n");
+        fprintf(stdout, "                       Predefined values; 24p=23.976, 25p=25, 30p=29.967\n");
+        fprintf(stdout, "                       /fps:keep preserves the source fps (for BD&XML)\n");
+        fprintf(stdout, "    /fps:<s>,<t>     : convert framerate from <s> to <t>\n");
+        fprintf(stdout, "                       Predefined values; 24p=23.976, 25p=25, 30p=29.967\n");
+        fprintf(stdout, "                       /fps:auto,<t> detects source frame rate automatically\n");
+        fprintf(stdout, "    /dly:<t>         : set delay in ms - default: 0.0\n");
+        fprintf(stdout, "    /filter:<f>      : set scaling filter - default: bilinear\n");
+        fprintf(stdout, "                       Supported values: bilinear, triangle, bicubic, bell,\n");
+        fprintf(stdout, "                       b-spline, hermite, lanczos3, mitchell\n");
+        fprintf(stdout, "    /palmode:<s>     : palette mode: keep, create, dither - default: create\n");
+        fprintf(stdout, "    /tmin:<t>        : set minimum display time in ms - default: 500\n");
+        fprintf(stdout, "    /tmerge:<t>      : set max time diff for merging subs in ms - default: 200\n");
+        fprintf(stdout, "    /movin:<r>[,<o>] : move captions inside screen ratio <r>, +/- offset <o>\n");
+        fprintf(stdout, "    /movout:<r>[,<o>]: move captions inside screen ratio <r>, +/- offset <o>\n");
+        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be left,right,center.\n");
+        fprintf(stdout, "                       +/- optional offset <o> (only if moving left or right)\n");
+        fprintf(stdout, "    /cropy:<n>       : crop the upper/lower n lines - default: 0\n");
+        fprintf(stdout, "    /acrop:<n>       : set alpha cropping threshold - default: 10\n");
+        fprintf(stdout, "    /scale:<x>,<y>   : scale captions with free factors - default: 1.0,1.0\n");
+        fprintf(stdout, "    /exppal[+/-]     : export target palette in PGCEdit format - default: off\n");
+        fprintf(stdout, "    /forced[+/-]     : export only forced subtitles - default: off (export all)\n");
+        fprintf(stdout, "    /forceall[+/-]   : set/clear forced flag for all subs - default: off (keep)\n");
+        fprintf(stdout, "    /swap[+/-]       : swap Cr/Cb components - default: off (don't swap)\n");
+        fprintf(stdout, "    /fixinv[+/-]     : fix zero alpha frame palette - default: off (don't fix)\n");
+        fprintf(stdout, "    /verbatim[+/-]   : switch on verbatim console output mode - default: off\n");
+        fprintf(stdout, "Options only for SUB/IDX or SUP/IFO as target:\n");
+        fprintf(stdout, "    /atr:<n>         : set alpha threshold 0..255 - default 80\n");
+        fprintf(stdout, "    /ltr1:<n>        : set lum lo/mid threshold 0..255 - default auto\n");
+        fprintf(stdout, "    /ltr2:<n>        : set lum mid/hi threshold 0..255 - default auto\n");
+        fprintf(stdout, "    /lang:<s>        : set language to string <s> - default: de (only SUB/IDX)\n");
+        fprintf(stdout, "    /pal:<s>         : load palette file <s> - default: use builtin palette\n");
+        fprintf(stdout, "\nNote:\n");
+        fprintf(stdout, "Boolean parameters like \"verbatim\" are switched off with a trailing \"-\".\n");
+        fprintf(stdout, "\nWildcard support:\n");
+        fprintf(stdout, "To use wildcards, enclose the whole parameter string in double quotes.\n");
+        fprintf(stdout, "For filenames containing spaces, use single quotes around the file name.\n");
+        fprintf(stdout, "Use \"*\" for any character and \"?\" for one character in the source name\n");
+        fprintf(stdout, "Use exactly one \"*\" in the target file name.\n");
+        fprintf(stdout, "Example:\n");
+        fprintf(stdout, "BDSup2Sub \"'movie* 1?.sup' dvd_*.sub /res:720 /fps:25p\"\n");
+    }
+    else
+    {
+        // analyze parameters
+        QString cmdLine = "";
+        for (int i = 1; i < args.size(); ++i)
+        {
+            cmdLine += args[i] + " ";
+        }
+        fprintf(stdout, QString("\nCommand line:\n" + args[0]
+                                + " " + cmdLine + "\n").toAscii());
+
+        // parse parameters
+        QString src = "";
+        QString trg = "";
+        int alphaThr = subtitleProcessor->getAlphaThreshold();
+        int lumThr1 = -1;
+        int lumThr2 = -1;
+        int langIdx = -1;
+        Resolution r = Resolution::PAL;
+        OutputMode mode = (OutputMode)0;
+        bool defineFPStrg = false;
+        double screenRatio = -1;
+        for (int i = 1; i < args.size() ; ++i)
+        {
+            QString a = args[i];
+
+            // detect source and target
+            if (a.at(0) != QChar('/'))
+            {
+                if (src.isEmpty())
+                {
+                    src = a;
+                    continue;
+                }
+                else if (trg.isEmpty())
+                {
+                    trg = a;
+
+                    QString ext = QFileInfo(trg).suffix();
+                    if (ext.isEmpty())
+                    {
+                        fprintf(stdout, QString("ERROR: No extension given for target " + trg).toAscii());
+                        exit(1);
+                    }
+                    if (ext == "sup")
+                    {
+                        mode = OutputMode::BDSUP;
+                    }
+                    else if (ext == "sub" || ext == "idx")
+                    {
+                        mode = OutputMode::VOBSUB;
+                    }
+                    else if (ext == "xml")
+                    {
+                        mode = OutputMode::XML;
+                    }
+                    else if (ext == "ifo")
+                    {
+                        mode = OutputMode::SUPIFO;
+                    }
+                    else
+                    {
+                        fprintf(stdout, QString("ERROR: Unknown extension of target " + trg).toAscii());
+                        exit(1);
+                    }
+                    subtitleProcessor->setOutputMode(mode);
+                    continue;
+                }
+            }
+
+            bool switchOn = true;
+
+            // analyze normal parameters
+            if (a.length() < 4 || a.at(0) != QChar('/'))
+            {
+                fprintf(stdout, QString("ERROR: Illegal argument: " + a).toAscii());
+                exit(1);
+            }
+            int pos = a.indexOf(':');
+            QString val;
+            if (pos > -1)
+            {
+                val = a.mid(pos + 1, a.length());
+                a = a.mid(1, pos);
+            }
+            else
+            {
+                val = "";
+                a = a.mid(1);
+                // check +/- at end of parameter
+                int last = a.length() - 1;
+                if (a.indexOf('+') == last)
+                {
+                    a = a.mid(0, last);
+                }
+                else if (a.indexOf('-') == last)
+                {
+                    a = a.mid(0, last);
+                    switchOn = false;
+                }
+            }
+
+            QString strSwitchOn;
+            if (switchOn)
+            {
+                strSwitchOn = "ON";
+            }
+            else
+            {
+                strSwitchOn = "OFF";
+            }
+
+            bool ok;
+            int ival = val.toInt(&ok);
+            if (!ok)
+            {
+                ival = -1;
+            }
+
+            Parameters p = (Parameters)params.indexOf(a);
+
+            switch ((int)p)
+            {
+            case (int)Parameters::ALPHATHR:
+            {
+                // alpha threshold for SUB/IDX conversion
+                if (ival <0 || ival > 255)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal number range for alpha threshold: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                else
+                {
+                    alphaThr = ival;
+                }
+                fprintf(stdout, (QString("OPTION: set alpha threshold to %1")
+                                 .arg(QString::number(ival))).toAscii());
+            } break;
+            case (int)Parameters::LUMTHR1:
+            {
+                // luminance threshold low-med for SUB/IDX conversion
+                if (ival <0 || ival > 255)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal number range for luminance: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                else
+                {
+                    lumThr1 = ival;
+                }
+                fprintf(stdout, (QString("OPTION: set low/mid luminance threshold to %1")
+                                 .arg(QString::number(ival))).toAscii());
+            } break;
+            case (int)Parameters::LUMTHR2:
+            {
+                // luminance threshold med-high for SUB/IDX conversion
+                if (ival <0 || ival > 255)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal number range for luminance: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                else
+                {
+                    lumThr2 = ival;
+                }
+                fprintf(stdout, (QString("OPTION: set mid/high luminance threshold to %1")
+                                 .arg(QString::number(ival))).toAscii());
+            } break;
+            case (int)Parameters::RESOLUTION:
+            {
+                // resolution for export
+                if (val.toLower() == "keep")
+                {
+                    subtitleProcessor->setConvertResolution(false);
+                }
+                else
+                {
+                    subtitleProcessor->setConvertResolution(true);
+                    if (val.toLower() == "pal" || ival == 576)
+                    {
+                        r = Resolution::PAL;
+                        if (!defineFPStrg)
+                        {
+                            subtitleProcessor->setFPSTrg(FPS_PAL);
+                        }
+                    }
+                    else if (val.toLower() == "ntsc" || ival == 480)
+                    {
+                        r = Resolution::NTSC;
+                        if (!defineFPStrg)
+                        {
+                            subtitleProcessor->setFPSTrg(FPS_NTSC);
+                        }
+                    }
+                    else if (val.toLower() == "720p" || ival == 720)
+                    {
+                        r = Resolution::HD_720;
+                        if (!defineFPStrg)
+                        {
+                            subtitleProcessor->setFPSTrg(FPS_24P);
+                        }
+                    }
+                    else if (val.toLower() == "1440x1080")
+                    {
+                        r = Resolution::HD_1440x1080;
+                        if (!defineFPStrg)
+                        {
+                            subtitleProcessor->setFPSTrg(FPS_24P);
+                        }
+                    }
+                    else if (val.toLower() == "1080p" || ival == 1080)
+                    {
+                        r = Resolution::HD_1080;
+                        if (!defineFPStrg)
+                        {
+                            subtitleProcessor->setFPSTrg(FPS_24P);
+                        }
+                    }
+                    else
+                    {
+                        fprintf(stdout, (QString("ERROR: Illegal resolution: %1")
+                                         .arg(val)).toAscii());
+                        exit(1);
+                    }
+                }
+                fprintf(stdout, (QString("OPTION: set resolution to %1")
+                                 .arg(subtitleProcessor->getResolutionName(r))).toAscii());
+            } break;
+            case (int)Parameters::LANGUAGE:
+            {
+                // language used for SUB/IDX export
+                langIdx = -1;
+                for (int l = 0; l < subtitleProcessor->getLanguages().size(); ++l)
+                {
+                    if (subtitleProcessor->getLanguages()[l][1] == val)
+                    {
+                        langIdx = l;
+                        break;
+                    }
+                }
+                if (langIdx == -1)
+                {
+                    fprintf(stdout, (QString("ERROR: Unknown language %1").arg(val)).toAscii());
+                    fprintf(stdout, "Use one of the following 2 character codes:");
+                    for (int l = 0; l < subtitleProcessor->getLanguages().size(); ++l)
+                    {
+                        fprintf(stdout, (QString("    %1 - %2")
+                                         .arg(subtitleProcessor->getLanguages()[l][1])
+                                         .arg(subtitleProcessor->getLanguages()[l][0])).toAscii());
+                    }
+                    exit(1);
+                }
+                fprintf(stdout, (QString("OPTION: set language to %1 (%2)")
+                                 .arg(subtitleProcessor->getLanguages()[langIdx][0])
+                                 .arg(subtitleProcessor->getLanguages()[langIdx][1])).toAscii());
+            } break;
+            case (int)Parameters::PALETTE:
+            {
+                // load color profile for for SUB/IDX conversion
+                QFileInfo f(val);
+                if (f.exists())
+                {
+                    QByteArray id = subtitleProcessor->getFileID(val, 4);
+                    if (id.isEmpty() || id[0] != 0x23 || id[1] != 0x43 || id[2] != 0x4F || id[3] != 0x4C) //#COL
+                    {
+                        fprintf(stdout, (QString("ERROR: No valid palette file: %1").arg(val)).toAscii());
+                        exit(1);
+                    }
+                }
+                else
+                {
+                    fprintf(stdout, (QString("ERROR: Palette file not found: %1").arg(val)).toAscii());
+                    exit(1);
+                }
+                //TODO: implement props
+                //Props colProps = new Props();
+                //colProps.load(val);
+                for (int c = 0; c < 15; ++c)
+                {
+                    QString s = "";//colProps.get("Color_"+c, "0,0,0");
+                    QStringList sp = s.split(",");
+                    if (sp.size() >= 3)
+                    {
+                        int red = sp[0].trimmed().toInt() & 0xff;
+                        int green = sp[1].trimmed().toInt() & 0xff;
+                        int blue = sp[2].trimmed().toInt() & 0xff;
+                        subtitleProcessor->getCurrentDVDPalette()->setColor(c + 1, QColor(red, green, blue));
+                    }
+                }
+                fprintf(stdout, (QString("OPTION: loaded palette from %1").arg(val)).toAscii());
+            } break;
+            case (int)Parameters::FORCED:
+            {
+                // export only forced subtitles (when converting from BD-SUP)
+                subtitleProcessor->setExportForced(switchOn);
+                fprintf(stdout, (QString("OPTION: export only forced subtitles: %1").arg(strSwitchOn)).toAscii());
+            } break;
+            case (int)Parameters::SWAP_CR_CB:
+            {
+                // export only forced subtitles (when converting from BD-SUP)
+                subtitleProcessor->setSwapCrCb(switchOn);
+                fprintf(stdout, (QString("OPTION: swap Cr/Cb components: %1").arg(strSwitchOn)).toAscii());
+            } break;
+            case (int)Parameters::FPS:
+            {
+                // set target (and source) frame rate
+                double fpsSrc, fpsTrg;
+                pos = val.indexOf(',');
+                if (pos > 0)
+                {
+                    bool autoFPS;
+                    // source and target: frame rate conversion
+                    QString srcStr = val.mid(0, pos).trimmed();
+                    if (srcStr.toLower() == "auto")
+                    {
+                        // leave default value
+                        autoFPS = true;
+                        fpsSrc = 0; // stub to avoid undefined warning
+                    }
+                    else
+                    {
+                        autoFPS = false;
+                        fpsSrc = subtitleProcessor->getFPS(srcStr);
+                        if (fpsSrc <= 0)
+                        {
+                            fprintf(stdout, (QString("ERROR: invalid source framerate: %1")
+                                             .arg(srcStr)).toAscii());
+                            exit(1);
+                        }
+                        subtitleProcessor->setFPSSrc(fpsSrc);
+                    }
+                    fpsTrg = subtitleProcessor->getFPS(val.mid(pos + 1));
+                    if (fpsTrg <= 0)
+                    {
+                        fprintf(stdout, (QString("ERROR: invalid target value: %1")
+                                         .arg(val.mid(pos + 1))).toAscii());
+                        exit(1);
+                    }
+                    if (!autoFPS)
+                    {
+                        subtitleProcessor->setFPSTrg(fpsTrg);
+                    }
+
+                    subtitleProcessor->setConvertFPS(true);
+
+                    fprintf(stdout, (QString("OPTION: convert framerate from %1fps to %2fps")
+                                     .arg(autoFPS ? "<auto>" : QString::number(fpsSrc, 'g', 6))
+                                     .arg(QString::number(fpsTrg, 'g', 6))).toAscii());
+
+                    defineFPStrg = true;
+                }
+                else
+                {
+                    // only target: frame rate synchronization
+                    if (val.toLower() == "keep")
+                    {
+                        subtitleProcessor->setKeepFps(true);
+                        fprintf(stdout, "OPTION: use source fps as target fps");
+                    }
+                    else
+                    {
+                        fpsTrg = subtitleProcessor->getFPS(val);
+                        if (fpsTrg <= 0)
+                        {
+                            fprintf(stdout, (QString("ERROR: invalid target framerate: %1").arg(val)).toAscii());
+                            exit(1);
+                        }
+                        subtitleProcessor->setFPSTrg(fpsTrg);
+
+                        fprintf(stdout, (QString("OPTION: synchronize target framerate to %1fps")
+                                         .arg(QString::number(fpsTrg, 'g', 6))).toAscii());
+
+                        defineFPStrg = true;
+                    }
+                }
+            } break;
+            case (int)Parameters::DELAY:
+            {
+                // add a delay
+                double delay = 0;
+                bool ok;
+                delay = val.trimmed().toDouble(&ok) * 90.0;
+                if (!ok)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal delay value: %1").arg(val)).toAscii());
+                    exit(1);
+                }
+                int delayPTS = (int)subtitleProcessor->syncTimePTS((long)delay, subtitleProcessor->getFPSTrg());
+                subtitleProcessor->setDelayPTS(delayPTS);
+                fprintf(stdout, (QString("OPTION: set delay to %1")
+                                 .arg(QString::number(delayPTS / 90.0, 'g', 6))).toAscii());
+            } break;
+            case (int)Parameters::MIN_TIME:
+            {
+                // set minimum duration
+                double t = 0;
+                bool ok;
+                t = val.trimmed().toDouble(&ok) * 90.0;
+                if (!ok)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal value for minimum display time: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                int tMin = (int)subtitleProcessor->syncTimePTS((long)t, subtitleProcessor->getFPSTrg());
+                subtitleProcessor->setMinTimePTS(tMin);
+                subtitleProcessor->setFixShortFrames(true);
+                fprintf(stdout, (QString("OPTION: set delay to %1")
+                                 .arg(QString::number(tMin / 90.0, 'g', 6))).toAscii());
+            } break;
+            case (int)Parameters::MOVE_INSIDE:
+            case (int)Parameters::MOVE_OUTSIDE:
+            {
+                // move captions
+                QString sm;
+                if (p == Parameters::MOVE_OUTSIDE)
+                {
+                    subtitleProcessor->setMoveModeY(MoveModeY::OUTSIDE);
+                    sm = "outside";
+                }
+                else
+                {
+                    subtitleProcessor->setMoveModeY(MoveModeY::INSIDE);
+                    sm = "inside";
+                }
+                QString ratio;
+                pos = val.indexOf(',');
+                if (pos > 0)
+                {
+                    ratio = val.mid(0, pos);
+                }
+                else
+                {
+                    ratio = val;
+                }
+                bool ok;
+                screenRatio = ratio.toDouble(&ok);
+                if (!ok)
+                {
+                    screenRatio = -1;
+                }
+                if (screenRatio <= (16.0/9))
+                {
+                    fprintf(stdout, (QString("ERROR: invalid screen ratio: %1")
+                                     .arg(ratio)).toAscii());
+                    exit(1);
+                }
+                int moveOffsetY = subtitleProcessor->getMoveOffsetY();
+                if (pos > 0)
+                {
+                    bool ok;
+                    moveOffsetY = val.mid(pos + 1).toInt(&ok);
+                    if (!ok)
+                    {
+                        moveOffsetY = -1;
+                    }
+                    if (moveOffsetY < 0)
+                    {
+                        fprintf(stdout, (QString("ERROR: invalid pixel offset: %1")
+                                         .arg(val.mid(pos + 1))).toAscii());
+                        exit(1);
+                    }
+                    subtitleProcessor->setMoveOffsetY(moveOffsetY);
+                }
+                fprintf(stdout, (QString("OPTION: moving captions %1 %2:1 plus/minus %3 pixels")
+                                 .arg(sm)
+                                 .arg(QString::number(screenRatio, 'g', 6))
+                                 .arg(QString::number(moveOffsetY))).toAscii());
+            } break;
+            case (int)Parameters::MOVE_X:
+            {
+                // move captions
+                QString mx;
+                pos = val.indexOf(',');
+                if (pos > 0)
+                {
+                    mx = val.mid(0, pos);
+                }
+                else
+                {
+                    mx = val;
+                }
+                if (mx.toLower() == "left")
+                {
+                    subtitleProcessor->setMoveModeX(MoveModeX::LEFT);
+                }
+                else if (mx.toLower() == "right")
+                {
+                    subtitleProcessor->setMoveModeX(MoveModeX::RIGHT);
+                }
+                else if (mx.toLower() == "center")
+                {
+                    subtitleProcessor->setMoveModeX(MoveModeX::CENTER);
+                }
+                else
+                {
+                    fprintf(stdout, (QString("ERROR: invalid moveX command: %1").arg(mx)).toAscii());
+                    exit(1);
+                }
+
+                int moveOffsetX = subtitleProcessor->getMoveOffsetX();
+                if (pos > 0)
+                {
+                    bool ok;
+                    moveOffsetX = val.mid(pos + 1).toInt(&ok);
+                    if (!ok)
+                    {
+                        moveOffsetX = -1;
+                    }
+                    if (moveOffsetX < 0)
+                    {
+                        fprintf(stdout, (QString("ERROR: invalid pixel offset: %1")
+                                         .arg(val.mid(pos + 1))).toAscii());
+                        exit(1);
+                    }
+                    subtitleProcessor->setMoveOffsetX(moveOffsetX);
+                }
+                fprintf(stdout, (QString("OPTION: moving captions to the %1 plus/minus %2 pixels")
+                                 .arg(mx)
+                                 .arg(QString::number(moveOffsetX))).toAscii());
+            } break;
+            case (int)Parameters::CROP_Y:
+            {
+                // add a delay
+                int cropY;
+                bool ok;
+                cropY = val.trimmed().toInt(&ok);
+                if (!ok)
+                {
+                    cropY = -1;
+                }
+                if (cropY >= 0)
+                {
+                    subtitleProcessor->setCropOfsY(cropY);
+                    fprintf(stdout, (QString("OPTION: set delay to %1")
+                                     .arg(QString::number(cropY))).toAscii());
+                }
+                else
+                {
+                    fprintf(stdout, (QString("ERROR: invalid crop y value: %1")
+                                     .arg(val.mid(0, pos))).toAscii());
+                    exit(1);
+                }
+            } break;
+            case (int)Parameters::PALETTE_MODE:
+            {
+                // select palette mode
+                if (val.toLower() == "keep")
+                {
+                    subtitleProcessor->setPaletteMode(PaletteMode::KEEP_EXISTING);
+                }
+                else if (val.toLower() == "create")
+                {
+                    subtitleProcessor->setPaletteMode(PaletteMode::NEW);
+                }
+                else if (val.toLower() == "dither")
+                {
+                    subtitleProcessor->setPaletteMode(PaletteMode::CREATE_DITHERED);
+                }
+                else
+                {
+                    fprintf(stdout, (QString("ERROR: invalid palette mode: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                fprintf(stdout, (QString("OPTION: set palette mode to %1")
+                                 .arg(val.toLower())).toAscii());
+            } break;
+            case (int)Parameters::VERBATIM:
+            {
+                // select verbatim console output
+                subtitleProcessor->setVerbatim(switchOn);
+                fprintf(stdout, (QString("OPTION: enabled verbatim output mode: %1")
+                                 .arg(strSwitchOn)).toAscii());
+            } break;
+            case (int)Parameters::FILTER:
+            {
+                // select scaling filter
+                int idx = scalingFilters.indexOf(val);
+                if (idx != -1)
+                {
+                    subtitleProcessor->setScalingFilter((ScalingFilters)idx);
+                    fprintf(stdout, (QString("OPTION: set scaling filter to: %1").arg(scalingFilters[idx])).toAscii());
+                }
+                else
+                {
+                    fprintf(stdout, (QString("ERROR: invalid scaling filter: %1").arg(val)).toAscii());
+                    exit(1);
+                }
+            } break;
+            case (int)Parameters::TMERGE:
+            {
+                // set maximum difference for merging captions
+                double t = 0;
+                bool ok;
+                t = val.trimmed().toDouble(&ok) * 90.0;
+                if (!ok)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal value for maximum merge time: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                int ti = (int)(t + 0.5);
+                subtitleProcessor->setMergePTSdiff(ti);
+                fprintf(stdout, (QString("OPTION: set maximum merge time to %1")
+                                 .arg(QString::number(ti / 90.0, 'g', 6))).toAscii());
+            } break;
+            case (int)Parameters::SCALE:
+            {
+                // free x/y scaling factors
+                pos = val.indexOf(',');
+                if (pos > 0)
+                {
+                    bool ok;
+                    double scaleX = val.mid(0, pos).toDouble(&ok);
+                    if (!ok)
+                    {
+                        scaleX = -1;
+                    }
+                    if (scaleX < subtitleProcessor->minScale || scaleX > subtitleProcessor->maxScale)
+                    {
+                        fprintf(stdout, (QString("ERROR: invalid x scaling factor: %1")
+                                         .arg(val.mid(0, pos))).toAscii());
+                        exit(1);
+                    }
+                    double scaleY = val.mid(pos + 1).toDouble(&ok);
+                    if (!ok)
+                    {
+                        scaleY = -1;
+                    }
+                    if (scaleY < subtitleProcessor->minScale || scaleY > subtitleProcessor->maxScale)
+                    {
+                        fprintf(stdout, (QString("ERROR: invalid y scaling factor: %1")
+                                         .arg(val.mid(pos + 1))).toAscii());
+                        exit(1);
+                    }
+                    subtitleProcessor->setFreeScale(scaleX, scaleY);
+                    fprintf(stdout, (QString("OPTION: set free scaling factors to %1, %2")
+                                     .arg(QString::number(scaleX, 'g', 6))
+                                     .arg(QString::number(scaleY, 'g', 6))).toAscii());
+                }
+                else
+                {
+                    fprintf(stdout, (QString("ERROR: invalid scale command (missing comma): %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+
+            } break;
+            case (int)Parameters::ALPHA_CROP:
+            {
+                // alpha threshold for cropping and patching background color to black
+                if (ival <0 || ival > 255)
+                {
+                    fprintf(stdout, (QString("ERROR: Illegal number range for alpha cropping threshold: %1")
+                                     .arg(val)).toAscii());
+                    exit(1);
+                }
+                else
+                {
+                    subtitleProcessor->setAlphaCrop(ival);
+                }
+                fprintf(stdout, (QString("OPTION: set alpha cropping threshold to %1")
+                                 .arg(QString::number(ival))).toAscii());
+            } break;
+            case (int)Parameters::EXPORT_PAL:
+            {
+                // export target palette in PGCEdit text format
+                subtitleProcessor->setWritePGCEditPal(switchOn);
+                fprintf(stdout, (QString("OPTION: export target palette in PGCEDit text format: %1")
+                                 .arg(strSwitchOn)).toAscii());
+            } break;
+            case (int)Parameters::FIX_ZERO_ALPHA:
+            {
+                // fix zero alpha frame palette for SUB/IDX and SUP/IFO
+                subtitleProcessor->setFixZeroAlpha(switchOn);
+                fprintf(stdout, (QString("OPTION: fix zero alpha frame palette for SUB/IDX and SUP/IFO: %1")
+                                 .arg(strSwitchOn)).toAscii());
+            } break; // useless
+            case (int)Parameters::FORCE_ALL:
+            {
+                // clear/set forced flag for all captions
+                subtitleProcessor->setForceAll(switchOn ? SetState::SET : SetState::CLEAR );
+                fprintf(stdout, (QString("OPTION: set forced state of all captions to: %1")
+                                 .arg(strSwitchOn)).toAscii());
+            } break;
+            default: //UNKNOWN:
+            {
+                fprintf(stdout, (QString("ERROR: Illegal argument: %1")
+                                 .arg(args[i])).toAscii());
+                exit(1);
+            }
+            }
+        }
+
+        subtitleProcessor->setOutputResolution(r);
+
+        if (!subtitleProcessor->getKeepFps() && !defineFPStrg)
+        {
+            subtitleProcessor->setFPSTrg(subtitleProcessor->getDefaultFPS(r));
+            fprintf(stdout, (QString("Target frame rate set to %1fps")
+                             .arg(QString::number(subtitleProcessor->getFPSTrg(), 'g', 6))).toAscii());
+        }
+
+        // Step 3
+        // open GUI if trg file name is missing
+        if (trg.isEmpty())
+        {
+            loadPath = QFileInfo(src).absoluteFilePath();
+            return false;
+        }
+
+        // Step 4
+        // handle wildcards
+        QStringList srcFileNames;
+        QStringList trgFileNames;
+        QString path;
+        // multiple files
+        if (src.indexOf('*') != -1)
+        {
+            path = QFileInfo(src).absolutePath();
+            if (path.isNull() || path.isEmpty())
+            {
+                path = "./";
+            }
+            QDir dir(QFileInfo(src).absolutePath());
+            QStringList filters("*.sup");
+            QFileInfoList srcFiles = dir.entryInfoList(filters, QDir::Files);
+
+            if (srcFiles.size() == 0)
+            {
+                fprintf(stdout, (QString("ERROR: No match found for %1'")
+                                 .arg(QString(path + "/" + src))).toAscii());
+                exit(1);
+            }
+            if (trg.indexOf('*') == -1)
+            {
+                fprintf(stdout, QString("ERROR: No wildcards in target string!").toAscii());
+                exit(1);
+            }
+            for (int i = 0; i < srcFiles.size(); ++i)
+            {
+                srcFileNames.insert(i, srcFiles.at(i).absoluteFilePath());
+                QString srcName = srcFiles.at(i).completeBaseName();
+                trgFileNames.insert(i, QFileInfo(QString(trg).replace("*", srcName)).absoluteFilePath());
+            }
+        }
+        else
+        {
+            srcFileNames.insert(0, QFileInfo(src).absoluteFilePath());
+            int aPos = trg.indexOf('*');
+            if (aPos != -1)
+            {
+                // replace asterisk by path+filename of source without the extension
+                trgFileNames.insert(0, QFileInfo(trg.replace("*", QFileInfo(src).completeBaseName())).absoluteFilePath());
+            }
+            else
+            {
+                trgFileNames.insert(0, QFileInfo(trg).absoluteFilePath());
+            }
+        }
+
+        // Step 5
+        // the main loop
+        for (int fileNumber = 0; fileNumber < srcFileNames.size(); ++fileNumber)
+        {
+            subtitleProcessor->setCliMode(true);
+            src = srcFileNames[fileNumber];
+            trg = trgFileNames[fileNumber];
+            // ok, let's start
+            fprintf(stdout, (QString("\nConverting %1\n").arg(modes[(int)mode])).toAscii());
+            // check input file
+            QFileInfo srcFileInfo(src);
+            if (!srcFileInfo.exists())
+            {
+                fprintf(stdout, (QString("ERROR: File '%1' does not exist.").arg(src)).toAscii());
+                exit(1);
+            }
+            bool xml = srcFileInfo.completeSuffix().toLower() == "xml";
+            bool idx = srcFileInfo.completeSuffix().toLower() == "idx";
+            bool ifo = srcFileInfo.completeSuffix().toLower() == "ifo";
+            QByteArray id = subtitleProcessor->getFileID(src, 4);
+            StreamID sid = (id.isEmpty()) ? StreamID::UNKNOWN : subtitleProcessor->getStreamID(id);
+            if (!idx && !xml && !ifo && sid == StreamID::UNKNOWN)
+            {
+                fprintf(stdout, (QString("File '%1' is not a supported subtitle stream.").arg(src)).toAscii());
+                exit(1);
+            }
+            // check output file(s)
+            QFileInfo fi, fs;
+            QFileInfo trgFileInfo(trg);
+            if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB)
+            {
+                fi = QFileInfo(QString("%1/%2.idx").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
+                fs = QFileInfo(QString("%1/%2.sub").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
+            }
+            else
+            {
+                fs = QFileInfo(QString("%1/%2.sup").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
+                fi = QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName()));
+                if (!fi.exists())
+                {
+                    fi = fs; // ifo file doesn't exist set it to the same name as sup
+                }
+            }
+            if (fi.exists() || fs.exists())
+            {
+                if ((fi.exists() && !fi.isWritable()) || (fs.exists() && !fs.isWritable()))
+                {
+                    fprintf(stdout, (QString("Target file '%1' is write protected.").arg(trg)).toAscii());
+                    exit(1);
+                }
+            }
+
+            subtitleProcessor->setLoadPath(src);
+            // read input file
+            if (xml || sid == StreamID::XML)
+            {
+                subtitleProcessor->readXml();
+            }
+            else if (idx || sid == StreamID::DVDSUB || sid == StreamID::IDX)
+            {
+                subtitleProcessor->readDVDSubStream(sid, true);
+            }
+            else if (ifo || sid == StreamID::IFO)
+            {
+                subtitleProcessor->readDVDSubStream(sid, false);
+            }
+            else
+            {
+                if (QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName())).exists())
+                {
+                    subtitleProcessor->readDVDSubStream(sid, false);
+                }
+                else
+                {
+                    subtitleProcessor->readSup();
+                }
+            }
+
+            subtitleProcessor->scanSubtitles();
+            printWarnings();
+            // move captions
+            if (subtitleProcessor->getMoveModeX() != MoveModeX::KEEP || subtitleProcessor->getMoveModeY() != MoveModeY::KEEP)
+            {
+                subtitleProcessor->setCineBarFactor((1.0 - (16.0/9)/screenRatio)/2.0);
+                subtitleProcessor->moveAllToBounds();
+            }
+            // set some values
+            if (subtitleProcessor->getExportForced() && subtitleProcessor->getNumForcedFrames()==0)
+            {
+                fprintf(stdout, QString("No forced subtitles found.").toAscii());
+                exit(1);
+            }
+            QVector<int> lt = subtitleProcessor->getLuminanceThreshold();
+            if (lumThr1 > 0)
+            {
+                lt.replace(1, lumThr1);
+            }
+            if (lumThr2 > 0)
+            {
+                lt.replace(0, lumThr2);
+            }
+            subtitleProcessor->setLuminanceThreshold(lt);
+            subtitleProcessor->setAlphaThreshold(alphaThr);
+            if (langIdx != -1)
+            {
+                subtitleProcessor->setLanguageIdx(langIdx);
+            }
+            // write output
+            subtitleProcessor->writeSub(trg);
+            // clean up
+            printWarnings();
+            subtitleProcessor->exit();
+        }
+        fprintf(stdout, (QString("\nConversion of %1 file(s) finished\n").arg(QString::number(srcFileNames.size()))).toAscii());
+    }
+    exit(0);
+}
+
+void BDSup2Sub::Redirect_console()
+{
+#ifdef Q_WS_WIN
+    int hCrtout,hCrterr;
+    FILE *hfout, *hferr;
+
+    AllocConsole();
+
+    hCrtout=_open_osfhandle( (long) GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT );
+    hfout=_fdopen(hCrtout, "w");
+    *stdout= *hfout;
+    setvbuf(stdout,NULL, _IONBF,0);
+
+    hCrterr=_open_osfhandle( (long) GetStdHandle(STD_ERROR_HANDLE), _O_TEXT );
+    hferr=_fdopen(hCrterr, "w");
+    *stderr= *hferr;
+    setvbuf(stderr,NULL, _IONBF,0);
+#endif
 }
 
 void BDSup2Sub::print(const QString &message)
@@ -638,10 +1741,10 @@ void BDSup2Sub::editImportedDVDPalette_triggered()
     QVector<QColor> colors;
     QVector<QColor> defaultColors;
 
-    for (int i = 0; i < 15; ++i)
+    for (int i = 0; i < 16; ++i)
     {
-        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette()->getColor(i + 1));
-        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette()->getColor(i + 1));
+        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette()->getColor(i));
+        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette()->getColor(i));
     }
 
     colorDialog.setParameters(colorNames, colors, defaultColors);
@@ -791,7 +1894,8 @@ void BDSup2Sub::openConversionSettings()
 
 void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
 {
-    subtitleProcessor->setOutputMode((OutputMode)index);
+    OutputMode outMode = (OutputMode)index;
+    subtitleProcessor->setOutputMode(outMode);
     subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
     refreshTrgFrame(subIndex);
 

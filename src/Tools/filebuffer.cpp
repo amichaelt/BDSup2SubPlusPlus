@@ -28,7 +28,7 @@ FileBuffer::FileBuffer(QString inFileName) :
     if (!file.open(QIODevice::ReadOnly))
     {
         //TODO: error handling
-        throw 10;
+        throw QString("File '%1' not found").arg(fileName);
     }
     readBuffer(offset);
 }
@@ -96,14 +96,24 @@ void FileBuffer::close()
 
 void FileBuffer::readBuffer(long ofs)
 {
-    offset = ofs;
-    file.seek(offset);
-    long l = length - offset;
-    if (l < 0)
+    if (file.isOpen())
     {
-        //TODO: error handling;
-        throw 10;
+        offset = ofs;
+        file.seek(offset);
+        long l = length - offset;
+        if (l < 0)
+        {
+            close();
+            throw QString("Offset %1 out of bounds for file '%2'")
+                    .arg(QString::number(ofs)).arg(fileName);
+        }
+        buf = file.read(l);
+        if (buf.isEmpty() && file.error() != QFile::NoError)
+        {
+            close();
+            throw QString("IO error at offset +%1 of file '%2'")
+                    .arg(QString::number(ofs)).arg(fileName);
+        }
+        offsetEnd = (offset + buf.size()) - 1;
     }
-    buf = file.read(l);
-    offsetEnd = (offset + buf.size()) - 1;
 }

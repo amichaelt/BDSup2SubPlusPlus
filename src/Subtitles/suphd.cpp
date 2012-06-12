@@ -87,8 +87,16 @@ SubPicture *SupHD::getSubPicture(int index)
 
 void SupHD::readAllSupFrames()
 {
+    try
+    {
+        fileBuffer = new FileBuffer(supFileName);
+    }
+    catch(QString e)
+    {
+        throw e;
+    }
+
     int index = 0;
-    fileBuffer= new FileBuffer(supFileName);
     int bufsize = (int)fileBuffer->getSize();
     SubPictureHD* pic = 0;
     subPictures = QVector<SubPictureHD*>();
@@ -151,7 +159,7 @@ void SupHD::readAllSupFrames()
                 stopDisplay = true;
                 pic->endTime = pic->startTime + (dcsq * 1024);
 
-                subtitleProcessor->printX(QString("DCSQ stop     ofs: %1  (%2)")
+                subtitleProcessor->printX(QString("DCSQ stop     ofs: %1  (%2)\n")
                                           .arg(QString::number(index, 16), 8, QChar('0'))
                                           .arg(TimeUtil::ptsToTimeStr(pic->endTime)));
             } break;

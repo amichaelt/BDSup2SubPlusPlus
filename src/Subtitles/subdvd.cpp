@@ -37,7 +37,8 @@ SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subt
     idxFile(idxFileName)
 {
     this->subtitleProcessor = subtitleProcessor;
-    fileBuffer = new FileBuffer(subFileName);
+    this->subFileName = subFileName;
+    this->idxFileName = idxFileName;
     palette = new Palette(4, true);
     bitmap = new Bitmap(0, 0);
 }
@@ -136,130 +137,132 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
     int packHeaderSize;
     bool firstPackFound = false;
 
-    do {
-        // 4 bytes:  packet identifier 0x000001ba
-        long startOfs = ofs;
-        if (fileBuffer->getDWord(ofs) != 0x000001ba)
-        {
-            //TODO: error handling
-            throw 10;
-        }
-
-        // 6 bytes:  system clock reference
-        // 3 bytes:  multiplexer rate
-        // 1 byte:   stuffing info
-        int stuffOfs = fileBuffer->getByte(ofs += 13) & 7;
-
-        // 4 bytes:  sub packet ID 0x000001bd
-        if (fileBuffer->getDWord(ofs += (1 + stuffOfs)) != 0x000001bd)
-        {
-            //TODO: error handling
-            throw 10;
-        }
-        // 2 bytes:  packet length (number of bytes after this entry)
-        length = fileBuffer->getWord(ofs += 4);
-        nextOfs = ofs + 2 + length;
-
-        // 2 bytes:  packet type
-        ofs += 2;
-        packHeaderSize = (int)(ofs - startOfs);
-        bool firstPack = ((fileBuffer->getByte(++ofs) & 0x80) == 0x80);
-
-        // 1 byte    pts length
-        int ptsLength = fileBuffer->getByte(ofs += 1);
-        ofs += (1 + ptsLength); // skip PTS and stream ID
-        int packetStreamID = fileBuffer->getByte(ofs++) & 0xf;
-        if (packetStreamID != streamID)
-        {
-            // packet doesn't belong to stream -> skip
-            if ((nextOfs % 0x800) != 0)
-            {
-                ofs = ((nextOfs / 0x800) + 1) * 0x800;
-
-                Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
-            }
-            else
-            {
-                ofs = nextOfs;
-            }
-            ctrlOfs += 0x800;
-            continue;
-        }
-        int headerSize = (int)(ofs - startOfs); // only valid for additional packets
-        if (firstPack && ptsLength >= 5)
-        {
-            int size = fileBuffer->getWord(ofs);
-            ofs += 2;
-            ctrlOfsRel = fileBuffer->getWord(ofs);
-            rleSize = ctrlOfsRel - 2;             // calculate size of RLE buffer
-            ctrlSize = (size - ctrlOfsRel) - 2;       // calculate size of control header
-            if (ctrlSize < 0)
+    try
+    {
+        do {
+            // 4 bytes:  packet identifier 0x000001ba
+            long startOfs = ofs;
+            if (fileBuffer->getDWord(ofs) != 0x000001ba)
             {
                 //TODO: error handling
                 throw 10;
             }
-            ctrlHeader = QVector<uchar>(ctrlSize);
-            ctrlOfs = ctrlOfsRel + ofs; // might have to be corrected for multiple packets
-            ofs += 2;
-            headerSize = (int)(ofs - startOfs);
-            firstPackFound = true;
-        }
-        else
-        {
-            if (firstPackFound)
+
+            // 6 bytes:  system clock reference
+            // 3 bytes:  multiplexer rate
+            // 1 byte:   stuffing info
+            int stuffOfs = fileBuffer->getByte(ofs += 13) & 7;
+
+            // 4 bytes:  sub packet ID 0x000001bd
+            if (fileBuffer->getDWord(ofs += (1 + stuffOfs)) != 0x000001bd)
             {
-                ctrlOfs += headerSize; // fix absolute offset by adding header bytes
+                //TODO: error handling
+                throw 10;
+            }
+            // 2 bytes:  packet length (number of bytes after this entry)
+            length = fileBuffer->getWord(ofs += 4);
+            nextOfs = ofs + 2 + length;
+
+            // 2 bytes:  packet type
+            ofs += 2;
+            packHeaderSize = (int)(ofs - startOfs);
+            bool firstPack = ((fileBuffer->getByte(++ofs) & 0x80) == 0x80);
+
+            // 1 byte    pts length
+            int ptsLength = fileBuffer->getByte(ofs += 1);
+            ofs += (1 + ptsLength); // skip PTS and stream ID
+            int packetStreamID = fileBuffer->getByte(ofs++) & 0xf;
+            if (packetStreamID != streamID)
+            {
+                // packet doesn't belong to stream -> skip
+                if ((nextOfs % 0x800) != 0)
+                {
+                    ofs = ((nextOfs / 0x800) + 1) * 0x800;
+
+                    subtitleProcessor->printWarning(QString("Offset to next fragment is invalid. Fixed to: %1\n")
+                                                    .arg(QString::number(ofs, 16), 8, QChar('0')));
+                }
+                else
+                {
+                    ofs = nextOfs;
+                }
+                ctrlOfs += 0x800;
+                continue;
+            }
+            int headerSize = (int)(ofs - startOfs); // only valid for additional packets
+            if (firstPack && ptsLength >= 5)
+            {
+                int size = fileBuffer->getWord(ofs);
+                ofs += 2;
+                ctrlOfsRel = fileBuffer->getWord(ofs);
+                rleSize = ctrlOfsRel - 2;             // calculate size of RLE buffer
+                ctrlSize = (size - ctrlOfsRel) - 2;       // calculate size of control header
+                if (ctrlSize < 0)
+                {
+                    //TODO: error handling
+                    throw 10;
+                }
+                ctrlHeader = QVector<uchar>(ctrlSize);
+                ctrlOfs = ctrlOfsRel + ofs; // might have to be corrected for multiple packets
+                ofs += 2;
+                headerSize = (int)(ofs - startOfs);
+                firstPackFound = true;
             }
             else
             {
-                Core.printWarn("Invalid fragment skipped at ofs "+ToolBox.hex(startOfs, 8)+"\n");
+                if (firstPackFound)
+                {
+                    ctrlOfs += headerSize; // fix absolute offset by adding header bytes
+                }
+                else
+                {
+                    subtitleProcessor->printWarning(QString("Invalid fragment skipped at ofs %1\n")
+                                                    .arg(QString::number(startOfs, 16), 8, QChar('0')));
+                }
             }
-        }
 
-        // check if control header is (partly) in this packet
-        int diff = (int)((nextOfs - ctrlOfs) - ctrlHeaderCopied);
-        if (diff < 0)
-        {
-            diff = 0;
-        }
-        int copied = ctrlHeaderCopied;
-        try
-        {
+            // check if control header is (partly) in this packet
+            int diff = (int)((nextOfs - ctrlOfs) - ctrlHeaderCopied);
+            if (diff < 0)
+            {
+                diff = 0;
+            }
+            int copied = ctrlHeaderCopied;
             for (int i = 0; (i < diff) && (ctrlHeaderCopied < ctrlSize); ++i)
             {
                 ctrlHeader.replace(ctrlHeaderCopied, (uchar)fileBuffer->getByte(ctrlOfs + i + copied));
                 ++ctrlHeaderCopied;
             }
-        }
-        catch (int e)
-        {
-            //TODO: error handling
-            throw 10;
-        }
-        rleFrag = new ImageObjectFragment();
-        rleFrag->imageBufferOfs = ofs;
-        rleFrag->imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
-        pic->rleFragments.push_back(rleFrag);
+            rleFrag = new ImageObjectFragment();
+            rleFrag->imageBufferOfs = ofs;
+            rleFrag->imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
+            pic->rleFragments.push_back(rleFrag);
 
-        rleBufferFound += rleFrag->imagePacketSize;
+            rleBufferFound += rleFrag->imagePacketSize;
 
-        if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
-        {
-            ofs = ((nextOfs / 0x800) + 1) * 0x800;
+            if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
+            {
+                ofs = ((nextOfs / 0x800) + 1) * 0x800;
 
-            Core.printWarn("Offset to next fragment is invalid. Fixed to:"+ToolBox.hex(ofs, 8)+"\n");
+                subtitleProcessor->printWarning(QString("Offset to next fragment is invalid. Fixed to: %1")
+                                                .arg(QString::number(ofs, 16), 8, QChar('0')));
 
-            rleBufferFound += ofs-nextOfs;
-        }
-        else
-        {
-            ofs = nextOfs;
-        }
-    } while ( ofs < endOfs && ctrlHeaderCopied < ctrlSize);
+                rleBufferFound += ofs-nextOfs;
+            }
+            else
+            {
+                ofs = nextOfs;
+            }
+        } while ( ofs < endOfs && ctrlHeaderCopied < ctrlSize);
+    }
+    catch (QString e)
+    {
+        subtitleProcessor->printError(QString(e));
+    }
 
     if (ctrlHeaderCopied != ctrlSize)
     {
-        Core.printWarn("Control buffer size inconsistent.\n");
+        subtitleProcessor->printWarning("Control buffer size inconsistent.\n");
 
         for (int i = ctrlHeaderCopied; i < ctrlSize; ++i)
         {
@@ -269,7 +272,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
     if (rleBufferFound != rleSize)
     {
-        Core.printWarn("RLE buffer size inconsistent.\n");
+        subtitleProcessor->printWarning("RLE buffer size inconsistent.\n");
     }
 
     pic->rleSize = rleBufferFound;
@@ -279,14 +282,14 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
     int delay = -1;
     bool ColAlphaUpdate = false;
 
-    Core.print("SP_DCSQT at ofs: "+ToolBox.hex(ctrlOfs,8)+"\n");
+    subtitleProcessor->print(QString("SP_DCSQT at ofs: %1\n").arg(QString::number(ctrlOfs, 16), 8, QChar('0')));
 
     int b;
     int index = 0;
     int endSeqOfs = (((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - ctrlOfsRel) - 2;
     if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
     {
-        Core.printWarn("Invalid end sequence offset -> no end time\n");
+        subtitleProcessor->printWarning("Invalid end sequence offset -> no end time\n");
 
         endSeqOfs = ctrlSize;
     }
@@ -313,7 +316,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             pic->pal.replace(1, (b >> 4));
             pic->pal.replace(0, (b & 0x0f));
 
-            Core.print("Palette:   "+pic.pal[0]+", "+pic.pal[1]+", "+pic.pal[2]+", "+pic.pal[3]+"\n");
+            subtitleProcessor->print(QString("Palette:   %1, %2, %3, %4\n")
+                                     .arg(QString::number(pic->pal[0])).arg(QString::number(pic->pal[1]))
+                                     .arg(QString::number(pic->pal[2])).arg(QString::number(pic->pal[3])));
 
         } break;
         case 4: // alpha info
@@ -329,7 +334,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
                 alphaSum += pic->alpha[i] & 0xff;
             }
 
-            Core.print("Alpha:     "+pic.alpha[0]+", "+pic.alpha[1]+", "+pic.alpha[2]+", "+pic.alpha[3]+"\n");
+            subtitleProcessor->print(QString("Alpha:     %1, %2, %3, %4\n")
+                                     .arg(QString::number(pic->alpha[0])).arg(QString::number(pic->alpha[1]))
+                                     .arg(QString::number(pic->alpha[2])).arg(QString::number(pic->alpha[3])));
         } break;
         case 5: // coordinates
         {
@@ -340,9 +347,10 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             pic->setOfsY(ofsYglob + yOfs);
             pic->setImageHeight((((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff)) - yOfs) + 1);
 
-            Core.print("Area info:"+" ("
-                                            +pic.getOfsX()+", "+pic.getOfsY()+") - ("+(pic.getOfsX()+pic.getImageWidth()-1)+", "
-                                            +(pic.getOfsY()+pic.getImageHeight()-1)+")\n");
+            subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
+                                     .arg(QString::number(pic->getOfsX())).arg(QString::number(pic->getOfsY()))
+                                     .arg(QString::number((pic->getOfsX() + pic->getImageWidth()) - 1))
+                                     .arg(QString::number((pic->getOfsY() + pic->getImageHeight()) - 1)));
 
             index += 6;
         } break;
@@ -352,7 +360,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             pic->oddOfs = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
             index += 4;
 
-            Core.print("RLE ofs:   "+ToolBox.hex(pic.evenOfs, 4)+", "+ToolBox.hex(pic.oddOfs, 4)+"\n");
+            subtitleProcessor->print(QString("RLE ofs:   %1, %2\n")
+                                     .arg(QString::number(pic->evenOfs, 16), 4, QChar('0'))
+                                     .arg(QString::number(pic->oddOfs, 16), 4, QChar('0')));
         } break;
         case 7: // color/alpha update
         {
@@ -388,7 +398,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             endSeqOfs = (((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - ctrlOfsRel) - 2;
             if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
             {
-                Core.printWarn("Invalid end sequence offset -> no end time\n");
+                subtitleProcessor->printWarning("Invalid end sequence offset -> no end time\n");
 
                 endSeqOfs = ctrlSize;
             }
@@ -398,7 +408,8 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
              goto parse_ctrl;
         default:
         {
-            Core.printWarn("Unknown control sequence "+ToolBox.hex(cmd,2)+" skipped\n");
+            subtitleProcessor->printWarning(QString("Unknown control sequence %1 skipped\n")
+                                            .arg(QString::number(cmd, 16), 2, QChar('0')));
         } break;
         }
     }
@@ -418,7 +429,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         }
         if (ctrlSeqCount > 2)
         {
-            Core.printWarn("Control sequence(s) ignored - result may be erratic.");
+            subtitleProcessor->printWarning("Control sequence(s) ignored - result may be erratic.");
         }
         pic->endTime = pic->startTime + delay;
     }
@@ -429,7 +440,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
     if (ColAlphaUpdate)
     {
-        Core.printWarn("Palette update/alpha fading detected - result may be erratic.\n");
+        subtitleProcessor->printWarning("Palette update/alpha fading detected - result may be erratic.\n");
     }
 
     if (alphaSum == 0)
@@ -441,11 +452,11 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
                 pic->alpha.replace(i, lastAlpha[i]);
             }
 
-            Core.printWarn("Invisible caption due to zero alpha - used alpha info of last caption.\n");
+            subtitleProcessor->printWarning("Invisible caption due to zero alpha - used alpha info of last caption.\n");
         }
         else
         {
-            Core.printWarn("Invisible caption due to zero alpha (not fixed due to user setting).\n");
+            subtitleProcessor->printWarning("Invisible caption due to zero alpha (not fixed due to user setting).\n");
         }
     }
 
@@ -456,11 +467,20 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
 void SubDVD::readAllSubFrames()
 {
+    try
+    {
+        fileBuffer = new FileBuffer(subFileName);
+    }
+    catch(QString e)
+    {
+        throw e;
+    }
+
     for (int i = 0; i < subPictures.size(); ++i)
     {
         emit currentProgressChanged(i);
 
-        Core.printX("# "+(i+1)+"\n");
+        subtitleProcessor->printX(QString("# %1\n").arg(QString::number(i + 1)));
 
         long nextOfs;
         if (i < subPictures.size() - 1)
@@ -476,7 +496,7 @@ void SubDVD::readAllSubFrames()
 
     emit currentProgressChanged(subPictures.size());
 
-    Core.printX("\nDetected "+numForcedFrames+" forced captions.\n");
+    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
 }
 
 QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
@@ -791,7 +811,7 @@ void SubDVD::readIdx()
         int position = inString.indexOf(':');
         if (position == -1 || (inString.size() - position) <= 1)
         {
-            Core.printErr("Illegal key: "+s+"\n");
+            subtitleProcessor->printError(QString("Illegal key: %1\n").arg(inString));
             continue;
         }
         QString key(inString.left(position).trimmed().toLower());
@@ -955,7 +975,7 @@ void SubDVD::readIdx()
             id = vals[0];
             if (id.size() != 2)
             {
-                Core.printWarn("Illegal language id: "+id+"\n");
+                subtitleProcessor->printWarning(QString("Illegal language id: %1\n").arg(id));
                 continue;
             }
             bool found = false;
@@ -972,12 +992,17 @@ void SubDVD::readIdx()
             }
             if (!found)
             {
-                Core.printWarn("Illegal language id: "+id+"\n");
+                subtitleProcessor->printWarning(QString("Illegal language id: %1\n").arg(id));
             }
             vals = value.split(':', QString::SkipEmptyParts);
+            if (vals.size() == 1)
+            {
+                subtitleProcessor->printError(QString("Missing index key: %1\n").arg(value));
+                continue;
+            }
             if (vals[0].toLower() == "index")
             {
-                Core.printErr("Missing index key: "+val+"\n");
+                subtitleProcessor->printError(QString("Missing index key: %1\n").arg(vals[0]));
                 continue;
             }
             temp = vals[1].toInt();
@@ -989,7 +1014,8 @@ void SubDVD::readIdx()
             if (temp != langIdx)
             {
                 ignore = true;
-                Core.printWarn("Language id "+id+"(index:"+v+") inactive -> ignored\n");
+                subtitleProcessor->printWarning(QString("Language id %1(index:%2) inactive -> ignored\n")
+                                                .arg(id).arg(QString::number(temp)));
             }
             else
             {

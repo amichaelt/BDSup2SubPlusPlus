@@ -31,23 +31,20 @@ public:
     void paintEvent(QPaintEvent *event);
     void setImage(QImage* image);
 
+signals:
+
+public slots:
+
 private:
-    int zoomScale = 1;
+    int zoomScale = 0;
     double scaleFactor = 0.0;
     bool settingPixmap = false;
     QImage* image = 0;
-    QRect scaleSize = QRect();
-    QPixmap backgroundPixmap = QPixmap();
-    QPixmap drawPixmap = QPixmap();
+    QPixmap* drawPixmap = 0;
     QPainter* painter = new QPainter();
     QSize originalSize;
 
     void setZoomScale(int scale);
-    
-signals:
-    
-public slots:
-    
 };
 
 #endif // ZOOMABLEIMAGEAREA_H

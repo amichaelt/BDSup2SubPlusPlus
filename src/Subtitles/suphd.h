@@ -63,6 +63,7 @@ private:
     Palette *palette = 0;
     Bitmap *bitmap = 0;
     int primaryColorIndex = 0;
+    SubtitleProcessor* subtitleProcessor = 0;
 
     void decode(SubPictureHD* subPicture);
     void decodeLine(QImage* trg, int trgOfs, int width, int maxPixels, BitStream* src);
