@@ -3,6 +3,9 @@
 #include "Subtitles/subtitleprocessor.h"
 #include "Subtitles/subpicture.h"
 
+#include <QIntValidator>
+#include <QDoubleValidator>
+
 MoveDialog::MoveDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
     QDialog(parent),
     ui(new Ui::MoveDialog),
@@ -67,6 +70,15 @@ MoveDialog::MoveDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
         ui->moveOutsideBoundsRadioButton->setChecked(true);
     } break;
     }
+
+    xOffsetValidator = new QIntValidator;
+    ui->xOffsetLineEdit->setValidator(xOffsetValidator);
+    yOffsetValiator = new QIntValidator;
+    ui->yOffsetLineEdit->setValidator(yOffsetValiator);
+    cropOffsetValidator = new QIntValidator;
+    ui->cropOffsetYLineEdit->setValidator(cropOffsetValidator);
+    aspectRatioValidator = new QDoubleValidator;
+    ui->aspectRatioLineEdit->setValidator(aspectRatioValidator);
 
     ui->aspectRatioLineEdit->blockSignals(true);
     ui->xOffsetLineEdit->blockSignals(true);

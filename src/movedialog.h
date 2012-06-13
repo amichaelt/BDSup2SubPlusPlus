@@ -8,6 +8,8 @@ class SubtitleProcessor;
 class SubPicture;
 class QImage;
 class QButtonGroup;
+class QIntValidator;
+class QDoubleValidator;
 
 namespace Ui {
 class MoveDialog;
@@ -71,6 +73,11 @@ private:
     int offsetX;
     int offsetY;
     int cropOfsY;
+
+    QIntValidator* xOffsetValidator;
+    QIntValidator* yOffsetValiator;
+    QIntValidator* cropOffsetValidator;
+    QDoubleValidator* aspectRatioValidator;
 
     QPalette* errorBackground;
     QPalette* okBackground;

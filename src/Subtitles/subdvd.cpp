@@ -818,6 +818,7 @@ void SubDVD::readIdx()
         QString value(inString.mid(position + 1, inString.size() - 1).trimmed());
         QStringList keyValue;
 
+        bool ok;
         // size (e.g. "size: 720x576")
         if (key == "size")
         {
@@ -827,14 +828,16 @@ void SubDVD::readIdx()
                 //TODO: error handling
                 throw 10;
             }
-            temp = keyValue[0].toInt();
+            temp = keyValue[0].toInt(&ok);
+            temp = ok ? temp : -1;
             if (temp < 2)
             {
                 //TODO: error handling
                 throw 10;
             }
             screenWidth = temp;
-            temp = keyValue[1].toInt();
+            temp = keyValue[1].toInt(&ok);
+            temp = ok ? temp: -1;
             if (temp < 2)
             {
                 //TODO: error handling
@@ -853,14 +856,16 @@ void SubDVD::readIdx()
                 //TODO: error handling
                 throw 10;
             }
-            temp = keyValue[0].toInt();
+            temp = keyValue[0].toInt(&ok);
+            temp = ok ? temp: -1;
             if (temp < 0)
             {
                 //TODO: error handling
                 throw 10;
             }
             ofsXglob = temp;
-            temp =keyValue[1].toInt();
+            temp =keyValue[1].toInt(&ok);
+            temp = ok ? temp: -1;
             if (temp < 0)
             {
                 //TODO: error handling
@@ -903,7 +908,8 @@ void SubDVD::readIdx()
         // time offset (e.g. "time offset: 0")
         if (key == "time offset")
         {
-            temp = value.toInt();
+            temp = value.toInt(&ok);
+            temp = ok ? temp: -1;
             if (temp < 0)
             {
                 temp = (int) TimeUtil::timeStrToPTS(value);
@@ -957,7 +963,8 @@ void SubDVD::readIdx()
         // language index (e.g. "langidx: 0")
         if (key == "langidx")
         {
-            temp = value.toInt();
+            temp = value.toInt(&ok);
+            temp = ok ? temp: -1;
             if (temp < 0)
             {
                 //TODO: error handling
@@ -1005,7 +1012,8 @@ void SubDVD::readIdx()
                 subtitleProcessor->printError(QString("Missing index key: %1\n").arg(vals[0]));
                 continue;
             }
-            temp = vals[1].toInt();
+            temp = vals[1].toInt(&ok);
+            temp = ok ? temp: -1;
             if (temp < 0)
             {
                 //TODO: error handling
