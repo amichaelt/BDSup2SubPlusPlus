@@ -331,7 +331,6 @@ PaletteBitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette *palette, Filte
     if (size > 255)
     {
         size = 255;
-        //TODO: print warning
     }
     // create palette
     Palette* trgPal = new Palette(256);
@@ -615,7 +614,6 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette, boo
     if (size > 255)
     {
         size = 255;
-        //TODO: print warning
     }
     // create palette
     Palette* trgPal = new Palette(256);

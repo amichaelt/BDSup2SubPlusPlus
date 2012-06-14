@@ -32,6 +32,14 @@ SupHD::SupHD(QString fileName, SubtitleProcessor *subtitleProcessor) :
     this->subtitleProcessor = subtitleProcessor;
 }
 
+SupHD::~SupHD()
+{
+    if (!fileBuffer.isNull())
+    {
+        fileBuffer.reset();
+    }
+}
+
 QImage *SupHD::getImage()
 {
     return bitmap->getImage(palette);
@@ -50,19 +58,13 @@ void SupHD::decode(int index)
     }
     else
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Index: %1 out of bounds.\n").arg(QString::number(index));
     }
 }
 
 int SupHD::getNumFrames()
 {
     return subPictures.size();
-}
-
-void SupHD::close()
-{
-    fileBuffer->close();
 }
 
 long SupHD::getEndTime(int index)
@@ -87,177 +89,181 @@ SubPicture *SupHD::getSubPicture(int index)
 
 void SupHD::readAllSupFrames()
 {
-    try
-    {
-        fileBuffer = new FileBuffer(supFileName);
-    }
-    catch(QString e)
-    {
-        throw e;
-    }
+    fileBuffer.reset(new FileBuffer(supFileName));
 
     int index = 0;
     int bufsize = (int)fileBuffer->getSize();
     SubPictureHD* pic = 0;
     subPictures = QVector<SubPictureHD*>();
-    while (index < bufsize)
+
+    try
     {
-        if (subtitleProcessor->isCancelled())
+        while (index < bufsize)
         {
-            //TODO: error handling
-            throw 10;
-        }
-        emit currentProgressChanged(index);
-
-        if (fileBuffer->getWord(index) != 0x5350)
-        {
-            //TODO: error handling
-            throw 10;
-        }
-        int masterIndex = index + 10; //end of header
-        pic = new SubPictureHD;
-        // hard code size since it's not part of the format???
-        pic->width = 1920;
-        pic->height = 1080;
-
-        subtitleProcessor->printX(QString("#%1\n").arg(QString::number(subPictures.size() + 1)));;
-
-        pic->startTime = fileBuffer->getDWordLE(index += 2); // read PTS
-        int packetSize = fileBuffer->getDWord(index += 10);
-        // offset to command buffer
-        int ofsCmd = fileBuffer->getDWord(index += 4) + masterIndex;
-        pic->imageBufferSize = ofsCmd - (index + 4);
-        index  = ofsCmd;
-        int dcsq = fileBuffer->getWord(index);
-        pic->startTime += (dcsq * 1024);
-
-        subtitleProcessor->printX(QString("DCSQ start    ofs: %1  (%2)\n").arg(QString::number(index, 16), 8, QChar('0'))
-                                                                          .arg(TimeUtil::ptsToTimeStr(pic->startTime)));
-
-        index+=2; // 2 bytes: dcsq
-        int nextIndex = fileBuffer->getDWord(index) + masterIndex; // offset to next dcsq
-        index += 5;  // 4 bytes: offset, 1 byte: start
-        int cmd = 0;
-        bool stopDisplay = false;
-        bool stopCommand = false;
-        int alphaSum = 0;
-        int minAlphaSum = 256 * 256; // 256 fully transparent entries
-        while (!stopDisplay)
-        {
-            cmd = fileBuffer->getByte(index++);
-            switch (cmd)
+            if (subtitleProcessor->isCancelled())
             {
-            case 0x01:
-            {
-                subtitleProcessor->printX(QString("DCSQ start    ofs: %1  (%2)\n")
-                                          .arg(QString::number(index, 16), 8, QChar('0'))
-                                          .arg(TimeUtil::ptsToTimeStr(pic->startTime + (dcsq * 1024))));
-                subtitleProcessor->printWarning("DCSQ start ignored due to missing DCSQ stop\n");
-            } break;
-            case 0x02:
-            {
-                stopDisplay = true;
-                pic->endTime = pic->startTime + (dcsq * 1024);
+                throw QString("Cancelled by user!");
+            }
+            emit currentProgressChanged(index);
 
-                subtitleProcessor->printX(QString("DCSQ stop     ofs: %1  (%2)\n")
-                                          .arg(QString::number(index, 16), 8, QChar('0'))
-                                          .arg(TimeUtil::ptsToTimeStr(pic->endTime)));
-            } break;
-            case 0x83: // palette
+            if (fileBuffer->getWord(index) != 0x5350)
             {
-                subtitleProcessor->print(QString("Palette info  ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));
+                throw QString("ID 'SP' missing at index ").arg(QString::number(index, 16), 8, QChar('0'));
+            }
+            int masterIndex = index + 10; //end of header
+            pic = new SubPictureHD;
+            // hard code size since it's not part of the format???
+            pic->width = 1920;
+            pic->height = 1080;
 
-                pic->paletteOfs = index;
-                index += 0x300;
-            } break;
-            case 0x84: // alpha
+            subtitleProcessor->printX(QString("#%1\n").arg(QString::number(subPictures.size() + 1)));;
+
+            pic->startTime = fileBuffer->getDWordLE(index += 2); // read PTS
+            int packetSize = fileBuffer->getDWord(index += 10);
+            // offset to command buffer
+            int ofsCmd = fileBuffer->getDWord(index += 4) + masterIndex;
+            pic->imageBufferSize = ofsCmd - (index + 4);
+            index  = ofsCmd;
+            int dcsq = fileBuffer->getWord(index);
+            pic->startTime += (dcsq * 1024);
+
+            subtitleProcessor->printX(QString("DCSQ start    ofs: %1  (%2)\n").arg(QString::number(index, 16), 8, QChar('0'))
+                                                                              .arg(TimeUtil::ptsToTimeStr(pic->startTime)));
+
+            index+=2; // 2 bytes: dcsq
+            int nextIndex = fileBuffer->getDWord(index) + masterIndex; // offset to next dcsq
+            index += 5;  // 4 bytes: offset, 1 byte: start
+            int cmd = 0;
+            bool stopDisplay = false;
+            bool stopCommand = false;
+            int alphaSum = 0;
+            int minAlphaSum = 256 * 256; // 256 fully transparent entries
+            while (!stopDisplay)
             {
-                subtitleProcessor->print(QString("Alpha info    ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));                alphaSum = 0;
-
-                for (int i = index; i < index + 0x100; ++i)
+                cmd = fileBuffer->getByte(index++);
+                switch (cmd)
                 {
-                    alphaSum += fileBuffer->getByte(i);
-                }
-                if (alphaSum < minAlphaSum)
+                case 0x01:
                 {
-                    pic->alphaOfs = index;
-                    minAlphaSum = alphaSum;
-                }
-                else
+                    subtitleProcessor->printX(QString("DCSQ start    ofs: %1  (%2)\n")
+                                              .arg(QString::number(index, 16), 8, QChar('0'))
+                                              .arg(TimeUtil::ptsToTimeStr(pic->startTime + (dcsq * 1024))));
+                    subtitleProcessor->printWarning("DCSQ start ignored due to missing DCSQ stop\n");
+                } break;
+                case 0x02:
                 {
-                    subtitleProcessor->printWarning(QString("Found faded alpha buffer -> alpha buffer skipped\n"));
-                }
-                index += 0x100;
-            } break;
-            case 0x85: // area
-            {
-                pic->setOfsX((fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4));
-                pic->setImageWidth(((((fileBuffer->getByte(index + 1) &0xf) << 8) | (fileBuffer->getByte(index + 2))) - pic->getOfsX()) + 1);
-                pic->setOfsY((fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4));
-                pic->setImageHeight(((((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5))) - pic->getOfsY()) + 1);
-
-                subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
-                                         .arg(QString::number(index, 16), 8, QChar('0'))
-                                         .arg(QString::number(pic->getOfsX()))
-                                         .arg(QString::number(pic->getOfsY()))
-                                         .arg(QString::number(pic->getOfsX() + pic->getImageWidth()))
-                                         .arg(QString::number(pic->getOfsY() + pic->getImageHeight())));
-
-                index += 6;
-            } break;
-            case 0x86: // even/odd offsets
-            {
-                pic->imageBufferOfsEven = fileBuffer->getDWord(index) + masterIndex;
-                pic->imageBufferOfsOdd = fileBuffer->getDWord(index + 4) + masterIndex;
-
-                subtitleProcessor->print(QString("RLE buffers   ofs: %1  (even: %2, odd: %3)\n")
-                                         .arg(QString::number(index, 16), 8, QChar('0'))
-                                         .arg(QString::number(pic->imageBufferOfsEven, 16), 8, QChar('0'))
-                                         .arg(QString::number(pic->imageBufferOfsOdd, 16), 8, QChar('0')));
-
-                index += 8;
-            } break;
-            case 0xff:
-            {
-                if (stopCommand)
-                {
-                    subtitleProcessor->printWarning(QString("DCSQ stop missing.\n"));
-
-                    for (++index; index < bufsize; ++index)
-                    {
-                        if (fileBuffer->getByte(index++) != 0xff)
-                        {
-                            index--;
-                            break;
-                        }
-                    }
                     stopDisplay = true;
-                } else {
-                    index = nextIndex;
-                    // add to display time
-                    int d = fileBuffer->getWord(index);
-                    dcsq = d;
-                    nextIndex = fileBuffer->getDWord(index + 2) + masterIndex;
-                    stopCommand = (index == nextIndex);
+                    pic->endTime = pic->startTime + (dcsq * 1024);
 
-                    subtitleProcessor->print(QString("DCSQ          ofs: %1  (%2ms),    next DCSQ at ofs: %3\n")
+                    subtitleProcessor->printX(QString("DCSQ stop     ofs: %1  (%2)\n")
+                                              .arg(QString::number(index, 16), 8, QChar('0'))
+                                              .arg(TimeUtil::ptsToTimeStr(pic->endTime)));
+                } break;
+                case 0x83: // palette
+                {
+                    subtitleProcessor->print(QString("Palette info  ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));
+
+                    pic->paletteOfs = index;
+                    index += 0x300;
+                } break;
+                case 0x84: // alpha
+                {
+                    subtitleProcessor->print(QString("Alpha info    ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));                alphaSum = 0;
+
+                    for (int i = index; i < index + 0x100; ++i)
+                    {
+                        alphaSum += fileBuffer->getByte(i);
+                    }
+                    if (alphaSum < minAlphaSum)
+                    {
+                        pic->alphaOfs = index;
+                        minAlphaSum = alphaSum;
+                    }
+                    else
+                    {
+                        subtitleProcessor->printWarning(QString("Found faded alpha buffer -> alpha buffer skipped\n"));
+                    }
+                    index += 0x100;
+                } break;
+                case 0x85: // area
+                {
+                    pic->setOfsX((fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4));
+                    pic->setImageWidth(((((fileBuffer->getByte(index + 1) &0xf) << 8) | (fileBuffer->getByte(index + 2))) - pic->getOfsX()) + 1);
+                    pic->setOfsY((fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4));
+                    pic->setImageHeight(((((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5))) - pic->getOfsY()) + 1);
+
+                    subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))
-                                             .arg(QString::number((d * 1024) / 90))
-                                             .arg(QString::number(nextIndex, 16), 8, QChar('0')));
+                                             .arg(QString::number(pic->getOfsX()))
+                                             .arg(QString::number(pic->getOfsY()))
+                                             .arg(QString::number(pic->getOfsX() + pic->getImageWidth()))
+                                             .arg(QString::number(pic->getOfsY() + pic->getImageHeight())));
 
                     index += 6;
+                } break;
+                case 0x86: // even/odd offsets
+                {
+                    pic->imageBufferOfsEven = fileBuffer->getDWord(index) + masterIndex;
+                    pic->imageBufferOfsOdd = fileBuffer->getDWord(index + 4) + masterIndex;
+
+                    subtitleProcessor->print(QString("RLE buffers   ofs: %1  (even: %2, odd: %3)\n")
+                                             .arg(QString::number(index, 16), 8, QChar('0'))
+                                             .arg(QString::number(pic->imageBufferOfsEven, 16), 8, QChar('0'))
+                                             .arg(QString::number(pic->imageBufferOfsOdd, 16), 8, QChar('0')));
+
+                    index += 8;
+                } break;
+                case 0xff:
+                {
+                    if (stopCommand)
+                    {
+                        subtitleProcessor->printWarning(QString("DCSQ stop missing.\n"));
+
+                        for (++index; index < bufsize; ++index)
+                        {
+                            if (fileBuffer->getByte(index++) != 0xff)
+                            {
+                                index--;
+                                break;
+                            }
+                        }
+                        stopDisplay = true;
+                    } else {
+                        index = nextIndex;
+                        // add to display time
+                        int d = fileBuffer->getWord(index);
+                        dcsq = d;
+                        nextIndex = fileBuffer->getDWord(index + 2) + masterIndex;
+                        stopCommand = (index == nextIndex);
+
+                        subtitleProcessor->print(QString("DCSQ          ofs: %1  (%2ms),    next DCSQ at ofs: %3\n")
+                                                 .arg(QString::number(index, 16), 8, QChar('0'))
+                                                 .arg(QString::number((d * 1024) / 90))
+                                                 .arg(QString::number(nextIndex, 16), 8, QChar('0')));
+
+                        index += 6;
+                    }
+                } break;
+                default:
+                {
+                    throw QString("Unexpected command %1 at index %2").arg(cmd).arg(QString::number(index, 16), 8, QChar('0'));
                 }
-            } break;
-            default:
-            {
-                //TODO: error handling
-                throw 10;
+                }
             }
-            }
+            index = masterIndex + packetSize;
+            subPictures.push_back(pic);
         }
-        index = masterIndex + packetSize;
-        subPictures.push_back(pic);
     }
+    catch (QString e)
+    {
+        if (subPictures.size() == 0)
+        {
+            throw e;
+        }
+        subtitleProcessor->printError(QString(e + "\n"));
+        subtitleProcessor->print(QString("Probably not all caption imported due to error.\n"));
+    }
+
     emit currentProgressChanged(bufsize);
 }
 
@@ -401,8 +407,10 @@ Bitmap *SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
 
     if (w > subPicture->width || h > subPicture->height)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Subpicture too large: %1x%2 at offset %3")
+                .arg(QString::number(w))
+                .arg(QString::number(h))
+                .arg(QString::number(subPicture->imageBufferOfsEven, 16), 8, QChar('0'));
     }
 
     Bitmap* bm = new Bitmap(w, h, transparentIndex);
@@ -412,8 +420,7 @@ Bitmap *SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
 
     if (sizeEven <= 0 || sizeOdd <= 0)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Corrupt buffer offset information");
     }
 
     QVector<uchar> evenBuf = QVector<uchar>(sizeEven);

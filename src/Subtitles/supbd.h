@@ -22,9 +22,11 @@
 #include "substream.h"
 #include <QObject>
 #include <QString>
+#include <QScopedPointer>
 
 class SubtitleProcessor;
 class SubPictureBD;
+class FileBuffer;
 
 class SupBD : public QObject, public Substream
 {
@@ -32,6 +34,7 @@ class SupBD : public QObject, public Substream
 
 public:
     SupBD(QString fileName, SubtitleProcessor* subtitleProcessor);
+    ~SupBD();
 
     Palette *getPalette() { return palette; }
     Bitmap *getBitmap() { return bitmap; }
@@ -42,7 +45,6 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
-    void close();
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index);
@@ -94,8 +96,8 @@ private:
     int getFpsId(double fps);
 
     QString supFileName;
-    QVector<SubPictureBD*> subPictures = QVector<SubPictureBD*>();
-    FileBuffer *fileBuffer = 0;
+    QVector<SubPictureBD*> subPictures;
+    QScopedPointer<FileBuffer> fileBuffer;
     Palette *palette = 0;
     Bitmap *bitmap = 0;
     int primaryColorIndex = 0;

@@ -46,7 +46,6 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
-    void close();
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index);
@@ -74,11 +73,10 @@ signals:
 
 private:
     int streamID = 0;
-    QFile idxFile;
     QString idxFileName;
     QString subFileName;
 
-    QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
+    QVector<SubPictureDVD*> subPictures;
 
     void decode(SubPictureDVD* pic);
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage *trg, int trgOfs, int width, int maxPixels);

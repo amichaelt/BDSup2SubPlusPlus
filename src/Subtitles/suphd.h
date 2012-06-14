@@ -34,6 +34,7 @@ class SupHD : public QObject, public Substream
 
 public:
     SupHD(QString fileName, SubtitleProcessor* subtitleProcessor);
+    ~SupHD();
 
     Palette *getPalette() { return palette; }
     Bitmap *getBitmap() { return bitmap; }
@@ -44,7 +45,6 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return 0; }
     bool isForced(int index) { return false; }
-    void close();
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index);
@@ -58,8 +58,8 @@ signals:
 
 private:
     QString supFileName;
-    QVector<SubPictureHD*> subPictures = QVector<SubPictureHD*>();
-    FileBuffer *fileBuffer = 0;
+    QVector<SubPictureHD*> subPictures;
+    QScopedPointer<FileBuffer> fileBuffer;
     Palette *palette = 0;
     Bitmap *bitmap = 0;
     int primaryColorIndex = 0;

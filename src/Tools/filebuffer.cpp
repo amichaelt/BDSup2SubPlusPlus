@@ -21,16 +21,23 @@
 #include <QDataStream>
 
 FileBuffer::FileBuffer(QString inFileName) :
-    fileName(inFileName),
-    file(fileName)
+    fileName(inFileName)
 {
-    length = file.size();
-    if (!file.open(QIODevice::ReadOnly))
+    file.reset(new QFile(fileName));
+    length = file->size();
+    if (!file->open(QIODevice::ReadOnly))
     {
-        //TODO: error handling
-        throw QString("File '%1' not found").arg(fileName);
+        throw QString("File: '%1' can not be opened for reading.").arg(fileName);
     }
     readBuffer(offset);
+}
+
+FileBuffer::~FileBuffer()
+{
+    if (!file.isNull())
+    {
+        file.reset();
+    }
 }
 
 int FileBuffer::getDWord(long ofs)
@@ -86,32 +93,24 @@ int FileBuffer::getDWordLE(long ofs)
             | ((buf.at(idx + 2) & 0xff) << 16) | ((buf.at(idx + 3) & 0xff) << 24);
 }
 
-void FileBuffer::close()
-{
-    if (file.isOpen())
-    {
-        file.close();
-    }
-}
-
 void FileBuffer::readBuffer(long ofs)
 {
-    if (file.isOpen())
+    if (file->isOpen())
     {
         offset = ofs;
-        file.seek(offset);
+        file->seek(offset);
         long l = length - offset;
         if (l < 0)
         {
-            close();
-            throw QString("Offset %1 out of bounds for file '%2'")
+            file.reset();
+            throw QString("Offset %1 out of bounds for file: '%2'")
                     .arg(QString::number(ofs)).arg(fileName);
         }
-        buf = file.read(l);
-        if (buf.isEmpty() && file.error() != QFile::NoError)
+        buf = file->read(l);
+        if (buf.isEmpty() && file->error() != QFile::NoError)
         {
-            close();
-            throw QString("IO error at offset +%1 of file '%2'")
+            file.reset();
+            throw QString("IO error at offset +%1 of file: '%2'")
                     .arg(QString::number(ofs)).arg(fileName);
         }
         offsetEnd = (offset + buf.size()) - 1;

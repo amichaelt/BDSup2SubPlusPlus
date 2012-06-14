@@ -39,12 +39,51 @@
 #include <QPixmap>
 #include <QFileInfoList>
 #include <QFileInfo>
+#include <QSettings>
 
 BDSup2Sub::BDSup2Sub(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::BDSup2Sub)
 {
     ui->setupUi(this);
+
+    QSettings* settings;
+
+    //Rename INI file to name matching the new program name
+    QString oldIniFilePath = QString("%1/%2").arg(QDir::currentPath()).arg(oldIniName);
+    QString newIniFilePath = QString("%1/%2").arg(QDir::currentPath()).arg(iniName);
+    QFileInfo oldIniFileInfo = QFileInfo(oldIniFilePath);
+    if (oldIniFileInfo.exists())
+    {
+        QDir dir = oldIniFileInfo.absoluteDir();
+        dir.rename(oldIniFilePath, newIniFilePath);
+        settings = new QSettings(newIniFilePath, QSettings::IniFormat);
+
+        //Fix mangled Windows path names written by Java in INI files imported from original BDSup2Sub
+#ifdef Q_WS_WIN
+        QString fixPath;
+        if (settings->allKeys().contains("loadPath"))
+        {
+            fixPath = settings->value("loadPath").toString();
+            fixPath.insert(1, ":");
+            settings->setValue("loadPath", fixPath);
+        }
+        for (auto key : settings->allKeys())
+        {
+            if (key.contains("recent"))
+            {
+                fixPath = settings->value(key).toString();
+                fixPath.insert(1, ":");
+                settings->setValue(key, fixPath);
+            }
+        }
+        settings->sync();
+#endif
+    }
+    else
+    {
+        settings = new QSettings(newIniFilePath, QSettings::IniFormat);
+    }
 
     okBackground = new QPalette(ui->subtitleNumberComboBox->palette());
     errorBackground = new QPalette();
@@ -60,7 +99,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     ui->consoleOutput->insertPlainText(authorDate + "\n");
     ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
 
-    subtitleProcessor = new SubtitleProcessor(this);
+    subtitleProcessor = new SubtitleProcessor(this, settings);
 
     fillComboBoxes();
 
@@ -82,6 +121,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     connect(ui->actionEdit_DVD_Frame_Palette, SIGNAL(triggered()), this, SLOT(editDVDFramePalette_triggered()));
     connect(ui->action_Move_all_captions, SIGNAL(triggered()), this, SLOT(moveAllCaptions_triggered()));
     connect(ui->action_Reset_crop_offset, SIGNAL(triggered()), this, SLOT(resetCropOffset_triggered()));
+    connect(ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
 
     progressDialog = new ProgressDialog(this);
     connectSubtitleProcessor();
@@ -97,61 +137,66 @@ void BDSup2Sub::changeWindowTitle(QString newTitle)
     this->setWindowTitle(newTitle);
 }
 
-void BDSup2Sub::onLoadingSubtitleFileFinished()
+void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
 {
-    warningDialog();
-
-    int num = subtitleProcessor->getNumberOfFrames();
-    ui->subtitleNumberComboBox->clear();
-    ui->subtitleNumberComboBox->blockSignals(true);
-    subtitleNumberValidator = new QIntValidator(1, num, this);
-    for (int i = 1; i <= num; ++i)
+    if (!errorString.isEmpty())
     {
-        ui->subtitleNumberComboBox->addItem(QString::number(i));
+        errorDialog(errorString);
     }
-    ui->subtitleNumberComboBox->setValidator(subtitleNumberValidator);
-    ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
-    ui->subtitleNumberComboBox->blockSignals(false);
-    ui->alphaThresholdComboBox->blockSignals(true);
-    ui->medLowThresholdComboBox->blockSignals(true);
-    ui->hiMedThresholdComboBox->blockSignals(true);
-    ui->alphaThresholdComboBox->setCurrentIndex(subtitleProcessor->getAlphaThreshold());
-    ui->hiMedThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[0]);
-    ui->medLowThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[1]);
-    ui->alphaThresholdComboBox->blockSignals(false);
-    ui->medLowThresholdComboBox->blockSignals(false);
-    ui->hiMedThresholdComboBox->blockSignals(false);
-
-    if (subtitleProcessor->getCropOfsY() > 0)
     {
-        if (QMessageBox::question(this, "", "Reset Crop Offset?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+        warningDialog();
+
+        int num = subtitleProcessor->getNumberOfFrames();
+        ui->subtitleNumberComboBox->clear();
+        ui->subtitleNumberComboBox->blockSignals(true);
+        subtitleNumberValidator = new QIntValidator(1, num, this);
+        for (int i = 1; i <= num; ++i)
         {
-            subtitleProcessor->setCropOfsY(0);
+            ui->subtitleNumberComboBox->addItem(QString::number(i));
         }
-    }
+        ui->subtitleNumberComboBox->setValidator(subtitleNumberValidator);
+        ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
+        ui->subtitleNumberComboBox->blockSignals(false);
+        ui->alphaThresholdComboBox->blockSignals(true);
+        ui->medLowThresholdComboBox->blockSignals(true);
+        ui->hiMedThresholdComboBox->blockSignals(true);
+        ui->alphaThresholdComboBox->setCurrentIndex(subtitleProcessor->getAlphaThreshold());
+        ui->hiMedThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[0]);
+        ui->medLowThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[1]);
+        ui->alphaThresholdComboBox->blockSignals(false);
+        ui->medLowThresholdComboBox->blockSignals(false);
+        ui->hiMedThresholdComboBox->blockSignals(false);
 
-    ConversionDialog conversionDialog(this, subtitleProcessor);
-    conversionDialog.enableOptionMove(subtitleProcessor->getMoveCaptions());
-    if (conversionDialog.exec() != QDialog::Rejected)
-    {
-        subtitleProcessor->scanSubtitles();
-        if (subtitleProcessor->getMoveCaptions())
+        if (subtitleProcessor->getCropOfsY() > 0)
         {
-            QThread *workerThread = new QThread;
-            subtitleProcessor->moveToThread(workerThread);
-            connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(moveAll()));
-            connect(subtitleProcessor, SIGNAL(moveAllFinished()), workerThread, SLOT(quit()));
-            connect(subtitleProcessor, SIGNAL(moveAllFinished()), workerThread, SLOT(deleteLater()));
-
-            workerThread->start();
+            if (QMessageBox::question(this, "", "Reset Crop Offset?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+            {
+                subtitleProcessor->setCropOfsY(0);
+            }
         }
-        convertSup();
-    }
-    else
-    {
-        closeSubtitle();
-        print("Loading cancelled by user.");
-        subtitleProcessor->close();
+
+        ConversionDialog conversionDialog(this, subtitleProcessor);
+        conversionDialog.enableOptionMove(subtitleProcessor->getMoveCaptions());
+        if (conversionDialog.exec() != QDialog::Rejected)
+        {
+            subtitleProcessor->scanSubtitles();
+            if (subtitleProcessor->getMoveCaptions())
+            {
+                QThread *workerThread = new QThread;
+                subtitleProcessor->moveToThread(workerThread);
+                connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(moveAll()));
+                connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), workerThread, SLOT(quit()));
+                connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), workerThread, SLOT(deleteLater()));
+
+                workerThread->start();
+            }
+            convertSup();
+        }
+        else
+        {
+            closeSubtitle();
+            print("Loading cancelled by user.");
+        }
     }
 }
 
@@ -159,6 +204,7 @@ void BDSup2Sub::onWritingSubtitleFileFinished(const QString& errorString)
 {
     if (!errorString.isEmpty())
     {
+        print(QString("ERROR: " + errorString));
         QMessageBox::warning(this, "Error!", errorString);
     }
     else
@@ -167,9 +213,41 @@ void BDSup2Sub::onWritingSubtitleFileFinished(const QString& errorString)
     }
 }
 
+void BDSup2Sub::onMoveAllFinished(const QString &errorString)
+{
+    if (!errorString.isEmpty())
+    {
+        errorDialog(errorString);
+    }
+    else
+    {
+        try
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        }
+        catch (QString e)
+        {
+            errorDialog(e);
+            return;
+        }
+
+        refreshSrcFrame(subIndex);
+        refreshTrgFrame(subIndex);
+        ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
+    }
+}
+
 void BDSup2Sub::convertSup()
 {
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshSrcFrame(subIndex);
     refreshTrgFrame(subIndex);
 
@@ -228,7 +306,6 @@ void BDSup2Sub::connectSubtitleProcessor()
 {
     if (subtitleProcessor != 0)
     {
-        subtitleProcessor->close();
         subtitleProcessor->moveToThread(QApplication::instance()->thread());
         subtitleProcessor->disconnect();
     }
@@ -237,9 +314,9 @@ void BDSup2Sub::connectSubtitleProcessor()
     connect(subtitleProcessor, SIGNAL(progressDialogTitleChanged(QString)), progressDialog, SLOT(setWindowTitle(QString)));
     connect(subtitleProcessor, SIGNAL(progressDialogValueChanged(int)), progressDialog, SLOT(setCurrentValue(int)));
     connect(subtitleProcessor, SIGNAL(progressDialogVisibilityChanged(bool)), progressDialog, SLOT(setVisible(bool)));
-    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), this, SLOT(onLoadingSubtitleFileFinished()));
+    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), this, SLOT(onLoadingSubtitleFileFinished(QString)));
     connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), this, SLOT(onWritingSubtitleFileFinished(QString)));
-    connect(subtitleProcessor, SIGNAL(moveAllFinished()), this, SLOT(convertSup()));
+    connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), this, SLOT(onMoveAllFinished(QString)));
     connect(subtitleProcessor, SIGNAL(printText(QString)), this, SLOT(print(QString)));
 }
 
@@ -248,6 +325,9 @@ void BDSup2Sub::fillComboBoxes()
     ui->alphaThresholdComboBox->blockSignals(true);
     ui->medLowThresholdComboBox->blockSignals(true);
     ui->hiMedThresholdComboBox->blockSignals(true);
+    ui->outputFormatComboBox->blockSignals(true);
+    ui->filterComboBox->blockSignals(true);
+    ui->paletteComboBox->blockSignals(true);
     for (int i = 0; i < 256; ++i)
     {
         ui->alphaThresholdComboBox->addItem(QString::number(i));
@@ -265,9 +345,13 @@ void BDSup2Sub::fillComboBoxes()
     ui->alphaThresholdComboBox->setValidator(alphaThresholdValidator);
     ui->medLowThresholdComboBox->setValidator(medLowThresholdValidator);
     ui->hiMedThresholdComboBox->setValidator(hiMedThresholdValidator);
+
     ui->alphaThresholdComboBox->blockSignals(false);
     ui->medLowThresholdComboBox->blockSignals(false);
     ui->hiMedThresholdComboBox->blockSignals(false);
+    ui->outputFormatComboBox->blockSignals(false);
+    ui->filterComboBox->blockSignals(false);
+    ui->paletteComboBox->blockSignals(false);
 }
 
 void BDSup2Sub::enableCoreComponents(bool enable)
@@ -421,11 +505,13 @@ void BDSup2Sub::saveFile()
             if ((QFile(fi).exists() && !QFileInfo(fi).isWritable()) ||
                 (QFile(fs).exists() && !QFileInfo(fs).isWritable()))
             {
+                QMessageBox::warning(this, "", "Target is write protected.");
                 return;
             }
             if (QMessageBox::question(this, "", "Target exists! Overwrite?",
                                       QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
             {
+                QMessageBox::warning(this, "", "Target exists. Aborted by user.");
                 return;
             }
         }
@@ -448,6 +534,19 @@ void BDSup2Sub::closeFile()
 
 void BDSup2Sub::loadSubtitleFile()
 {
+    QFileInfo fileInfo(loadPath);
+    QString extension = fileInfo.suffix().toLower();
+    bool isXML(extension == "xml"), isIDX(extension == "idx"), isIFO(extension == "ifo");
+
+    QByteArray id = subtitleProcessor->getFileID(loadPath, 4);
+    StreamID streamID = (id.isEmpty()) ? StreamID::UNKNOWN : subtitleProcessor->getStreamID(id);
+
+    if (!isXML && !isIDX && !isIFO && streamID == StreamID::UNKNOWN)
+    {
+        QMessageBox::warning(this, "Wrong format!", "This is not a supported SUP stream");
+        return;
+    }
+
     subIndex = 0;
     saveFileName = QFileInfo(loadPath).completeBaseName();
     savePath = QFileInfo(loadPath).absolutePath();
@@ -522,6 +621,12 @@ void BDSup2Sub::warningDialog()
     {
         QMessageBox::warning(this, "Warnings!", QString(message + "\nCheck the log for details"));
     }
+}
+
+void BDSup2Sub::errorDialog(const QString &errorMessage)
+{
+    print(QString("ERROR: %1\n").arg(errorMessage));
+    QMessageBox::warning(this, "Error!", errorMessage);
 }
 
 void BDSup2Sub::printWarnings()
@@ -795,10 +900,7 @@ bool BDSup2Sub::execCLI()
 
             bool ok;
             int ival = val.toInt(&ok);
-            if (!ok)
-            {
-                ival = -1;
-            }
+            ival = ok ? ival : -1;
 
             Parameters p = (Parameters)params.indexOf(a);
 
@@ -1121,10 +1223,7 @@ bool BDSup2Sub::execCLI()
                 }
                 bool ok;
                 screenRatio = ratio.toDouble(&ok);
-                if (!ok)
-                {
-                    screenRatio = -1;
-                }
+                screenRatio = ok ? screenRatio : -1;
                 if (screenRatio <= (16.0/9))
                 {
                     fprintf(stdout, (QString("ERROR: invalid screen ratio: %1")
@@ -1136,10 +1235,7 @@ bool BDSup2Sub::execCLI()
                 {
                     bool ok;
                     moveOffsetY = val.mid(pos + 1).toInt(&ok);
-                    if (!ok)
-                    {
-                        moveOffsetY = -1;
-                    }
+                    moveOffsetY = ok ? moveOffsetY : -1;
                     if (moveOffsetY < 0)
                     {
                         fprintf(stdout, (QString("ERROR: invalid pixel offset: %1")
@@ -1189,10 +1285,7 @@ bool BDSup2Sub::execCLI()
                 {
                     bool ok;
                     moveOffsetX = val.mid(pos + 1).toInt(&ok);
-                    if (!ok)
-                    {
-                        moveOffsetX = -1;
-                    }
+                    moveOffsetX = ok ? moveOffsetX : -1;
                     if (moveOffsetX < 0)
                     {
                         fprintf(stdout, (QString("ERROR: invalid pixel offset: %1")
@@ -1211,10 +1304,7 @@ bool BDSup2Sub::execCLI()
                 int cropY;
                 bool ok;
                 cropY = val.trimmed().toInt(&ok);
-                if (!ok)
-                {
-                    cropY = -1;
-                }
+                cropY = ok ? cropY : -1;
                 if (cropY >= 0)
                 {
                     subtitleProcessor->setCropOfsY(cropY);
@@ -1299,10 +1389,7 @@ bool BDSup2Sub::execCLI()
                 {
                     bool ok;
                     double scaleX = val.mid(0, pos).toDouble(&ok);
-                    if (!ok)
-                    {
-                        scaleX = -1;
-                    }
+                    scaleX = ok ? scaleX : -1;
                     if (scaleX < subtitleProcessor->minScale || scaleX > subtitleProcessor->maxScale)
                     {
                         fprintf(stdout, (QString("ERROR: invalid x scaling factor: %1")
@@ -1310,10 +1397,7 @@ bool BDSup2Sub::execCLI()
                         exit(1);
                     }
                     double scaleY = val.mid(pos + 1).toDouble(&ok);
-                    if (!ok)
-                    {
-                        scaleY = -1;
-                    }
+                    scaleY = ok ? scaleY : -1;
                     if (scaleY < subtitleProcessor->minScale || scaleY > subtitleProcessor->maxScale)
                     {
                         fprintf(stdout, (QString("ERROR: invalid y scaling factor: %1")
@@ -1454,107 +1538,114 @@ bool BDSup2Sub::execCLI()
             src = srcFileNames[fileNumber];
             trg = trgFileNames[fileNumber];
             // ok, let's start
-            fprintf(stdout, (QString("\nConverting %1\n").arg(modes[(int)mode])).toAscii());
-            // check input file
-            QFileInfo srcFileInfo(src);
-            if (!srcFileInfo.exists())
+            try
             {
-                fprintf(stdout, (QString("ERROR: File '%1' does not exist.").arg(src)).toAscii());
-                exit(1);
-            }
-            bool xml = srcFileInfo.completeSuffix().toLower() == "xml";
-            bool idx = srcFileInfo.completeSuffix().toLower() == "idx";
-            bool ifo = srcFileInfo.completeSuffix().toLower() == "ifo";
-            QByteArray id = subtitleProcessor->getFileID(src, 4);
-            StreamID sid = (id.isEmpty()) ? StreamID::UNKNOWN : subtitleProcessor->getStreamID(id);
-            if (!idx && !xml && !ifo && sid == StreamID::UNKNOWN)
-            {
-                fprintf(stdout, (QString("File '%1' is not a supported subtitle stream.").arg(src)).toAscii());
-                exit(1);
-            }
-            // check output file(s)
-            QFileInfo fi, fs;
-            QFileInfo trgFileInfo(trg);
-            if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB)
-            {
-                fi = QFileInfo(QString("%1/%2.idx").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
-                fs = QFileInfo(QString("%1/%2.sub").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
-            }
-            else
-            {
-                fs = QFileInfo(QString("%1/%2.sup").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
-                fi = QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName()));
-                if (!fi.exists())
+                fprintf(stdout, (QString("\nConverting %1\n").arg(modes[(int)mode])).toAscii());
+                // check input file
+                QFileInfo srcFileInfo(src);
+                if (!srcFileInfo.exists())
                 {
-                    fi = fs; // ifo file doesn't exist set it to the same name as sup
-                }
-            }
-            if (fi.exists() || fs.exists())
-            {
-                if ((fi.exists() && !fi.isWritable()) || (fs.exists() && !fs.isWritable()))
-                {
-                    fprintf(stdout, (QString("Target file '%1' is write protected.").arg(trg)).toAscii());
+                    fprintf(stdout, (QString("ERROR: File '%1' does not exist.").arg(src)).toAscii());
                     exit(1);
                 }
-            }
+                bool xml = srcFileInfo.completeSuffix().toLower() == "xml";
+                bool idx = srcFileInfo.completeSuffix().toLower() == "idx";
+                bool ifo = srcFileInfo.completeSuffix().toLower() == "ifo";
+                QByteArray id = subtitleProcessor->getFileID(src, 4);
+                StreamID sid = (id.isEmpty()) ? StreamID::UNKNOWN : subtitleProcessor->getStreamID(id);
+                if (!idx && !xml && !ifo && sid == StreamID::UNKNOWN)
+                {
+                    fprintf(stdout, (QString("File '%1' is not a supported subtitle stream.").arg(src)).toAscii());
+                    exit(1);
+                }
+                // check output file(s)
+                QFileInfo fi, fs;
+                QFileInfo trgFileInfo(trg);
+                if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB)
+                {
+                    fi = QFileInfo(QString("%1/%2.idx").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
+                    fs = QFileInfo(QString("%1/%2.sub").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
+                }
+                else
+                {
+                    fs = QFileInfo(QString("%1/%2.sup").arg(trgFileInfo.absolutePath()).arg(trgFileInfo.completeBaseName()));
+                    fi = QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName()));
+                    if (!fi.exists())
+                    {
+                        fi = fs; // ifo file doesn't exist set it to the same name as sup
+                    }
+                }
+                if (fi.exists() || fs.exists())
+                {
+                    if ((fi.exists() && !fi.isWritable()) || (fs.exists() && !fs.isWritable()))
+                    {
+                        fprintf(stdout, (QString("Target file '%1' is write protected.").arg(trg)).toAscii());
+                        exit(1);
+                    }
+                }
 
-            subtitleProcessor->setLoadPath(src);
-            // read input file
-            if (xml || sid == StreamID::XML)
-            {
-                subtitleProcessor->readXml();
-            }
-            else if (idx || sid == StreamID::DVDSUB || sid == StreamID::IDX)
-            {
-                subtitleProcessor->readDVDSubStream(sid, true);
-            }
-            else if (ifo || sid == StreamID::IFO)
-            {
-                subtitleProcessor->readDVDSubStream(sid, false);
-            }
-            else
-            {
-                if (QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName())).exists())
+                subtitleProcessor->setLoadPath(src);
+                // read input file
+                if (xml || sid == StreamID::XML)
+                {
+                    subtitleProcessor->readXml();
+                }
+                else if (idx || sid == StreamID::DVDSUB || sid == StreamID::IDX)
+                {
+                    subtitleProcessor->readDVDSubStream(sid, true);
+                }
+                else if (ifo || sid == StreamID::IFO)
                 {
                     subtitleProcessor->readDVDSubStream(sid, false);
                 }
                 else
                 {
-                    subtitleProcessor->readSup();
+                    if (QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName())).exists())
+                    {
+                        subtitleProcessor->readDVDSubStream(sid, false);
+                    }
+                    else
+                    {
+                        subtitleProcessor->readSup();
+                    }
                 }
-            }
 
-            subtitleProcessor->scanSubtitles();
-            printWarnings();
-            // move captions
-            if (subtitleProcessor->getMoveModeX() != MoveModeX::KEEP || subtitleProcessor->getMoveModeY() != MoveModeY::KEEP)
-            {
-                subtitleProcessor->setCineBarFactor((1.0 - (16.0/9)/screenRatio)/2.0);
-                subtitleProcessor->moveAllToBounds();
+                subtitleProcessor->scanSubtitles();
+                printWarnings();
+                // move captions
+                if (subtitleProcessor->getMoveModeX() != MoveModeX::KEEP || subtitleProcessor->getMoveModeY() != MoveModeY::KEEP)
+                {
+                    subtitleProcessor->setCineBarFactor((1.0 - (16.0/9)/screenRatio)/2.0);
+                    subtitleProcessor->moveAllToBounds();
+                }
+                // set some values
+                if (subtitleProcessor->getExportForced() && subtitleProcessor->getNumForcedFrames()==0)
+                {
+                    fprintf(stdout, QString("No forced subtitles found.").toAscii());
+                    exit(1);
+                }
+                QVector<int> lt = subtitleProcessor->getLuminanceThreshold();
+                if (lumThr1 > 0)
+                {
+                    lt.replace(1, lumThr1);
+                }
+                if (lumThr2 > 0)
+                {
+                    lt.replace(0, lumThr2);
+                }
+                subtitleProcessor->setLuminanceThreshold(lt);
+                subtitleProcessor->setAlphaThreshold(alphaThr);
+                if (langIdx != -1)
+                {
+                    subtitleProcessor->setLanguageIdx(langIdx);
+                }
+                // write output
+                subtitleProcessor->writeSub(trg);
             }
-            // set some values
-            if (subtitleProcessor->getExportForced() && subtitleProcessor->getNumForcedFrames()==0)
+            catch(QString e)
             {
-                fprintf(stdout, QString("No forced subtitles found.").toAscii());
-                exit(1);
+                print(QString("ERROR: " + e));
             }
-            QVector<int> lt = subtitleProcessor->getLuminanceThreshold();
-            if (lumThr1 > 0)
-            {
-                lt.replace(1, lumThr1);
-            }
-            if (lumThr2 > 0)
-            {
-                lt.replace(0, lumThr2);
-            }
-            subtitleProcessor->setLuminanceThreshold(lt);
-            subtitleProcessor->setAlphaThreshold(alphaThr);
-            if (langIdx != -1)
-            {
-                subtitleProcessor->setLanguageIdx(langIdx);
-            }
-            // write output
-            subtitleProcessor->writeSub(trg);
             // clean up
             printWarnings();
             subtitleProcessor->exit();
@@ -1582,6 +1673,11 @@ void BDSup2Sub::Redirect_console()
     *stderr= *hferr;
     setvbuf(stderr,NULL, _IONBF,0);
 #endif
+}
+
+void BDSup2Sub::showAboutQt()
+{
+    QMessageBox::aboutQt(this, "About Qt");
 }
 
 void BDSup2Sub::print(const QString &message)
@@ -1657,7 +1753,15 @@ void BDSup2Sub::loadEditPane()
     editDialog.setIndex(subIndex);
     editDialog.exec();
     subIndex = editDialog.getIndex();
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshSrcFrame(subIndex);
     refreshTrgFrame(subIndex);
     ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
@@ -1674,7 +1778,15 @@ void BDSup2Sub::swapCrCb_toggled(bool checked)
     subtitleProcessor->setSwapCrCb(checked);
     if (subtitleProcessor->getNumberOfFrames() > 0)
     {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        try
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        }
+        catch (QString e)
+        {
+            errorDialog(e);
+            return;
+        }
         refreshSrcFrame(subIndex);
         refreshTrgFrame(subIndex);
     }
@@ -1723,7 +1835,15 @@ void BDSup2Sub::editDefaultDVDPalette_triggered()
         }
         if (subtitleProcessor->getNumberOfFrames() > 0)
         {
-            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            try
+            {
+                subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            }
+            catch (QString e)
+            {
+                errorDialog(e);
+                return;
+            }
             refreshTrgFrame(subIndex);
         }
     }
@@ -1761,7 +1881,15 @@ void BDSup2Sub::editImportedDVDPalette_triggered()
         subtitleProcessor->setCurrentSrcDVDPalette(palette);
         if (subtitleProcessor->getNumberOfFrames() > 0)
         {
-            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            try
+            {
+                subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            }
+            catch (QString e)
+            {
+                errorDialog(e);
+                return;
+            }
             refreshSrcFrame(subIndex);
             refreshTrgFrame(subIndex);
         }
@@ -1775,7 +1903,15 @@ void BDSup2Sub::editDVDFramePalette_triggered()
     framePaletteDialog.exec();
     if (subtitleProcessor->getNumberOfFrames() > 0)
     {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        try
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        }
+        catch (QString e)
+        {
+            errorDialog(e);
+            return;
+        }
         refreshSrcFrame(subIndex);
         refreshTrgFrame(subIndex);
     }
@@ -1792,7 +1928,15 @@ void BDSup2Sub::moveAllCaptions_triggered()
     }
     subIndex = moveDialog.getIndex();
     ui->subtitleImage->setScreenRatio(moveDialog.getTrgRatio());
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshSrcFrame(subIndex);
     refreshTrgFrame(subIndex);
     ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
@@ -1827,7 +1971,15 @@ void BDSup2Sub::refreshTrgFrame(int index)
 void BDSup2Sub::on_subtitleNumberComboBox_currentIndexChanged(int index)
 {
     subIndex = index;
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshSrcFrame(subIndex);
     refreshTrgFrame(subIndex);
 }
@@ -1843,7 +1995,15 @@ void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &index)
 
     ui->subtitleNumberComboBox->blockSignals(true);
     subIndex = index.toInt() - 1;
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshSrcFrame(subIndex);
     refreshTrgFrame(subIndex);
     ui->subtitleNumberComboBox->blockSignals(false);
@@ -1887,7 +2047,15 @@ void BDSup2Sub::openConversionSettings()
     if (conversionDialog.exec() != QDialog::Rejected)
     {
         subtitleProcessor->reScanSubtitles(oldResolution, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        try
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        }
+        catch (QString e)
+        {
+            errorDialog(e);
+            return;
+        }
         refreshTrgFrame(subIndex);
     }
 }
@@ -1896,7 +2064,15 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
 {
     OutputMode outMode = (OutputMode)index;
     subtitleProcessor->setOutputMode(outMode);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
 
     if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
@@ -1912,14 +2088,30 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
 void BDSup2Sub::on_paletteComboBox_currentIndexChanged(int index)
 {
     subtitleProcessor->setPaletteMode((PaletteMode)index);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
 }
 
 void BDSup2Sub::on_filterComboBox_currentIndexChanged(int index)
 {
     subtitleProcessor->setScalingFilter((ScalingFilters)index);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
 }
 
@@ -1945,7 +2137,15 @@ void BDSup2Sub::on_hiMedThresholdComboBox_currentIndexChanged(int index)
     lumaThreshold[0] = idx;
     subtitleProcessor->setLuminanceThreshold(lumaThreshold);
     ui->hiMedThresholdComboBox->blockSignals(true);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
     ui->hiMedThresholdComboBox->blockSignals(false);
     ui->hiMedThresholdComboBox->setCurrentIndex(idx);
@@ -1963,7 +2163,15 @@ void BDSup2Sub::on_hiMedThresholdComboBox_editTextChanged(const QString &arg1)
     ui->hiMedThresholdComboBox->blockSignals(true);
     lumaThreshold[0] = arg1.toInt();
     subtitleProcessor->setLuminanceThreshold(lumaThreshold);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
     ui->hiMedThresholdComboBox->blockSignals(false);
 }
@@ -1989,7 +2197,15 @@ void BDSup2Sub::on_medLowThresholdComboBox_currentIndexChanged(int index)
     lumaThreshold[1] = idx;
     subtitleProcessor->setLuminanceThreshold(lumaThreshold);
     ui->medLowThresholdComboBox->blockSignals(true);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
     ui->medLowThresholdComboBox->blockSignals(false);
     ui->medLowThresholdComboBox->setCurrentIndex(idx);
@@ -2007,7 +2223,15 @@ void BDSup2Sub::on_medLowThresholdComboBox_editTextChanged(const QString &arg1)
     ui->medLowThresholdComboBox->blockSignals(true);
     lumaThreshold[1] = arg1.toInt();
     subtitleProcessor->setLuminanceThreshold(lumaThreshold);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
     ui->medLowThresholdComboBox->blockSignals(false);
 }
@@ -2015,7 +2239,15 @@ void BDSup2Sub::on_medLowThresholdComboBox_editTextChanged(const QString &arg1)
 void BDSup2Sub::on_alphaThresholdComboBox_currentIndexChanged(int index)
 {
     subtitleProcessor->setAlphaThreshold(index);
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
 }
 
@@ -2029,7 +2261,15 @@ void BDSup2Sub::on_alphaThresholdComboBox_editTextChanged(const QString &arg1)
     ui->alphaThresholdComboBox->setPalette(*okBackground);
     ui->alphaThresholdComboBox->blockSignals(true);
     subtitleProcessor->setAlphaThreshold(arg1.toInt());
-    subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
     refreshTrgFrame(subIndex);
     ui->alphaThresholdComboBox->blockSignals(false);
 }

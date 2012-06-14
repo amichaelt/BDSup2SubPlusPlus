@@ -659,16 +659,17 @@
     <addaction name="action_Fix_invisible_frames"/>
     <addaction name="action_Verbatim_Output"/>
    </widget>
-   <widget class="QMenu" name="menu_Help">
+   <widget class="QMenu" name="menu_About">
     <property name="title">
-     <string>&amp;Help</string>
+     <string>&amp;About</string>
     </property>
     <addaction name="action_Help"/>
+    <addaction name="actionAbout_Qt"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
    <addaction name="menu_Settings"/>
-   <addaction name="menu_Help"/>
+   <addaction name="menu_About"/>
   </widget>
   <action name="action_Load">
    <property name="text">
@@ -775,6 +776,11 @@
   <action name="actionHello">
    <property name="text">
     <string>hello</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About &amp;Qt</string>
    </property>
   </action>
  </widget>

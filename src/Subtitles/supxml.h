@@ -62,6 +62,7 @@ class SupXML : public QObject, public Substream
 
 public:
     SupXML(QString fileName, SubtitleProcessor* subtitleProcessor);
+    ~SupXML();
 
     Palette *getPalette() { return palette; }
     Bitmap *getBitmap() { return bitmap; }
@@ -72,15 +73,14 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
-    void close();
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index) { return 0; }
     SubPicture *getSubPicture(int index);
 
     void readAllImages();
-     QString getLanguage() { return language; }
-     double getFps() { return fps; }
+    QString getLanguage() { return language; }
+    double getFps() { return fps; }
     QString getPNGname(QString filename, int idx);
     void writeXml(QString filename, QVector<SubPicture*> pics);
 
@@ -90,19 +90,19 @@ signals:
 
 private:
     QString xmlFileName;
-    QFile xmlFile;
+    QScopedPointer<QFile> xmlFile;
     QString title = "";
     QString pathName;
     QString language = "deu";
     Resolution resolution = Resolution::HD_1080;
-    QVector<SubPictureXML*> subPictures = QVector<SubPictureXML*>();
+    QVector<SubPictureXML*> subPictures;
     FileBuffer *fileBuffer = 0;
     Palette *palette = 0;
     Bitmap *bitmap = 0;
     int primaryColorIndex = 0;
     int numToImport = 0;
     double fps = FPS_24P;
-    double fpsXml;
+    double fpsXml = FPS_24P;
     SubtitleProcessor* subtitleProcessor = 0;
 
     double XmlFps(double fps);

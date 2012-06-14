@@ -19,12 +19,11 @@
 #ifndef SUBTITLEPROCESSOR_H
 #define SUBTITLEPROCESSOR_H
 
-#include <array>
-#include <QObject>
 #include <QByteArray>
 #include <QString>
-#include <vector>
 #include <QStringList>
+#include <QSharedPointer>
+#include <QSettings>
 
 #include "palette.h"
 #include "types.h"
@@ -39,7 +38,6 @@ class SubPictureDVD;
 class SubPicture;
 class QImage;
 class Bitmap;
-class Props;
 
 static QStringList resolutionNamesXml = { "480i", "576i", "720p", "1440x1080", "1080p" };
 
@@ -247,15 +245,15 @@ class SubtitleProcessor : public QObject
     Q_OBJECT
 
 public:
-    SubtitleProcessor(QWidget* parent = 0);
+    SubtitleProcessor(QWidget* parent = 0, QSettings* settings = 0);
+    ~SubtitleProcessor();
 
     double minScale = 0.5;
     double maxScale = 2.0;
 
     QWidget* parent;
+    QSettings* settings;
 
-    QByteArray getFileID(QString fileName, int numberOfBytes);
-    StreamID getStreamID(QByteArray id);
     QVector<QVector<QString>>& getLanguages() { return languages; }
     Palette* getDefaultDVDPalette() { return defaultDVDPalette; }
     Palette* getCurrentDVDPalette() { return currentDVDPalette; }
@@ -272,44 +270,52 @@ public:
     MoveModeY getMoveModeY() { return moveModeY; }
     void setMoveModeY(MoveModeY value) { moveModeY = value; }
     int getAlphaCrop() { return alphaCrop; }
-    void setAlphaCrop(int value) { alphaCrop = value; }
+    void setAlphaCrop(int value)
+    {
+        alphaCrop = value;
+        settings->setValue("alphaCrop", QVariant(value));
+    }
     bool getFixZeroAlpha() { return fixZeroAlpha; }
-    void setFixZeroAlpha(bool value) { fixZeroAlpha = value; }
+    void setFixZeroAlpha(bool value)
+    {
+        fixZeroAlpha = value;
+        settings->setValue("fixZeroAlpha", QVariant(value));
+    }
     int getAlphaThreshold() { return alphaThreshold; }
     bool getVerbatim() { return verbatim; }
-    void setVerbatim(bool value) { verbatim = value; }
+    void setVerbatim(bool value)
+    {
+        verbatim = value;
+        settings->setValue("verbatim", QVariant(value));
+    }
     void setAlphaThreshold(int value) { alphaThreshold = value; }
     bool getWritePGCEditPal() { return writePGCEditPal; }
-    void setWritePGCEditPal(bool value) { writePGCEditPal = value; }
-    int getNumberOfFrames();
-    int getNumForcedFrames();
+    void setWritePGCEditPal(bool value)
+    {
+        writePGCEditPal = value;
+        settings->setValue("writePGCEditPal", QVariant(value));
+    }
     void setCliMode(bool value) { cliMode = value; }
     bool getExportForced() { return exportForced; }
     void setExportForced(bool value) { exportForced = value; }
-    QVector<int>& getFrameAlpha(int index);
-    QVector<int>& getOriginalFrameAlpha(int index);
-    QVector<int>& getFramePal(int index);
-    QVector<int>& getOriginalFramePal(int index);
     QVector<int> getLuminanceThreshold() { return luminanceThreshold; }
     void setLuminanceThreshold(QVector<int> value) { luminanceThreshold = value; }
-    QImage* getSrcImage();
-    QImage* getSrcImage(int index);
-    QImage* getTrgImagePatched(SubPicture* subPicture);
     void setLoadPath(QString loadPath) { fileName = loadPath; }
     int getCropOfsY() { return cropOfsY; }
     int setCropOfsY(int ofs) { return cropOfsY = ofs; }
     OutputMode getOutputMode() { return outMode; }
-    void setOutputMode(OutputMode mode) { outMode = mode; }
+    void setOutputMode(OutputMode mode)
+    {
+        outMode = mode;
+        settings->setValue("outputMode", QVariant(modes[(int)mode]));
+    }
     InputMode getInputMode() { return inMode; }
     bool getMoveCaptions() { return moveCaptions; }
     void setMoveCaptions(bool value) { moveCaptions = value; }
     bool getConvertResolution() { return convertResolution; }
     void setConvertResolution(bool value) { convertResolution = value; }
-    Resolution getResolution(int width, int height);
     Resolution getOutputResolution() { return resolutionTrg; }
     void setOutputResolution(Resolution value) { resolutionTrg = value; }
-    SubPicture* getSubPictureSrc(int index);
-    SubPicture* getSubPictureTrg(int index);
     int getDelayPTS() { return delayPTS; }
     void setDelayPTS(int value) { delayPTS = value; }
     int getDelayPTSDefault() { return delayPTSdefault; }
@@ -321,7 +327,7 @@ public:
     bool getConvertFPS() { return convertFPS; }
     void setConvertFPS(bool value) { convertFPS = value; }
     bool getApplyFreeScale() { return applyFreeScale; }
-    void setApplyFreeScale(bool value) { applyFreeScale = value; }
+    void setApplyFreeScale(bool value){ applyFreeScale = value; }
     bool getApplyFreeScaleDefault() { return applyFreeScaleDefault; }
     bool getFixShortFrames() { return fixShortFrames; }
     void setFixShortFrames(bool value) { fixShortFrames = value; }
@@ -334,27 +340,69 @@ public:
     void setForceAll(SetState value) { forceAll = value; }
     void setFreeScale(double x, double y) { freeScaleX = x; freeScaleY = y; }
     bool getFpsSrcCertain() { return fpsSrcCertain; }
-    void close();
-    void exit();
+    QStringList getRecentFiles() { return recentFiles; }
+    PaletteMode getPaletteMode() { return paletteMode; }
+    void setPaletteMode(PaletteMode value)
+    {
+        paletteMode = value;
+        settings->setValue("paletteMode", QVariant(paletteModeNames[(int)value]));
+    }
+    bool isCancelled() { return isActive; }
+    int getMergePTSdiff() { return mergePTSdiff; }
+    void setMergePTSdiff(int value)
+    {
+        mergePTSdiff = value;
+        settings->setValue("mergePTSdiff", QVariant(value));
+    }
+    bool usesBT601() { return useBT601; }
+    bool getSwapCrCb() { return swapCrCb; }
+    void setSwapCrCb(bool value) { swapCrCb = value; }
+    ScalingFilters getScalingFilter() { return scalingFilter; }
+    void setScalingFilter(ScalingFilters value)
+    {
+        scalingFilter = value;
+        settings->setValue("filter", QVariant(scalingFilters[(int)value]));
+    }
+    QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
+    int getLanguageIdx() { return languageIdx; }
+    void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
+    QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
+    bool getKeepFps() { return keepFps; }
+    void setKeepFps(bool value) { keepFps = value; }
+    int getErrors() { return numberOfErrors; }
+    void resetErrors() { numberOfErrors = 0; }
+    int getWarnings() { return numberOfWarnings; }
+    void resetWarnings() { numberOfWarnings = 0; }
+    void loadedHook() { fpsSrcSet = false; }
+
+    void readDVDSubStream(StreamID streamID, bool isVobSub);
+    void readXml();
+    void readSup();
+
+    void writeSub(QString filename);
+
+    void moveAllToBounds();
+    void moveToBounds(SubPicture* picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX moveModeX, MoveModeY moveModeY, int cropOffsetY);
+
+    void convertSup(int index, int displayNumber, int displayMax);
+
     void scanSubtitles();
     void reScanSubtitles(Resolution oldResolution, double fpsTrgOld, int delayOld,
                          bool convertFpsOld, double fsXOld, double fsYOld);
-    QVector<int> getResolution(Resolution resolution);
-    void validateTimes(int index, SubPicture* subPicture, SubPicture* subPictureNext,
-                       SubPicture* subPicturePrevious);
-    void moveAllToBounds();
-    void convertSup(int index, int displayNumber, int displayMax);
-    void convertSup(int index, int displayNumber, int displayMax, bool skipScaling);
-    void determineFramePalette(int index);
-    bool updateTrgPic(int index);
-    void loadedHook() { fpsSrcSet = false; }
+
+    void exit();
+
+    int getNumberOfFrames();
+    int getNumForcedFrames();
     void addRecent(QString fileName);
-    void moveToBounds(SubPicture* picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX moveModeX, MoveModeY moveModeY, int cropOffsetY);
+    QByteArray getFileID(QString fileName, int numberOfBytes);
+    StreamID getStreamID(QByteArray id);
+    void setFPSTrg(double trg);
+    double getFPS(QString string);
+    double getDefaultFPS(Resolution resolution);
+    QImage* getSrcImage();
     QString getSrcInfoStr(int index);
     QString getTrgInfoStr(int index);
-    QStringList getRecentFiles() { return recentFiles; }
-    PaletteMode getPaletteMode() { return paletteMode; }
-    void setPaletteMode(PaletteMode value) { paletteMode = value; }
     int getTrgWidth(int index);
     int getTrgHeight(int index);
     int getTrgOfsX(int index);
@@ -363,34 +411,19 @@ public:
     int getTrgImgWidth(int index);
     int getTrgImgHeight(int index);
     bool getTrgExcluded(int index);
-    bool isCancelled() { return isActive; }
-    int getMergePTSdiff() { return mergePTSdiff; }
-    void setMergePTSdiff(int value) { mergePTSdiff = value; }
-    bool usesBT601() { return useBT601; }
-    bool getSwapCrCb() { return swapCrCb; }
-    void setSwapCrCb(bool value) { swapCrCb = value; }
-    ScalingFilters getScalingFilter() { return scalingFilter; }
-    void setScalingFilter(ScalingFilters value) { scalingFilterSet = true; scalingFilter = value; }
-    void setFPSTrg(double trg);
-    double getFPS(QString string);
+    Resolution getResolution(int width, int height);
+    SubPicture* getSubPictureSrc(int index);
     Resolution getResolution(QString string);
-    QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     QVector<int> getResolutions(Resolution resolution);
-    void writeSub(QString filename);
-    int getLanguageIdx() { return languageIdx; }
-    void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
-    QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
-    bool getKeepFps() { return keepFps; }
-    void setKeepFps(bool value) { keepFps = value; }
-    double getDefaultFPS(Resolution resolution);
-    int getErrors() { return numberOfErrors; }
-    void resetErrors() { numberOfErrors = 0; }
-    int getWarnings() { return numberOfWarnings; }
-    void resetWarnings() { numberOfWarnings = 0; }
+    QImage* getTrgImagePatched(SubPicture* subPicture);
+    SubPicture* getSubPictureTrg(int index);
+    QVector<int>& getFrameAlpha(int index);
+    QVector<int>& getOriginalFrameAlpha(int index);
+    QVector<int>& getFramePal(int index);
+    QVector<int>& getOriginalFramePal(int index);
 
-    void readXml();
-    void readDVDSubStream(StreamID streamID, bool isVobSub);
-    void readSup();
+    void storeFreeScale(double xScale, double yScale);
+    void storeSettings();
 
 signals:
     void windowTitleChanged(const QString &newTitle);
@@ -398,9 +431,9 @@ signals:
     void progressDialogTextChanged(const QString &newText);
     void progressDialogValueChanged(int value);
     void progressDialogVisibilityChanged(bool visible);
-    void loadingSubtitleFinished();
+    void loadingSubtitleFinished(const QString& errorString);
     void writingSubtitleFinished(const QString& errorString);
-    void moveAllFinished();
+    void moveAllFinished(const QString& errorString);
     void printText(const QString &message);
 
 public slots:
@@ -416,23 +449,22 @@ public slots:
     void printWarning(const QString &message);
 
 private:
-    Substream* substream = 0;
-    SubDVD* subDVD = 0;
-    SupDVD* supDVD = 0;
-    SupXML* supXML = 0;
-    SupHD* supHD = 0;
-    SupBD* supBD = 0;
+    QSharedPointer<Substream> substream;
+    QSharedPointer<SubDVD> subDVD;
+    QSharedPointer<SupDVD> supDVD;
+    QSharedPointer<SupXML> supXML;
+    QSharedPointer<SupHD> supHD;
+    QSharedPointer<SupBD> supBD;
     SubPictureDVD* subVobTrg = 0;
     Bitmap* trgBitmap = 0;
     Bitmap* trgBitmapUnpatched = 0;
     Palette* defaultSourceDVDPalette = 0;
     Palette* currentSourceDVDPalette = 0;
     Palette* trgPal = 0;
-    Palette *defaultDVDPalette;
-    Palette *currentDVDPalette;
-    Props* props = 0;
+    Palette* defaultDVDPalette;
+    Palette* currentDVDPalette;
     QStringList recentFiles;
-    QVector<SubPicture*> subPictures = QVector<SubPicture*>();
+    QVector<SubPicture*> subPictures;
     int maxProgress = 0, lastProgress = 0;
     int numberOfErrors, numberOfWarnings;
     int languageIdx = 0;
@@ -466,6 +498,7 @@ private:
     bool cliMode = false;
     bool exportForced = false;
     bool verbatim = false;
+    bool verbatimSet = false;
     static constexpr bool applyFreeScaleDefault = false;
     bool applyFreeScale = applyFreeScaleDefault;
     static constexpr bool convertFPSdefault = false;
@@ -479,6 +512,7 @@ private:
     bool keepFps = false;
     bool fpsTrgSet = false;
     bool writePGCEditPal = false;
+    bool writePGCEditPalSet = false;
     static constexpr PaletteMode paletteModeDefault = PaletteMode::NEW;
     PaletteMode paletteMode = paletteModeDefault;
     RunType runType;
@@ -499,9 +533,17 @@ private:
     QVector<int> luminanceThreshold = { 210, 160 };
 
     QVector<int> alphaDefault = { 0, 0xf, 0xf, 0xf};
+    void SetValuesFromSettings();
     int countForcedIncluded();
     int countIncluded();
     void writePGCEditPalette(QString filename, Palette* palette);
+    void convertSup(int index, int displayNumber, int displayMax, bool skipScaling);
+    void validateTimes(int index, SubPicture* subPicture, SubPicture* subPictureNext,
+                       SubPicture* subPicturePrevious);
+    QVector<int> getResolution(Resolution resolution);
+    void determineFramePalette(int index);
+    bool updateTrgPic(int index);
+    QImage* getSrcImage(int index);
 };
 
 #endif // SUBTITLEPROCESSOR_H

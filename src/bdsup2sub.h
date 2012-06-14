@@ -25,9 +25,6 @@
 
 class SubtitleProcessor;
 class ProgressDialog;
-class ConversionDialog;
-class ExportDialog;
-class EditDialog;
 
 namespace Ui {
 class BDSup2Sub;
@@ -45,8 +42,9 @@ public:
 
 public slots:
     void changeWindowTitle(QString newTitle);
-    void onLoadingSubtitleFileFinished();
+    void onLoadingSubtitleFileFinished(const QString& errorString);
     void onWritingSubtitleFileFinished(const QString& errorString);
+    void onMoveAllFinished(const QString& errorString);
     void convertSup();
     
 protected:
@@ -85,10 +83,12 @@ private:
     void loadSubtitleFile();
     QString getWarningMessage();
     void warningDialog();
+    void errorDialog(const QString &errorMessage);
     void printWarnings();
     void Redirect_console();
 
 private slots:
+    void showAboutQt();
     void openFile();
     void saveFile();
     void closeFile();

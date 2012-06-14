@@ -31,6 +31,7 @@ class FileBuffer
 {
 public:
     FileBuffer(QString inFileName);
+    ~FileBuffer();
 
     int getDWord(long ofs);
     int getByte(long ofs);
@@ -38,14 +39,13 @@ public:
     void getBytes(long ofs, QVector<uchar> &b, int length);
      long getSize() { return length; }
     int getDWordLE(long ofs);
-    void close();
 
 private:
     void readBuffer(long ofs);
 
     QByteArray buf;
     QString fileName;
-    QFile file;
+    QScopedPointer<QFile> file;
     long offset = 0;
     long offsetEnd = 0;
     long length = 0;

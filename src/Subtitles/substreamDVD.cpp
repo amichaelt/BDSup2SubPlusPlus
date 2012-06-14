@@ -31,6 +31,14 @@ SubstreamDVD::SubstreamDVD()
     srcPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 }
 
+SubstreamDVD::~SubstreamDVD()
+{
+    if (!fileBuffer.isNull())
+    {
+        fileBuffer.reset();
+    }
+}
+
 Palette *SubstreamDVD::decodePalette(SubPictureDVD *pic, Palette *palette, int alphaCrop)
 {
     Palette* miniPalette = new Palette(4, true);
@@ -177,8 +185,7 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 
     if (sizeEven <= 0 || sizeOdd <= 0)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Corrupt buffer offset information");
     }
 
     for (int p = 0; p < pic->rleFragments.size(); ++p)

@@ -56,8 +56,7 @@ SOURCES += main.cpp\
     helpdialog.cpp \
     colordialog.cpp \
     framepalettedialog.cpp \
-    movedialog.cpp \
-    Tools/hr_time.cpp
+    movedialog.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \
@@ -105,8 +104,7 @@ HEADERS  += bdsup2sub.h \
     helpdialog.h \
     colordialog.h \
     framepalettedialog.h \
-    movedialog.h \
-    Tools/hr_time.h
+    movedialog.h
 
 FORMS    += bdsup2sub.ui \
     progressdialog.ui \

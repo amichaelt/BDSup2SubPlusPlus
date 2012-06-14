@@ -49,8 +49,7 @@ void SupDVD::decode(int index)
     }
     else
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Index: %1 out of bounds.\n").arg(QString::number(index));
     }
 }
 
@@ -62,11 +61,6 @@ int SupDVD::getNumFrames()
 bool SupDVD::isForced(int index)
 {
     return subPictures.at(index)->isForced;
-}
-
-void SupDVD::close()
-{
-    fileBuffer->close();
 }
 
 long SupDVD::getEndTime(int index)
@@ -111,14 +105,7 @@ QVector<int>& SupDVD::getOriginalFramePal(int index)
 
 void SupDVD::readIfo()
 {
-    try
-    {
-        fileBuffer = new FileBuffer(ifoFileName);
-    }
-    catch(QString e)
-    {
-        throw e;
-    }
+    fileBuffer.reset(new FileBuffer(ifoFileName));
 
     QVector<uchar> header(IFOheader.size());
 
@@ -128,8 +115,7 @@ void SupDVD::readIfo()
     {
         if (header[i] != IFOheader[i])
         {
-            //TODO: error handling
-            throw 10;
+            throw QString("Not a valid IFO file.");
         }
     }
 
@@ -303,26 +289,17 @@ void SupDVD::writeIfo(QString filename, SubPicture *subPicture, Palette *palette
         NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 2, ycbcr[1]);
         NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 3, ycbcr[2]);
     }
-    QFile out(filename);
-    if (!out.open(QIODevice::WriteOnly))
+    QScopedPointer<QFile> out(new QFile(filename));
+    if (!out->open(QIODevice::WriteOnly))
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("File: '%1' can not be opened for writing.").arg(filename);
     }
-    out.write((char*)buf.data(), buf.size());
-    out.close();
+    out->write((char*)buf.data(), buf.size());
 }
 
 void SupDVD::readAllSupFrames()
 {
-    try
-    {
-        fileBuffer = new FileBuffer(supFileName);
-    }
-    catch(QString e)
-    {
-        throw e;
-    }
+    fileBuffer.reset(new FileBuffer(supFileName));
 
     long ofs = 0;
     long size = fileBuffer->getSize();
@@ -482,8 +459,7 @@ long SupDVD::readSupFrame(long ofs)
     long startOfs = ofs;
     if (fileBuffer->getWord(ofs) != 0x5350)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Missing packet identifier at ofs: %1").arg(QString::number(ofs, 16), 8, QChar('0'));
     }
     // 8 uchars PTS:  system clock reference, but use only the first 4
     SubPictureDVD* pic = new SubPictureDVD();
@@ -501,8 +477,7 @@ long SupDVD::readSupFrame(long ofs)
     ctrlSize = (length - ctrlOfsRel) - 2;		// calculate size of control header
     if (ctrlSize < 0)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Invalid control buffer size");
     }
     ctrlOfs = ctrlOfsRel + ofs;			// absolute offset of control header
     ofs += 2;

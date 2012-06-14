@@ -30,12 +30,19 @@
 #include <QRect>
 
 SupXML::SupXML(QString fileName, SubtitleProcessor* subtitleProcessor) :
-    xmlFileName(fileName),
-    xmlFile(xmlFileName)
+    xmlFileName(fileName)
 {
     pathName = QFileInfo(fileName).absolutePath() + "/";
     this->subtitleProcessor = subtitleProcessor;
     fpsXml = XmlFps(fps);
+}
+
+SupXML::~SupXML()
+{
+    if (!xmlFile.isNull())
+    {
+        xmlFile.reset();
+    }
 }
 
 QImage *SupXML::getImage()
@@ -50,11 +57,9 @@ QImage *SupXML::getImage(Bitmap *bitmap)
 
 void SupXML::decode(int index)
 {
-    QFile imageFile(subPictures.at(index)->fileName);
-    if (!imageFile.exists())
+    if (!QFileInfo(subPictures.at(index)->fileName).exists())
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("File: '%1' not found").arg(subPictures.at(index)->fileName);
     }
     QImage* image = new QImage(subPictures.at(index)->fileName);
     int width = image->width();
@@ -153,14 +158,6 @@ bool SupXML::isForced(int index)
     return subPictures.at(index)->isForced;
 }
 
-void SupXML::close()
-{
-    if (xmlFile.isOpen())
-    {
-        xmlFile.close();
-    }
-}
-
 long SupXML::getEndTime(int index)
 {
     return subPictures.at(index)->endTime;
@@ -179,7 +176,7 @@ SubPicture *SupXML::getSubPicture(int index)
 void SupXML::readAllImages()
 {
     QXmlSimpleReader xmlReader;
-    QXmlInputSource *source = new QXmlInputSource(&xmlFile);
+    QXmlInputSource *source = new QXmlInputSource(xmlFile.data());
 
     XmlHandler *handler = new XmlHandler(this);
     xmlReader.setContentHandler(handler);
@@ -187,8 +184,7 @@ void SupXML::readAllImages()
 
     if (!xmlReader.parse(source))
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Failed to parse file: '%1'").arg(xmlFileName);
     }
 
     subtitleProcessor->print(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
@@ -205,20 +201,19 @@ void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
     double fps = subtitleProcessor->getFPSTrg();
     double fpsXml = XmlFps(fps);
     long t;
-    QFile out(filename);
+    QScopedPointer<QFile> out(new QFile(filename));
     QString name = QFileInfo(filename).completeBaseName();
-    if (!out.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!out->open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("File: '%1' can not be opened for reading.").arg(filename);
     }
-    out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    out.write("<BDN Version=\"0.93\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"BD-03-006-0093b BDN File Format.xsd\">\n");
-    out.write("  <Description>\n");
-    out.write(QString("    <Name Title=\"" + name + "\" Content=\"\"/>\n").toAscii());
-    out.write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toAscii());
+    out->write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    out->write("<BDN Version=\"0.93\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"BD-03-006-0093b BDN File Format.xsd\">\n");
+    out->write("  <Description>\n");
+    out->write(QString("    <Name Title=\"" + name + "\" Content=\"\"/>\n").toAscii());
+    out->write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toAscii());
     QString res = subtitleProcessor->getResolutionNameXml((int)subtitleProcessor->getOutputResolution());
-    out.write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 6) + "\" DropFrame=\"False\"/>\n").toAscii());
+    out->write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 6) + "\" DropFrame=\"False\"/>\n").toAscii());
     t = pics[0]->startTime;
     if (fps != fpsXml)
     {
@@ -231,9 +226,9 @@ void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
         t = ((t * 2000) + 1001) / 2002;
     }
     QString te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
-    out.write(QString("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + QString::number(pics.size()) + "\"/>\n").toAscii());
-    out.write("  </Description>\n");
-    out.write("  <Events>\n");
+    out->write(QString("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + QString::number(pics.size()) + "\"/>\n").toAscii());
+    out->write("  </Description>\n");
+    out->write("  <Events>\n");
     for (int idx = 0; idx < pics.size(); ++idx)
     {
         SubPicture* p = pics[idx];
@@ -250,16 +245,15 @@ void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
         }
         te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
         QString forced = p->isForced ? "True": "False";
-        out.write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toAscii());
+        out->write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toAscii());
 
         QString pname = QFileInfo(getPNGname(name, idx + 1)).fileName();
-        out.write(QString("      <Graphic Width=\"" + QString::number(p->getImageWidth()) + "\" Height=\"" + QString::number(p->getImageHeight()) +
+        out->write(QString("      <Graphic Width=\"" + QString::number(p->getImageWidth()) + "\" Height=\"" + QString::number(p->getImageHeight()) +
                           "\" X=\"" + QString::number(p->getOfsX()) + "\" Y=\"" + QString::number(p->getOfsY()) + "\">" + pname + "</Graphic>\n").toAscii());
-        out.write("    </Event>\n");
+        out->write("    </Event>\n");
     }
-    out.write("  </Events>\n");
-    out.write("</BDN>\n");
-    out.close();
+    out->write("  </Events>\n");
+    out->write("</BDN>\n");
 }
 
 double SupXML::XmlFps(double fps)
@@ -377,10 +371,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         {
             bool ok;
             int n = at.toInt(&ok);
-            if (!ok)
-            {
-                n = -1;
-            }
+            n = ok ? n : -1;
             if (n > 0)
             {
                 parent->numToImport = n;
@@ -443,31 +434,19 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
     {
         bool ok;
         int width = atts.value("Width").toInt(&ok);
-        if (!ok)
-        {
-            width = -1;
-        }
+        width = ok ? width : -1;
         subPicture->setImageWidth(width);
 
         int height = atts.value("Height").toInt(&ok);
-        if (!ok)
-        {
-            height = -1;
-        }
+        height = ok ? height : -1;
         subPicture->setImageHeight(height);
 
         int x = atts.value("X").toInt(&ok);
-        if (!ok)
-        {
-            x = -1;
-        }
+        x = ok ? x : -1;
         subPicture->setOfsX(x);
 
         int y = atts.value("Y").toInt(&ok);
-        if (!ok)
-        {
-            y = -1;
-        }
+        y = ok ? y : -1;
         subPicture->setOfsY(y);
         subPicture->setOriginal();
     } break;

@@ -20,6 +20,7 @@
 #define SUBSTREAMDVD_H
 
 #include <QVector>
+#include <QScopedPointer>
 
 class Bitmap;
 class Palette;
@@ -30,8 +31,10 @@ class SubtitleProcessor;
 
 class SubstreamDVD
 {
+
 public:
     SubstreamDVD();
+    ~SubstreamDVD();
     virtual QVector<int>& getFrameAlpha(int index) = 0;
     virtual QVector<int>& getFramePal(int index) = 0;
     virtual QVector<int>& getOriginalFrameAlpha(int index) = 0;
@@ -45,7 +48,7 @@ public:
 
 protected:
     Palette *srcPalette;
-    FileBuffer *fileBuffer = 0;
+    QScopedPointer<FileBuffer> fileBuffer;
     Palette *palette = 0;
     Bitmap *bitmap = 0;
     SubtitleProcessor* subtitleProcessor = 0;

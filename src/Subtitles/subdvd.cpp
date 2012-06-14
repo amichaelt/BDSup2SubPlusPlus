@@ -33,8 +33,7 @@
 #include <QVector>
 #include <QMessageBox>
 
-SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor) :
-    idxFile(idxFileName)
+SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor)
 {
     this->subtitleProcessor = subtitleProcessor;
     this->subFileName = subFileName;
@@ -61,8 +60,7 @@ void SubDVD::decode(int index)
     }
     else
     {
-        //implement error handling
-        return;
+        throw QString("Index: %1 out of bounds.\n").arg(QString::number(index));
     }
 }
 
@@ -74,11 +72,6 @@ int SubDVD::getNumFrames()
 bool SubDVD::isForced(int index)
 {
     return subPictures.at(index)->isForced;
-}
-
-void SubDVD::close()
-{
-    fileBuffer->close();
 }
 
 long SubDVD::getEndTime(int index)
@@ -137,128 +130,118 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
     int packHeaderSize;
     bool firstPackFound = false;
 
-    try
-    {
-        do {
-            // 4 bytes:  packet identifier 0x000001ba
-            long startOfs = ofs;
-            if (fileBuffer->getDWord(ofs) != 0x000001ba)
-            {
-                //TODO: error handling
-                throw 10;
-            }
+    do {
+        // 4 bytes:  packet identifier 0x000001ba
+        long startOfs = ofs;
+        if (fileBuffer->getDWord(ofs) != 0x000001ba)
+        {
+            throw QString("Missing packet identifier at ofs %1").arg(QString::number(ofs, 16), 8, QChar('0'));
+        }
 
-            // 6 bytes:  system clock reference
-            // 3 bytes:  multiplexer rate
-            // 1 byte:   stuffing info
-            int stuffOfs = fileBuffer->getByte(ofs += 13) & 7;
+        // 6 bytes:  system clock reference
+        // 3 bytes:  multiplexer rate
+        // 1 byte:   stuffing info
+        int stuffOfs = fileBuffer->getByte(ofs += 13) & 7;
 
-            // 4 bytes:  sub packet ID 0x000001bd
-            if (fileBuffer->getDWord(ofs += (1 + stuffOfs)) != 0x000001bd)
-            {
-                //TODO: error handling
-                throw 10;
-            }
-            // 2 bytes:  packet length (number of bytes after this entry)
-            length = fileBuffer->getWord(ofs += 4);
-            nextOfs = ofs + 2 + length;
+        // 4 bytes:  sub packet ID 0x000001bd
+        if (fileBuffer->getDWord(ofs += (1 + stuffOfs)) != 0x000001bd)
+        {
+            throw QString("Missing packet identifier at ofs %1").arg(QString::number(ofs, 16), 8, QChar('0'));
+        }
+        // 2 bytes:  packet length (number of bytes after this entry)
+        length = fileBuffer->getWord(ofs += 4);
+        nextOfs = ofs + 2 + length;
 
-            // 2 bytes:  packet type
-            ofs += 2;
-            packHeaderSize = (int)(ofs - startOfs);
-            bool firstPack = ((fileBuffer->getByte(++ofs) & 0x80) == 0x80);
+        // 2 bytes:  packet type
+        ofs += 2;
+        packHeaderSize = (int)(ofs - startOfs);
+        bool firstPack = ((fileBuffer->getByte(++ofs) & 0x80) == 0x80);
 
-            // 1 byte    pts length
-            int ptsLength = fileBuffer->getByte(ofs += 1);
-            ofs += (1 + ptsLength); // skip PTS and stream ID
-            int packetStreamID = fileBuffer->getByte(ofs++) & 0xf;
-            if (packetStreamID != streamID)
-            {
-                // packet doesn't belong to stream -> skip
-                if ((nextOfs % 0x800) != 0)
-                {
-                    ofs = ((nextOfs / 0x800) + 1) * 0x800;
-
-                    subtitleProcessor->printWarning(QString("Offset to next fragment is invalid. Fixed to: %1\n")
-                                                    .arg(QString::number(ofs, 16), 8, QChar('0')));
-                }
-                else
-                {
-                    ofs = nextOfs;
-                }
-                ctrlOfs += 0x800;
-                continue;
-            }
-            int headerSize = (int)(ofs - startOfs); // only valid for additional packets
-            if (firstPack && ptsLength >= 5)
-            {
-                int size = fileBuffer->getWord(ofs);
-                ofs += 2;
-                ctrlOfsRel = fileBuffer->getWord(ofs);
-                rleSize = ctrlOfsRel - 2;             // calculate size of RLE buffer
-                ctrlSize = (size - ctrlOfsRel) - 2;       // calculate size of control header
-                if (ctrlSize < 0)
-                {
-                    //TODO: error handling
-                    throw 10;
-                }
-                ctrlHeader = QVector<uchar>(ctrlSize);
-                ctrlOfs = ctrlOfsRel + ofs; // might have to be corrected for multiple packets
-                ofs += 2;
-                headerSize = (int)(ofs - startOfs);
-                firstPackFound = true;
-            }
-            else
-            {
-                if (firstPackFound)
-                {
-                    ctrlOfs += headerSize; // fix absolute offset by adding header bytes
-                }
-                else
-                {
-                    subtitleProcessor->printWarning(QString("Invalid fragment skipped at ofs %1\n")
-                                                    .arg(QString::number(startOfs, 16), 8, QChar('0')));
-                }
-            }
-
-            // check if control header is (partly) in this packet
-            int diff = (int)((nextOfs - ctrlOfs) - ctrlHeaderCopied);
-            if (diff < 0)
-            {
-                diff = 0;
-            }
-            int copied = ctrlHeaderCopied;
-            for (int i = 0; (i < diff) && (ctrlHeaderCopied < ctrlSize); ++i)
-            {
-                ctrlHeader.replace(ctrlHeaderCopied, (uchar)fileBuffer->getByte(ctrlOfs + i + copied));
-                ++ctrlHeaderCopied;
-            }
-            rleFrag = new ImageObjectFragment();
-            rleFrag->imageBufferOfs = ofs;
-            rleFrag->imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
-            pic->rleFragments.push_back(rleFrag);
-
-            rleBufferFound += rleFrag->imagePacketSize;
-
-            if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
+        // 1 byte    pts length
+        int ptsLength = fileBuffer->getByte(ofs += 1);
+        ofs += (1 + ptsLength); // skip PTS and stream ID
+        int packetStreamID = fileBuffer->getByte(ofs++) & 0xf;
+        if (packetStreamID != streamID)
+        {
+            // packet doesn't belong to stream -> skip
+            if ((nextOfs % 0x800) != 0)
             {
                 ofs = ((nextOfs / 0x800) + 1) * 0x800;
 
-                subtitleProcessor->printWarning(QString("Offset to next fragment is invalid. Fixed to: %1")
+                subtitleProcessor->printWarning(QString("Offset to next fragment is invalid. Fixed to: %1\n")
                                                 .arg(QString::number(ofs, 16), 8, QChar('0')));
-
-                rleBufferFound += ofs-nextOfs;
             }
             else
             {
                 ofs = nextOfs;
             }
-        } while ( ofs < endOfs && ctrlHeaderCopied < ctrlSize);
-    }
-    catch (QString e)
-    {
-        subtitleProcessor->printError(QString(e));
-    }
+            ctrlOfs += 0x800;
+            continue;
+        }
+        int headerSize = (int)(ofs - startOfs); // only valid for additional packets
+        if (firstPack && ptsLength >= 5)
+        {
+            int size = fileBuffer->getWord(ofs);
+            ofs += 2;
+            ctrlOfsRel = fileBuffer->getWord(ofs);
+            rleSize = ctrlOfsRel - 2;             // calculate size of RLE buffer
+            ctrlSize = (size - ctrlOfsRel) - 2;       // calculate size of control header
+            if (ctrlSize < 0)
+            {
+                throw QString("Invalid control buffer size");
+            }
+            ctrlHeader = QVector<uchar>(ctrlSize);
+            ctrlOfs = ctrlOfsRel + ofs; // might have to be corrected for multiple packets
+            ofs += 2;
+            headerSize = (int)(ofs - startOfs);
+            firstPackFound = true;
+        }
+        else
+        {
+            if (firstPackFound)
+            {
+                ctrlOfs += headerSize; // fix absolute offset by adding header bytes
+            }
+            else
+            {
+                subtitleProcessor->printWarning(QString("Invalid fragment skipped at ofs %1\n")
+                                                .arg(QString::number(startOfs, 16), 8, QChar('0')));
+            }
+        }
+
+        // check if control header is (partly) in this packet
+        int diff = (int)((nextOfs - ctrlOfs) - ctrlHeaderCopied);
+        if (diff < 0)
+        {
+            diff = 0;
+        }
+        int copied = ctrlHeaderCopied;
+        for (int i = 0; (i < diff) && (ctrlHeaderCopied < ctrlSize); ++i)
+        {
+            ctrlHeader.replace(ctrlHeaderCopied, (uchar)fileBuffer->getByte(ctrlOfs + i + copied));
+            ++ctrlHeaderCopied;
+        }
+        rleFrag = new ImageObjectFragment();
+        rleFrag->imageBufferOfs = ofs;
+        rleFrag->imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
+        pic->rleFragments.push_back(rleFrag);
+
+        rleBufferFound += rleFrag->imagePacketSize;
+
+        if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
+        {
+            ofs = ((nextOfs / 0x800) + 1) * 0x800;
+
+            subtitleProcessor->printWarning(QString("Offset to next fragment is invalid. Fixed to: %1")
+                                            .arg(QString::number(ofs, 16), 8, QChar('0')));
+
+            rleBufferFound += ofs-nextOfs;
+        }
+        else
+        {
+            ofs = nextOfs;
+        }
+    } while ( ofs < endOfs && ctrlHeaderCopied < ctrlSize);
 
     if (ctrlHeaderCopied != ctrlSize)
     {
@@ -467,14 +450,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
 void SubDVD::readAllSubFrames()
 {
-    try
-    {
-        fileBuffer = new FileBuffer(subFileName);
-    }
-    catch(QString e)
-    {
-        throw e;
-    }
+    fileBuffer.reset(new FileBuffer(subFileName));
 
     for (int i = 0; i < subPictures.size(); ++i)
     {
@@ -789,13 +765,13 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
 
 void SubDVD::readIdx()
 {
-    if (!idxFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    QScopedPointer<QFile> idxFile(new QFile(idxFileName));
+    if (!idxFile->open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Idx file '%1' can not be opened for reading.").arg(idxFileName);
     }
 
-    QTextStream idxTextStream(&idxFile);
+    QTextStream idxTextStream(idxFile.data());
     QString inString;
     int temp;
     int langIdx = 0;
@@ -817,31 +793,28 @@ void SubDVD::readIdx()
         QString key(inString.left(position).trimmed().toLower());
         QString value(inString.mid(position + 1, inString.size() - 1).trimmed());
         QStringList keyValue;
-
         bool ok;
+
         // size (e.g. "size: 720x576")
         if (key == "size")
         {
             keyValue = value.split("x", QString::SkipEmptyParts);
             if (keyValue.isEmpty() || keyValue.size() <= 1)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal size: %1").arg(value);
             }
             temp = keyValue[0].toInt(&ok);
             temp = ok ? temp : -1;
             if (temp < 2)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal screen width: %1").arg(keyValue[0]);
             }
             screenWidth = temp;
             temp = keyValue[1].toInt(&ok);
-            temp = ok ? temp: -1;
+            temp = ok ? temp : -1;
             if (temp < 2)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal screen height: %1").arg(keyValue[1]);
             }
             screenHeight = temp;
             continue;
@@ -853,23 +826,20 @@ void SubDVD::readIdx()
             keyValue = value.split(",", QString::SkipEmptyParts);
             if (keyValue.isEmpty() || keyValue.size() <= 1)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal origin: %1").arg(value);
             }
             temp = keyValue[0].toInt(&ok);
-            temp = ok ? temp: -1;
+            temp = ok ? temp : -1;
             if (temp < 0)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal x origin: %1").arg(keyValue[0]);
             }
             ofsXglob = temp;
-            temp =keyValue[1].toInt(&ok);
-            temp = ok ? temp: -1;
+            temp = keyValue[1].toInt(&ok);
+            temp = ok ? temp : -1;
             if (temp < 0)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal y origin: %1").arg(keyValue[1]);
             }
             ofsYglob = temp;
             continue;
@@ -909,15 +879,14 @@ void SubDVD::readIdx()
         if (key == "time offset")
         {
             temp = value.toInt(&ok);
-            temp = ok ? temp: -1;
+            temp = ok ? temp : -1;
             if (temp < 0)
             {
                 temp = (int) TimeUtil::timeStrToPTS(value);
             }
             if (temp < 0)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal time offset: %1").arg(QString::number(temp));
             }
             delayGlob = temp * 90; //ms -> 90khz
             continue;
@@ -935,18 +904,16 @@ void SubDVD::readIdx()
             QStringList paletteValues = value.split(",");
             if (paletteValues.isEmpty() || paletteValues.size() < 1 || paletteValues.size() > 16)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal palette definition: %1").arg(value);
             }
             for (int i = 0; i < paletteValues.size(); ++i)
             {
                 int color = -1;
-                bool ok;
                 temp = paletteValues[i].trimmed().toInt(&ok, 16);
-                if (!ok)
+                temp = ok ? temp : -1;
+                if (temp == -1)
                 {
-                    //TODO: error handling
-                    throw 10;
+                    throw QString("Illegal palette entry: %1").arg(paletteValues[i]);
                 }
                 color = temp;
                 srcPalette->setARGB(i, color);
@@ -964,11 +931,10 @@ void SubDVD::readIdx()
         if (key == "langidx")
         {
             temp = value.toInt(&ok);
-            temp = ok ? temp: -1;
+            temp = ok ? temp : -1;
             if (temp < 0)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal language idx: %1").arg(temp);
             }
             langIdx = temp;
             continue;
@@ -1013,11 +979,10 @@ void SubDVD::readIdx()
                 continue;
             }
             temp = vals[1].toInt(&ok);
-            temp = ok ? temp: -1;
+            temp = ok ? temp : -1;
             if (temp < 0)
             {
-                //TODO: error handling
-                throw 10;
+                throw QString("Illegal language index: %1").arg(temp);
             }
             if (temp != langIdx)
             {
@@ -1042,29 +1007,25 @@ void SubDVD::readIdx()
                 QStringList vals = value.split(',', QString::SkipEmptyParts);
                 if (vals.isEmpty() || vals.size() <= 1)
                 {
-                    //TODO: error handling
-                    throw 10;
+                    throw QString("Illegal timestamp entry: %1").arg(value);
                 }
                 vs = vals[0];
                 long time = TimeUtil::timeStrToPTS(vs);
                 if (time < 0)
                 {
-                    //TODO: error handling
-                    throw 10;
+                    throw QString("Illegal timestamp: %1").arg(vals[0]);
                 }
                 vs = vals[1].trimmed().toLower();
                 vals = vs.split(':', QString::SkipEmptyParts);
                 if (vals.isEmpty() || vals.size() <= 1)
                 {
-                    //TODO: error handling
-                    throw 10;
+                    throw QString("Missing filepos: %1").arg(value);
                 }
                 bool ok;
                 long hex = vals[1].trimmed().toLong(&ok, 16);
                 if (!ok)
                 {
-                    //TODO: error handling
-                    throw 10;
+                    throw QString("Illegal filepos: %1").arg(vals[1]);
                 }
                 SubPictureDVD* pic = new SubPictureDVD;
                 pic->offset = hex;
@@ -1076,83 +1037,79 @@ void SubDVD::readIdx()
         }
     }
 
-    idxFile.close();
-
     emit maxProgressChanged(subPictures.size());
 }
 
 void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> offsets, QVector<int> timestamps, Palette *palette)
 {
-    QFile out(filename);
-    if (!out.open(QIODevice::WriteOnly | QIODevice::Text))
+    QScopedPointer<QFile> out(new QFile(filename));
+    if (!out->open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("File: '%1' can not be opened for writing.").arg(filename);
     }
 
-    out.write("# VobSub index file, v7 (do not modify this line!)\n");
-    out.write(QString("# Created by " + progNameVer + "\n").toAscii());
-    out.write("\n");
-    out.write("# Frame size\n");
-    out.write(QString("size: " + QString::number(subPicture->width) + "x" + QString::number((subPicture->height - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toAscii());
-    out.write("\n");
-    out.write("# Origin - upper-left corner\n");
-    out.write("org: 0, 0\n");
-    out.write("\n");
-    out.write("# Scaling\n");
-    out.write("scale: 100%, 100%\n");
-    out.write("\n");
-    out.write("# Alpha blending\n");
-    out.write("alpha: 100%\n");
-    out.write("\n");
-    out.write("# Smoothing\n");
-    out.write("smooth: OFF\n");
-    out.write("\n");
-    out.write("# Fade in/out in milliseconds\n");
-    out.write("fadein/out: 0, 0\n");
-    out.write("\n");
-    out.write("# Force subtitle placement relative to (org.x, org.y)\n");
-    out.write("align: OFF at LEFT TOP\n");
-    out.write("\n");
-    out.write("# For correcting non-progressive desync. (in millisecs or hh:mm:ss:ms)\n");
-    out.write("time offset: 0\n");
-    out.write("\n");
-    out.write("# ON: displays only forced subtitles, OFF: shows everything\n");
-    out.write("forced subs: OFF\n");
-    out.write("\n");
-    out.write("# The palette of the generated file\n");
-    out.write("palette: ");
+    out->write("# VobSub index file, v7 (do not modify this line!)\n");
+    out->write(QString("# Created by " + progNameVer + "\n").toAscii());
+    out->write("\n");
+    out->write("# Frame size\n");
+    out->write(QString("size: " + QString::number(subPicture->width) + "x" + QString::number((subPicture->height - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toAscii());
+    out->write("\n");
+    out->write("# Origin - upper-left corner\n");
+    out->write("org: 0, 0\n");
+    out->write("\n");
+    out->write("# Scaling\n");
+    out->write("scale: 100%, 100%\n");
+    out->write("\n");
+    out->write("# Alpha blending\n");
+    out->write("alpha: 100%\n");
+    out->write("\n");
+    out->write("# Smoothing\n");
+    out->write("smooth: OFF\n");
+    out->write("\n");
+    out->write("# Fade in/out in milliseconds\n");
+    out->write("fadein/out: 0, 0\n");
+    out->write("\n");
+    out->write("# Force subtitle placement relative to (org.x, org.y)\n");
+    out->write("align: OFF at LEFT TOP\n");
+    out->write("\n");
+    out->write("# For correcting non-progressive desync. (in millisecs or hh:mm:ss:ms)\n");
+    out->write("time offset: 0\n");
+    out->write("\n");
+    out->write("# ON: displays only forced subtitles, OFF: shows everything\n");
+    out->write("forced subs: OFF\n");
+    out->write("\n");
+    out->write("# The palette of the generated file\n");
+    out->write("palette: ");
     //Palette pal = Core.getCurrentDVDPalette();
     for (int i = 0; i < palette->getSize(); ++i)
     {
         QVector<int> rgb = palette->getRGB(i);
         QRgb val = qRgb(rgb[0], rgb[1], rgb[2]);
         QString value = QString("%1").arg(QString::number(val, 16), 6, QChar('0'));
-        out.write(value.mid(2).toAscii());
+        out->write(value.mid(2).toAscii());
         if (i != palette->getSize() - 1)
         {
-            out.write(", ");
+            out->write(", ");
         }
     }
-    out.write("\n");
-    out.write("\n");
-    out.write("# Custom colors (transp idxs and the four colors)\n");
-    out.write("custom colors: OFF, tridx: 1000, colors: 000000, 444444, 888888, cccccc\n");
-    out.write("\n");
-    out.write("# Language index in use\n");
-    out.write("langidx: 0\n");
-    out.write("\n");
-    out.write(QString("# " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toAscii());
-    out.write(QString("id: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][1] + ", index: 0\n").toAscii());
-    out.write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x\n");
-    out.write(QString("# alt: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toAscii());
-    out.write("# Vob/Cell ID: 1, 1 (PTS: 0)\n");
+    out->write("\n");
+    out->write("\n");
+    out->write("# Custom colors (transp idxs and the four colors)\n");
+    out->write("custom colors: OFF, tridx: 1000, colors: 000000, 444444, 888888, cccccc\n");
+    out->write("\n");
+    out->write("# Language index in use\n");
+    out->write("langidx: 0\n");
+    out->write("\n");
+    out->write(QString("# " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toAscii());
+    out->write(QString("id: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][1] + ", index: 0\n").toAscii());
+    out->write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x\n");
+    out->write(QString("# alt: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toAscii());
+    out->write("# Vob/Cell ID: 1, 1 (PTS: 0)\n");
     for (int i = 0; i < timestamps.size(); ++i)
     {
-        out.write(QString("timestamp: " + TimeUtil::ptsToTimeStrIdx(timestamps[i])).toAscii());
+        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStrIdx(timestamps[i])).toAscii());
         QString value = QString("%1").arg(QString::number(offsets[i], 16), 9, QChar('0'));
-        out.write(", filepos: " +  value.toAscii());
-        out.write("\n");
+        out->write(", filepos: " +  value.toAscii());
+        out->write("\n");
     }
-    out.close();
 }

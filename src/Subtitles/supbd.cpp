@@ -37,6 +37,14 @@ SupBD::SupBD(QString fileName, SubtitleProcessor* subtitleProcessor) :
     this->subtitleProcessor = subtitleProcessor;
 }
 
+SupBD::~SupBD()
+{
+    if (!fileBuffer.isNull())
+    {
+        fileBuffer.reset();
+    }
+}
+
 QImage *SupBD::getImage()
 {
     return bitmap->getImage(palette);
@@ -55,8 +63,7 @@ void SupBD::decode(int index)
     }
     else
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Index: %1 out of bounds.\n").arg(QString::number(index));
     }
 }
 
@@ -68,14 +75,6 @@ int SupBD::getNumFrames()
 bool SupBD::isForced(int index)
 {
     return subPictures.at(index)->isForced;
-}
-
-void SupBD::close()
-{
-    if (fileBuffer != 0)
-    {
-        fileBuffer->close();
-    }
 }
 
 long SupBD::getEndTime(int index)
@@ -101,14 +100,7 @@ SubPicture *SupBD::getSubPicture(int index)
 
 void SupBD::readAllSupFrames()
 {
-    try
-    {
-        fileBuffer = new FileBuffer(supFileName);
-    }
-    catch(QString e)
-    {
-        throw e;
-    }
+    fileBuffer.reset(new FileBuffer(supFileName));
 
     int index = 0;
     int bufsize = (int)fileBuffer->getSize();
@@ -136,11 +128,8 @@ void SupBD::readAllSupFrames()
             {
                 if (subPictures.size() == 0)
                 {
-                    throw 10;
+                    throw QString("Cancelled by user!");
                 }
-                subtitleProcessor->printError(QString("Cancelled by user!\n"));
-                subtitleProcessor->print(QString("Probably not all captions imported due to error.\n"));
-                return;
             }
             emit currentProgressChanged(index);
             segment = readSegment(index);
@@ -1117,8 +1106,7 @@ Palette *SupBD::decodePalette(SubPictureBD *subPicture)
     QVector<PaletteInfo*>* pl = subPicture->palettes.at(subPicture->getImgObj()->paletteID);
     if (pl == 0)
     {
-        //TODO: error handling
-        throw 10;
+        throw QString("Palette ID out of bounds.");
     }
 
     Palette* palette = new Palette(256, subtitleProcessor->usesBT601());
@@ -1199,106 +1187,99 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
     int size = 0;
     int xpos = 0;
 
-    try
+    // just for multi-packet support, copy all of the image data in one common buffer
+    QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj()->bufferSize);
+    index = 0;
+    for (int p = 0; p < subPicture->getImgObj()->fragmentList.size(); ++p)
     {
-        // just for multi-packet support, copy all of the image data in one common buffer
-        QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj()->bufferSize);
-        index = 0;
-        for (int p = 0; p < subPicture->getImgObj()->fragmentList.size(); ++p)
+        // copy data of all packet to one common buffer
+        fragment = subPicture->getImgObj()->fragmentList.at(p);
+        for (int i = 0; i < fragment->imagePacketSize; ++i)
         {
-            // copy data of all packet to one common buffer
-            fragment = subPicture->getImgObj()->fragmentList.at(p);
-            for (int i = 0; i < fragment->imagePacketSize; ++i)
-            {
-                buf[index + i] = (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i);
-            }
-            index += fragment->imagePacketSize;
+            buf[index + i] = (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i);
         }
+        index += fragment->imagePacketSize;
+    }
 
-        index = 0;
+    index = 0;
 
-        do
+    do
+    {
+        b = buf[index++] & 0xff;
+        if (b == 0)
         {
             b = buf[index++] & 0xff;
             if (b == 0)
             {
-                b = buf[index++] & 0xff;
-                if (b == 0)
+                // next line
+                ofs = (ofs / (w + (bm->getImg()->bytesPerLine() - w))) * (w + (bm->getImg()->bytesPerLine() - w));
+                if (xpos < (w + (bm->getImg()->bytesPerLine() - w)))
                 {
-                    // next line
-                    ofs = (ofs / (w + (bm->getImg()->bytesPerLine() - w))) * (w + (bm->getImg()->bytesPerLine() - w));
-                    if (xpos < (w + (bm->getImg()->bytesPerLine() - w)))
-                    {
-                        ofs += (w + (bm->getImg()->bytesPerLine() - w));
-                    }
-                    xpos = 0;
+                    ofs += (w + (bm->getImg()->bytesPerLine() - w));
                 }
-                else
-                {
-                    if ((b & 0xC0) == 0x40)
-                    {
-                        // 00 4x xx -> xxx zeroes
-                        size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
-
-                        uchar* pixels = bm->getImg()->bits();
-                        for (int i = 0; i < size; ++i)
-                        {
-                            pixels[ofs++] = 0; /*(uchar)b;*/
-                        }
-                        xpos += size;
-                    }
-                    else if ((b & 0xC0) == 0x80)
-                    {
-                        // 00 8x yy -> x times value y
-                        size = (b - 0x80);
-                        b = buf[index++] & 0xff;
-
-                        uchar* pixels = bm->getImg()->bits();
-                        for (int i = 0; i < size; ++i)
-                        {
-                            pixels[ofs++] = (uchar)b;
-                        }
-                        xpos += size;
-                    }
-                    else if  ((b & 0xC0) != 0)
-                    {
-                        // 00 cx yy zz -> xyy times value z
-                        size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
-                        b = buf[index++] & 0xff;
-
-                        uchar* pixels = bm->getImg()->bits();
-                        for (int i = 0; i < size; ++i)
-                        {
-                            pixels[ofs++] = (uchar)b;
-                        }
-                        xpos += size;
-                    }
-                    else
-                    {
-                        uchar* pixels = bm->getImg()->bits();
-                        // 00 xx -> xx times 0
-                        for (int i = 0; i < b; ++i)
-                        {
-                            pixels[ofs++] = 0;
-                        }
-                        xpos += b;
-                    }
-                }
+                xpos = 0;
             }
             else
             {
-                uchar* pixels = bm->getImg()->bits();
-                pixels[ofs++] = (uchar)b;
-                xpos++;
-            }
-        } while (index < buf.size());
+                if ((b & 0xC0) == 0x40)
+                {
+                    // 00 4x xx -> xxx zeroes
+                    size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
 
-        return bm;
-    }
-    catch (QString e)
-    {
-        throw e;
-    }
+                    uchar* pixels = bm->getImg()->bits();
+                    for (int i = 0; i < size; ++i)
+                    {
+                        pixels[ofs++] = 0; /*(uchar)b;*/
+                    }
+                    xpos += size;
+                }
+                else if ((b & 0xC0) == 0x80)
+                {
+                    // 00 8x yy -> x times value y
+                    size = (b - 0x80);
+                    b = buf[index++] & 0xff;
+
+                    uchar* pixels = bm->getImg()->bits();
+                    for (int i = 0; i < size; ++i)
+                    {
+                        pixels[ofs++] = (uchar)b;
+                    }
+                    xpos += size;
+                }
+                else if  ((b & 0xC0) != 0)
+                {
+                    // 00 cx yy zz -> xyy times value z
+                    size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
+                    b = buf[index++] & 0xff;
+
+                    uchar* pixels = bm->getImg()->bits();
+                    for (int i = 0; i < size; ++i)
+                    {
+                        pixels[ofs++] = (uchar)b;
+                    }
+                    xpos += size;
+                }
+                else
+                {
+                    uchar* pixels = bm->getImg()->bits();
+                    // 00 xx -> xx times 0
+                    for (int i = 0; i < b; ++i)
+                    {
+                        pixels[ofs++] = 0;
+                    }
+                    xpos += b;
+                }
+            }
+        }
+        else
+        {
+            uchar* pixels = bm->getImg()->bits();
+            pixels[ofs++] = (uchar)b;
+            xpos++;
+        }
+    } while (index < buf.size());
+
+    return bm;
 }
 
 double SupBD::getFpsFromID(int id)

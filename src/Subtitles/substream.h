@@ -20,6 +20,7 @@
 #define SUBSTREAM_H
 
 #include <QVector>
+#include <QSharedData>
 
 class Palette;
 class QImage;
@@ -29,7 +30,7 @@ class SubPictureDVD;
 class FileBuffer;
 class SubtitleProcessor;
 
-class Substream
+class Substream : public QSharedData
 {
 public:
     virtual Palette *getPalette() = 0;
@@ -41,7 +42,6 @@ public:
     virtual int getNumFrames() = 0;
     virtual int getNumForcedFrames() = 0;
     virtual bool isForced(int index) = 0;
-    virtual void close() = 0;
     virtual long getEndTime(int index) = 0;
     virtual long getStartTime(int index) = 0;
     virtual long getStartOffset(int index) = 0;

@@ -44,7 +44,6 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
     bool isForced(int index);
-    void close();
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index);
@@ -70,7 +69,7 @@ private:
     QString supFileName;
     QString ifoFileName;
 
-    QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
+    QVector<SubPictureDVD*> subPictures;
 
     const QVector<uchar> IFOheader = { 0x44, 0x56, 0x44, 0x56, 0x49, 0x44, 0x45, 0x4F, 0x2D, 0x56, 0x54, 0x53 };
 
