@@ -47,8 +47,6 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QSettings* settings;
-
     //Rename INI file to name matching the new program name
     QString oldIniFilePath = QString("%1/%2").arg(QDir::currentPath()).arg(oldIniName);
     QString newIniFilePath = QString("%1/%2").arg(QDir::currentPath()).arg(iniName);
@@ -66,7 +64,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
         {
             fixPath = settings->value("loadPath").toString();
             fixPath.insert(1, ":");
-            settings->setValue("loadPath", fixPath);
+            settings->setValue("loadPath", QVariant(fixPath));
         }
         for (auto key : settings->allKeys())
         {
@@ -74,7 +72,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
             {
                 fixPath = settings->value(key).toString();
                 fixPath.insert(1, ":");
-                settings->setValue(key, fixPath);
+                settings->setValue(key, QVariant(fixPath));
             }
         }
         settings->sync();
@@ -84,6 +82,25 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     {
         settings = new QSettings(newIniFilePath, QSettings::IniFormat);
     }
+
+    QRect geometry = this->geometry();
+    int w = settings->value("frameWidth", 800).toInt();
+    int h = settings->value("frameHeight", 600).toInt();
+    setMinimumWidth(w);
+    setMinimumHeight(h);
+    geometry.setWidth(w);
+    geometry.setHeight(h);
+
+    QPoint center = QDesktopWidget().availableGeometry().center();
+    center.setX(center.x() - (geometry.width() / 2));
+    center.setY(center.y() - (geometry.height() / 2));
+    geometry.setX(settings->value("framePosX", center.x()).toInt());
+    geometry.setY(settings->value("framePosY", center.y()).toInt());
+
+    setGeometry(geometry);
+
+    loadPath = settings->value("loadPath", "").toString();
+    colorPath = settings->value("colorPath", "").toString();
 
     okBackground = new QPalette(ui->subtitleNumberComboBox->palette());
     errorBackground = new QPalette();
@@ -132,6 +149,24 @@ BDSup2Sub::~BDSup2Sub()
     delete ui;
 }
 
+void BDSup2Sub::closeEvent(QCloseEvent *event)
+{
+    if (!isMaximized())
+    {
+        QRect geometry = this->geometry();
+        settings->setValue("frameWidth", QVariant(geometry.width()));
+        settings->setValue("frameHeight", QVariant(geometry.height()));
+        // store frame pos
+        settings->setValue("framePosX", QVariant(geometry.x()));
+        settings->setValue("framePosY", QVariant(geometry.y()));
+    }
+    settings->setValue("loadPath", QVariant(loadPath));
+    settings->setValue("colorPath", QVariant(colorPath));
+
+    subtitleProcessor->exit();
+    QMainWindow::closeEvent(event);
+}
+
 void BDSup2Sub::changeWindowTitle(QString newTitle)
 {
     this->setWindowTitle(newTitle);
@@ -175,9 +210,9 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
             }
         }
 
-        ConversionDialog conversionDialog(this, subtitleProcessor);
+        ConversionDialog conversionDialog(this, subtitleProcessor, settings);
         conversionDialog.enableOptionMove(subtitleProcessor->getMoveCaptions());
-        if (conversionDialog.exec() != QDialog::Rejected)
+        if (conversionDialog.exec() != QDialog::Rejected && subtitleProcessor->getNumberOfFrames() > 0)
         {
             subtitleProcessor->scanSubtitles();
             if (subtitleProcessor->getMoveCaptions())
@@ -1049,7 +1084,8 @@ bool BDSup2Sub::execCLI()
                 if (f.exists())
                 {
                     QByteArray id = subtitleProcessor->getFileID(val, 4);
-                    if (id.isEmpty() || id[0] != 0x23 || id[1] != 0x43 || id[2] != 0x4F || id[3] != 0x4C) //#COL
+                    if (id.isEmpty() || (char)id[0] != 0x23 || (char)id[1] != 0x43 ||
+                                        (char)id[2] != 0x4F || (char)id[3] != 0x4C) //#COL
                     {
                         fprintf(stdout, (QString("ERROR: No valid palette file: %1").arg(val)).toAscii());
                         exit(1);
@@ -1060,12 +1096,10 @@ bool BDSup2Sub::execCLI()
                     fprintf(stdout, (QString("ERROR: Palette file not found: %1").arg(val)).toAscii());
                     exit(1);
                 }
-                //TODO: implement props
-                //Props colProps = new Props();
-                //colProps.load(val);
+                QSettings colorSettings(val, QSettings::IniFormat);
                 for (int c = 0; c < 15; ++c)
                 {
-                    QString s = "";//colProps.get("Color_"+c, "0,0,0");
+                    QString s = settings->value(QString("Color_%1").arg(QString::number(c)), QVariant("0,0,0")).toString();
                     QStringList sp = s.split(",");
                     if (sp.size() >= 3)
                     {
@@ -2042,9 +2076,9 @@ void BDSup2Sub::openConversionSettings()
         fsYOld = subtitleProcessor->getFreeScaleY();
     }
 
-    ConversionDialog conversionDialog(this, subtitleProcessor);
+    ConversionDialog conversionDialog(this, subtitleProcessor, settings);
     conversionDialog.enableOptionMove(subtitleProcessor->getMoveCaptions());
-    if (conversionDialog.exec() != QDialog::Rejected)
+    if (conversionDialog.exec() != QDialog::Rejected && subtitleProcessor->getNumberOfFrames() > 0)
     {
         subtitleProcessor->reScanSubtitles(oldResolution, fpsTrgOld, delayOld, changeFpsOld, fsXOld, fsYOld);
         try

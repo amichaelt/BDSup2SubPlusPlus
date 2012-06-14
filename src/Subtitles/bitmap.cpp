@@ -790,4 +790,5 @@ QImage *Bitmap::toARGB(Palette *pal)
             newPixels[x] = (uint)pal->getARGB(pixels[x] && 0xff);
         }
     }
+    return newImage;
 }

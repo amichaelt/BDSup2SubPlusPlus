@@ -312,29 +312,39 @@ public:
     InputMode getInputMode() { return inMode; }
     bool getMoveCaptions() { return moveCaptions; }
     void setMoveCaptions(bool value) { moveCaptions = value; }
+    bool restoreConvertResolution() { return settings->value("convertResolution", QVariant(convertResolution)).toBool(); }
     bool getConvertResolution() { return convertResolution; }
     void setConvertResolution(bool value) { convertResolution = value; }
     Resolution getOutputResolution() { return resolutionTrg; }
     void setOutputResolution(Resolution value) { resolutionTrg = value; }
+    int restoreDelayPTS() { return settings->value("delayPTS", QVariant(delayPTS)).toInt(); }
     int getDelayPTS() { return delayPTS; }
     void setDelayPTS(int value) { delayPTS = value; }
     int getDelayPTSDefault() { return delayPTSdefault; }
     long syncTimePTS(long timeStamp, double fps);
+    int restoreMinTimePTS() { return settings->value("minTimePTS", QVariant(minTimePTS)).toInt(); }
     int getMinTimePTS() { return minTimePTS; }
     void setMinTimePTS(int value) { minTimePTS = value; }
     int getMinTimePTSDefault() { return minTimePTSdefault; }
+    double restoreFpsTrg() { return settings->value("fpsTrg", QVariant(fpsTrg)).toDouble(); }
     double getFPSTrg() { return fpsTrg; }
+    bool restoreConvertFPS() { return settings->value("convertFPS", QVariant(convertFPS)).toBool(); }
     bool getConvertFPS() { return convertFPS; }
     void setConvertFPS(bool value) { convertFPS = value; }
+    bool restoreApplyFreeScale() { return settings->value("applyFreeScale", QVariant(applyFreeScale)).toBool(); }
     bool getApplyFreeScale() { return applyFreeScale; }
     void setApplyFreeScale(bool value){ applyFreeScale = value; }
     bool getApplyFreeScaleDefault() { return applyFreeScaleDefault; }
+    bool restoreFixShortFrames() { return settings->value("fixShortFrames", QVariant(fixShortFrames)).toBool(); }
     bool getFixShortFrames() { return fixShortFrames; }
     void setFixShortFrames(bool value) { fixShortFrames = value; }
     bool getFixShortFramesDefault() { return fixShortFramesDefault; }
+    double restoreFpsSrc() { return settings->value("fpsSrc", QVariant(fpsSrc)).toDouble(); }
     double getFPSSrc() { return fpsSrc; }
     void setFPSSrc(double value) { fpsSrc = value; }
+    double restoreFreeScaleX() { return settings->value("freeScaleX", QVariant(freeScaleX)).toDouble(); }
     double getFreeScaleX() { return freeScaleX; }
+    double restoreFreeScaleY() { return settings->value("freeScaleY", QVariant(freeScaleY)).toDouble(); }
     double getFreeScaleY() { return freeScaleY; }
     SetState getForceAll() { return forceAll; }
     void setForceAll(SetState value) { forceAll = value; }
@@ -411,6 +421,7 @@ public:
     int getTrgImgWidth(int index);
     int getTrgImgHeight(int index);
     bool getTrgExcluded(int index);
+    Resolution restoreResolution() { return (Resolution)resolutionNames.indexOf(settings->value("resolutionTrg", QVariant(getResolutionName(resolutionTrg))).toString()); }
     Resolution getResolution(int width, int height);
     SubPicture* getSubPictureSrc(int index);
     Resolution getResolution(QString string);

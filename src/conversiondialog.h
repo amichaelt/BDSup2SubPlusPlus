@@ -27,6 +27,7 @@ class QPalette;
 class SubtitleProcessor;
 class QDoubleValidator;
 class QRegExpValidator;
+class QSettings;
 
 namespace Ui {
 class ConversionDialog;
@@ -37,7 +38,7 @@ class ConversionDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit ConversionDialog(QWidget *parent = 0, SubtitleProcessor *subtitleProcessor = 0);
+    explicit ConversionDialog(QWidget *parent = 0, SubtitleProcessor *subtitleProcessor = 0, QSettings* settings = 0);
     ~ConversionDialog();
 
     void enableOptionMove(bool enable);
@@ -83,6 +84,8 @@ private:
     QDoubleValidator* scaleYValidator;
     QDoubleValidator* delayPTSValidator;
     QDoubleValidator* minTimePTSValidator;
+
+    QSettings* settings;
 
     QPalette* errorBackground;
     QPalette* warnBackground;

@@ -25,6 +25,7 @@
 
 class SubtitleProcessor;
 class ProgressDialog;
+class QSettings;
 
 namespace Ui {
 class BDSup2Sub;
@@ -37,6 +38,7 @@ class BDSup2Sub : public QMainWindow
 public:
     explicit BDSup2Sub(QWidget *parent = 0);
     ~BDSup2Sub();
+    void closeEvent(QCloseEvent *event);
 
     bool execCLI();
 
@@ -67,6 +69,8 @@ private:
     QIntValidator *subtitleNumberValidator;
     QPalette* errorBackground;
     QPalette* okBackground;
+
+    QSettings* settings;
 
     QString filter = tr("All Files (*.*);;Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
     QString selectedFilter = tr("Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");

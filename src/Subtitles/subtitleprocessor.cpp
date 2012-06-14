@@ -318,7 +318,7 @@ long SubtitleProcessor::syncTimePTS(long timeStamp, double fps)
 
 void SubtitleProcessor::exit()
 {
-    //TODO: store props
+    storeSettings();
 }
 
 void SubtitleProcessor::scanSubtitles()

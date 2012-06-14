@@ -25,8 +25,9 @@
 #include <QRegExpValidator>
 #include <QPalette>
 #include <QKeyEvent>
+#include <QSettings>
 
-ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleProcessor) :
+ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleProcessor, QSettings* settings) :
     QDialog(parent),
     ui(new Ui::ConversionDialog)
 {
@@ -34,6 +35,7 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
     setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
 
     this->subtitleProcessor = subtitleProcessor;
+    this->settings = settings;
 
     QRegExp regex("[0-9]+([.][0-9]+)?|pal|25p|ntsc|30p|24p|50i|60i");
     fpsSrcValidator = new QRegExpValidator(regex);
@@ -323,14 +325,122 @@ void ConversionDialog::on_forceFlagsComboBox_currentIndexChanged(int index)
 
 void ConversionDialog::on_storeButton_clicked()
 {
-    //TODO: implement
-    throw 10;
+    QString s;
+    double d;
+
+    // fps source
+    settings->setValue("convertFPS", QVariant(changeFPS));
+    if (changeFPS)
+    {
+        s = ui->sourceFramerateComboBox->currentText();
+        d = subtitleProcessor->getFPS(s);
+        if (d > 0)
+        {
+            fpsSrc = d;
+            settings->setValue("fpsSrc", QVariant(fpsSrc));
+        }
+    }
+
+    // fps target
+    s = ui->targetFramerateComboBox->currentText();
+    d = subtitleProcessor->getFPS(s);
+    if (d > 0)
+    {
+        fpsTrg = d;
+        settings->setValue("fpsTrg", QVariant(fpsTrg));
+    }
+
+    // delay
+    bool ok;
+    d = ui->delayLineEdit->text().toDouble(&ok);
+    if (ok)
+    {
+        delayPTS = (int)subtitleProcessor->syncTimePTS((long)(d * 90.0), fpsTrg);
+        settings->setValue("delayPTS", QVariant(delayPTS));
+    }
+
+    // min time
+    settings->setValue("fixShortFrames", QVariant(fixShortFrames));
+    d = ui->minTimeLineEdit->text().toDouble(&ok);
+    if (ok)
+    {
+        minTimePTS = (int)subtitleProcessor->syncTimePTS((long)d * 90.0, fpsTrg);
+        settings->setValue("minTimePTS", minTimePTS);
+    }
+
+    // exit
+    settings->setValue("changeResolution", QVariant(changeResolution));
+    if (changeResolution)
+    {
+        settings->setValue("resolution", QVariant(subtitleProcessor->getResolutionName(resolution)));
+    }
+
+    // scaleX
+    d = ui->scaleXLineEdit->text().toDouble(&ok);
+    d = ok ? d : -1;
+    if (d > 0)
+    {
+        if (d > subtitleProcessor->maxScale)
+        {
+            d = subtitleProcessor->maxScale;
+        }
+        else if (d < subtitleProcessor->minScale)
+        {
+            d = subtitleProcessor->minScale;
+        }
+        scaleX = d;
+    }
+
+    // scaleY
+    d = ui->scaleYLineEdit->text().toDouble(&ok);
+    d = ok ? d : -1;
+    if (d > 0)
+    {
+        if (d > subtitleProcessor->maxScale)
+        {
+            d = subtitleProcessor->maxScale;
+        }
+        else if (d < subtitleProcessor->minScale)
+        {
+            d = subtitleProcessor->minScale;
+        }
+        scaleY = d;
+    }
+
+    // set scale X/Y
+    settings->setValue("applyFreeScale", QVariant(changeScale));
+    if (changeScale)
+    {
+        subtitleProcessor->storeFreeScale(scaleX, scaleY);
+    }
+
+    subtitleProcessor->storeSettings();
 }
 
 void ConversionDialog::on_restoreButton_clicked()
 {
-    //TODO: implement
-    throw 10;
+    changeResolution = subtitleProcessor->restoreConvertResolution();
+    if (changeResolution)
+    {
+        resolution = subtitleProcessor->restoreResolution();
+    }
+    changeFPS = subtitleProcessor->restoreConvertFPS();
+    if (changeFPS && !fpsSrcCertain)
+    {
+        fpsSrc = subtitleProcessor->restoreFpsSrc();
+    }
+    fpsTrg = subtitleProcessor->restoreFpsTrg();
+    delayPTS = subtitleProcessor->restoreDelayPTS();
+    fixShortFrames = subtitleProcessor->restoreFixShortFrames();
+    minTimePTS = subtitleProcessor->restoreMinTimePTS();
+    changeScale = subtitleProcessor->restoreApplyFreeScale();
+    if (changeScale)
+    {
+        scaleX = subtitleProcessor->restoreFreeScaleX();
+        scaleY = subtitleProcessor->restoreFreeScaleY();
+    }
+    forcedState = subtitleProcessor->getForceAll();
+    fillDialog();
 }
 
 void ConversionDialog::on_scaleXLineEdit_editingFinished()

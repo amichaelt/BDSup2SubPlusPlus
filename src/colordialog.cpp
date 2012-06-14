@@ -25,6 +25,7 @@
 #include <QPainter>
 #include <QStandardItemModel>
 #include <QFileDialog>
+#include <QSettings>
 
 ColorDialog::ColorDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
     QDialog(parent),
@@ -103,7 +104,13 @@ void ColorDialog::on_savePaletteButton_clicked()
     if (filePath.isEmpty() || filePath.isNull()) return;
 
     colorPath = filePath;
-    //TODO: implement props
+    QSettings settings(colorPath, QSettings::IniFormat);
+    for (int i = 0; i < selectedColors.size(); ++i)
+    {
+        QVariantList colors = { selectedColors[i].red(), selectedColors[i].green(), selectedColors[i].blue() };
+        settings.setValue(QString("Color_%1").arg(QString::number(i)), colors);
+    }
+    settings.sync();
 }
 
 void ColorDialog::on_loadPaletteButton_clicked()
@@ -116,8 +123,32 @@ void ColorDialog::on_loadPaletteButton_clicked()
 
     if (filePath.isNull() || filePath.isEmpty()) return;
 
+    QPixmap* pixmap;
+    QStandardItemModel* model = new QStandardItemModel(colorNames.size(), 2);
+
     colorPath = filePath;
-    //TODO: implement props
+    QSettings settings(colorPath, QSettings::IniFormat);
+    QVariantList defaultList = { 0, 0, 0 };
+    for (int i = 0; i < selectedColors.size(); ++i)
+    {
+        QVariantList s = settings.value(QString("Color_%1").arg(QString::number(i)), defaultList).toList();
+        if (s.size() >= 3)
+        {
+            int r = s[0].toInt() & 0xff;
+            int g = s[1].toInt() & 0xff;
+            int b = s[2].toInt() & 0xff;
+            selectedColors.replace(i, QColor(r,g,b));
+            pixmap = new QPixmap(12, 12);
+            pixmap->fill(selectedColors[i]);
+            colorIcons.insert(i, QIcon(*pixmap));
+            QStandardItem* item = new QStandardItem(colorIcons[i], colorNames[i]);
+            model->setItem(i, item);
+        }
+    }
+    ui->colorList->setModel(model);
+    QModelIndex index = ui->colorList->model()->index(0, 0);
+    ui->colorList->setCurrentIndex(index);
+    ui->colorList->update();
 }
 
 void ColorDialog::on_cancelButton_clicked()

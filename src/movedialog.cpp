@@ -24,11 +24,11 @@
 MoveDialog::MoveDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
     QDialog(parent),
     ui(new Ui::MoveDialog),
-    cropOfsY(subtitleProcessor->getCropOfsY()),
+    moveModeX(subtitleProcessor->getMoveModeX()),
+    moveModeY(subtitleProcessor->getMoveModeY()),
     offsetX(subtitleProcessor->getMoveOffsetX()),
     offsetY(subtitleProcessor->getMoveOffsetY()),
-    moveModeX(subtitleProcessor->getMoveModeX()),
-    moveModeY(subtitleProcessor->getMoveModeY())
+    cropOfsY(subtitleProcessor->getCropOfsY())
 {
     ui->setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);

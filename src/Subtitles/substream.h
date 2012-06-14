@@ -33,6 +33,7 @@ class SubtitleProcessor;
 class Substream : public QSharedData
 {
 public:
+    virtual ~Substream() { }
     virtual Palette *getPalette() = 0;
     virtual Bitmap *getBitmap() = 0;
     virtual QImage *getImage() = 0;
