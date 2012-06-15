@@ -388,7 +388,7 @@ Palette *SupHD::decodePalette(SubPictureHD *subPicture)
         int alpha = 0xff - fileBuffer->getByte(alphaOfs++);
         if (alpha < subtitleProcessor->getAlphaCrop()) // to not mess with scaling algorithms, make transparent color black
         {
-            palette->setRGB(i, 0, 0, 0);
+            palette->setRGB(i, qRgb(0, 0, 0));
         }
         else
         {

@@ -41,7 +41,7 @@ FramePaletteDialog::FramePaletteDialog(QWidget *parent, SubtitleProcessor* subti
     for (int i = 0; i < palette->getSize(); ++i)
     {
         QPixmap* pixmap = new QPixmap(12, 12);
-        pixmap->fill(QColor(palette->getARGB(i) | 0xff000000));
+        pixmap->fill(QColor(palette->getARGB(i));
         colorIcons.insert(i, QIcon(*pixmap));
         ui->color1ComboBox->addItem(colorIcons[i], colorNames[i]);
         ui->color2ComboBox->addItem(colorIcons[i], colorNames[i]);

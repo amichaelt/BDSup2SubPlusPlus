@@ -178,6 +178,7 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
     {
         errorDialog(errorString);
     }
+    else
     {
         warningDialog();
 
@@ -230,6 +231,7 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
         else
         {
             closeSubtitle();
+            subtitleProcessor->close();
             print("Loading cancelled by user.");
         }
     }
@@ -292,6 +294,11 @@ void BDSup2Sub::convertSup()
     {
         enableVobSubComponents(true);
     }
+    else
+    {
+        enableVobSubComponents(false);
+    }
+
     subtitleProcessor->loadedHook();
     subtitleProcessor->addRecent(loadPath);
     updateRecentMenu();
@@ -326,7 +333,7 @@ void BDSup2Sub::dropEvent(QDropEvent *event)
 void BDSup2Sub::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);
-    if (loadPath != "")
+    if (fromCLI && loadPath != "")
     {
         if (!QFile(loadPath).isReadable())
         {
@@ -565,6 +572,7 @@ void BDSup2Sub::saveFile()
 void BDSup2Sub::closeFile()
 {
     closeSubtitle();
+    subtitleProcessor->close();
 }
 
 void BDSup2Sub::loadSubtitleFile()
@@ -1510,6 +1518,7 @@ bool BDSup2Sub::execCLI()
         // open GUI if trg file name is missing
         if (trg.isEmpty())
         {
+            fromCLI = true;
             loadPath = QFileInfo(src).absoluteFilePath();
             return false;
         }
@@ -2043,26 +2052,6 @@ void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &index)
     ui->subtitleNumberComboBox->blockSignals(false);
 }
 
-void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(const QString &format)
-{
-    if (format.contains("IDX"))
-    {
-        subtitleProcessor->setOutputMode(OutputMode::VOBSUB);
-    }
-    else if (format.contains("IFO"))
-    {
-        subtitleProcessor->setOutputMode(OutputMode::SUPIFO);
-    }
-    else if (format.contains("SUP"))
-    {
-        subtitleProcessor->setOutputMode(OutputMode::BDSUP);
-    }
-    else
-    {
-        subtitleProcessor->setOutputMode(OutputMode::XML);
-    }
-}
-
 void BDSup2Sub::openConversionSettings()
 {
     Resolution oldResolution = subtitleProcessor->getOutputResolution();
@@ -2091,31 +2080,6 @@ void BDSup2Sub::openConversionSettings()
             return;
         }
         refreshTrgFrame(subIndex);
-    }
-}
-
-void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
-{
-    OutputMode outMode = (OutputMode)index;
-    subtitleProcessor->setOutputMode(outMode);
-    try
-    {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
-    }
-    catch (QString e)
-    {
-        errorDialog(e);
-        return;
-    }
-    refreshTrgFrame(subIndex);
-
-    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
-    {
-        enableVobSubComponents(true);
-    }
-    else
-    {
-        enableVobSubComponents(false);
     }
 }
 
@@ -2306,4 +2270,29 @@ void BDSup2Sub::on_alphaThresholdComboBox_editTextChanged(const QString &arg1)
     }
     refreshTrgFrame(subIndex);
     ui->alphaThresholdComboBox->blockSignals(false);
+}
+
+void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
+{
+    OutputMode outMode = (OutputMode)index;
+    subtitleProcessor->setOutputMode(outMode);
+    try
+    {
+        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+    }
+    catch (QString e)
+    {
+        errorDialog(e);
+        return;
+    }
+    refreshTrgFrame(subIndex);
+
+    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
+    {
+        enableVobSubComponents(true);
+    }
+    else
+    {
+        enableVobSubComponents(false);
+    }
 }

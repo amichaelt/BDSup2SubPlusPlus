@@ -102,14 +102,12 @@ void FileBuffer::readBuffer(long ofs)
         long l = length - offset;
         if (l < 0)
         {
-            file.reset();
             throw QString("Offset %1 out of bounds for file: '%2'")
                     .arg(QString::number(ofs)).arg(fileName);
         }
         buf = file->read(l);
         if (buf.isEmpty() && file->error() != QFile::NoError)
         {
-            file.reset();
             throw QString("IO error at offset +%1 of file: '%2'")
                     .arg(QString::number(ofs)).arg(fileName);
         }

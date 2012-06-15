@@ -37,10 +37,7 @@ QVector<QRgb> FilterOp::filter(Bitmap *src, Palette *palette, int w, int h)
     srcWidth = src->getWidth();
     srcHeight = src->getHeight();
 
-    r = palette->getR();
-    g = palette->getG();
-    b = palette->getB();
-    a = palette->getAlpha();
+    rgba = palette->getColorTable();
 
     float xscale = (float)(dstWidth - 1) / (float)(srcWidth - 1);
     float yscale = (float)(dstHeight - 1) / (float)(srcHeight - 1);
@@ -285,10 +282,10 @@ void FilterOp::filterHorizontally(QImage* src, QVector<QRgb>& trg)
                 int ofsX = horizontalSubsamplingData->pixelPositions[index];
                 int palIdx = pixels[ofsX] & 0xff;
                 float w = horizontalSubsamplingData->weights[index];
-                red += (r[palIdx] & 0xff) * w;
-                green += (g[palIdx] & 0xff) * w;
-                blue+= (b[palIdx] & 0xff) * w;
-                alpha += (a[palIdx] & 0xff) * w;
+                red += qRed(rgba[palIdx]) * w;
+                green += qGreen(rgba[palIdx]) * w;
+                blue+= qBlue(rgba[palIdx]) * w;
+                alpha += qAlpha(rgba[palIdx]) * w;
                 index++;
             }
             int ri = (int)(red);

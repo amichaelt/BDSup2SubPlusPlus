@@ -97,7 +97,8 @@ void EditDialog::setIndex(int value)
     {
         subPicturePrevious = 0;
     }
-    if (index < subtitleProcessor->getNumberOfFrames() - 1)
+    int num = subtitleProcessor->getNumberOfFrames();
+    if (index < num - 1)
     {
         subPictureNext = subtitleProcessor->getSubPictureTrg(index + 1);
     }

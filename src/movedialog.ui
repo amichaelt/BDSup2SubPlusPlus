@@ -241,7 +241,7 @@
              <string>Move to the left</string>
             </property>
             <property name="text">
-             <string>move &amp;left</string>
+             <string>move to &amp;left</string>
             </property>
            </widget>
           </item>
@@ -257,7 +257,7 @@
              <string>Move to the right</string>
             </property>
             <property name="text">
-             <string>move &amp;right</string>
+             <string>move to &amp;right</string>
             </property>
            </widget>
           </item>
@@ -309,7 +309,7 @@
              <string>Move the subtitles inside the inner frame</string>
             </property>
             <property name="text">
-             <string>move &amp;inside bounds</string>
+             <string>move to &amp;inside bounds</string>
             </property>
            </widget>
           </item>
@@ -325,7 +325,7 @@
              <string>Move the subtitles outside the inner frame as much as possible</string>
             </property>
             <property name="text">
-             <string>move &amp;outside bounds</string>
+             <string>move to &amp;outside bounds</string>
             </property>
            </widget>
           </item>

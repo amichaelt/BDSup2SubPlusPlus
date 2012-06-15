@@ -260,15 +260,23 @@ public:
     Palette* getCurrentSrcDVDPalette() { return currentSourceDVDPalette; }
     void setCurrentSrcDVDPalette(Palette* value) { currentSourceDVDPalette = value; }
     Palette* getDefaultSrcDVDPalette() { return defaultSourceDVDPalette; }
-    void setCineBarFactor(int value) { cineBarFactor = value; }
+    void setCineBarFactor(double value) { cineBarFactor = value; }
     int getMoveOffsetX() { return moveOffsetX; }
     void setMoveOffsetX(int value) { moveOffsetX = value; }
     int getMoveOffsetY() { return moveOffsetY; }
     void setMoveOffsetY(int value) { moveOffsetY = value; }
     MoveModeX getMoveModeX() { return moveModeX; }
-    void setMoveModeX(MoveModeX value) { moveModeX = value; }
+    void setMoveModeX(MoveModeX value)
+    {
+        moveModeX = value;
+        moveCaptions = (moveModeY != MoveModeY::KEEP || moveModeX != MoveModeX::KEEP);
+    }
     MoveModeY getMoveModeY() { return moveModeY; }
-    void setMoveModeY(MoveModeY value) { moveModeY = value; }
+    void setMoveModeY(MoveModeY value)
+    {
+        moveModeY = value;
+        moveCaptions = (moveModeY != MoveModeY::KEEP || moveModeX != MoveModeX::KEEP);
+    }
     int getAlphaCrop() { return alphaCrop; }
     void setAlphaCrop(int value)
     {
@@ -384,6 +392,8 @@ public:
     int getWarnings() { return numberOfWarnings; }
     void resetWarnings() { numberOfWarnings = 0; }
     void loadedHook() { fpsSrcSet = false; }
+
+    void close();
 
     void readDVDSubStream(StreamID streamID, bool isVobSub);
     void readXml();

@@ -19,7 +19,6 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <QRect>
 #include <QVector>
 
 class QImage;
@@ -34,15 +33,24 @@ public:
     Bitmap(Bitmap* other);
     Bitmap(int width, int height);
     Bitmap(int width, int height, int color);
-    Bitmap(int width, int height, QImage* image) { this->width = width; this->height = height; this->img = image; }
+    Bitmap(int width, int height, QImage* image) { this->width = width; this->height = height; this->image = image; }
 
-    QRect getBounds(Palette* palette, int alphaThreshold);
-    void clear(int color);
     int getWidth() { return width; }
     int getHeight() { return height; }
-    Bitmap* crop(int x, int y, int width, int height);
-    int getPrimaryColorIndex(Palette* palette, int alphaThreshold);
+    QImage* getImg() { return image; }
+    void setImg(QImage* newImage) { image = newImage; }
     QImage* getImage(Palette* palette);
+    QImage* toARGB(Palette* pal);
+
+    int getPrimaryColorIndex(Palette* palette, int alphaThreshold);
+    int getHighestColorIndex(Palette* pal);
+
+    void clear(int color);
+    void fillRect(int x, int y, int width, int height, int color);
+
+    QRect* getBounds(Palette* palette, int alphaThreshold);
+    Bitmap* crop(int x, int y, int width, int height);
+
     Bitmap* convertLm(Palette* palette, int alphaThreshold, QVector<int> lumaThreshold);
     Bitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter);
     PaletteBitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter, bool dither);
@@ -50,15 +58,10 @@ public:
     Bitmap* scaleBilinear(int sizeX, int sizeY, Palette* palette);
     PaletteBitmap* scaleBilinear(int sizeX, int sizeY, Palette* palette, bool dither);
     Bitmap* scaleBilinearLm(int sizeX, int sizeY, Palette* palette, int alphaThreshold, QVector<int> lumaThreshold);
-    void fillRect(int x, int y, int width, int height, int color);
-    QImage* getImg();
-    void setImg(QImage* newImage);
-    int getHighestColorIndex(Palette* pal);
-    QImage* toARGB(Palette* pal);
 
 private:
     int width, height;
-    QImage* img;
+    QImage* image;
     int dummyNumber = 0;
 };
 

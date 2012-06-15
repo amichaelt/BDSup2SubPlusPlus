@@ -1083,8 +1083,7 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     //Palette pal = Core.getCurrentDVDPalette();
     for (int i = 0; i < palette->getSize(); ++i)
     {
-        QVector<int> rgb = palette->getRGB(i);
-        QRgb val = qRgb(rgb[0], rgb[1], rgb[2]);
+        QRgb val = palette->getRGB(i);
         QString value = QString("%1").arg(QString::number(val, 16), 6, QChar('0'));
         out->write(value.mid(2).toAscii());
         if (i != palette->getSize() - 1)

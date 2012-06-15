@@ -31,43 +31,43 @@ public:
     Palette(const Palette* other);
     Palette(int paletteSize) : Palette(paletteSize, false) { }
     Palette(int paletteSize, bool use601);
-    Palette(QVector<uchar> r, QVector<uchar> g, QVector<uchar> b, QVector<uchar> a, bool use601);
+    Palette(QVector<QRgb> inRgba, bool use601);
 
     void setAlpha(int index, int alpha);
-    void setRGB(int index, int red, int green, int blue);
-    QVector<int> getRGB(int index);
-    void setARGB(int index, unsigned int inColor);
-    int getARGB(int index);
-    int getSize() { return size; }
-    QColor getColor(int index) { return QColor(r[index] & 0xff, g[index] & 0xff, b[index] & 0xff, a[index] & 0xff); }
-    void setColor(int index, QColor color) { setRGB(index, color.red(), color.green(), color.blue()); setAlpha(index, color.alpha()); }
-    QVector<uchar> getR() { return r; }
-    QVector<uchar> getG() { return g; }
-    QVector<uchar> getB() { return b; }
-    QVector<uchar> getAlpha() { return a; }
-    int getAlpha(int index) { return a[index]; }
+    int getAlpha(int index) { return qAlpha(rgba[index]); }
+    QVector<QRgb> getAlpha() { return rgba; }
+
+    void setRGB(int index, QRgb inRgb);
+    QRgb getRGB(int index) { return rgba[index]; }
+
+    void setARGB(int index, unsigned int inColor){ setRGB(index, inColor); setAlpha(index, qAlpha(inColor)); }
+    QRgb getARGB(int index) { return rgba[index]; }
+
+    void setColor(int index, QColor color) { setRGB(index, color.rgb()); setAlpha(index, color.alpha()); }
+    QColor getColor(int index) { return QColor(qRed(rgba[index]), qGreen(rgba[index]), qBlue(rgba[index]), qAlpha(rgba[index])); }
+
+    QVector<QRgb> getColorTable() { return rgba; }
+
+    void setYCbCr(int index, int yn, int cbn, int crn);
     QVector<uchar> getY() { return y; }
     QVector<uchar> getCb() { return cb; }
     QVector<uchar> getCr() { return cr; }
-    QVector<QRgb> getColorTable();
-    int getTransparentIndex();
-    void setYCbCr(int index, int yn, int cbn, int crn);
     QVector<int> getYCbCr(int index);
 
-    static QVector<int> RGB2YCbCr(int r, int g, int b, bool use601);
+    static QVector<int> RGB2YCbCr(QRgb rgb, bool use601);
+
+    int getSize() { return size; }
+    int getTransparentIndex();
 
 private:
     int size = 0;
-    QVector<uchar> r = QVector<uchar>();
-    QVector<uchar> g = QVector<uchar>();
-    QVector<uchar> b = QVector<uchar>();
-    QVector<uchar> a = QVector<uchar>();
+    QVector<QRgb> rgba;
     QVector<uchar> y = QVector<uchar>();
     QVector<uchar> cb = QVector<uchar>();
     QVector<uchar> cr = QVector<uchar>();
     bool useBT601 = false;
 
-    QVector<int> YCbCr2RGB(int y, int cb, int cr, bool useBT601);
+    QRgb YCbCr2RGB(int y, int cb, int cr, bool useBT601);
 };
 
 #endif // PALETTE_H

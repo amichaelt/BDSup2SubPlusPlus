@@ -28,7 +28,7 @@
 
 SubstreamDVD::SubstreamDVD()
 {
-    srcPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
+    srcPalette = new Palette(defaultRgba, true);
 }
 
 SubstreamDVD::~SubstreamDVD()
@@ -48,7 +48,7 @@ Palette *SubstreamDVD::decodePalette(SubPictureDVD *pic, Palette *palette, int a
         int a = (pic->alpha[i] * 0xff) / 0xf;
         if (a >= alphaCrop)
         {
-            miniPalette->setRGB(i, palette->getR()[pic->pal[i]], palette->getG()[pic->pal[i]], palette->getB()[pic->pal[i]]);
+            miniPalette->setRGB(i, palette->getRGB(pic->pal[i]));
             miniPalette->setAlpha(i, a);
         }
         else

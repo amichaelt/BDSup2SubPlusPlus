@@ -106,27 +106,39 @@ void ConversionDialog::keyPressEvent(QKeyEvent *event)
     {
         if (ui->delayLineEdit->hasFocus())
         {
+            isReady = true;
             on_delayLineEdit_editingFinished();
+            isReady = false;
         }
         if (ui->minTimeLineEdit->hasFocus())
         {
+            isReady = true;
             on_minTimeLineEdit_editingFinished();
+            isReady = false;
         }
         if (ui->scaleXLineEdit->hasFocus())
         {
+            isReady = true;
             on_scaleXLineEdit_editingFinished();
+            isReady = false;
         }
         if (ui->scaleYLineEdit->hasFocus())
         {
+            isReady = true;
             on_scaleYLineEdit_editingFinished();
+            isReady = false;
         }
         if (ui->sourceFramerateComboBox->hasFocus())
         {
+            isReady = true;
             on_sourceFramerateComboBox_editingFinished();
+            isReady = false;
         }
         if (ui->targetFramerateComboBox->hasFocus())
         {
+            isReady = true;
             on_targetFramerateComboBox_editingFinished();
+            isReady = false;
         }
     }
     QDialog::keyPressEvent(event);
@@ -209,15 +221,30 @@ void ConversionDialog::on_resetButton_clicked()
 
 void ConversionDialog::fillDialog()
 {
+    ui->resolutionComboBox->blockSignals(true);
+    ui->convertResolutionCheckBox->blockSignals(true);
+    ui->delayLineEdit->blockSignals(true);
+    ui->changeFrameRateCheckBox->blockSignals(true);
+    ui->sourceFramerateComboBox->blockSignals(true);
+    ui->targetFramerateComboBox->blockSignals(true);
+    ui->minTimeLineEdit->blockSignals(true);
+    ui->fixTooShortFramesCheckBox->blockSignals(true);
+    ui->scaleCheckBox->blockSignals(true);
+    ui->scaleXLineEdit->blockSignals(true);
+    ui->scaleYLineEdit->blockSignals(true);
+    ui->forcedFlagsGroupBox->blockSignals(true);
+
     ui->resolutionComboBox->setCurrentIndex((int)resolution);
     ui->resolutionComboBox->setEnabled(changeResolution);
     ui->convertResolutionCheckBox->setChecked(changeResolution);
 
     ui->delayLineEdit->setText(QString::number(delayPTS / 90.0, 'g', 6));
     ui->changeFrameRateCheckBox->setChecked(changeFPS);
-    ui->sourceFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsSrc)));
+    QString srcFrameRate = QString::number(fpsSrc, 'g', 5);
+    ui->sourceFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(srcFrameRate));
     ui->sourceFramerateComboBox->setEnabled(changeFPS);
-    ui->targetFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(QString::number(fpsTrg)));
+    QString trgFrameRate = QString::number(fpsTrg, 'g', 5);
+    ui->targetFramerateComboBox->setCurrentIndex(ui->sourceFramerateComboBox->findText(trgFrameRate));
     ui->targetFramerateComboBox->setEnabled(true);
     ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 6));
     ui->minTimeLineEdit->setEnabled(fixShortFrames);
@@ -230,6 +257,19 @@ void ConversionDialog::fillDialog()
     ui->scaleYLineEdit->setEnabled(changeScale);
 
     ui->forceFlagsComboBox->setCurrentIndex((int) forcedState);
+
+    ui->resolutionComboBox->blockSignals(false);
+    ui->convertResolutionCheckBox->blockSignals(false);
+    ui->delayLineEdit->blockSignals(false);
+    ui->changeFrameRateCheckBox->blockSignals(false);
+    ui->sourceFramerateComboBox->blockSignals(false);
+    ui->targetFramerateComboBox->blockSignals(false);
+    ui->minTimeLineEdit->blockSignals(false);
+    ui->fixTooShortFramesCheckBox->blockSignals(false);
+    ui->scaleCheckBox->blockSignals(false);
+    ui->scaleXLineEdit->blockSignals(false);
+    ui->scaleYLineEdit->blockSignals(false);
+    ui->forcedFlagsGroupBox->blockSignals(false);
 }
 
 void ConversionDialog::on_resolutionComboBox_currentIndexChanged(int index)
@@ -445,6 +485,7 @@ void ConversionDialog::on_restoreButton_clicked()
 
 void ConversionDialog::on_scaleXLineEdit_editingFinished()
 {
+    if (!isReady) return;
     QString text = ui->scaleXLineEdit->text();
     int pos = 0;
     if (ui->scaleXLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
@@ -466,6 +507,7 @@ void ConversionDialog::on_scaleXLineEdit_editingFinished()
 
 void ConversionDialog::on_scaleYLineEdit_editingFinished()
 {
+    if (!isReady) return;
     QString text = ui->scaleYLineEdit->text();
     int pos = 0;
     if (ui->scaleYLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
@@ -487,6 +529,7 @@ void ConversionDialog::on_scaleYLineEdit_editingFinished()
 
 void ConversionDialog::on_delayLineEdit_editingFinished()
 {
+    if (!isReady) return;
     QString text = ui->delayLineEdit->text();
     int pos = 0;
     if (ui->delayLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
@@ -499,6 +542,7 @@ void ConversionDialog::on_delayLineEdit_editingFinished()
 
 void ConversionDialog::on_minTimeLineEdit_editingFinished()
 {
+    if (!isReady) return;
     QString text = ui->minTimeLineEdit->text();
     int pos = 0;
     if (ui->minTimeLineEdit->validator()->validate(text, pos) == QValidator::Acceptable)
@@ -511,7 +555,7 @@ void ConversionDialog::on_minTimeLineEdit_editingFinished()
 
 void ConversionDialog::on_sourceFramerateComboBox_currentIndexChanged(const QString &arg1)
 {
-    on_sourceFramerateComboBox_editingFinished();
+    on_sourceFramerateComboBox_editTextChanged(arg1);
 }
 
 void ConversionDialog::on_sourceFramerateComboBox_editTextChanged(const QString &arg1)
@@ -531,6 +575,7 @@ void ConversionDialog::on_sourceFramerateComboBox_editTextChanged(const QString 
 
 void ConversionDialog::on_sourceFramerateComboBox_editingFinished()
 {
+    if (!isReady) return;
     double d = subtitleProcessor->getFPS(ui->sourceFramerateComboBox->currentText());
     if (d > 0)
     {
@@ -543,7 +588,7 @@ void ConversionDialog::on_sourceFramerateComboBox_editingFinished()
 
 void ConversionDialog::on_targetFramerateComboBox_currentIndexChanged(const QString &arg1)
 {
-    on_targetFramerateComboBox_editingFinished();
+    on_targetFramerateComboBox_editTextChanged(arg1);
 }
 
 void ConversionDialog::on_targetFramerateComboBox_editTextChanged(const QString &arg1)
@@ -571,6 +616,7 @@ void ConversionDialog::on_targetFramerateComboBox_editTextChanged(const QString 
 
 void ConversionDialog::on_targetFramerateComboBox_editingFinished()
 {
+    if (!isReady) return;
     QString text = ui->targetFramerateComboBox->currentText();
     double d = subtitleProcessor->getFPS(text);
     if (d > 0)

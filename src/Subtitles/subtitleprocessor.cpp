@@ -44,8 +44,8 @@ SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings)
 {
     this->parent = parent;
     this->settings = settings;
-    defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
-    currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
+    defaultDVDPalette = new Palette(defaultRgba, true);
+    currentDVDPalette = new Palette(defaultRgba, true);
 
     SetValuesFromSettings();
 }
@@ -147,7 +147,7 @@ StreamID SubtitleProcessor::getStreamID(QByteArray id)
 
 int SubtitleProcessor::getNumberOfFrames()
 {
-    if (substream == 0)
+    if (substream.isNull())
     {
         return 0;
     }
@@ -156,7 +156,7 @@ int SubtitleProcessor::getNumberOfFrames()
 
 int SubtitleProcessor::getNumForcedFrames()
 {
-    if (substream == 0)
+    if (substream.isNull())
     {
         return 0;
     }
@@ -314,6 +314,34 @@ long SubtitleProcessor::syncTimePTS(long timeStamp, double fps)
         retval = (long)(((long)(timeStamp / tpf) * tpf) + 0.5);
     }
     return retval;
+}
+
+void SubtitleProcessor::close()
+{
+    if (!substream.isNull())
+    {
+        substream.clear();
+    }
+    if (!subDVD.isNull())
+    {
+        subDVD.clear();
+    }
+    if (!supDVD.isNull())
+    {
+        supDVD.clear();
+    }
+    if (!supXML.isNull())
+    {
+        supXML.clear();
+    }
+    if (!supHD.isNull())
+    {
+        supHD.clear();
+    }
+    if (!supBD.isNull())
+    {
+        supBD.clear();
+    }
 }
 
 void SubtitleProcessor::exit()
@@ -1350,7 +1378,7 @@ void SubtitleProcessor::determineFramePalette(int index)
     if ((inMode != InputMode::VOBSUB && inMode != InputMode::SUPIFO) || paletteMode != PaletteMode::KEEP_EXISTING)
     {
         // get the primary color from the source palette
-        QVector<int> rgbSrc(substream->getPalette()->getRGB(substream->getPrimaryColorIndex()));
+        QRgb rgbSrc = substream->getPalette()->getRGB(substream->getPrimaryColorIndex());
 
         // match with primary color from 16 color target palette
         // note: skip index 0 , primary colors at even positions
@@ -1360,11 +1388,11 @@ void SubtitleProcessor::determineFramePalette(int index)
         int colIdx = 0;
         for (int idx = 1; idx < trgPalette->getSize(); idx += 2 )
         {
-            QVector<int> rgb(trgPalette->getRGB(idx));
+            QRgb rgb = trgPalette->getRGB(idx);
             // distance vector (skip sqrt)
-            int rd = rgbSrc[0] - rgb[0];
-            int gd = rgbSrc[1] - rgb[1];
-            int bd = rgbSrc[2] - rgb[2];
+            int rd = qRed(rgbSrc) - qRed(rgb);
+            int gd = qGreen(rgbSrc) - qGreen(rgb);
+            int bd = qBlue(rgbSrc) - qBlue(rgb);
             int distance = (rd * rd) + (gd * gd) + (bd * bd);
             // new minimum distance ?
             if (distance < minDistance)
@@ -1585,11 +1613,12 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
         {
             if (mmy == MoveModeY::INSIDE)
             {
-                picture->setOfsY((((h - barHeight) - offsetY)) - hi);
+                int temp = h - barHeight - offsetY - hi;
+                picture->setOfsY(temp);
             }
             else
             {
-                picture->setOfsY((h - offsetY) - hi);
+                picture->setOfsY(h - offsetY - hi);
             }
             print(QString("Caption %1 moved to y position %2\n")
                   .arg(QString::number(index))
@@ -2091,8 +2120,9 @@ void SubtitleProcessor::writePGCEditPalette(QString filename, Palette *palette)
     out->write("# Palette file for PGCEdit - colors given as R,G,B components (0..255)\n");
     for (int i = 0; i < palette->getSize(); ++i)
     {
-        QVector<int> rgb = palette->getRGB(i);
-        out->write(QString("Color " + QString::number(i) + "=" + QString::number(rgb[0]) + ", " + QString::number(rgb[1]) + ", " + QString::number(rgb[2]) + "\n").toAscii());
+        QRgb rgb = palette->getRGB(i);
+        out->write(QString("Color " + QString::number(i) + "=" + QString::number(qRed(rgb)) +
+                           ", " + QString::number(qGreen(rgb)) + ", " + QString::number(qBlue(rgb)) + "\n").toAscii());
     }
 }
 

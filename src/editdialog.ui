@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>750</width>
-    <height>655</height>
+    <width>702</width>
+    <height>570</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>750</width>
-    <height>655</height>
+    <width>702</width>
+    <height>570</height>
    </size>
   </property>
   <property name="font">
@@ -56,7 +56,7 @@
     <widget class="QFrame" name="frame">
      <property name="minimumSize">
       <size>
-       <width>732</width>
+       <width>0</width>
        <height>32</height>
       </size>
      </property>
@@ -96,7 +96,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Info</string>
+         <string>9999 of 9999</string>
         </property>
        </widget>
       </item>
@@ -105,9 +105,12 @@
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>427</width>
+          <width>385</width>
           <height>20</height>
          </size>
         </property>
@@ -242,8 +245,8 @@
     <widget class="QFrame" name="frame_2">
      <property name="minimumSize">
       <size>
-       <width>732</width>
-       <height>428</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
      <property name="frameShape">
@@ -270,6 +273,12 @@
       </property>
       <item row="0" column="0">
        <widget class="EditPane" name="subtitleImage">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>310</height>
+         </size>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -311,7 +320,7 @@
     <widget class="QGroupBox" name="groupBox">
      <property name="minimumSize">
       <size>
-       <width>405</width>
+       <width>0</width>
        <height>0</height>
       </size>
      </property>
@@ -366,6 +375,12 @@
             <height>0</height>
            </size>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>Set start time of subtitle</string>
           </property>
@@ -415,6 +430,12 @@
             <height>0</height>
            </size>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>Set end time of subtitle</string>
           </property>
@@ -449,6 +470,12 @@
            <size>
             <width>80</width>
             <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
            </size>
           </property>
           <property name="toolTip">
@@ -503,9 +530,12 @@
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Minimum</enum>
+          </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>80</width>
+            <width>10</width>
             <height>20</height>
            </size>
           </property>
@@ -520,7 +550,7 @@
     <widget class="QGroupBox" name="groupBox_3">
      <property name="minimumSize">
       <size>
-       <width>325</width>
+       <width>0</width>
        <height>0</height>
       </size>
      </property>
@@ -551,6 +581,12 @@
              <size>
               <width>80</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="toolTip">
@@ -586,9 +622,12 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Minimum</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>80</width>
+              <width>10</width>
               <height>20</height>
              </size>
             </property>
@@ -621,6 +660,12 @@
              <size>
               <width>80</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="toolTip">
@@ -681,9 +726,12 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Minimum</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>18</width>
+              <width>10</width>
               <height>20</height>
              </size>
             </property>
@@ -713,7 +761,7 @@
     <widget class="QGroupBox" name="groupBox_2">
      <property name="minimumSize">
       <size>
-       <width>405</width>
+       <width>0</width>
        <height>55</height>
       </size>
      </property>
@@ -757,7 +805,7 @@
     <widget class="QGroupBox" name="groupBox_4">
      <property name="minimumSize">
       <size>
-       <width>325</width>
+       <width>0</width>
        <height>55</height>
       </size>
      </property>
@@ -809,9 +857,12 @@
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>64</width>
+          <width>100</width>
           <height>19</height>
          </size>
         </property>
@@ -852,9 +903,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Minimum</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>218</width>
+         <width>220</width>
          <height>20</height>
         </size>
        </property>
@@ -884,9 +938,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Minimum</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>218</width>
+         <width>220</width>
          <height>20</height>
         </size>
        </property>

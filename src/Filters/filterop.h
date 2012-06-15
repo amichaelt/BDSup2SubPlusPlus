@@ -54,10 +54,7 @@ private:
     int srcHeight = 0;
     int dstWidth = 0;
     int dstHeight = 0;
-    QVector<uchar> r;
-    QVector<uchar> g;
-    QVector<uchar> b;
-    QVector<uchar> a;
+    QVector<QRgb> rgba;
 
     SubSamplingData* horizontalSubsamplingData;
     SubSamplingData* verticalSubsamplingData;

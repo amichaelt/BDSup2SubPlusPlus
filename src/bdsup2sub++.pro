@@ -5,8 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui xml
-CONFIG += qt \
-console
+CONFIG   += qt console
 QMAKE_CXXFLAGS += -std=c++0x
 TARGET = bdsup2sub++
 TEMPLATE = app
