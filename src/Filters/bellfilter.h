@@ -1,6 +1,7 @@
 /*
  * BDSup2Sub++ (C) 2012 Adam T.
  * Based on code from BDSup2Sub by Copyright 2009 Volker Oth (0xdeadbeef)
+ * and Copyright 2012 Miklos Juhasz (mjuhasz)
  *
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
