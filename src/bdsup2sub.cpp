@@ -117,6 +117,7 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
 
     subtitleProcessor = new SubtitleProcessor(this, settings);
+    updateRecentMenu();
 
     fillComboBoxes();
 
@@ -856,8 +857,10 @@ bool BDSup2Sub::execCLI()
             QString a = args[i];
 
             // detect source and target
+#ifdef Q_WS_WIN
             if (a.at(0) != QChar('/'))
             {
+#endif
                 if (src.isEmpty())
                 {
                     src = a;
@@ -897,7 +900,9 @@ bool BDSup2Sub::execCLI()
                     subtitleProcessor->setOutputMode(mode);
                     continue;
                 }
+#ifdef Q_WS_WIN
             }
+#endif
 
             bool switchOn = true;
 
@@ -1114,7 +1119,7 @@ bool BDSup2Sub::execCLI()
                         int red = sp[0].trimmed().toInt() & 0xff;
                         int green = sp[1].trimmed().toInt() & 0xff;
                         int blue = sp[2].trimmed().toInt() & 0xff;
-                        subtitleProcessor->getCurrentDVDPalette()->setColor(c + 1, QColor(red, green, blue));
+                        subtitleProcessor->getCurrentDVDPalette()->setColor(c + 1, QColor(red, green, blue, 0));
                     }
                 }
                 fprintf(stdout, (QString("OPTION: loaded palette from %1").arg(val)).toAscii());
@@ -1776,7 +1781,17 @@ void BDSup2Sub::onRecentItemClicked()
         return;
     }
     QAction* action = (QAction*)QObject::sender();
-    loadPath = QFileInfo(action->text()).absoluteFilePath();
+    QFileInfo info(action->text());
+    if (!info.exists())
+    {
+        if (QMessageBox::warning(this, "Error!", "This file no longer exists. Remove from menu?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+        {
+            subtitleProcessor->removeRecent(action->text());
+            ui->menu_Recent_Files->removeAction(action);
+        }
+        return;
+    }
+    loadPath = info.absoluteFilePath();
     closeFile();
     connectSubtitleProcessor();
     loadSubtitleFile();

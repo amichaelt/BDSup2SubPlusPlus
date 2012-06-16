@@ -732,7 +732,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
         buf.replace(index++, pal->getY()[i]);									// Y
         buf.replace(index++, pal->getCr()[i]);									// Cr
         buf.replace(index++, pal->getCb()[i]);									// Cb
-        buf.replace(index++, pal->getAlpha()[i]);								// Alpha
+        buf.replace(index++, qAlpha(pal->getColorTable()[i]));   				// Alpha
     }
 
     // write first OBJ

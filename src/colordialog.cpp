@@ -137,7 +137,7 @@ void ColorDialog::on_loadPaletteButton_clicked()
             int r = s[0].toInt() & 0xff;
             int g = s[1].toInt() & 0xff;
             int b = s[2].toInt() & 0xff;
-            selectedColors.replace(i, QColor(r,g,b));
+            selectedColors.replace(i, QColor(r, g ,b, 0));
             pixmap = new QPixmap(12, 12);
             pixmap->fill(selectedColors[i]);
             colorIcons.insert(i, QIcon(*pixmap));

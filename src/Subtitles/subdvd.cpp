@@ -773,7 +773,7 @@ void SubDVD::readIdx()
 
     QTextStream idxTextStream(idxFile.data());
     QString inString;
-    int temp;
+    unsigned int temp;
     int langIdx = 0;
     bool ignore = false;
 

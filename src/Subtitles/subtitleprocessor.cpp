@@ -43,9 +43,8 @@
 SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings)
 {
     this->parent = parent;
-    this->settings = settings;
-    defaultDVDPalette = new Palette(defaultRgba, true);
-    currentDVDPalette = new Palette(defaultRgba, true);
+    this->settings = settings;defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
+    currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 
     SetValuesFromSettings();
 }
@@ -1378,7 +1377,7 @@ void SubtitleProcessor::determineFramePalette(int index)
     if ((inMode != InputMode::VOBSUB && inMode != InputMode::SUPIFO) || paletteMode != PaletteMode::KEEP_EXISTING)
     {
         // get the primary color from the source palette
-        QRgb rgbSrc = substream->getPalette()->getRGB(substream->getPrimaryColorIndex());
+        QRgb rgbSrc(substream->getPalette()->getRGB(substream->getPrimaryColorIndex()));
 
         // match with primary color from 16 color target palette
         // note: skip index 0 , primary colors at even positions
@@ -1388,7 +1387,7 @@ void SubtitleProcessor::determineFramePalette(int index)
         int colIdx = 0;
         for (int idx = 1; idx < trgPalette->getSize(); idx += 2 )
         {
-            QRgb rgb = trgPalette->getRGB(idx);
+            QRgb rgb(trgPalette->getRGB(idx));
             // distance vector (skip sqrt)
             int rd = qRed(rgbSrc) - qRed(rgb);
             int gd = qGreen(rgbSrc) - qGreen(rgb);
@@ -1544,8 +1543,8 @@ bool SubtitleProcessor::updateTrgPic(int index)
 
 void SubtitleProcessor::addRecent(QString fileName)
 {
-    bool found = recentFiles.indexOf(fileName) == -1;
-    if (!found)
+    bool notFound = recentFiles.indexOf(fileName) == -1;
+    if (notFound)
     {
         recentFiles.insert(recentFiles.begin(), fileName);
         if (recentFiles.size() > 5)
@@ -1557,6 +1556,26 @@ void SubtitleProcessor::addRecent(QString fileName)
             settings->setValue(QString("recent_%1").arg(QString::number(i)), QVariant(recentFiles.at(i)));
         }
     }
+}
+
+void SubtitleProcessor::removeRecent(QString fileName)
+{
+    recentFiles.removeOne(fileName);
+    int idxToRemove;
+
+    for (QString key : settings->allKeys())
+    {
+        if (settings->value(key, QVariant("")).toString() == fileName)
+        {
+            idxToRemove = settings->allKeys().indexOf(key);
+        }
+    }
+    settings->remove(settings->allKeys()[idxToRemove]);
+    for (int i = 0; i < recentFiles.size(); ++i)
+    {
+        settings->setValue(QString("recent_%1").arg(QString::number(i)), QVariant(recentFiles.at(i)));
+    }
+    settings->sync();
 }
 
 void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX mmx, MoveModeY mmy, int cropOffsetY)
@@ -1613,8 +1632,7 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
         {
             if (mmy == MoveModeY::INSIDE)
             {
-                int temp = h - barHeight - offsetY - hi;
-                picture->setOfsY(temp);
+                picture->setOfsY((((h - barHeight) - offsetY)) - hi);
             }
             else
             {

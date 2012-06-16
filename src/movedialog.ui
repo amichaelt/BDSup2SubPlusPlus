@@ -230,6 +230,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QRadioButton" name="moveFromXPositionRadioButton">
+            <property name="toolTip">
+             <string>Move from the original X position</string>
+            </property>
+            <property name="text">
+             <string>move from original X position</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QRadioButton" name="moveLeftRadioButton">
             <property name="minimumSize">
              <size>
@@ -241,7 +251,7 @@
              <string>Move to the left</string>
             </property>
             <property name="text">
-             <string>move to &amp;left</string>
+             <string>move from &amp;left</string>
             </property>
            </widget>
           </item>
@@ -257,7 +267,7 @@
              <string>Move to the right</string>
             </property>
             <property name="text">
-             <string>move to &amp;right</string>
+             <string>move from &amp;right</string>
             </property>
            </widget>
           </item>
@@ -273,7 +283,7 @@
              <string>Move to center</string>
             </property>
             <property name="text">
-             <string>move to &amp;center</string>
+             <string>move from &amp;center</string>
             </property>
            </widget>
           </item>
@@ -298,6 +308,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QRadioButton" name="moveFromYPositionRadioButton">
+            <property name="toolTip">
+             <string>Move from the original Y position</string>
+            </property>
+            <property name="text">
+             <string>move from original Y position</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QRadioButton" name="moveInsideBoundsRadioButton">
             <property name="minimumSize">
              <size>
@@ -309,7 +329,7 @@
              <string>Move the subtitles inside the inner frame</string>
             </property>
             <property name="text">
-             <string>move to &amp;inside bounds</string>
+             <string>move from &amp;inside bounds</string>
             </property>
            </widget>
           </item>
@@ -325,7 +345,7 @@
              <string>Move the subtitles outside the inner frame as much as possible</string>
             </property>
             <property name="text">
-             <string>move to &amp;outside bounds</string>
+             <string>move from &amp;outside bounds</string>
             </property>
            </widget>
           </item>

@@ -415,6 +415,7 @@ public:
     int getNumberOfFrames();
     int getNumForcedFrames();
     void addRecent(QString fileName);
+    void removeRecent(QString fileName);
     QByteArray getFileID(QString fileName, int numberOfBytes);
     StreamID getStreamID(QByteArray id);
     void setFPSTrg(double trg);

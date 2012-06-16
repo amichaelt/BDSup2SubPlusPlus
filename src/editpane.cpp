@@ -176,9 +176,9 @@ void EditPane::paintEvent(QPaintEvent *event)
         {
             painter.setPen(Qt::red);
             int y = y1 + (int)((cropOfsY * sy) + 0.5);
-            painter.drawLine(x1, y, rectWidth - 1, y);
+            painter.drawLine(x1, y, (rectWidth + x1) - 1, y);
             y = ((y1 + rectHeight) - (int)((cropOfsY * sy) + 0.5)) - 1;
-            painter.drawLine(x1, y, rectWidth - 1, y);
+            painter.drawLine(x1, y, (rectWidth + x1) - 1, y);
         }
 
         if (validSelection)

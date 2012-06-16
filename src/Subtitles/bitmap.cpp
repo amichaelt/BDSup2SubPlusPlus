@@ -25,48 +25,46 @@
 #include <QImage>
 #include <QHash>
 #include <QFile>
-#include <QRect>
-#include <algorithm>
 
 Bitmap::Bitmap(Bitmap &other) :
     width(other.width),
     height(other.height)
 {
-    image = new QImage(other.image->copy());
+    img = new QImage(other.img->copy());
 }
 
 Bitmap::Bitmap(Bitmap *other) :
     width(other->width),
     height(other->height)
 {
-    image = new QImage(other->image->copy());
+    img = new QImage(other->img->copy());
 }
 
 Bitmap::Bitmap(int width, int height) :
     width(width),
     height(height)
 {
-    image = new QImage(width, height, QImage::Format_Indexed8);
+    img = new QImage(width, height, QImage::Format_Indexed8);
 }
 
 Bitmap::Bitmap(int width, int height, int color) :
     width(width),
     height(height)
 {
-    image = new QImage(width, height, QImage::Format_Indexed8);
+    img = new QImage(width, height, QImage::Format_Indexed8);
     clear(color);
 }
 
 QRect Bitmap::getBounds(Palette* palette, int alphaThreshold)
 {
-    QVector<QRgb> a = palette->getAlpha();
+    QVector<QRgb> a = palette->getColorTable();
     int xMin, xMax, yMin, yMax;
 
-    yMax = image->height() - 1;
+    yMax = img->height() - 1;
     for (int y = yMax; y > 0; --y, --yMax)
     {
-        uchar * pixels = image->scanLine(y);
-        for (int x = 0; x < image->width(); ++x)
+        uchar * pixels = img->scanLine(y);
+        for (int x = 0; x < img->width(); ++x)
         {
             int idx = pixels[x] & 0xff;
             int alpha = qAlpha(a[idx]);
@@ -81,8 +79,8 @@ QRect Bitmap::getBounds(Palette* palette, int alphaThreshold)
     yMin = 0;
     for (int y = yMin; y < yMax; ++y, ++yMin)
     {
-        uchar * pixels = image->scanLine(y);
-        for (int x = 0; x < image->width(); x++)
+        uchar * pixels = img->scanLine(y);
+        for (int x = 0; x < img->width(); x++)
         {
             int idx = pixels[x] & 0xff;
             if (qAlpha(a[idx]) >= alphaThreshold)
@@ -93,12 +91,12 @@ QRect Bitmap::getBounds(Palette* palette, int alphaThreshold)
     }
     loop2:
 
-    xMax = image->width() - 1;
+    xMax = img->width() - 1;
     for (int x = xMax; x > 0 ; --x, --xMax)
     {
         for (int y = yMin; y < yMax; y++)
         {
-            uchar * pixels = image->scanLine(y);
+            uchar * pixels = img->scanLine(y);
             int idx = pixels[x] & 0xff;
             if (qAlpha(a[idx]) >= alphaThreshold)
             {
@@ -113,7 +111,7 @@ QRect Bitmap::getBounds(Palette* palette, int alphaThreshold)
     {
         for (int y = yMin; y < yMax; y++)
         {
-            uchar * pixels = image->scanLine(y);
+            uchar * pixels = img->scanLine(y);
             int idx = pixels[x] & 0xff;
             if (qAlpha(a[idx]) >= alphaThreshold)
             {
@@ -128,14 +126,14 @@ QRect Bitmap::getBounds(Palette* palette, int alphaThreshold)
 
 void Bitmap::clear(int color)
 {
-    image->fill(color);
+    img->fill(color);
 }
 
 Bitmap* Bitmap::crop(int x, int y, int width, int height)
 {
     Bitmap* bm = new Bitmap(width, height);
 
-    bm->image = new QImage(image->copy(x, y, width, height));
+    bm->img = new QImage(img->copy(x, y, width, height));
 
     return bm;
 }
@@ -144,10 +142,10 @@ int Bitmap::getPrimaryColorIndex(Palette* palette, int alphaThreshold)
 {
     QVector<int> histogram(palette->getSize(), 0);
 
-    for (int i = 0; i < image->height(); ++i)
+    for (int i = 0; i < img->height(); ++i)
     {
-        uchar* pixels = image->scanLine(i);
-        for (int j = 0; j < image->width(); ++j)
+        uchar* pixels = img->scanLine(i);
+        for (int j = 0; j < img->width(); ++j)
         {
             int oldValue = histogram.at(pixels[j] & 0xff);
             histogram.replace(pixels[j] & 0xff, ++oldValue);
@@ -181,7 +179,7 @@ int Bitmap::getPrimaryColorIndex(Palette* palette, int alphaThreshold)
 
 QImage *Bitmap::getImage(Palette* palette)
 {
-    QImage* newImage = new QImage(image->bits(), image->width(), image->height(), image->format());
+    QImage* newImage = new QImage(img->bits(), img->width(), img->height(), img->format());
     newImage->setColorTable(palette->getColorTable());
     return newImage;
 }
@@ -189,23 +187,23 @@ QImage *Bitmap::getImage(Palette* palette)
 Bitmap *Bitmap::convertLm(Palette *palette, int alphaThreshold, QVector<int> lumaThreshold)
 {
     QVector<uchar> cy = palette->getY();
-    QVector<QRgb> a = palette->getAlpha();
+    QVector<QRgb> a = palette->getColorTable();
     Bitmap* bm = new Bitmap(width, height);
     QImage* destImage = bm->getImg();
 
     // select nearest colors in existing palette
     QHash<int, int> p;
 
-    for (int i = 0; i < image->height(); ++i)
+    for (int i = 0; i < img->height(); ++i)
     {
-        uchar* sourcePixels = image->scanLine(i);
+        uchar* sourcePixels = img->scanLine(i);
         uchar* destPixels = destImage->scanLine(i);
-        for (int j = 0; j < image->width(); ++j)
+        for (int j = 0; j < img->width(); ++j)
         {
             int colIdx;
             int idx = sourcePixels[j] & 0xff;
-            int alpha = qAlpha(a.at(idx));
-            int cyp   = cy.at(idx) & 0xff;
+            int alpha = qAlpha(a[idx]);
+            int cyp = cy.at(idx) & 0xff;
 
             int key = ((alpha << 8) | cyp);
             if (p.contains(key))
@@ -244,7 +242,7 @@ Bitmap *Bitmap::convertLm(Palette *palette, int alphaThreshold, QVector<int> lum
 
 Bitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette *palette, Filter *filter)
 {
-    QVector<QRgb> rgba = palette->getColorTable();
+    QVector<QRgb> rgb = palette->getColorTable();
 
     FilterOp* filterOp = new FilterOp();
     filterOp->setFilter(filter);
@@ -279,10 +277,10 @@ Bitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette *palette, Filter *filt
                 for (int idx = 0; idx < palette->getSize(); ++idx)
                 {
                     // distance vector (skip sqrt)
-                    int ad = alpha - qAlpha(rgba[idx]);
-                    int rd = red - qRed(rgba[idx]);
-                    int gd = green - qGreen(rgba[idx]);
-                    int bd = blue - qBlue(rgba[idx]);
+                    int ad = alpha - qAlpha(rgb[idx]);
+                    int rd = red - qRed(rgb[idx]);
+                    int gd = green - qGreen(rgb[idx]);
+                    int bd = blue - qBlue(rgb[idx]);
                     int distance = (rd * rd) + (gd * gd) + (bd * bd) + (ad * ad);
                     // new minimum distance ?
                     if (distance < minDistance)
@@ -402,7 +400,7 @@ Bitmap *Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette *palette, int alphaT
 
 Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette)
 {
-    QVector<QRgb> rgba = palette->getColorTable();
+    QVector<QRgb> rgb = palette->getColorTable();
 
     double scaleX = (double)(width - 1) / (sizeX - 1);
     double scaleY = (double)(height - 1) / (sizeY - 1);
@@ -424,7 +422,6 @@ Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette)
 
         for (int xt = 0; xt < sizeX; ++xt)
         {
-
             double xs = xt * scaleX;     // source coordinate
             int xsi = (int)xs;
             double wx = (xs - xsi);	// weight factor
@@ -433,49 +430,43 @@ Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette)
 
             // top left
             double w = wx1 * wy1;
-            int idx = image->scanLine(ysi)[xsi] & 0xff;
-
-            int a = qAlpha(rgba[idx]);
-            int r = qRed(rgba[idx]);
-            int g = qGreen(rgba[idx]);
-            int b = qBlue(rgba[idx]);
-
-            double at = a * w;
-            double rt = r * w;
-            double gt = g * w;
-            double bt = b * w;
+            int idx = img->scanLine(ysi)[xsi] & 0xff;
+            double at = qAlpha(rgb[idx]) * w;
+            double rt = qRed(rgb[idx]) * w;
+            double gt = qGreen(rgb[idx]) * w;
+            double bt = qBlue(rgb[idx]) * w;
 
             // top right
             if (xsi < width - 1)
             {
                 w = wx * wy1;
-                idx = image->scanLine(ysi)[xsi + 1] & 0xff;
-                at += a * w;
-                rt += r * w;
-                gt += g * w;
-                bt += b * w;
+                idx = img->scanLine(ysi)[xsi + 1] & 0xff;
+                at += qAlpha(rgb[idx]) * w;
+                rt += qRed(rgb[idx]) * w;
+                gt += qGreen(rgb[idx]) * w;
+                bt += qBlue(rgb[idx]) * w;
             }  // else assume transparent black
 
             // bottom left
             if (ysi < height - 1)
             {
                 w = wx1 * wy;
-                idx = image->scanLine(ysi + 1)[xsi] & 0xff;
-                at += a * w;
-                rt += r * w;
-                gt += g * w;
-                bt += b * w;
+                idx = img->scanLine(ysi + 1)[xsi] & 0xff;
+                at += qAlpha(rgb[idx]) * w;
+                rt += qRed(rgb[idx]) * w;
+                gt += qGreen(rgb[idx]) * w;
+                bt += qBlue(rgb[idx]) * w;
             } // else assume transparent black
 
             // bottom right
             if ((ysi < height - 1) && (xsi < width - 1))
             {
                 w = wx * wy;
-                idx = image->scanLine(ysi + 1)[xsi + 1] & 0xff;
-                at += a * w;
-                rt += r * w;
-                gt += g * w;
-                bt += b * w;
+                idx = img->scanLine(ysi + 1)[xsi + 1] & 0xff;
+                at += qAlpha(rgb[idx]) * w;
+                rt += qRed(rgb[idx]) * w;
+                gt += qGreen(rgb[idx]) * w;
+                bt += qBlue(rgb[idx]) * w;
 
             } // else assume transparent black
 
@@ -493,16 +484,11 @@ Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette)
                 int minDistance = 0xffffff; // init > 0xff*0xff*4 = 0x03f804
                 for (idx = 0; idx < palette->getSize(); ++idx)
                 {
-                    a = qAlpha(rgba[idx]);
-                    r = qRed(rgba[idx]);
-                    g = qGreen(rgba[idx]);
-                    b = qBlue(rgba[idx]);
-
                     // distance vector (skip sqrt)
-                    int ad = ati - a;
-                    int rd = rti - r;
-                    int gd = gti - g;
-                    int bd = bti - b;
+                    int ad = ati - qAlpha(rgb[idx]);
+                    int rd = rti - qRed(rgb[idx]);
+                    int gd = gti - qGreen(rgb[idx]);
+                    int bd = bti - qBlue(rgb[idx]);
                     int distance = (rd * rd) + (gd * gd) + (bd * bd) + (ad * ad);
                     // new minimum distance ?
                     if (distance < minDistance)
@@ -531,7 +517,7 @@ Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette)
 
 PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette, bool dither)
 {
-    QVector<QRgb> rgba = palette->getColorTable();
+    QVector<QRgb> rgb = palette->getColorTable();
 
     double scaleX = (double)(width - 1) / (sizeX - 1);
     double scaleY = (double)(height - 1) / (sizeY - 1);
@@ -559,34 +545,22 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette, boo
 
             // top left
             double w = wx1 * wy1;
-            idx = image->scanLine(ysi)[xsi] & 0xff;
-
-            int a = qAlpha(rgba[idx]);
-            int r = qRed(rgba[idx]);
-            int g = qGreen(rgba[idx]);
-            int b = qBlue(rgba[idx]);
-
-            double at = a * w;
-            double rt = r * w;
-            double gt = g * w;
-            double bt = b * w;
+            idx = img->scanLine(ysi)[xsi] & 0xff;
+            double at = qAlpha(rgb[idx]) * w;
+            double rt = qRed(rgb[idx]) * w;
+            double gt = qGreen(rgb[idx]) * w;
+            double bt = qBlue(rgb[idx]) * w;
 
             // top right
             x = xsi + 1;
             if (x < width)
             {
                 w = wx * wy1;
-                idx = image->scanLine(ysi)[x] & 0xff;
-
-                a = qAlpha(rgba[idx]);
-                r = qRed(rgba[idx]);
-                g = qGreen(rgba[idx]);
-                b = qBlue(rgba[idx]);
-
-                at += a * w;
-                rt += r * w;
-                gt += g * w;
-                bt += b * w;
+                idx = img->scanLine(ysi)[x] & 0xff;
+                at += qAlpha(rgb[idx]) * w;
+                rt += qRed(rgb[idx]) * w;
+                gt += qGreen(rgb[idx]) * w;
+                bt += qBlue(rgb[idx]) * w;
             }  // else assume transparent black
 
             // bottom left
@@ -594,17 +568,11 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette, boo
             if (y < height)
             {
                 w = wx1 * wy;
-                idx = image->scanLine(y)[xsi] & 0xff;
-
-                a = qAlpha(rgba[idx]);
-                r = qRed(rgba[idx]);
-                g = qGreen(rgba[idx]);
-                b = qBlue(rgba[idx]);
-
-                at += a * w;
-                rt += r * w;
-                gt += g * w;
-                bt += b * w;
+                idx = img->scanLine(y)[xsi] & 0xff;
+                at += qAlpha(rgb[idx]) * w;
+                rt += qRed(rgb[idx]) * w;
+                gt += qGreen(rgb[idx]) * w;
+                bt += qBlue(rgb[idx]) * w;
             } // else assume transparent black
 
             // bottom right
@@ -613,17 +581,11 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette, boo
             if ((x < width) && (y < height))
             {
                 w = wx * wy;
-                idx = image->scanLine(y)[x] & 0xff;
-
-                a = qAlpha(rgba[idx]);
-                r = qRed(rgba[idx]);
-                g = qGreen(rgba[idx]);
-                b = qBlue(rgba[idx]);
-
-                at += a * w;
-                rt += r * w;
-                gt += g * w;
-                bt += b * w;
+                idx = img->scanLine(y)[x] & 0xff;
+                at += qAlpha(rgb[idx]) * w;
+                rt += qRed(rgb[idx]) * w;
+                gt += qGreen(rgb[idx]) * w;
+                bt += qBlue(rgb[idx]) * w;
             } // else assume transparent black
 
             int ati = (int)(at);
@@ -657,7 +619,7 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette *palette, boo
 Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette *palette, int alphaThreshold, QVector<int> lumaThreshold)
 {
     QVector<uchar> cy = palette->getY();
-    QVector<QRgb> a = palette->getAlpha();
+    QVector<QRgb> a = palette->getColorTable();
 
     double scaleX = (double)(width - 1) / (sizeX - 1);
     double scaleY = (double)(height - 1) / (sizeY - 1);
@@ -687,7 +649,7 @@ Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette *palette, int alph
 
             // top left
             double w = wx1 * wy1;
-            int idx = image->scanLine(ysi)[xsi] & 0xff;
+            int idx = img->scanLine(ysi)[xsi] & 0xff;
             double at = qAlpha(a[idx]) * w;
             double cyt = (cy[idx] & 0xff) * w;
 
@@ -695,7 +657,7 @@ Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette *palette, int alph
             if (xsi < width - 1)
             {
                 w = wx * wy1;
-                idx = image->scanLine(ysi)[xsi + 1] & 0xff;
+                idx = img->scanLine(ysi)[xsi + 1] & 0xff;
                 at += qAlpha(a[idx]) * w;
                 cyt += (cy[idx] & 0xff) * w;
             }  // else assume transparent black
@@ -704,7 +666,7 @@ Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette *palette, int alph
             if (ysi < height - 1)
             {
                 w = wx1 * wy;
-                idx = image->scanLine(ysi + 1)[xsi] & 0xff;
+                idx = img->scanLine(ysi + 1)[xsi] & 0xff;
                 at += qAlpha(a[idx]) * w;
                 cyt += (cy[idx] & 0xff) * w;
             } // else assume transparent black
@@ -713,7 +675,7 @@ Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette *palette, int alph
             if ((ysi < height - 1) && (xsi < width - 1))
             {
                 w = wx * wy;
-                idx = image->scanLine(ysi + 1)[xsi + 1] & 0xff;
+                idx = img->scanLine(ysi + 1)[xsi + 1] & 0xff;
                 at += qAlpha(a[idx]) * w;
                 cyt += (cy[idx] & 0xff) * w;
             } // else assume transparent black
@@ -762,7 +724,7 @@ void Bitmap::fillRect(int x, int y, int width, int height, int color)
 
     for (int i = y; i < (y + height); ++i)
     {
-        uchar* pixels = image->scanLine(i);
+        uchar* pixels = img->scanLine(i);
         for (int j = x; j < (x + width); ++j)
         {
             pixels[j] = b;
@@ -770,16 +732,26 @@ void Bitmap::fillRect(int x, int y, int width, int height, int color)
     }
 }
 
+QImage *Bitmap::getImg()
+{
+    return img;
+}
+
+void Bitmap::setImg(QImage* newImage)
+{
+    img = newImage;
+}
+
 int Bitmap::getHighestColorIndex(Palette *pal)
 {
     // create histogram for palette
     int maxIdx = 0;
-    for (int y = 0; y < image->height(); ++y)
+    for (int y = 0; y < img->height(); ++y)
     {
-        uchar* pixels = image->scanLine(y);
-        for (int x = 0; x < image->width(); ++x)
+        uchar* pixels = img->scanLine(y);
+        for (int x = 0; x < img->width(); ++x)
         {
-            int idx = pixels[x];
+            int idx = pixels[x] & 0xff;
             if (pal->getAlpha(idx) > 0)
             {
                 if (idx > maxIdx)
@@ -799,14 +771,14 @@ int Bitmap::getHighestColorIndex(Palette *pal)
 
 QImage *Bitmap::toARGB(Palette *pal)
 {
-    QImage* newImage = new QImage(image->width(), image->height(), QImage::Format_ARGB32);
+    QImage* newImage = new QImage(img->width(), img->height(), QImage::Format_ARGB32);
     for (int y = 0; y < newImage->height(); ++y)
     {
-        uchar* pixels = image->scanLine(y);
+        uchar* pixels = img->scanLine(y);
         QRgb* newPixels = (QRgb*)newImage->scanLine(y);
         for (int x = 0; x < newImage->width(); ++x)
         {
-            newPixels[x] = (QRgb)pal->getARGB(pixels[x]);
+            newPixels[x] = pal->getARGB(pixels[x]);
         }
     }
     return newImage;

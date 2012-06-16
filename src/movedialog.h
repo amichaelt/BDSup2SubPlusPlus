@@ -26,6 +26,8 @@ class SubtitleProcessor;
 class SubPicture;
 class QImage;
 class QButtonGroup;
+class QIntValidator;
+class QDoubleValidator;
 
 namespace Ui {
 class MoveDialog;
@@ -42,6 +44,11 @@ public:
     void setIndex(int idx);
     int getIndex() { return index; }
     double getTrgRatio() { return screenRatioTrg; }
+
+    QIntValidator* offsetXValidator;
+    QIntValidator* offsetYValidator;
+    QIntValidator* cropOffsetYValidator;
+    QDoubleValidator* aspectRatioValidator;
     
 private slots:
     void on_previousButton_clicked();
@@ -54,10 +61,13 @@ private slots:
     void on_aspectRatio3Button_clicked();
 
     void on_keepXPositionRadioButton_clicked();
+    void on_moveFromXPositionRadioButton_clicked();
     void on_moveLeftRadioButton_clicked();
     void on_moveRightRadioButton_clicked();
     void on_moveToCenterRadioButton_clicked();
+
     void on_keepYPositionRadioButton_clicked();
+    void on_moveFromYPositionRadioButton_clicked();
     void on_moveInsideBoundsRadioButton_clicked();
     void on_moveOutsideBoundsRadioButton_clicked();
 
@@ -77,18 +87,24 @@ private:
     SubPicture* subPicture;
     QButtonGroup* xButtonGroup;
     QButtonGroup* yButtonGroup;
-    int index;
-    double screenRatioTrg = 21.0 / 9;
-    double screenRatio = 16.0 / 9;
-    double cineBarFactor = 5.0 / 42;
     QImage* image = 0;
+
     MoveModeX moveModeX = MoveModeX::KEEP;
     MoveModeY moveModeY = MoveModeY::KEEP;
+
+    int index;
     int originalX;
     int originalY;
     int offsetX;
     int offsetY;
     int cropOfsY;
+
+    double screenRatioTrg = 21.0 / 9;
+    double screenRatio = 16.0 / 9;
+    double cineBarFactor = 5.0 / 42;
+
+    bool moveFromXPos = false;
+    bool moveFromYPos = false;
 
     QPalette* errorBackground;
     QPalette* okBackground;
