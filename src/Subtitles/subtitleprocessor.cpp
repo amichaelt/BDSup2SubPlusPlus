@@ -1173,40 +1173,54 @@ void SubtitleProcessor::moveAllToBounds()
     QString sy("");
     switch ((int)moveModeY)
     {
-        case (int)MoveModeY::INSIDE:
-            sy = "inside";
-            break;
-        case (int)MoveModeY::OUTSIDE:
-            sy = "outside";
-            break;
+    case (int)MoveModeY::INSIDE:
+    {
+        sy = "inside cinemascope bars";
+    } break;
+    case (int)MoveModeY::OUTSIDE:
+    {
+        sy = "outside cinemascope bars";
+    } break;
+    case (int)MoveModeY::ORIGIN:
+    {
+        sy = "from the original Y position";
+    } break;
     }
 
     QString sx("");
     switch ((int)moveModeX)
     {
-        case (int)MoveModeX::CENTER:
-            sx = "center vertically";
-            break;
-        case (int)MoveModeX::LEFT:
-            sx = "left";
-            break;
-        case (int)MoveModeX::RIGHT:
-            sx = "right";
+    case (int)MoveModeX::CENTER:
+    {
+        sx = "to the center vertically";
+    } break;
+    case (int)MoveModeX::LEFT:
+    {
+        sx = "to the left";
+    } break;
+    case (int)MoveModeX::RIGHT:
+    {
+        sx = "to the right";
+    } break;
+    case (int)MoveModeX::ORIGIN:
+    {
+        sx = "from the original X position";
+    } break;
     }
 
     QString s("Moving captions ");
     if (!sy.isEmpty())
     {
-        s += sy + " cinemascope bars";
+        s += sy + "";
         if (!sx.isEmpty())
         {
-            s += " and to the " + sx;
+            s += " and " + sx;
         }
         print(s+".\n");
     }
     else if (!sx.isEmpty())
     {
-        print(s+"to the "+sx+".\n");
+        print(s+sx+".\n");
     }
     if (!cliMode)
     {
@@ -1620,9 +1634,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             {
                 picture->setOfsY(barHeight + offsetY);
             }
-            else
+            else if (mmy == MoveModeY::OUTSIDE)
             {
                 picture->setOfsY(offsetY);
+            }
+            else
+            {
+                picture->setOfsY(y1 + offsetY);
             }
 
             print(QString("Caption %1 moved to y position %2\n")
@@ -1635,9 +1653,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             {
                 picture->setOfsY((((h - barHeight) - offsetY)) - hi);
             }
-            else
+            else if (mmy == MoveModeY::OUTSIDE)
             {
                 picture->setOfsY(h - offsetY - hi);
+            }
+            else
+            {
+                picture->setOfsY(y1 + offsetY);
             }
             print(QString("Caption %1 moved to y position %2\n")
                   .arg(QString::number(index))
@@ -1661,6 +1683,21 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
     // move horizontally
     switch ((int)mmx)
     {
+    case (int)MoveModeX::ORIGIN:
+    {
+        if ((picture->getOfsX() + offsetX) < 0)
+        {
+            picture->setOfsX(0);
+        }
+        else if ((picture->getImageWidth() + picture->getOfsX() + offsetX) > picture->width)
+        {
+            picture->setOfsX(picture->width - (picture->getImageWidth() + picture->getOfsX()));
+        }
+        else
+        {
+            picture->setOfsX(picture->getOfsX() + offsetX);
+        }
+    } break;
     case (int)MoveModeX::LEFT:
     {
         if ((w - wi) >= offsetX)

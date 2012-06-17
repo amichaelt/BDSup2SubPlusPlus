@@ -104,9 +104,6 @@ private:
     double screenRatio = 16.0 / 9;
     double cineBarFactor = 5.0 / 42;
 
-    bool moveFromXPos = false;
-    bool moveFromYPos = false;
-
     QPalette* errorBackground;
     QPalette* okBackground;
 

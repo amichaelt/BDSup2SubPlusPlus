@@ -72,6 +72,10 @@ MoveDialog::MoveDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
     {
         ui->keepXPositionRadioButton->setChecked(true);
     } break;
+    case (int)MoveModeX::ORIGIN:
+    {
+        ui->moveFromXPositionRadioButton->setChecked(true);
+    } break;
     case (int)MoveModeX::LEFT:
     {
         ui->moveLeftRadioButton->setChecked(true);
@@ -90,6 +94,10 @@ MoveDialog::MoveDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
     case (int)MoveModeY::KEEP:
     {
         ui->keepYPositionRadioButton->setChecked(true);
+    } break;
+    case (int)MoveModeY::ORIGIN:
+    {
+        ui->moveFromYPositionRadioButton->setChecked(true);
     } break;
     case (int)MoveModeY::INSIDE:
     {
@@ -196,7 +204,6 @@ void MoveDialog::on_nextButton_clicked()
 
 void MoveDialog::on_keepXPositionRadioButton_clicked()
 {
-    moveFromXPos = false;
     moveModeX = MoveModeX::KEEP;
     subPicture->setOfsX(originalX);
     on_xOffsetLineEdit_editingFinished();
@@ -205,15 +212,14 @@ void MoveDialog::on_keepXPositionRadioButton_clicked()
 
 void MoveDialog::on_moveFromXPositionRadioButton_clicked()
 {
-    moveFromXPos = true;
-    moveModeX = MoveModeX::LEFT;
+    moveModeX = MoveModeX::ORIGIN;
+    subPicture->setOfsX(originalX);
     on_xOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
 }
 
 void MoveDialog::on_moveLeftRadioButton_clicked()
 {
-    moveFromXPos = false;
     moveModeX = MoveModeX::LEFT;
     on_xOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
@@ -221,7 +227,6 @@ void MoveDialog::on_moveLeftRadioButton_clicked()
 
 void MoveDialog::on_moveRightRadioButton_clicked()
 {
-    moveFromXPos = false;
     moveModeX = MoveModeX::RIGHT;
     on_xOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
@@ -229,7 +234,6 @@ void MoveDialog::on_moveRightRadioButton_clicked()
 
 void MoveDialog::on_moveToCenterRadioButton_clicked()
 {
-    moveFromXPos = false;
     moveModeX = MoveModeX::CENTER;
     on_xOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
@@ -237,7 +241,6 @@ void MoveDialog::on_moveToCenterRadioButton_clicked()
 
 void MoveDialog::on_keepYPositionRadioButton_clicked()
 {
-    moveFromYPos = false;
     moveModeY = MoveModeY::KEEP;
     subPicture->setOfsY(originalY);
     on_yOffsetLineEdit_editingFinished();
@@ -246,15 +249,14 @@ void MoveDialog::on_keepYPositionRadioButton_clicked()
 
 void MoveDialog::on_moveFromYPositionRadioButton_clicked()
 {
-    moveFromYPos = true;
-    moveModeY = MoveModeY::OUTSIDE;
+    moveModeY = MoveModeY::ORIGIN;
+    subPicture->setOfsY(originalY);
     on_yOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
 }
 
 void MoveDialog::on_moveInsideBoundsRadioButton_clicked()
 {
-    moveFromYPos = false;
     moveModeY = MoveModeY::INSIDE;
     on_yOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
@@ -262,7 +264,6 @@ void MoveDialog::on_moveInsideBoundsRadioButton_clicked()
 
 void MoveDialog::on_moveOutsideBoundsRadioButton_clicked()
 {
-    moveFromYPos = false;
     moveModeY = MoveModeY::OUTSIDE;
     on_yOffsetLineEdit_editingFinished();
     setRatio(screenRatioTrg);
@@ -272,25 +273,26 @@ void MoveDialog::on_xOffsetLineEdit_editingFinished()
 {
     int x = ui->xOffsetLineEdit->text().toInt();
 
-    if (moveFromXPos)
+    if (moveModeX == MoveModeX::ORIGIN)
     {
-        x = originalX + x;
+        int scaledX = originalX + x;
 
-        if (x < 0)
+        if (scaledX < 0)
         {
-            x = 0;
+            x = -originalX;
         }
-        else if ((subPicture->getImageWidth() + x) > subPicture->width)
+        else if ((subPicture->getImageWidth() + scaledX) > subPicture->width)
         {
-            x = (subPicture->width - subPicture->getImageWidth());
+            x = (subPicture->width - (subPicture->getImageWidth() + originalX));
         }
 
         if (x != offsetX)
         {
             offsetX = x;
+            subPicture->setOfsX(originalX);
             setRatio(screenRatioTrg);
         }
-        ui->xOffsetLineEdit->setText(QString::number(x - originalX));
+        ui->xOffsetLineEdit->setText(QString::number(x));
     }
     else
     {
@@ -316,10 +318,10 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
 {
     int x = arg1.toInt();
 
-    if (moveFromXPos)
+    if (moveModeX == MoveModeX::ORIGIN)
     {
-        x = originalX + x;
-        if (x < 0 || (subPicture->getImageWidth() + x) > subPicture->width)
+        int scaledX = originalX + x;
+        if (scaledX < 0 || (subPicture->getImageWidth() + scaledX) > subPicture->width)
         {
             ui->xOffsetLineEdit->setPalette(*errorBackground);
         }
@@ -328,6 +330,7 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
             if (x != offsetX)
             {
                 offsetX = x;
+                subPicture->setOfsX(originalX);
                 setRatio(screenRatioTrg);
             }
             ui->xOffsetLineEdit->setPalette(*okBackground);
@@ -355,25 +358,24 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
 {
     int y = ui->yOffsetLineEdit->text().toInt();
 
-    if (moveFromYPos)
+    if (moveModeY == MoveModeY::ORIGIN)
     {
-        int yPos = subPicture->getImageHeight() + originalY - y;
-        int scaledY = subPicture->height - yPos;
+        int scaledY = subPicture->height - ((subPicture->getImageHeight() + originalY) - y);
 
         if (scaledY < 0)
         {
-            y -= scaledY;
-            scaledY = 0;
+            y = -(subPicture->height - (subPicture->getImageHeight() + originalY));
         }
         else if (scaledY > subPicture->height / 3)
         {
             scaledY = subPicture->height / 3;
-            y = scaledY - (subPicture->height - (subPicture->getImageHeight() + originalY));
+            y = (subPicture->height - originalY) - scaledY;
         }
 
-        if (scaledY != offsetY)
+        if (y != offsetY)
         {
-            offsetY = scaledY;
+            offsetY = y;
+            subPicture->setOfsY(originalY);
             setRatio(screenRatioTrg);
         }
         ui->yOffsetLineEdit->setText(QString::number(y));
@@ -402,7 +404,7 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
 {
     int y = arg1.toInt();
 
-    if (moveFromYPos)
+    if (moveModeY == MoveModeY::ORIGIN)
     {
         int yPos = subPicture->getImageHeight() + originalY - y;
         y = subPicture->height - yPos;
@@ -416,6 +418,7 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
         if (y != offsetY)
         {
             offsetY = y;
+            subPicture->setOfsY(originalY);
             setRatio(screenRatioTrg);
         }
         ui->yOffsetLineEdit->setPalette(*okBackground);

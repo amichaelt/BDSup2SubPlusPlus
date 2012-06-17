@@ -200,6 +200,8 @@ enum class MoveModeY
 {
     /** keep position - don't move */
     KEEP,
+    /** move from original position */
+    ORIGIN,
     /** move inside bounds */
     INSIDE,
     /** move outside bounds */
@@ -211,6 +213,8 @@ enum class MoveModeX
 {
     /** keep position - don't move */
     KEEP,
+    /** move from original position */
+    ORIGIN,
     /** move to center */
     CENTER,
     /** move to left border */
