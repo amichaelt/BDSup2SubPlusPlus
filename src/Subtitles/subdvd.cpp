@@ -1031,10 +1031,6 @@ void SubDVD::readIdx()
                     throw QString("Missing filepos: %1").arg(value);
                 }
                 bool ok;
-                if (vals[1].trimmed() == "003901000")
-                {
-                    int temp = 0;
-                }
                 long hex = vals[1].trimmed().toLong(&ok, 16);
                 if (!ok)
                 {
