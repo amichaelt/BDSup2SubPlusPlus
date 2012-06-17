@@ -161,7 +161,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         // 1 byte    pts length
         int ptsLength = fileBuffer->getByte(ofs += 1);
         ofs += (1 + ptsLength); // skip PTS and stream ID
-        int packetStreamID = fileBuffer->getByte(ofs++) & 0xf;
+        int packetStreamID = fileBuffer->getByte(ofs++) - 0x20;
         if (packetStreamID != streamID)
         {
             // packet doesn't belong to stream -> skip
@@ -242,7 +242,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         {
             ofs = nextOfs;
         }
-    } while ( ofs < endOfs && ctrlHeaderCopied < ctrlSize);
+    } while (ofs < endOfs && ctrlHeaderCopied < ctrlSize);
 
     if (ctrlHeaderCopied != ctrlSize)
     {
@@ -270,6 +270,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
 
     int b;
     int index = 0;
+
     int endSeqOfs = (((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - ctrlOfsRel) - 2;
     if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
     {
@@ -952,6 +953,7 @@ void SubDVD::readIdx()
                 subtitleProcessor->printWarning(QString("Illegal language id: %1\n").arg(id));
                 continue;
             }
+
             bool found = false;
             auto subLanguages = subtitleProcessor->getLanguages();
 
@@ -959,7 +961,6 @@ void SubDVD::readIdx()
             {
                 if (id == subLanguages[i][1])
                 {
-                    languageIdx = i;
                     found = true;
                     break;
                 }
@@ -993,6 +994,13 @@ void SubDVD::readIdx()
             }
             else
             {
+                for (int i = 0; i < subLanguages.size(); ++i)
+                {
+                    if (id == subLanguages[i][1])
+                    {
+                        languageIdx = i;
+                    }
+                }
                 streamID = temp;
                 ignore = false;
             }
@@ -1023,6 +1031,10 @@ void SubDVD::readIdx()
                     throw QString("Missing filepos: %1").arg(value);
                 }
                 bool ok;
+                if (vals[1].trimmed() == "003901000")
+                {
+                    int temp = 0;
+                }
                 long hex = vals[1].trimmed().toLong(&ok, 16);
                 if (!ok)
                 {

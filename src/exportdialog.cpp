@@ -36,12 +36,14 @@ ExportDialog::ExportDialog(QWidget *parent, QString filePath, SubtitleProcessor*
     exportForced = subtitleProcessor->getNumForcedFrames() > 0 && subtitleProcessor->getExportForced();
     writePGCPal = subtitleProcessor->getWritePGCEditPal();
 
+    ui->languageComboBox->blockSignals(true);
     for (auto language : subtitleProcessor->getLanguages())
     {
         int n = subtitleProcessor->getOutputMode() == OutputMode::XML ? 2 : 1;
         ui->languageComboBox->addItem(QString(language[0] + " (" + language[n] + ")"));
     }
     ui->languageComboBox->setCurrentIndex(languageIdx);
+    ui->languageComboBox->blockSignals(false);
 
     if (subtitleProcessor->getOutputMode() == OutputMode::BDSUP)
     {

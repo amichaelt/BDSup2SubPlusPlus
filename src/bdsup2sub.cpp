@@ -603,8 +603,8 @@ void BDSup2Sub::loadSubtitleFile()
     subtitleProcessor->setLoadPath(loadPath);
     subtitleProcessor->moveToThread(workerThread);
     connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(readSubtitleStream()));
-    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), workerThread, SLOT(quit()));
-    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished()), workerThread, SLOT(deleteLater()));
+    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(quit()));
+    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
     workerThread->start();
 }
@@ -804,7 +804,8 @@ bool BDSup2Sub::execCLI()
         fprintf(stdout, "    /tmerge:<t>      : set max time diff for merging subs in ms - default: 200\n");
         fprintf(stdout, "    /movin:<r>[,<o>] : move captions inside screen ratio <r>, +/- offset <o>\n");
         fprintf(stdout, "    /movout:<r>[,<o>]: move captions inside screen ratio <r>, +/- offset <o>\n");
-        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be left,right,center.\n");
+        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be origin, left,\n");
+        fprintf(stdout, "                       right,center.\n");
         fprintf(stdout, "                       +/- optional offset <o> (only if moving left or right)\n");
         fprintf(stdout, "    /cropy:<n>       : crop the upper/lower n lines - default: 0\n");
         fprintf(stdout, "    /acrop:<n>       : set alpha cropping threshold - default: 10\n");
