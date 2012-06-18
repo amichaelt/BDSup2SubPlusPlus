@@ -27,6 +27,8 @@
 class SubtitleProcessor;
 class ProgressDialog;
 class QSettings;
+class QxtCommandOptions;
+class QTextStream;
 
 namespace Ui {
 class BDSup2Sub;
@@ -71,6 +73,11 @@ private:
     QPalette* errorBackground;
     QPalette* okBackground;
 
+    QTextStream* outStream;
+    QTextStream* errorStream;
+
+    QxtCommandOptions* options;
+
     QSettings* settings;
     bool fromCLI = false;
 
@@ -92,6 +99,7 @@ private:
     void errorDialog(const QString &errorMessage);
     void printWarnings();
     void Redirect_console();
+    void addCLIOptions();
 
 private slots:
     void showAboutQt();

@@ -41,6 +41,7 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include <QSettings>
+#include <QxtCommandOptions>
 
 BDSup2Sub::BDSup2Sub(QWidget *parent) :
     QMainWindow(parent),
@@ -337,9 +338,9 @@ void BDSup2Sub::showEvent(QShowEvent *event)
     QMainWindow::showEvent(event);
     if (fromCLI && loadPath != "")
     {
-        if (!QFile(loadPath).isReadable())
+        if (!QFile(loadPath).exists())
         {
-            QMessageBox::warning(this, "File not found!", QString("File '%1' does not exist\n").arg(loadPath));
+            QMessageBox::warning(this, "File not found!", QString("File '%1' does not exist\n").arg(QDir::toNativeSeparators(loadPath)));
             return;
         }
         loadSubtitleFile();
@@ -687,6 +688,10 @@ bool BDSup2Sub::execCLI()
 {
     Redirect_console();
 
+    outStream = new QTextStream(stdout),
+    errorStream = new QTextStream(stderr),
+    addCLIOptions();
+
     QStringList args = QCoreApplication::arguments();
     QStringList al(args[0]);
 
@@ -721,8 +726,29 @@ bool BDSup2Sub::execCLI()
             }
         } while (pos != -1 && pos < a.length());
 
-        if (args[1].indexOf('/') >= 0 ||
-           (args[1].indexOf(' ') >= 0 && extCnt > 1))
+        bool isValidFile = false;
+        QString testFileName = args[1].trimmed();
+
+        if (QFile(testFileName).exists())
+        {
+            isValidFile = true;
+        }
+        else
+        {
+            QFile testFile(testFileName);
+            if (testFile.open(QIODevice::WriteOnly))
+            {
+                isValidFile = true;
+                testFile.remove();
+            }
+            else
+            {
+                isValidFile = false;
+            }
+        }
+
+        if (!isValidFile && (args[1].indexOf('/') >= 0 ||
+           (args[1].indexOf(' ') >= 0 && extCnt > 1)))
         {
             bool inside = false;
             QString s = args[1].trimmed();
@@ -745,7 +771,7 @@ bool BDSup2Sub::execCLI()
                         {
                             al.push_back(sb);
                         }
-                        sb = QString();
+                        sb = QString("");
                         for (int j = i + 1; j < s.length(); ++j)
                         {
                             c = s.at(j).toAscii();
@@ -769,7 +795,7 @@ bool BDSup2Sub::execCLI()
             }
             if (inside)
             {
-                fprintf(stdout, "ERROR: Missing closing single quote");
+                fprintf(stderr, QString("ERROR: Missing closing single quote").toAscii());
                 exit(1);
             }
             if (sb.length() > 0)
@@ -875,7 +901,7 @@ bool BDSup2Sub::execCLI()
                     QString ext = QFileInfo(trg).suffix();
                     if (ext.isEmpty())
                     {
-                        fprintf(stdout, QString("ERROR: No extension given for target " + trg).toAscii());
+                        fprintf(stderr, QString("ERROR: No extension given for target " + trg).toAscii());
                         exit(1);
                     }
                     if (ext == "sup")
@@ -896,7 +922,7 @@ bool BDSup2Sub::execCLI()
                     }
                     else
                     {
-                        fprintf(stdout, QString("ERROR: Unknown extension of target " + trg).toAscii());
+                        fprintf(stderr, QString("ERROR: Unknown extension of target " + trg).toAscii());
                         exit(1);
                     }
                     subtitleProcessor->setOutputMode(mode);
@@ -911,7 +937,7 @@ bool BDSup2Sub::execCLI()
             // analyze normal parameters
             if (a.length() < 4 || a.at(0) != QChar('/'))
             {
-                fprintf(stdout, QString("ERROR: Illegal argument: " + a).toAscii());
+                fprintf(stderr, QString("ERROR: Illegal argument: " + a).toAscii());
                 exit(1);
             }
             int pos = a.indexOf(':');
@@ -961,7 +987,7 @@ bool BDSup2Sub::execCLI()
                 // alpha threshold for SUB/IDX conversion
                 if (ival <0 || ival > 255)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal number range for alpha threshold: %1")
+                    fprintf(stderr, (QString("ERROR: Illegal number range for alpha threshold: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -977,7 +1003,7 @@ bool BDSup2Sub::execCLI()
                 // luminance threshold low-med for SUB/IDX conversion
                 if (ival <0 || ival > 255)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal number range for luminance: %1")
+                    fprintf(stderr, (QString("ERROR: Illegal number range for luminance: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -993,7 +1019,7 @@ bool BDSup2Sub::execCLI()
                 // luminance threshold med-high for SUB/IDX conversion
                 if (ival <0 || ival > 255)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal number range for luminance: %1")
+                    fprintf(stderr, (QString("ERROR: Illegal number range for luminance: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -1056,7 +1082,7 @@ bool BDSup2Sub::execCLI()
                     }
                     else
                     {
-                        fprintf(stdout, (QString("ERROR: Illegal resolution: %1")
+                        fprintf(stderr, (QString("ERROR: Illegal resolution: %1")
                                          .arg(val)).toAscii());
                         exit(1);
                     }
@@ -1078,11 +1104,11 @@ bool BDSup2Sub::execCLI()
                 }
                 if (langIdx == -1)
                 {
-                    fprintf(stdout, (QString("ERROR: Unknown language %1").arg(val)).toAscii());
-                    fprintf(stdout, "Use one of the following 2 character codes:");
+                    fprintf(stderr, (QString("ERROR: Unknown language %1").arg(val)).toAscii());
+                    fprintf(stderr, "Use one of the following 2 character codes:");
                     for (int l = 0; l < subtitleProcessor->getLanguages().size(); ++l)
                     {
-                        fprintf(stdout, (QString("    %1 - %2")
+                        fprintf(stderr, (QString("    %1 - %2")
                                          .arg(subtitleProcessor->getLanguages()[l][1])
                                          .arg(subtitleProcessor->getLanguages()[l][0])).toAscii());
                     }
@@ -1102,13 +1128,13 @@ bool BDSup2Sub::execCLI()
                     if (id.isEmpty() || (char)id[0] != 0x23 || (char)id[1] != 0x43 ||
                                         (char)id[2] != 0x4F || (char)id[3] != 0x4C) //#COL
                     {
-                        fprintf(stdout, (QString("ERROR: No valid palette file: %1").arg(val)).toAscii());
+                        fprintf(stderr, (QString("ERROR: No valid palette file: %1").arg(val)).toAscii());
                         exit(1);
                     }
                 }
                 else
                 {
-                    fprintf(stdout, (QString("ERROR: Palette file not found: %1").arg(val)).toAscii());
+                    fprintf(stderr, (QString("ERROR: Palette file not found: %1").arg(val)).toAscii());
                     exit(1);
                 }
                 QSettings colorSettings(val, QSettings::IniFormat);
@@ -1160,7 +1186,7 @@ bool BDSup2Sub::execCLI()
                         fpsSrc = subtitleProcessor->getFPS(srcStr);
                         if (fpsSrc <= 0)
                         {
-                            fprintf(stdout, (QString("ERROR: invalid source framerate: %1")
+                            fprintf(stderr, (QString("ERROR: invalid source framerate: %1")
                                              .arg(srcStr)).toAscii());
                             exit(1);
                         }
@@ -1169,7 +1195,7 @@ bool BDSup2Sub::execCLI()
                     fpsTrg = subtitleProcessor->getFPS(val.mid(pos + 1));
                     if (fpsTrg <= 0)
                     {
-                        fprintf(stdout, (QString("ERROR: invalid target value: %1")
+                        fprintf(stderr, (QString("ERROR: invalid target value: %1")
                                          .arg(val.mid(pos + 1))).toAscii());
                         exit(1);
                     }
@@ -1199,7 +1225,7 @@ bool BDSup2Sub::execCLI()
                         fpsTrg = subtitleProcessor->getFPS(val);
                         if (fpsTrg <= 0)
                         {
-                            fprintf(stdout, (QString("ERROR: invalid target framerate: %1").arg(val)).toAscii());
+                            fprintf(stderr, (QString("ERROR: invalid target framerate: %1").arg(val)).toAscii());
                             exit(1);
                         }
                         subtitleProcessor->setFPSTrg(fpsTrg);
@@ -1219,7 +1245,7 @@ bool BDSup2Sub::execCLI()
                 delay = val.trimmed().toDouble(&ok) * 90.0;
                 if (!ok)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal delay value: %1").arg(val)).toAscii());
+                    fprintf(stderr, (QString("ERROR: Illegal delay value: %1").arg(val)).toAscii());
                     exit(1);
                 }
                 int delayPTS = (int)subtitleProcessor->syncTimePTS((long)delay, subtitleProcessor->getFPSTrg());
@@ -1235,7 +1261,7 @@ bool BDSup2Sub::execCLI()
                 t = val.trimmed().toDouble(&ok) * 90.0;
                 if (!ok)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal value for minimum display time: %1")
+                    fprintf(stderr, (QString("ERROR: Illegal value for minimum display time: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -1275,7 +1301,7 @@ bool BDSup2Sub::execCLI()
                 screenRatio = ok ? screenRatio : -1;
                 if (screenRatio <= (16.0/9))
                 {
-                    fprintf(stdout, (QString("ERROR: invalid screen ratio: %1")
+                    fprintf(stderr, (QString("ERROR: invalid screen ratio: %1")
                                      .arg(ratio)).toAscii());
                     exit(1);
                 }
@@ -1287,7 +1313,7 @@ bool BDSup2Sub::execCLI()
                     moveOffsetY = ok ? moveOffsetY : -1;
                     if (moveOffsetY < 0)
                     {
-                        fprintf(stdout, (QString("ERROR: invalid pixel offset: %1")
+                        fprintf(stderr, (QString("ERROR: invalid pixel offset: %1")
                                          .arg(val.mid(pos + 1))).toAscii());
                         exit(1);
                     }
@@ -1325,7 +1351,7 @@ bool BDSup2Sub::execCLI()
                 }
                 else
                 {
-                    fprintf(stdout, (QString("ERROR: invalid moveX command: %1").arg(mx)).toAscii());
+                    fprintf(stderr, (QString("ERROR: invalid moveX command: %1").arg(mx)).toAscii());
                     exit(1);
                 }
 
@@ -1337,7 +1363,7 @@ bool BDSup2Sub::execCLI()
                     moveOffsetX = ok ? moveOffsetX : -1;
                     if (moveOffsetX < 0)
                     {
-                        fprintf(stdout, (QString("ERROR: invalid pixel offset: %1")
+                        fprintf(stderr, (QString("ERROR: invalid pixel offset: %1")
                                          .arg(val.mid(pos + 1))).toAscii());
                         exit(1);
                     }
@@ -1362,7 +1388,7 @@ bool BDSup2Sub::execCLI()
                 }
                 else
                 {
-                    fprintf(stdout, (QString("ERROR: invalid crop y value: %1")
+                    fprintf(stderr, (QString("ERROR: invalid crop y value: %1")
                                      .arg(val.mid(0, pos))).toAscii());
                     exit(1);
                 }
@@ -1384,7 +1410,7 @@ bool BDSup2Sub::execCLI()
                 }
                 else
                 {
-                    fprintf(stdout, (QString("ERROR: invalid palette mode: %1")
+                    fprintf(stderr, (QString("ERROR: invalid palette mode: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -1409,7 +1435,7 @@ bool BDSup2Sub::execCLI()
                 }
                 else
                 {
-                    fprintf(stdout, (QString("ERROR: invalid scaling filter: %1").arg(val)).toAscii());
+                    fprintf(stderr, (QString("ERROR: invalid scaling filter: %1").arg(val)).toAscii());
                     exit(1);
                 }
             } break;
@@ -1421,7 +1447,7 @@ bool BDSup2Sub::execCLI()
                 t = val.trimmed().toDouble(&ok) * 90.0;
                 if (!ok)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal value for maximum merge time: %1")
+                    fprintf(stderr, (QString("ERROR: Illegal value for maximum merge time: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -1441,7 +1467,7 @@ bool BDSup2Sub::execCLI()
                     scaleX = ok ? scaleX : -1;
                     if (scaleX < subtitleProcessor->minScale || scaleX > subtitleProcessor->maxScale)
                     {
-                        fprintf(stdout, (QString("ERROR: invalid x scaling factor: %1")
+                        fprintf(stderr, (QString("ERROR: invalid x scaling factor: %1")
                                          .arg(val.mid(0, pos))).toAscii());
                         exit(1);
                     }
@@ -1449,7 +1475,7 @@ bool BDSup2Sub::execCLI()
                     scaleY = ok ? scaleY : -1;
                     if (scaleY < subtitleProcessor->minScale || scaleY > subtitleProcessor->maxScale)
                     {
-                        fprintf(stdout, (QString("ERROR: invalid y scaling factor: %1")
+                        fprintf(stderr, (QString("ERROR: invalid y scaling factor: %1")
                                          .arg(val.mid(pos + 1))).toAscii());
                         exit(1);
                     }
@@ -1460,7 +1486,7 @@ bool BDSup2Sub::execCLI()
                 }
                 else
                 {
-                    fprintf(stdout, (QString("ERROR: invalid scale command (missing comma): %1")
+                    fprintf(stderr, (QString("ERROR: invalid scale command (missing comma): %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -1471,7 +1497,7 @@ bool BDSup2Sub::execCLI()
                 // alpha threshold for cropping and patching background color to black
                 if (ival <0 || ival > 255)
                 {
-                    fprintf(stdout, (QString("ERROR: Illegal number range for alpha cropping threshold: %1")
+                    fprintf(stderr, (QString("ERROR: Illegal number range for alpha cropping threshold: %1")
                                      .arg(val)).toAscii());
                     exit(1);
                 }
@@ -1505,11 +1531,25 @@ bool BDSup2Sub::execCLI()
             } break;
             default: //UNKNOWN:
             {
-                fprintf(stdout, (QString("ERROR: Illegal argument: %1")
+                fprintf(stderr, (QString("ERROR: Illegal argument: %1")
                                  .arg(args[i])).toAscii());
                 exit(1);
             }
             }
+        }
+
+        // Step 3
+        // open GUI if trg file name is missing
+        if (trg.isEmpty())
+        {
+            loadPath = QFileInfo(src).absoluteFilePath();
+            if (!QFileInfo(loadPath).exists())
+            {
+                fprintf(stderr, (QString("ERROR: File '%1' does not exist.").arg(QDir::toNativeSeparators(loadPath))).toAscii());
+                exit(1);
+            }
+            fromCLI = true;
+            return false;
         }
 
         subtitleProcessor->setOutputResolution(r);
@@ -1517,17 +1557,8 @@ bool BDSup2Sub::execCLI()
         if (!subtitleProcessor->getKeepFps() && !defineFPStrg)
         {
             subtitleProcessor->setFPSTrg(subtitleProcessor->getDefaultFPS(r));
-            fprintf(stdout, (QString("Target frame rate set to %1fps")
+            fprintf(stdout, (QString("Target frame rate set to %1fps\n")
                              .arg(QString::number(subtitleProcessor->getFPSTrg(), 'g', 6))).toAscii());
-        }
-
-        // Step 3
-        // open GUI if trg file name is missing
-        if (trg.isEmpty())
-        {
-            fromCLI = true;
-            loadPath = QFileInfo(src).absoluteFilePath();
-            return false;
         }
 
         // Step 4
@@ -1549,13 +1580,13 @@ bool BDSup2Sub::execCLI()
 
             if (srcFiles.size() == 0)
             {
-                fprintf(stdout, (QString("ERROR: No match found for %1'")
+                fprintf(stderr, (QString("ERROR: No match found for %1'")
                                  .arg(QString(path + "/" + src))).toAscii());
                 exit(1);
             }
             if (trg.indexOf('*') == -1)
             {
-                fprintf(stdout, QString("ERROR: No wildcards in target string!").toAscii());
+                fprintf(stderr, QString("ERROR: No wildcards in target string!").toAscii());
                 exit(1);
             }
             for (int i = 0; i < srcFiles.size(); ++i)
@@ -1595,7 +1626,7 @@ bool BDSup2Sub::execCLI()
                 QFileInfo srcFileInfo(src);
                 if (!srcFileInfo.exists())
                 {
-                    fprintf(stdout, (QString("ERROR: File '%1' does not exist.").arg(src)).toAscii());
+                    fprintf(stderr, (QString("ERROR: File '%1' does not exist.").arg(QDir::toNativeSeparators(src))).toAscii());
                     exit(1);
                 }
                 bool xml = srcFileInfo.completeSuffix().toLower() == "xml";
@@ -1605,7 +1636,7 @@ bool BDSup2Sub::execCLI()
                 StreamID sid = (id.isEmpty()) ? StreamID::UNKNOWN : subtitleProcessor->getStreamID(id);
                 if (!idx && !xml && !ifo && sid == StreamID::UNKNOWN)
                 {
-                    fprintf(stdout, (QString("File '%1' is not a supported subtitle stream.").arg(src)).toAscii());
+                    fprintf(stderr, (QString("File '%1' is not a supported subtitle stream.").arg(src)).toAscii());
                     exit(1);
                 }
                 // check output file(s)
@@ -1629,7 +1660,7 @@ bool BDSup2Sub::execCLI()
                 {
                     if ((fi.exists() && !fi.isWritable()) || (fs.exists() && !fs.isWritable()))
                     {
-                        fprintf(stdout, (QString("Target file '%1' is write protected.").arg(trg)).toAscii());
+                        fprintf(stderr, (QString("Target file '%1' is write protected.").arg(trg)).toAscii());
                         exit(1);
                     }
                 }
@@ -1671,7 +1702,7 @@ bool BDSup2Sub::execCLI()
                 // set some values
                 if (subtitleProcessor->getExportForced() && subtitleProcessor->getNumForcedFrames()==0)
                 {
-                    fprintf(stdout, QString("No forced subtitles found.").toAscii());
+                    fprintf(stderr, QString("No forced subtitles found.").toAscii());
                     exit(1);
                 }
                 QVector<int> lt = subtitleProcessor->getLuminanceThreshold();
@@ -1694,7 +1725,8 @@ bool BDSup2Sub::execCLI()
             }
             catch(QString e)
             {
-                print(QString("ERROR: " + e));
+                fprintf(stderr, QString("ERROR: " + e).toAscii());
+                exit(1);
             }
             // clean up
             printWarnings();
@@ -1723,6 +1755,19 @@ void BDSup2Sub::Redirect_console()
     *stderr= *hferr;
     setvbuf(stderr,NULL, _IONBF,0);
 #endif
+}
+
+void BDSup2Sub::addCLIOptions()
+{
+    options = new QxtCommandOptions;
+    //options->addSection("Options");
+    //options->add("res", QString("%1%2")
+    //             .arg(QString(": set resolution to 480, 576, 720 or 1080 - default 576").rightJustified(80, QChar(' ')))
+    //             .arg(QString("Predefined values: keep, ntsc=480, pal=576, 1440x1080").rightJustified(80, QChar(' '))),
+    //             QxtCommandOptions::ValueRequired);
+    //options->add("fps", QString("%1\n%2\n")
+    //             .arg()
+    //             .arg());
 }
 
 void BDSup2Sub::showAboutQt()
