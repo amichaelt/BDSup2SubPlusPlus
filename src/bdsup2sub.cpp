@@ -41,7 +41,6 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include <QSettings>
-#include <QxtCommandOptions>
 
 BDSup2Sub::BDSup2Sub(QWidget *parent) :
     QMainWindow(parent),
@@ -688,9 +687,8 @@ bool BDSup2Sub::execCLI()
 {
     Redirect_console();
 
-    outStream = new QTextStream(stdout),
-    errorStream = new QTextStream(stderr),
-    addCLIOptions();
+    outStream = new QTextStream(stdout);
+    errorStream = new QTextStream(stderr);
 
     QStringList args = QCoreApplication::arguments();
     QStringList al(args[0]);
@@ -829,9 +827,8 @@ bool BDSup2Sub::execCLI()
         fprintf(stdout, "    /tmin:<t>        : set minimum display time in ms - default: 500\n");
         fprintf(stdout, "    /tmerge:<t>      : set max time diff for merging subs in ms - default: 200\n");
         fprintf(stdout, "    /movin:<r>[,<o>] : move captions inside screen ratio <r>, +/- offset <o>\n");
-        fprintf(stdout, "    /movout:<r>[,<o>]: move captions inside screen ratio <r>, +/- offset <o>\n");
-        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be origin, left,\n");
-        fprintf(stdout, "                       right,center.\n");
+        fprintf(stdout, "    /movout:<r>[,<o>]: move captions outside screen ratio <r>, +/- offset <o>\n");
+        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be left,right,center\n");
         fprintf(stdout, "                       +/- optional offset <o> (only if moving left or right)\n");
         fprintf(stdout, "    /cropy:<n>       : crop the upper/lower n lines - default: 0\n");
         fprintf(stdout, "    /acrop:<n>       : set alpha cropping threshold - default: 10\n");
@@ -1755,19 +1752,6 @@ void BDSup2Sub::Redirect_console()
     *stderr= *hferr;
     setvbuf(stderr,NULL, _IONBF,0);
 #endif
-}
-
-void BDSup2Sub::addCLIOptions()
-{
-    options = new QxtCommandOptions;
-    //options->addSection("Options");
-    //options->add("res", QString("%1%2")
-    //             .arg(QString(": set resolution to 480, 576, 720 or 1080 - default 576").rightJustified(80, QChar(' ')))
-    //             .arg(QString("Predefined values: keep, ntsc=480, pal=576, 1440x1080").rightJustified(80, QChar(' '))),
-    //             QxtCommandOptions::ValueRequired);
-    //options->add("fps", QString("%1\n%2\n")
-    //             .arg()
-    //             .arg());
 }
 
 void BDSup2Sub::showAboutQt()
