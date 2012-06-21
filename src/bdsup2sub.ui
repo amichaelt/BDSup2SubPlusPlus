@@ -663,7 +663,6 @@
     <property name="title">
      <string>&amp;About</string>
     </property>
-    <addaction name="action_Help"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
    <addaction name="menu_File"/>
