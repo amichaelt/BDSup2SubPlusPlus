@@ -5,12 +5,10 @@
 #-------------------------------------------------
 
 QT       += core gui xml
-CONFIG   += qt console qxt
-QXT      += core
+CONFIG   += qt console
 QMAKE_CXXFLAGS += -std=c++0x
 TARGET = bdsup2sub++
 TEMPLATE = app
-
 
 SOURCES += main.cpp\
         bdsup2sub.cpp \
