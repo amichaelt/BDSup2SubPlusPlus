@@ -20,7 +20,7 @@
 #include "supbd.h"
 
 #include "subtitleprocessor.h"
-#include "Tools/fileBuffer.h"
+#include "Tools/filebuffer.h"
 #include "Tools/timeutil.h"
 #include "subpicturebd.h"
 #include "imageobject.h"
