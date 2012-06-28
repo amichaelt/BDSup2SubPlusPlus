@@ -189,9 +189,11 @@ void SupHD::readAllSupFrames()
                 case 0x85: // area
                 {
                     pic->setOfsX((fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4));
-                    pic->setImageWidth(((((fileBuffer->getByte(index + 1) &0xf) << 8) | (fileBuffer->getByte(index + 2))) - pic->getOfsX()) + 1);
+                    int imageWidth = (((fileBuffer->getByte(index + 1) &0xf) << 8) | (fileBuffer->getByte(index + 2)));
+                    pic->setImageWidth((imageWidth - pic->getOfsX()) + 1);
                     pic->setOfsY((fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4));
-                    pic->setImageHeight(((((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5))) - pic->getOfsY()) + 1);
+                    int imageHeight = (((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5)));
+                    pic->setImageHeight((imageHeight - pic->getOfsY()) + 1);
 
                     subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))

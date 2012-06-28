@@ -327,10 +327,12 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         {
             int xOfs = ((ctrlHeader[index] & 0xff) << 4) | ((ctrlHeader[index + 1] & 0xff) >> 4);
             pic->setOfsX(ofsXglob + xOfs);
-            pic->setImageWidth((((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index + 2] & 0xff)) - xOfs) + 1);
+            int imageWidth = ((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index + 2] & 0xff));
+            pic->setImageWidth((imageWidth - xOfs) + 1);
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
             pic->setOfsY(ofsYglob + yOfs);
-            pic->setImageHeight((((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff)) - yOfs) + 1);
+            int imageHeight = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff));
+            pic->setImageHeight((imageHeight - yOfs) + 1);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
                                      .arg(QString::number(pic->getOfsX())).arg(QString::number(pic->getOfsY()))

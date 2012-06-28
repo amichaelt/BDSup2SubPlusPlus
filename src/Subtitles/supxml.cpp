@@ -36,6 +36,7 @@ SupXML::SupXML(QString fileName, SubtitleProcessor* subtitleProcessor) :
     pathName = QFileInfo(fileName).absolutePath() + "/";
     this->subtitleProcessor = subtitleProcessor;
     fpsXml = XmlFps(fps);
+    xmlFile.reset(new QFile(xmlFileName));
 }
 
 SupXML::~SupXML()
