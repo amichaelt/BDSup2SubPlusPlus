@@ -215,7 +215,7 @@ void SupDVD::readIfo()
     }
 
     // PTT_SRPTI
-    VTS_PGCITI_ofs += fileBuffer->getDWord(VTS_PGCITI_ofs+0x0C);
+    VTS_PGCITI_ofs += fileBuffer->getDWord(VTS_PGCITI_ofs + 0x0C);
 
     subtitleProcessor->print(QString("Reading palette from offset: %1\n").arg(QString::number(VTS_PGCITI_ofs, 16), 8, QChar('0')));
 
@@ -304,6 +304,11 @@ void SupDVD::readAllSupFrames()
 
     long ofs = 0;
     long size = fileBuffer->getSize();
+
+    if (size <= 0)
+    {
+        throw QString("SUP file is empty. No subtitles can be read.");
+    }
 
     emit maxProgressChanged(size);
 
@@ -567,11 +572,13 @@ long SupDVD::readSupFrame(long ofs)
         {
             int xOfs = ((ctrlHeader[index] & 0xff) << 4) | ((ctrlHeader[index + 1] & 0xff) >> 4);
             pic->setOfsX(ofsXglob + xOfs);
-            pic->setImageWidth((((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index+2] & 0xff)) - xOfs) + 1);
+            int width = ((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index+2] & 0xff));
+            pic->setImageWidth((width - xOfs) + 1);
 
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
             pic->setOfsY(ofsYglob + yOfs);
-            pic->setImageHeight((((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | ((ctrlHeader[index + 5] & 0xff))) - yOfs) + 1);
+            int height = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | ((ctrlHeader[index + 5] & 0xff)));
+            pic->setImageHeight((height - yOfs) + 1);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
                                      .arg(QString::number(pic->getOfsX()))

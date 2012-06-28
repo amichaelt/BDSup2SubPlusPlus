@@ -309,7 +309,8 @@ public:
     void setExportForced(bool value) { exportForced = value; }
     QVector<int> getLuminanceThreshold() { return luminanceThreshold; }
     void setLuminanceThreshold(QVector<int> value) { luminanceThreshold = value; }
-    void setLoadPath(QString loadPath) { fileName = loadPath; }
+    void setLoadPath(QString value) { fileName = value; }
+    void setIFOFileName(QString value) { ifoFile = value; }
     int getCropOfsY() { return cropOfsY; }
     int setCropOfsY(int ofs) { return cropOfsY = ofs; }
     OutputMode getOutputMode() { return outMode; }
@@ -552,7 +553,8 @@ private:
     ScalingFilters scalingFilter = scalingFilterDefault;
     bool isActive = false;
 
-    QString fileName;
+    QString fileName = "";
+    QString ifoFile = "";
     QVector<int> luminanceThreshold = { 210, 160 };
 
     QVector<int> alphaDefault = { 0, 0xf, 0xf, 0xf};

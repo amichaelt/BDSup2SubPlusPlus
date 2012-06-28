@@ -48,9 +48,12 @@ long TimeUtil::timeStrXmlToPTS(QString s, double fps)
     }
 }
 
-long TimeUtil::timeStrToPTS(QString s)
+long TimeUtil::timeStrToPTS(QString s, bool *ok)
 {
-    if (timePattern.exactMatch(s) && timePattern.indexIn(s) != -1)
+    *ok = false;
+    bool timestampIsNegative = s[0] == '-';
+    QString temp = timestampIsNegative ? s.mid(1) : s;
+    if (timePattern.exactMatch(temp) && timePattern.indexIn(temp) != -1)
     {
         QStringList m = timePattern.capturedTexts();
         long hour = m[1].toInt();
@@ -63,7 +66,9 @@ long TimeUtil::timeStrToPTS(QString s)
         temp *= 60;
         temp += sec;
         temp *= 1000;
-        return (temp + ms) * 90;
+        *ok = true;
+        long ret = (temp + ms) * 90;
+        return timestampIsNegative ? -ret : ret;
     }
     else
     {
@@ -80,22 +85,16 @@ QString TimeUtil::ptsToTimeStrXml(long pts, double fps)
                                  .arg(QString::number((int)(((fps * time[3]) / 1000.0) + 0.5)), 2, QChar('0'));
 }
 
-QString TimeUtil::ptsToTimeStrIdx(long pts)
-{
-    QVector<int> time = msToTime((pts + 45) / 90);
-    return QString("%1:%2:%3:%4").arg(QString::number(time[0]), 2, QChar('0'))
-                                 .arg(QString::number(time[1]), 2, QChar('0'))
-                                 .arg(QString::number(time[2]), 2, QChar('0'))
-                                 .arg(QString::number(time[3]), 3, QChar('0'));
-}
-
 QString TimeUtil::ptsToTimeStr(long pts)
 {
+    bool ptsIsNegative = pts < 0;
+    pts = ptsIsNegative ? -pts : pts;
     QVector<int> time = msToTime((pts + 45) / 90);
-    return QString("%1:%2:%3.%4").arg(QString::number(time[0]), 2, QChar('0'))
-                                 .arg(QString::number(time[1]), 2, QChar('0'))
-                                 .arg(QString::number(time[2]), 2, QChar('0'))
-                                 .arg(QString::number(time[3]), 3, QChar('0'));
+    return QString("%1%2:%3:%4.%5").arg(ptsIsNegative ? "-" : "")
+                                   .arg(QString::number(time[0]), 2, QChar('0'))
+                                   .arg(QString::number(time[1]), 2, QChar('0'))
+                                   .arg(QString::number(time[2]), 2, QChar('0'))
+                                   .arg(QString::number(time[3]), 3, QChar('0'));
 }
 
 QVector<int> TimeUtil::msToTime(long ms)

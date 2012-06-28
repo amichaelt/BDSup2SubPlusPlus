@@ -42,6 +42,11 @@ void ZoomableImageArea::setImage(QImage* image)
     }
 }
 
+void ZoomableImageArea::updateImage()
+{
+    setZoomScale(zoomScale);
+}
+
 void ZoomableImageArea::setZoomScale(int scale)
 {
     if (scale != zoomScale)
@@ -51,21 +56,17 @@ void ZoomableImageArea::setZoomScale(int scale)
     if (image != 0 && !image->isNull())
     {
         QRect target = image->rect();
-        if (zoomScale == 1)
-        {
-            drawPixmap = new QPixmap(this->width(), this->height());
-            drawPixmap->fill();
-        }
-        else
-        {
-            target.setWidth(image->width() * zoomScale);
-            target.setHeight(image->height() * zoomScale);
+        target.setWidth(image->width() * zoomScale);
+        target.setHeight(image->height() * zoomScale);
 
-            int drawHeight = target.height() > originalSize.height() ? target.height() : originalSize.height();
-            int drawWidth = target.width() > originalSize.width() ? target.width() : originalSize.width();
-            drawPixmap = new QPixmap(drawWidth, drawHeight);
-            drawPixmap->fill();
-        }
+        QRect visibleArea = this->parentWidget()->visibleRegion().boundingRect();
+
+        int drawHeight = target.height() > visibleArea.height() ? target.height() : visibleArea.height();
+        int drawWidth = target.width() > visibleArea.width() ? target.width() : visibleArea.width();
+
+        drawPixmap = new QPixmap(drawWidth, drawHeight);
+        drawPixmap->fill();
+
         painter->begin(drawPixmap);
         QLinearGradient gradient(0, 0, drawPixmap->width(), drawPixmap->height());
         gradient.setColorAt(0, Qt::blue);

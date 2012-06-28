@@ -25,6 +25,7 @@ SubPictureBD::SubPictureBD()
 }
 
 SubPictureBD::SubPictureBD(SubPictureBD *other) :
+    SubPicture(other),
     objectID(other->objectID),
     imageObjectList(other->imageObjectList),
     winWidth(other->winWidth),

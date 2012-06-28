@@ -41,7 +41,7 @@ public:
     int xWinOfs = 0;
     int yWinOfs = 0;
     int type = 0;
-    QVector<QVector<PaletteInfo*>*> palettes = QVector<QVector<PaletteInfo*>*>();
+    QVector<QVector<PaletteInfo*> > palettes = QVector<QVector<PaletteInfo*> >();
 
     ImageObject* getImgObj(int index) { return imageObjectList.at(index); }
     ImageObject* getImgObj() { return imageObjectList.at(objectID); }

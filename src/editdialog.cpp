@@ -404,7 +404,10 @@ void EditDialog::on_startTimeLineEdit_textChanged(const QString &arg1)
 {
     if (!isReady) return;
 
-    long t = subtitleProcessor->syncTimePTS(TimeUtil::timeStrToPTS(arg1), subtitleProcessor->getFPSTrg());
+    bool ok;
+    long timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
+    timestamp = ok ? timestamp : -1;
+    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t < 0 || t >= subPicture->endTime || (subPicturePrevious != 0 && subPicturePrevious->endTime > t))
     {
         ui->startTimeLineEdit->setPalette(*errorBackground);
@@ -429,7 +432,10 @@ void EditDialog::on_endTimeLineEdit_textChanged(const QString &arg1)
 {
     if (!isReady) return;
 
-    long t = subtitleProcessor->syncTimePTS(TimeUtil::timeStrToPTS(arg1), subtitleProcessor->getFPSTrg());
+    bool ok;
+    long timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
+    timestamp = ok ? timestamp : -1;
+    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t < 0 || t <= subPicture->startTime || (subPictureNext != 0 && subPictureNext->startTime < t))
     {
         ui->endTimeLineEdit->setPalette(*errorBackground);
@@ -582,7 +588,10 @@ void EditDialog::on_horizontalSlider_valueChanged(int value)
 
 void EditDialog::on_startTimeLineEdit_editingFinished()
 {
-    long t = subtitleProcessor->syncTimePTS(TimeUtil::timeStrToPTS(ui->startTimeLineEdit->text()), subtitleProcessor->getFPSTrg());
+    bool ok;
+    long timestamp = TimeUtil::timeStrToPTS(ui->startTimeLineEdit->text(), &ok);
+    timestamp = ok ? timestamp : -1;
+    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t > subPicture->endTime)
     {
         t = subPicture->endTime - frameTime;
@@ -612,7 +621,10 @@ void EditDialog::on_startTimeLineEdit_editingFinished()
 
 void EditDialog::on_endTimeLineEdit_editingFinished()
 {
-    long t = subtitleProcessor->syncTimePTS(TimeUtil::timeStrToPTS(ui->endTimeLineEdit->text()), subtitleProcessor->getFPSTrg());
+    bool ok;
+    long timestamp = TimeUtil::timeStrToPTS(ui->endTimeLineEdit->text(), &ok);
+    timestamp = ok ? timestamp : -1;
+    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t <= subPicture->startTime)
     {
         t = subPicture->startTime + frameTime;

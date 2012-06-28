@@ -68,6 +68,8 @@ public:
     void readAllSubFrames();
     QVector<uchar> createSubFrame(SubPictureDVD* subPicture, Bitmap* bitmap);
 
+    void setTimeOffset(QString value) { timeOffset = value; }
+
 signals:
     void maxProgressChanged(int maxProgress);
     void currentProgressChanged(int currentProgress);
@@ -76,6 +78,8 @@ private:
     int streamID = 0;
     QString idxFileName;
     QString subFileName;
+    QString timeOffset = "";
+    int delay = -1;
 
     QVector<SubPictureDVD*> subPictures;
 

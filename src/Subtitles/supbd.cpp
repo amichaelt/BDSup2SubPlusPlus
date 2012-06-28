@@ -109,7 +109,6 @@ void SupBD::readAllSupFrames()
     SubPictureBD* pic = 0;
     SubPictureBD* picLast = 0;
     SubPictureBD* picTmp = 0;
-    subPictures = QVector<SubPictureBD*>();
     int odsCtr = 0;
     int pdsCtr = 0;
     int odsCtrOld = 0;
@@ -238,15 +237,15 @@ void SupBD::readAllSupFrames()
                 else if (cs == CompositionState::EPOCH_START)
                 {
                     // new frame
-                    if (subPictures.size() > 0 && (odsCtr==0 || pdsCtr==0))
+                    if (subPictures.size() > 0 && (odsCtr == 0 || pdsCtr == 0))
                     {
                         subtitleProcessor->printWarning(QString("missing PDS/ODS: last epoch is discarded\n"));
 
-                        subPictures.remove(subPictures.size()-1);
+                        subPictures.remove(subPictures.size() - 1);
                         compNumOld = compNum - 1;
                         if (subPictures.size() > 0)
                         {
-                            picLast = subPictures.at(subPictures.size()-1);
+                            picLast = subPictures.at(subPictures.size() - 1);
                         }
                         else
                         {
@@ -277,13 +276,13 @@ void SupBD::readAllSupFrames()
                                                                                       .arg(QString::number(segment->size, 16), 4, QChar('0'))
                                                                                       .arg(QString::number(compNum))
                                                                                       .arg(pic->isForced ? "true" : "false");
-                    if (!so.isNull())
+                    if (!so.isEmpty())
                     {
-                        out+= ", " + so + "\n";
+                        out += ", " + so + "\n";
                     }
                     else
                     {
-                        out+="\n";
+                        out += "\n";
                     }
                     out += QString("PTS start: %1").arg(TimeUtil::ptsToTimeStr(pic->startTime));
                     out += QString(", screen size: %1*%2\n").arg(QString::number(pic->width)).arg(QString::number(pic->height));
@@ -327,11 +326,11 @@ void SupBD::readAllSupFrames()
                         so = QString("");
                         // store state to be able to revert to it
                         picTmp = new SubPictureBD(pic);
-                        picTmp->endTime = ptsPCS;
+                        //picTmp->endTime = ptsPCS;
                         // create new pic
                         parsePCS(segment, pic, so);
                     }
-                    if (!so.isNull())
+                    if (!so.isEmpty())
                     {
                         out+=", "+so;
                     }
@@ -367,7 +366,7 @@ void SupBD::readAllSupFrames()
                 // decide whether to store this last composition section as caption or merge it
                 if (cs == CompositionState::EPOCH_START)
                 {
-                    if (compCount>0 && odsCtr>odsCtrOld
+                    if (compCount>0 && odsCtr > odsCtrOld
                                     && compNum != compNumOld
                                     && picMergable(picLast, pic))
                     {
@@ -377,7 +376,7 @@ void SupBD::readAllSupFrames()
                         pic = picLast;
                         if (subPictures.size() > 0)
                         {
-                            picLast = subPictures.at(subPictures.size()-1);
+                            picLast = subPictures.at(subPictures.size() - 1);
                         }
                         else
                         {
@@ -948,11 +947,7 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
     int paletteUpdate = fileBuffer->getByte(index + 1);
     if (subPicture->palettes.isEmpty())
     {
-        subPicture->palettes = QVector<QVector<PaletteInfo*>*>();
-        for (int i = 0; i < 8; ++i)
-        {
-            subPicture->palettes.push_back(new QVector<PaletteInfo*>);
-        }
+        subPicture->palettes.resize(8);
     }
     if (paletteID > 7)
     {
@@ -960,15 +955,12 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
         return -1;
     }
     //
-    QVector<PaletteInfo*>* al = subPicture->palettes.at(paletteID);
-    if (al == 0)
-    {
-        al = new QVector<PaletteInfo*>;
-    }
+    QVector<PaletteInfo*> al = subPicture->palettes.at(paletteID);
     PaletteInfo* p = new PaletteInfo;
     p->paletteSize = (segment->size - 2) / 5;
     p->paletteOfs = index + 2;
-    al->push_back(p);
+    al.push_back(p);
+    subPicture->palettes.replace(paletteID, al);
     msg = QString("ID: %1, update: %2, %3 entries").arg(QString::number(paletteID))
                                                    .arg(QString::number(paletteUpdate))
                                                    .arg(QString::number(p->paletteSize));
@@ -1104,8 +1096,8 @@ Palette *SupBD::decodePalette(SubPictureBD *subPicture)
 {
     bool fadeOut = false;
     int palIndex = 0;
-    QVector<PaletteInfo*>* pl = subPicture->palettes.at(subPicture->getImgObj()->paletteID);
-    if (pl == 0)
+    QVector<PaletteInfo*> pl = subPicture->palettes.at(subPicture->getImgObj()->paletteID);
+    if (pl.isEmpty())
     {
         throw QString("Palette ID out of bounds.");
     }
@@ -1114,9 +1106,9 @@ Palette *SupBD::decodePalette(SubPictureBD *subPicture)
     // by definition, index 0xff is always completely transparent
     // also all entries must be fully transparent after initialization
 
-    for (int j = 0; j < pl->size(); j++)
+    for (int j = 0; j < pl.size(); j++)
     {
-        PaletteInfo* p = pl->at(j);
+        PaletteInfo* p = pl.at(j);
         int index = p->paletteOfs;
         for (int i = 0; i < p->paletteSize; ++i)
         {

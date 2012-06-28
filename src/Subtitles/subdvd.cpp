@@ -775,9 +775,10 @@ void SubDVD::readIdx()
 
     QTextStream idxTextStream(idxFile.data());
     QString inString;
-    unsigned int temp;
+    qint64 temp;
     int langIdx = 0;
     bool ignore = false;
+    bool langIdxMatched = false;
 
     while (!(inString = idxTextStream.readLine()).isNull())
     {
@@ -884,9 +885,10 @@ void SubDVD::readIdx()
             temp = ok ? temp : -1;
             if (temp < 0)
             {
-                temp = (int) TimeUtil::timeStrToPTS(value);
+                bool ok;
+                temp = (int) TimeUtil::timeStrToPTS(value, &ok);
             }
-            if (temp < 0)
+            if (!ok)
             {
                 throw QString("Illegal time offset: %1").arg(QString::number(temp));
             }
@@ -954,18 +956,18 @@ void SubDVD::readIdx()
                 continue;
             }
 
-            bool found = false;
+            bool languageFound = false;
             auto subLanguages = subtitleProcessor->getLanguages();
 
             for (int i = 0; i < subLanguages.size(); ++i)
             {
                 if (id == subLanguages[i][1])
                 {
-                    found = true;
+                    languageFound = true;
                     break;
                 }
             }
-            if (!found)
+            if (!languageFound)
             {
                 subtitleProcessor->printWarning(QString("Illegal language id: %1\n").arg(id));
             }
@@ -994,6 +996,7 @@ void SubDVD::readIdx()
             }
             else
             {
+                langIdxMatched = true;
                 for (int i = 0; i < subLanguages.size(); ++i)
                 {
                     if (id == subLanguages[i][1])
@@ -1005,6 +1008,12 @@ void SubDVD::readIdx()
                 ignore = false;
             }
             continue;
+        }
+
+        if (!langIdxMatched)
+        {
+            throw QString("langidx: %1 does not match an index in the IDX file. "
+                          "Unable to read any subpictures.").arg(QString::number(langIdx));
         }
 
         if (!ignore)
@@ -1019,8 +1028,9 @@ void SubDVD::readIdx()
                     throw QString("Illegal timestamp entry: %1").arg(value);
                 }
                 vs = vals[0];
-                long time = TimeUtil::timeStrToPTS(vs);
-                if (time < 0)
+                bool ok;
+                long time = TimeUtil::timeStrToPTS(vs, &ok);
+                if (!ok)
                 {
                     throw QString("Illegal timestamp: %1").arg(vals[0]);
                 }
@@ -1030,12 +1040,12 @@ void SubDVD::readIdx()
                 {
                     throw QString("Missing filepos: %1").arg(value);
                 }
-                bool ok;
                 long hex = vals[1].trimmed().toLong(&ok, 16);
                 if (!ok)
                 {
                     throw QString("Illegal filepos: %1").arg(vals[1]);
                 }
+
                 SubPictureDVD* pic = new SubPictureDVD;
                 pic->offset = hex;
                 pic->width = screenWidth;
@@ -1044,6 +1054,11 @@ void SubDVD::readIdx()
                 subPictures.push_back(pic);
             }
         }
+    }
+
+    if (subPictures.size() == 0)
+    {
+        throw QString("No subpictures were detected in IDX file.");
     }
 
     emit maxProgressChanged(subPictures.size());
@@ -1115,7 +1130,7 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     out->write("# Vob/Cell ID: 1, 1 (PTS: 0)\n");
     for (int i = 0; i < timestamps.size(); ++i)
     {
-        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStrIdx(timestamps[i])).toAscii());
+        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStr(timestamps[i])).toAscii());
         QString value = QString("%1").arg(QString::number(offsets[i], 16), 9, QChar('0'));
         out->write(", filepos: " +  value.toAscii());
         out->write("\n");

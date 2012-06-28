@@ -378,6 +378,10 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
                 parent->numToImport = n;
                 emit parent->maxProgressChanged(parent->numToImport);
             }
+            else
+            {
+                throw QString("The NumberofEvents in the XML file is invalid.");
+            }
         }
     } break;
     case (int)SupXML::XmlHandler::XmlState::EVENT:

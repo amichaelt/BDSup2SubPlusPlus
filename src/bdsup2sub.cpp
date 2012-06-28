@@ -29,6 +29,8 @@
 #include "colordialog.h"
 #include "framepalettedialog.h"
 #include "movedialog.h"
+#include "Subtitles/subpicture.h"
+#include "Tools/timeutil.h"
 
 #ifdef Q_WS_WIN
 #include "windows.h"
@@ -87,8 +89,6 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
     QRect geometry = this->geometry();
     int w = settings->value("frameWidth", 800).toInt();
     int h = settings->value("frameHeight", 600).toInt();
-    setMinimumWidth(w);
-    setMinimumHeight(h);
     geometry.setWidth(w);
     geometry.setHeight(h);
 
@@ -211,6 +211,12 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
             {
                 subtitleProcessor->setCropOfsY(0);
             }
+        }
+
+        if (subtitleProcessor->getSubPictureSrc(0)->startTime < 0)
+        {
+            QMessageBox::warning(this, "Warning!", QString("First subpicture has timestamp of %1.\n"
+                                 "Please specify proper delay value to correct this.").arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime)));
         }
 
         ConversionDialog conversionDialog(this, subtitleProcessor, settings);
@@ -344,6 +350,13 @@ void BDSup2Sub::showEvent(QShowEvent *event)
         }
         loadSubtitleFile();
     }
+}
+
+void BDSup2Sub::resizeEvent(QResizeEvent *event)
+{
+    ui->sourceImage->updateImage();
+    ui->targetImage->updateImage();
+    QMainWindow::resizeEvent(event);
 }
 
 void BDSup2Sub::connectSubtitleProcessor()
@@ -581,17 +594,38 @@ void BDSup2Sub::loadSubtitleFile()
 {
     QFileInfo fileInfo(loadPath);
     QString extension = fileInfo.suffix().toLower();
+
     bool isXML(extension == "xml"), isIDX(extension == "idx"), isIFO(extension == "ifo");
 
     QByteArray id = subtitleProcessor->getFileID(loadPath, 4);
     StreamID streamID = (id.isEmpty()) ? StreamID::UNKNOWN : subtitleProcessor->getStreamID(id);
+
+    if (extension == "sup" && streamID == StreamID::SUP)
+    {
+        QString fileName = QFileDialog::getOpenFileName(this, tr("Open IFO file"),
+                                                        loadPath.isEmpty() ? QDir::currentPath() : QFileInfo(loadPath).absolutePath(),
+                                                        ifoFilter,
+                                                        &ifoFilter
+                                                        );
+
+        if (!fileName.isNull() && !fileName.isEmpty() && QFileInfo(fileName).exists())
+        {
+            if (QFileInfo(fileName).suffix().toLower() == "ifo")
+            {
+                subtitleProcessor->setIFOFileName(fileName);
+            }
+            else
+            {
+                QMessageBox::warning(this, "Error!", "Invalid IFO file specified. Ignoring.");
+            }
+        }
+    }
 
     if (!isXML && !isIDX && !isIFO && streamID == StreamID::UNKNOWN)
     {
         QMessageBox::warning(this, "Wrong format!", "This is not a supported SUP stream");
         return;
     }
-
     subIndex = 0;
     saveFileName = QFileInfo(loadPath).completeBaseName();
     savePath = QFileInfo(loadPath).absolutePath();
@@ -599,8 +633,9 @@ void BDSup2Sub::loadSubtitleFile()
     enableCoreComponents(false);
     enableVobSubComponents(false);
 
-    QThread *workerThread = new QThread;
     subtitleProcessor->setLoadPath(loadPath);
+
+    QThread *workerThread = new QThread;
     subtitleProcessor->moveToThread(workerThread);
     connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(readSubtitleStream()));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(quit()));
@@ -828,7 +863,8 @@ bool BDSup2Sub::execCLI()
         fprintf(stdout, "    /tmerge:<t>      : set max time diff for merging subs in ms - default: 200\n");
         fprintf(stdout, "    /movin:<r>[,<o>] : move captions inside screen ratio <r>, +/- offset <o>\n");
         fprintf(stdout, "    /movout:<r>[,<o>]: move captions outside screen ratio <r>, +/- offset <o>\n");
-        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be left,right,center\n");
+        fprintf(stdout, "    /movex:<t>[,<o>] : move captions horizontally.<t> may be origin, left,\n");
+        fprintf(stdout, "                       right,center.\n");
         fprintf(stdout, "                       +/- optional offset <o> (only if moving left or right)\n");
         fprintf(stdout, "    /cropy:<n>       : crop the upper/lower n lines - default: 0\n");
         fprintf(stdout, "    /acrop:<n>       : set alpha cropping threshold - default: 10\n");
@@ -1688,8 +1724,9 @@ bool BDSup2Sub::execCLI()
                     }
                 }
 
-                subtitleProcessor->scanSubtitles();
                 printWarnings();
+
+                subtitleProcessor->scanSubtitles();
                 // move captions
                 if (subtitleProcessor->getMoveModeX() != MoveModeX::KEEP || subtitleProcessor->getMoveModeY() != MoveModeY::KEEP)
                 {
@@ -1783,9 +1820,9 @@ void BDSup2Sub::closeSubtitle()
     ui->subtitleImage->setImage(0, 1, 1);
     ui->subtitleImage->update();
     ui->sourceImage->setImage(0);
-    ui->sourceImage->update();
+    ui->sourceImage->updateImage();
     ui->targetImage->setImage(0);
-    ui->targetImage->update();
+    ui->targetImage->updateImage();
 
     ui->sourceInfoLabel->setText("");
     ui->targetInfoLabel->setText("");
@@ -1894,7 +1931,7 @@ void BDSup2Sub::verbatimOutput_toggled(bool checked)
 void BDSup2Sub::editDefaultDVDPalette_triggered()
 {
     ColorDialog colorDialog(this, subtitleProcessor);
-    QStringList colorNames = { "white", "light gray", "dark gray",
+    QStringList colorNames = { "black", "white", "light gray", "dark gray",
                                "Color 1 light", "Color 1 dark",
                                "Color 2 light", "Color 2 dark",
                                "Color 3 light", "Color 3 dark",
@@ -1906,10 +1943,10 @@ void BDSup2Sub::editDefaultDVDPalette_triggered()
     QVector<QColor> colors;
     QVector<QColor> defaultColors;
 
-    for (int i = 0; i < 15; ++i)
+    for (int i = 0; i < colorNames.size(); ++i)
     {
-        colors.push_back(subtitleProcessor->getCurrentDVDPalette()->getColor(i + 1));
-        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette()->getColor(i + 1));
+        colors.push_back(subtitleProcessor->getCurrentDVDPalette()->getColor(i));
+        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette()->getColor(i));
     }
 
     colorDialog.setParameters(colorNames, colors, defaultColors);
@@ -1920,7 +1957,7 @@ void BDSup2Sub::editDefaultDVDPalette_triggered()
         colorPath = colorDialog.getPath();
         for (int i = 0; i < colors.size(); ++i)
         {
-            subtitleProcessor->getCurrentDVDPalette()->setColor(i + 1, colors[i]);
+            subtitleProcessor->getCurrentDVDPalette()->setColor(i, colors[i]);
         }
         if (subtitleProcessor->getNumberOfFrames() > 0)
         {
@@ -2042,6 +2079,7 @@ void BDSup2Sub::refreshSrcFrame(int index)
 {
     QImage* image = subtitleProcessor->getSrcImage();
     ui->sourceImage->setImage(image);
+    ui->sourceImage->updateImage();
     ui->sourceInfoLabel->setText(subtitleProcessor->getSrcInfoStr(index));
 }
 
@@ -2054,6 +2092,7 @@ void BDSup2Sub::refreshTrgFrame(int index)
     ui->subtitleImage->setExcluded(subtitleProcessor->getTrgExcluded(index));
     QImage *image = subtitleProcessor->getTrgImage();
     ui->targetImage->setImage(image);
+    ui->targetImage->updateImage();
     ui->targetInfoLabel->setText(subtitleProcessor->getTrgInfoStr(index));
 }
 

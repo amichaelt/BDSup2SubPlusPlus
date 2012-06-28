@@ -271,6 +271,9 @@
             <height>20</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Set the target frame rate</string>
+          </property>
           <property name="editable">
            <bool>true</bool>
           </property>

@@ -44,7 +44,8 @@
 SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings)
 {
     this->parent = parent;
-    this->settings = settings;defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
+    this->settings = settings;
+    defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
     currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 
     SetValuesFromSettings();
@@ -399,7 +400,7 @@ void SubtitleProcessor::scanSubtitles()
         }
         else
         {
-            subPictures.at(i)->startTime= (long)((ts * factTS) + 0.5) + delayPTS;
+            subPictures.at(i)->startTime = (long)((ts * factTS) + 0.5) + delayPTS;
             subPictures.at(i)->endTime = (long)((te * factTS) + 0.5) + delayPTS;
         }
         // synchronize to target frame rate
@@ -709,54 +710,58 @@ QVector<int> SubtitleProcessor::getResolution(Resolution resolution)
 
 void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPicture *subPictureNext, SubPicture *subPicturePrevious)
 {
-    long ts =  subPicture->startTime;   // start time
-    long te =  subPicture->endTime;     // end time
-    long delay = 5000 * 90;             // default delay for missing end time (5 seconds)
+    long startTime = subPicture->startTime;    // start time
+    long endTime = subPicture->endTime;        // end time
+    long delay = 5000 * 90;                    // default delay for missing end time (5 seconds)
 
     index += 1; // only used for display
 
     // get end time of last frame
-    long te_last;
+    long lastFrameEndTime;
     if (subPicturePrevious != 0)
     {
-        te_last = subPicturePrevious->endTime;
+        lastFrameEndTime = subPicturePrevious->endTime;
     }
     else
     {
-        te_last = -1;
+        lastFrameEndTime = -1;
     }
 
-    if (ts < te_last)
+    if (startTime < lastFrameEndTime)
     {
         printWarning(QString("start time of frame %1 < end of last frame -> fixed\n").arg(QString::number(index)));
 
-        ts = te_last;
+        startTime = lastFrameEndTime;
     }
 
     // get start time of next frame
-    long ts_next;
+    long nextFrameStartTime;
     if (subPictureNext != 0)
     {
-        ts_next = subPictureNext->startTime;
+        nextFrameStartTime = subPictureNext->startTime;
     }
     else
     {
-        ts_next = 0;
+        nextFrameStartTime = 0;
     }
 
-    if (ts_next == 0) {
-        if ( te > ts)
-            ts_next = te;
-        else {
+    if (nextFrameStartTime == 0)
+    {
+        if (endTime > startTime)
+        {
+            nextFrameStartTime = endTime;
+        }
+        else
+        {
             // completely fucked:
             // end time and next start time are invalid
-            ts_next = ts+delay;
+            nextFrameStartTime = startTime + delay;
         }
     }
 
-    if (te <= ts)
+    if (endTime <= startTime)
     {
-        if (te == 0)
+        if (endTime == 0)
         {
             printWarning(QString("missing end time of frame %1 -> fixed\n").arg(QString::number(index)));
         }
@@ -764,26 +769,26 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
         {
             printWarning(QString("end time of frame %1 <= start time -> fixed\n").arg(QString::number(index)));
         }
-        te = ts + delay;
-        if (te > ts_next)
+        endTime = startTime + delay;
+        if (endTime > nextFrameStartTime)
         {
-            te = ts_next;
+            endTime = nextFrameStartTime;
         }
     }
-    else if (te > ts_next)
+    else if (endTime > nextFrameStartTime)
     {
         printWarning(QString("end time of frame %1 > start time of next frame -> fixed\n").arg(QString::number(index)));
-        te = ts_next;
+        endTime = nextFrameStartTime;
     }
 
-    if ((te - ts) < minTimePTS)
+    if ((endTime - startTime) < minTimePTS)
     {
         if (fixShortFrames)
         {
-            te = ts + minTimePTS;
-            if (te > ts_next)
+            endTime = startTime + minTimePTS;
+            if (endTime > nextFrameStartTime)
             {
-                te = ts_next;
+                endTime = nextFrameStartTime;
             }
             printWarning(QString("duration of frame %1 was shorter than %2ms -> fixed\n")
                          .arg(QString::number(index)).arg(QString::number(minTimePTS / 90.0, 'g', 6)));
@@ -795,13 +800,13 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
         }
     }
 
-    if (subPicture->startTime != ts)
+    if (subPicture->startTime != startTime)
     {
-        subPicture->startTime = syncTimePTS(ts, fpsTrg);
+        subPicture->startTime = syncTimePTS(startTime, fpsTrg);
     }
-    if (subPicture->endTime != te)
+    if (subPicture->endTime != endTime)
     {
-        subPicture->endTime = syncTimePTS(te, fpsTrg);
+        subPicture->endTime = syncTimePTS(endTime, fpsTrg);
     }
 }
 
@@ -835,19 +840,31 @@ void SubtitleProcessor::readSubtitleStream()
         {
             readDVDSubStream(streamID, true);
         }
-        else if (isIFO || streamID == StreamID::IFO)
+        else if (isIFO || streamID == StreamID::IFO || !ifoFile.isEmpty())
         {
             readDVDSubStream(streamID, false);
+        }
+        else if (streamID == StreamID::BDSUP)
+        {
+            readSup();
         }
         else
         {
             if (QFileInfo(QString("%1/%2.ifo").arg(fileInfo.absolutePath()).arg(fileInfo.completeBaseName())).exists())
             {
-                readDVDSubStream(streamID, false);
+                readDVDSubStream(StreamID::IFO, false);
             }
             else
             {
-                readSup();
+                try
+                {
+                    readDVDSubStream(streamID, false);
+                }
+                catch(QString e)
+                {
+                    printX("SUP file was not a valid DVD SUP file. Attempting to load as HD DVD SUP.\n");
+                    readSup();
+                }
             }
         }
     }
@@ -966,7 +983,10 @@ void SubtitleProcessor::writeSub(QString filename)
             {
                 convertSup(i, (frameNum / 2) + 1, maxNum);
                 subVobTrg->copyInfo(subPictures[i]);
-                subDVD = QSharedPointer<SubDVD>(new SubDVD("", "", this));
+                if (subDVD.isNull())
+                {
+                    subDVD = QSharedPointer<SubDVD>(new SubDVD("", "", this));
+                }
                 QVector<uchar> buf = subDVD->createSubFrame(subVobTrg, trgBitmap);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
                 offset += buf.size();
@@ -977,7 +997,10 @@ void SubtitleProcessor::writeSub(QString filename)
             {
                 convertSup(i, (frameNum / 2) + 1, maxNum);
                 subVobTrg->copyInfo(subPictures[i]);
-                supDVD = QSharedPointer<SupDVD>(new SupDVD("", "", this));
+                if (supDVD.isNull())
+                {
+                    supDVD = QSharedPointer<SupDVD>(new SupDVD("", "", this));
+                }
                 QVector<uchar> buf = supDVD->createSupFrame(subVobTrg, trgBitmap);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
             }
@@ -985,7 +1008,10 @@ void SubtitleProcessor::writeSub(QString filename)
             {
                 subPictures[i]->compNum = frameNum;
                 convertSup(i, (frameNum / 2) + 1, maxNum);
-                supBD = QSharedPointer<SupBD>(new SupBD("", this));
+                if (supBD.isNull())
+                {
+                    supBD = QSharedPointer<SupBD>(new SupBD("", this));
+                }
                 QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
             }
@@ -993,7 +1019,10 @@ void SubtitleProcessor::writeSub(QString filename)
             {
                 // Xml
                 convertSup(i, (frameNum / 2) + 1, maxNum);
-                supXML = QSharedPointer<SupXML>(new SupXML("", this));
+                if (supXML.isNull())
+                {
+                    supXML = QSharedPointer<SupXML>(new SupXML("", this));
+                }
                 QString fnp = supXML->getPNGname(fn, i + 1);
                 trgBitmap->getImage(trgPal)->save(fnp, "PNG");
             }
@@ -1576,7 +1605,7 @@ void SubtitleProcessor::addRecent(QString fileName)
 void SubtitleProcessor::removeRecent(QString fileName)
 {
     recentFiles.removeOne(fileName);
-    int idxToRemove;
+    int idxToRemove = -1;
 
     for (QString key : settings->allKeys())
     {
@@ -1585,12 +1614,15 @@ void SubtitleProcessor::removeRecent(QString fileName)
             idxToRemove = settings->allKeys().indexOf(key);
         }
     }
-    settings->remove(settings->allKeys()[idxToRemove]);
-    for (int i = 0; i < recentFiles.size(); ++i)
+    if (idxToRemove != -1)
     {
-        settings->setValue(QString("recent_%1").arg(QString::number(i)), QVariant(recentFiles.at(i)));
+        settings->remove(settings->allKeys()[idxToRemove]);
+        for (int i = 0; i < recentFiles.size(); ++i)
+        {
+            settings->setValue(QString("recent_%1").arg(QString::number(i)), QVariant(recentFiles.at(i)));
+        }
+        settings->sync();
     }
-    settings->sync();
 }
 
 void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX mmx, MoveModeY mmy, int cropOffsetY)
@@ -1983,8 +2015,20 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         QString supFileName;
         if (fileInfo.suffix() == "sup")
         {
-            ifoFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
             supFileName = fileName;
+            if (!ifoFile.isEmpty())
+            {
+                ifoFileName = ifoFile;
+            }
+            else
+            {
+                ifoFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
+                if (!QFileInfo(ifoFileName).exists())
+                {
+                    printWarning("No IFO file specified.  Assuming 720x576 and 25fps.\n");
+                    ifoFileName = supFileName;
+                }
+            }
         }
         else
         {
@@ -1994,7 +2038,10 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         supDVD = QSharedPointer<SupDVD>(new SupDVD(supFileName, ifoFileName, this));
         connect(supDVD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
         connect(supDVD.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
-        supDVD->readIfo();
+        if (ifoFileName != supFileName)
+        {
+            supDVD->readIfo();
+        }
         supDVD->readAllSupFrames();
         substream = qSharedPointerCast<Substream>(supDVD);
         inMode = InputMode::SUPIFO;

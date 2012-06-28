@@ -21,12 +21,14 @@
 #include "ui_conversiondialog.h"
 #include "Subtitles/subtitleprocessor.h"
 #include "Subtitles/subpicture.h"
+#include "Tools/timeutil.h"
 
 #include <QDoubleValidator>
 #include <QRegExpValidator>
 #include <QPalette>
 #include <QKeyEvent>
 #include <QSettings>
+#include <QMessageBox>
 
 ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleProcessor, QSettings* settings) :
     QDialog(parent),
@@ -152,6 +154,15 @@ void ConversionDialog::on_cancelButton_clicked()
 
 void ConversionDialog::on_okButton_clicked()
 {
+    if ((subtitleProcessor->getSubPictureSrc(0)->startTime + delayPTS) < 0)
+    {
+        QMessageBox::warning(this, "Warning!", QString("First subpicture has timestamp of %1.\n"
+                             "Delay value of %2 is insufficient to correct this.")
+                             .arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime))
+                             .arg(QString::number(delayPTS)));
+        return;
+    }
+
     subtitleProcessor->setConvertFPS(changeFPS);
     if (changeFPS)
     {

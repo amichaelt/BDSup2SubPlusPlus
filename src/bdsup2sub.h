@@ -27,6 +27,7 @@
 class SubtitleProcessor;
 class ProgressDialog;
 class QSettings;
+class QxtCommandOptions;
 class QTextStream;
 
 namespace Ui {
@@ -55,6 +56,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     void showEvent(QShowEvent *event);
+    void resizeEvent (QResizeEvent * event);
 
 private:
     Ui::BDSup2Sub *ui;
@@ -75,10 +77,13 @@ private:
     QTextStream* outStream;
     QTextStream* errorStream;
 
+    QxtCommandOptions* options;
+
     QSettings* settings;
     bool fromCLI = false;
 
     QString filter = tr("All Files (*.*);;Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
+    QString ifoFilter = tr("IFO File (*.ifo)");
     QString selectedFilter = tr("Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
 
     void fillComboBoxes();
@@ -96,6 +101,7 @@ private:
     void errorDialog(const QString &errorMessage);
     void printWarnings();
     void Redirect_console();
+    void addCLIOptions();
 
 private slots:
     void showAboutQt();

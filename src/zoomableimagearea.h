@@ -32,6 +32,8 @@ public:
     void paintEvent(QPaintEvent *event);
     void setImage(QImage* image);
 
+    void updateImage();
+
 signals:
 
 public slots:

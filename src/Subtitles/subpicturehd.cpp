@@ -24,6 +24,7 @@ SubPictureHD::SubPictureHD()
 }
 
 SubPictureHD::SubPictureHD(SubPictureHD &other) :
+    SubPicture(other),
     paletteOfs(other.paletteOfs),
     alphaOfs(other.alphaOfs),
     imageBufferSize(other.imageBufferSize),
@@ -33,6 +34,7 @@ SubPictureHD::SubPictureHD(SubPictureHD &other) :
 }
 
 SubPictureHD::SubPictureHD(SubPictureHD *other) :
+    SubPicture(other),
     paletteOfs(other->paletteOfs),
     alphaOfs(other->alphaOfs),
     imageBufferSize(other->imageBufferSize),

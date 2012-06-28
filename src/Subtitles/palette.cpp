@@ -180,7 +180,7 @@ QRgb Palette::YCbCr2RGB(int y, int cb, int cr, bool useBT601)
 
     b = (int)(b + 0.5);
     b = b < 0 ? 0 : b;
-    b = b > 255 ? 255 : g;
+    b = b > 255 ? 255 : b;
 
     return qRgb(r, g, b);
 }
