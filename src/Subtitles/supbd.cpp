@@ -1049,10 +1049,10 @@ void SupBD::parseWDS(SupSegment* segment, SubPictureBD* subPicture)
         // skipped:
         // 8bit: number of windows (currently assumed 1, 0..2 is legal)
         // 8bit: window id (0..1)
-        subPicture->xWinOfs   = fileBuffer->getWord(index+2);	// window_horizontal_position
-        subPicture->yWinOfs   = fileBuffer->getWord(index+4);	// window_vertical_position
-        subPicture->winWidth  = fileBuffer->getWord(index+6);	// window_width
-        subPicture->winHeight = fileBuffer->getWord(index+8);	// window_height
+        subPicture->xWinOfs = fileBuffer->getWord(index + 2);       // window_horizontal_position
+        subPicture->yWinOfs = fileBuffer->getWord(index + 4);       // window_vertical_position
+        subPicture->winWidth = fileBuffer->getWord(index + 6);      // window_width
+        subPicture->winHeight = fileBuffer->getWord(index + 8);     // window_height
     }
 }
 
@@ -1132,7 +1132,8 @@ Palette *SupBD::decodePalette(SubPictureBD *subPicture)
             // avoid fading out
             if (alpha >= alphaOld)
             {
-                if (alpha < subtitleProcessor->getAlphaCrop()) // to not mess with scaling algorithms, make transparent color black
+                // to not mess with scaling algorithms, make transparent color black
+                if (alpha < subtitleProcessor->getAlphaCrop())
                 {
                     y = 16;
                     cr = 128;

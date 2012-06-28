@@ -1010,12 +1010,6 @@ void SubDVD::readIdx()
             continue;
         }
 
-        if (!langIdxMatched)
-        {
-            throw QString("langidx: %1 does not match an index in the IDX file. "
-                          "Unable to read any subpictures.").arg(QString::number(langIdx));
-        }
-
         if (!ignore)
         {
             // e.g. ("timestamp: 00:00:14:160, filepos: 000000000")
@@ -1054,6 +1048,12 @@ void SubDVD::readIdx()
                 subPictures.push_back(pic);
             }
         }
+    }
+
+    if (!langIdxMatched)
+    {
+        throw QString("langidx: %1 does not match an index in the IDX file. "
+                      "Unable to read any subpictures.").arg(QString::number(langIdx));
     }
 
     if (subPictures.size() == 0)
