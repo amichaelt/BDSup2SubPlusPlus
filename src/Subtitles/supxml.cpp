@@ -29,11 +29,12 @@
 #include <QtXml/QXmlSimpleReader>
 #include <QtXml/QXmlInputSource>
 #include <QRect>
+#include <QDir>
 
 SupXML::SupXML(QString fileName, SubtitleProcessor* subtitleProcessor) :
     xmlFileName(fileName)
 {
-    pathName = QFileInfo(fileName).absolutePath() + "/";
+    pathName = QFileInfo(fileName).absolutePath() + QDir::separator();
     this->subtitleProcessor = subtitleProcessor;
     fpsXml = XmlFps(fps);
     xmlFile.reset(new QFile(xmlFileName));

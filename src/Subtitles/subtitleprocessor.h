@@ -282,27 +282,39 @@ public:
     void setAlphaCrop(int value)
     {
         alphaCrop = value;
-        settings->setValue("alphaCrop", QVariant(value));
+        if (settings != 0)
+        {
+            settings->setValue("alphaCrop", QVariant(value));
+        }
     }
     bool getFixZeroAlpha() { return fixZeroAlpha; }
     void setFixZeroAlpha(bool value)
     {
         fixZeroAlpha = value;
-        settings->setValue("fixZeroAlpha", QVariant(value));
+        if (settings != 0)
+        {
+            settings->setValue("fixZeroAlpha", QVariant(value));
+        }
     }
     int getAlphaThreshold() { return alphaThreshold; }
     bool getVerbatim() { return verbatim; }
     void setVerbatim(bool value)
     {
         verbatim = value;
-        settings->setValue("verbatim", QVariant(value));
+        if (settings != 0)
+        {
+            settings->setValue("verbatim", QVariant(value));
+        }
     }
     void setAlphaThreshold(int value) { alphaThreshold = value; }
     bool getWritePGCEditPal() { return writePGCEditPal; }
     void setWritePGCEditPal(bool value)
     {
         writePGCEditPal = value;
-        settings->setValue("writePGCEditPal", QVariant(value));
+        if (settings != 0)
+        {
+            settings->setValue("writePGCEditPal", QVariant(value));
+        }
     }
     void setCliMode(bool value) { cliMode = value; }
     bool getExportForced() { return exportForced; }
@@ -317,7 +329,10 @@ public:
     void setOutputMode(OutputMode mode)
     {
         outMode = mode;
-        settings->setValue("outputMode", QVariant(modes[(int)mode]));
+        if (settings != 0)
+        {
+            settings->setValue("outputMode", QVariant(modes[(int)mode]));
+        }
     }
     InputMode getInputMode() { return inMode; }
     bool getMoveCaptions() { return moveCaptions; }
@@ -351,7 +366,15 @@ public:
     bool getFixShortFramesDefault() { return fixShortFramesDefault; }
     double restoreFpsSrc() { return settings->value("fpsSrc", QVariant(fpsSrc)).toDouble(); }
     double getFPSSrc() { return fpsSrc; }
-    void setFPSSrc(double value) { fpsSrc = value; }
+    void setFPSSrc(double value)
+    {
+        fpsSrc = value;
+        if (settings == 0)
+        {
+            fpsSrcSet = true;
+            fpsSrcCertain = true;
+        }
+    }
     double restoreFreeScaleX() { return settings->value("freeScaleX", QVariant(freeScaleX)).toDouble(); }
     double getFreeScaleX() { return freeScaleX; }
     double restoreFreeScaleY() { return settings->value("freeScaleY", QVariant(freeScaleY)).toDouble(); }
@@ -365,14 +388,20 @@ public:
     void setPaletteMode(PaletteMode value)
     {
         paletteMode = value;
-        settings->setValue("paletteMode", QVariant(paletteModeNames[(int)value]));
+        if (settings != 0)
+        {
+            settings->setValue("paletteMode", QVariant(paletteModeNames[(int)value]));
+        }
     }
     bool isCancelled() { return isActive; }
     int getMergePTSdiff() { return mergePTSdiff; }
     void setMergePTSdiff(int value)
     {
         mergePTSdiff = value;
-        settings->setValue("mergePTSdiff", QVariant(value));
+        if (settings != 0)
+        {
+            settings->setValue("mergePTSdiff", QVariant(value));
+        }
     }
     bool usesBT601() { return useBT601; }
     bool getSwapCrCb() { return swapCrCb; }
@@ -381,7 +410,10 @@ public:
     void setScalingFilter(ScalingFilters value)
     {
         scalingFilter = value;
-        settings->setValue("filter", QVariant(scalingFilters[(int)value]));
+        if (settings != 0)
+        {
+            settings->setValue("filter", QVariant(scalingFilters[(int)value]));
+        }
     }
     QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     int getLanguageIdx() { return languageIdx; }
@@ -420,7 +452,16 @@ public:
     void removeRecent(QString fileName);
     QByteArray getFileID(QString fileName, int numberOfBytes);
     StreamID getStreamID(QByteArray id);
-    void setFPSTrg(double trg);
+    void setFPSTrg(double trg)
+    {
+        fpsTrg = trg;
+        delayPTS = (int)syncTimePTS(delayPTS, trg);
+        minTimePTS = (int)syncTimePTS(minTimePTS, trg);
+        if (settings == 0)
+        {
+            fpsTrgSet = true;
+        }
+    }
     double getFPS(QString string);
     double getDefaultFPS(Resolution resolution);
     QImage* getSrcImage();
@@ -533,7 +574,7 @@ private:
     bool fixShortFrames = fixShortFramesDefault;
     bool scalingFilterSet = false;
     bool paletteModeSet = false;
-    bool keepFps = false;
+    bool keepFps = true;
     bool fpsTrgSet = false;
     bool writePGCEditPal = false;
     bool writePGCEditPalSet = false;

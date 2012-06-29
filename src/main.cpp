@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     BDSup2Sub w;
 
-    bool isGUI = argc < 2;
+    bool isGUI = argc == 1;
 
-    if (isGUI || !w.execCLI())
+    if (isGUI || !w.execCLI(argc, argv))
     {
 #ifdef Q_WS_WIN
         FreeConsole();

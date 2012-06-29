@@ -43,7 +43,7 @@ public:
     ~BDSup2Sub();
     void closeEvent(QCloseEvent *event);
 
-    bool execCLI();
+    bool execCLI(int argc, char** argv);
 
 public slots:
     void changeWindowTitle(QString newTitle);
@@ -74,9 +74,6 @@ private:
     QPalette* errorBackground;
     QPalette* okBackground;
 
-    QTextStream* outStream;
-    QTextStream* errorStream;
-
     QxtCommandOptions* options;
 
     QSettings* settings;
@@ -102,8 +99,11 @@ private:
     void printWarnings();
     void Redirect_console();
     void addCLIOptions();
+    void showUsage(QTextStream& outStream);
 
 private slots:
+    void init();
+    void loadSettings();
     void showAboutQt();
     void openFile();
     void saveFile();

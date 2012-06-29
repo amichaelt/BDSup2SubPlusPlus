@@ -167,8 +167,12 @@ void ConversionDialog::on_okButton_clicked()
     if (changeFPS)
     {
         subtitleProcessor->setFPSSrc(fpsSrc);
+        subtitleProcessor->setFPSTrg(fpsTrg);
     }
-    subtitleProcessor->setFPSTrg(fpsTrg);
+    else
+    {
+        subtitleProcessor->setFPSTrg(fpsSrc);
+    }
     subtitleProcessor->setDelayPTS(delayPTS);
     subtitleProcessor->setFixShortFrames(fixShortFrames);
     subtitleProcessor->setMinTimePTS(minTimePTS);

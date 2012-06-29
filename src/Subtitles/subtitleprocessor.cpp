@@ -48,7 +48,10 @@ SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings)
     defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
     currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 
-    SetValuesFromSettings();
+    if (settings != 0)
+    {
+        SetValuesFromSettings();
+    }
 }
 
 SubtitleProcessor::~SubtitleProcessor()
@@ -224,7 +227,10 @@ void SubtitleProcessor::storeFreeScale(double xScale, double yScale)
 
 void SubtitleProcessor::storeSettings()
 {
-    settings->sync();
+    if (settings != 0)
+    {
+        settings->sync();
+    }
 }
 
 QImage *SubtitleProcessor::getSrcImage()
@@ -939,7 +945,7 @@ void SubtitleProcessor::writeSub(QString filename)
     // handle file name extensions depending on mode
     if (outMode == OutputMode::VOBSUB)
     {
-        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sub";
+        filename = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sub";
         out.reset(new QFile(filename));
         if (!out->open(QIODevice::WriteOnly))
         {
@@ -948,7 +954,7 @@ void SubtitleProcessor::writeSub(QString filename)
     }
     else if (outMode == OutputMode::SUPIFO || outMode == OutputMode::BDSUP)
     {
-        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sup";
+        filename = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sup";
         out.reset(new QFile(filename));
         if (!out->open(QIODevice::WriteOnly))
         {
@@ -957,7 +963,7 @@ void SubtitleProcessor::writeSub(QString filename)
     }
     else
     {
-        fn = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName();
+        fn = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName();
         filename = fn + ".xml";
     }
 
@@ -1055,7 +1061,7 @@ void SubtitleProcessor::writeSub(QString filename)
         {
             ts.replace(i, timestamps[i]);
         }
-        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".idx";
+        filename = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".idx";
 
         printX(QString("\nWriting %1\n").arg(filename));
 
@@ -1086,7 +1092,7 @@ void SubtitleProcessor::writeSub(QString filename)
         {
             trgPallete = currentSourceDVDPalette;
         }
-        filename = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
+        filename = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".ifo";
 
         printX(QString("\nWriting %1\n").arg(filename));
 
@@ -1096,7 +1102,7 @@ void SubtitleProcessor::writeSub(QString filename)
     // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
     if (trgPallete != 0 && writePGCEditPal)
     {
-        QString fnp = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".txt";
+        QString fnp = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".txt";
 
         printX(QString("\nWriting %1\n").arg(fnp));
 
@@ -1825,17 +1831,6 @@ bool SubtitleProcessor::getTrgExcluded(int index)
     return subPictures.at(index)->exclude;
 }
 
-void SubtitleProcessor::setFPSTrg(double trg)
-{
-    fpsTrg = trg;
-    delayPTS = (int)syncTimePTS(delayPTS, trg);
-    minTimePTS = (int)syncTimePTS(minTimePTS, trg);
-    if (settings == 0)
-    {
-        fpsTrgSet = true;
-    }
-}
-
 double SubtitleProcessor::getFPS(QString string)
 {
     string = string.trimmed().toLower();
@@ -1993,12 +1988,12 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         if (streamID == StreamID::DVDSUB)
         {
             subFileName = fileName;
-            idxFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".idx";
+            idxFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".idx";
         }
         else
         {
             idxFileName = fileName;
-            subFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sub";
+            subFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sub";
         }
         subDVD = QSharedPointer<SubDVD>(new SubDVD(subFileName, idxFileName, this));
         connect(subDVD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
@@ -2022,7 +2017,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
             }
             else
             {
-                ifoFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".ifo";
+                ifoFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".ifo";
                 if (!QFileInfo(ifoFileName).exists())
                 {
                     printWarning("No IFO file specified.  Assuming 720x576 and 25fps.\n");
@@ -2033,7 +2028,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         else
         {
             ifoFileName = fileName;
-            supFileName = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".sup";
+            supFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sup";
         }
         supDVD = QSharedPointer<SupDVD>(new SupDVD(supFileName, ifoFileName, this));
         connect(supDVD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
