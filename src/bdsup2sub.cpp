@@ -135,7 +135,6 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
                 QThread *workerThread = new QThread;
                 subtitleProcessor->moveToThread(workerThread);
                 connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(moveAll()));
-                connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), workerThread, SLOT(quit()));
                 connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), workerThread, SLOT(deleteLater()));
 
                 workerThread->start();
@@ -587,7 +586,6 @@ void BDSup2Sub::saveFile()
         subtitleProcessor->setLoadPath(fileName);
         subtitleProcessor->moveToThread(workerThread);
         connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(createSubtitleStream()));
-        connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), workerThread, SLOT(quit()));
         connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
         workerThread->start();
@@ -652,7 +650,6 @@ void BDSup2Sub::loadSubtitleFile()
     QThread *workerThread = new QThread;
     subtitleProcessor->moveToThread(workerThread);
     connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(readSubtitleStream()));
-    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(quit()));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
     workerThread->start();
