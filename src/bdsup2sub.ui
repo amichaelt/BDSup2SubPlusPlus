@@ -637,7 +637,7 @@
     <addaction name="menu_Recent_Files"/>
     <addaction name="action_Save_Export"/>
     <addaction name="action_Close"/>
-    <addaction name="action_Export"/>
+    <addaction name="action_Exit"/>
    </widget>
    <widget class="QMenu" name="menu_Edit">
     <property name="title">
@@ -691,7 +691,7 @@
     <string>&amp;Close</string>
    </property>
   </action>
-  <action name="action_Export">
+  <action name="action_Exit">
    <property name="text">
     <string>&amp;Exit</string>
    </property>

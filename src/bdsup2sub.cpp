@@ -287,6 +287,7 @@ void BDSup2Sub::init()
     connect(ui->action_Load, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->action_Save_Export, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->action_Close, SIGNAL(triggered()), this, SLOT(closeFile()));
+    connect(ui->action_Exit, SIGNAL(triggered()), this, SLOT(close()));
     connect(ui->action_Conversion_Settings, SIGNAL(triggered()), this, SLOT(openConversionSettings()));
     connect(ui->subtitleImage, SIGNAL(onMouseClicked(QMouseEvent*)), this, SLOT(onEditPaneClicked(QMouseEvent*)));
     connect(ui->action_Edit_Frame, SIGNAL(triggered()), this, SLOT(loadEditPane()));
