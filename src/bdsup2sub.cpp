@@ -598,6 +598,10 @@ void BDSup2Sub::closeFile()
 {
     closeSubtitle();
     subtitleProcessor->close();
+    ui->sourceImage->setImage(0);
+    ui->sourceImage->update();
+    ui->targetImage->setImage(0);
+    ui->targetImage->update();
 }
 
 void BDSup2Sub::loadSubtitleFile()
