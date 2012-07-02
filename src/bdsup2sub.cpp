@@ -289,7 +289,10 @@ void BDSup2Sub::dropEvent(QDropEvent *event)
 void BDSup2Sub::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);
-    loadSettings();
+    if (settings == 0)
+    {
+        loadSettings();
+    }
     init();
     if (fromCLI && loadPath != "")
     {
@@ -318,13 +321,18 @@ void BDSup2Sub::init()
     ui->consoleOutput->insertPlainText(authorDate + "\n");
     ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
 
-    subtitleProcessor = new SubtitleProcessor(this, settings);
+    if (settings == 0)
+    {
+        subtitleProcessor = new SubtitleProcessor(this, settings, true);
+    }
+
     updateRecentMenu();
 
     fillComboBoxes();
 
     ui->action_Verbatim_Output->setChecked(subtitleProcessor->getVerbatim());
     ui->action_Fix_invisible_frames->setChecked(subtitleProcessor->getFixZeroAlpha());
+    ui->action_Swap_Cr_Cb->setChecked(subtitleProcessor->getSwapCrCb());
 
     connect(ui->action_Load, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->action_Save_Export, SIGNAL(triggered()), this, SLOT(saveFile()));
@@ -900,7 +908,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     QMultiHash<QString, QVariant> parameters = options->parameters();
     QStringList positional = options->positional();
 
-    if (positional.size() == 0 || positional.size() > 1 || options->count("h") || options->showUnrecognizedWarning(errorStream))
+    if (positional.size() > 1 || options->count("h") || options->showUnrecognizedWarning(errorStream))
     {
         showUsage(outStream);
         exit(1);
@@ -921,18 +929,8 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     }
     else
     {
-        if (options->count("load-settings"))
-        {
-            loadSettings();
-            subtitleProcessor = new SubtitleProcessor(0, settings);
-        }
-        else
-        {
-            subtitleProcessor = new SubtitleProcessor(0);
-        }
-
         // parse parameters
-        QString src = positional[0];
+        QString src = positional.size() == 1 ? positional[0] : "";
         QString trg = "";
         OutputMode mode = (OutputMode)0;
 
@@ -967,11 +965,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 exit(1);
             }
             subtitleProcessor->setOutputMode(mode);
-        }
-        else
-        {
-            errorStream << "ERROR: No output file specified." << endl;
-            exit(1);
         }
 
         // handle wildcards
@@ -1010,7 +1003,10 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
         }
         else
         {
-            srcFileNames.insert(0, QFileInfo(src).absoluteFilePath());
+            if (src != "")
+            {
+                srcFileNames.insert(0, QFileInfo(src).absoluteFilePath());
+            }
             int aPos = trg.indexOf('*');
             if (aPos != -1)
             {
@@ -1019,9 +1015,24 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             }
             else
             {
-                trgFileNames.insert(0, QFileInfo(trg).absoluteFilePath());
+                if (trg != "")
+                {
+                    trgFileNames.insert(0, QFileInfo(trg).absoluteFilePath());
+                }
             }
         }
+
+        //Load GUI settings
+        loadSettings();
+        if (options->count("load-settings"))
+        {
+            subtitleProcessor = new SubtitleProcessor(0, settings, true);
+        }
+        else
+        {
+            subtitleProcessor = new SubtitleProcessor(0, settings, false);
+        }
+
 
         QString value;
         bool ok;
@@ -1579,6 +1590,19 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 errorStream << QString("Invalid set state: %1").arg(value) << endl;
                 exit(1);
             }
+        }
+
+        if (srcFileNames.count() == 1 && trg == "")
+        {
+            fromCLI = true;
+            loadPath = srcFileNames[0];
+            return false;
+        }
+        else if (src == "" && trg == "")
+        {
+            fromCLI = true;
+            loadPath = "";
+            return false;
         }
 
         for (int fileNumber = 0; fileNumber < srcFileNames.size(); ++fileNumber)

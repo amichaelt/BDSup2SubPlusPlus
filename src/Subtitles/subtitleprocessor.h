@@ -246,7 +246,7 @@ class SubtitleProcessor : public QObject
     Q_OBJECT
 
 public:
-    SubtitleProcessor(QWidget* parent = 0, QSettings* settings = 0);
+    SubtitleProcessor(QWidget* parent = 0, QSettings* settings = 0, bool loadSettings = true);
     ~SubtitleProcessor();
 
     double minScale = 0.5;

@@ -76,7 +76,7 @@ private:
 
     QxtCommandOptions* options;
 
-    QSettings* settings;
+    QSettings* settings = 0;
     bool fromCLI = false;
 
     QString filter = tr("All Files (*.*);;Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");

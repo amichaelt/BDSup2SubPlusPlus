@@ -26,17 +26,10 @@
 #include <QColor>
 
 const QString progName = "BDSup2Sub++";
-const QString progNameVer = progName + " 1.0.0b10";
+const QString progNameVer = progName + " 1.0.0b11";
 const QString authorDate = "0xdeadbeef, mjuhasz, Adam T.";
 const QString oldIniName = "bdsup2sup.ini";
 const QString iniName = "bdsup2sup++.ini";
-
-const QStringList params = {
-    "res", "atr", "ltr1", "ltr2", "lang", "pal", "forced",
-    "fps" , "dly", "tmin", "swap","movin", "movout", "cropy",
-    "palmode", "verbatim", "filter", "tmerge", "scale", "acrop",
-    "exppal", "fixinv", "movex", "forceall"
-};
 
 const QStringList scalingFilters = {
     "Bilinear", "Triangle", "Bicubic", "Bell", "B-Spline", "Hermite", "Lanczos3", "Mitchell"

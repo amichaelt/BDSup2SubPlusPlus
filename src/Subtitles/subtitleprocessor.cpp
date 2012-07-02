@@ -41,14 +41,14 @@
 #include <QTextStream>
 #include <cmath>
 
-SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings)
+SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool loadSettings)
 {
     this->parent = parent;
     this->settings = settings;
     defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
     currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 
-    if (settings != 0)
+    if (settings != 0 && loadSettings)
     {
         SetValuesFromSettings();
     }
