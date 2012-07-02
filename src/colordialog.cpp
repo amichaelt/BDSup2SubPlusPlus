@@ -105,13 +105,21 @@ void ColorDialog::on_savePaletteButton_clicked()
     if (filePath.isEmpty() || filePath.isNull()) return;
 
     colorPath = filePath;
-    QSettings settings(colorPath, QSettings::IniFormat);
-    for (int i = 0; i < selectedColors.size(); ++i)
+    QScopedPointer<QFile> outPalette(new QFile(filePath));
+    if (!outPalette->open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        QVariantList colors = { selectedColors[i].red(), selectedColors[i].green(), selectedColors[i].blue() };
-        settings.setValue(QString("Color_%1").arg(QString::number(i)), colors);
+        throw QString("Palette file '%1' can not be opened for writing.").arg(filePath);
     }
-    settings.sync();
+
+    outPalette->write(QString("#COL - created by %1\n").arg(progNameVer).toAscii());
+    for (int i = selectedColors.size() - 1; i >= 0; --i)
+    {
+        outPalette->write(QString("Color_%1=%2,%3,%4\n")
+                              .arg(QString::number(i))
+                              .arg(QString::number(selectedColors[i].red()))
+                              .arg(QString::number(selectedColors[i].green()))
+                              .arg(QString::number(selectedColors[i].blue())).toAscii());
+    }
 }
 
 void ColorDialog::on_loadPaletteButton_clicked()

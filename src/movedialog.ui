@@ -830,6 +830,9 @@
           <property name="autoDefault">
            <bool>false</bool>
           </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
        </layout>
@@ -846,6 +849,29 @@
    <header location="global">editpane.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>moveAllButton</tabstop>
+  <tabstop>previousButton</tabstop>
+  <tabstop>nextButton</tabstop>
+  <tabstop>keepXPositionRadioButton</tabstop>
+  <tabstop>moveFromXPositionRadioButton</tabstop>
+  <tabstop>moveLeftRadioButton</tabstop>
+  <tabstop>moveRightRadioButton</tabstop>
+  <tabstop>moveToCenterRadioButton</tabstop>
+  <tabstop>keepYPositionRadioButton</tabstop>
+  <tabstop>moveFromYPositionRadioButton</tabstop>
+  <tabstop>moveInsideBoundsRadioButton</tabstop>
+  <tabstop>moveOutsideBoundsRadioButton</tabstop>
+  <tabstop>xOffsetLineEdit</tabstop>
+  <tabstop>yOffsetLineEdit</tabstop>
+  <tabstop>aspectRatioLineEdit</tabstop>
+  <tabstop>aspectRatio1Button</tabstop>
+  <tabstop>aspectRatio2Button</tabstop>
+  <tabstop>aspectRatio3Button</tabstop>
+  <tabstop>cropOffsetYLineEdit</tabstop>
+  <tabstop>cropBarsButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
  <resources>
   <include location="bdsup2sub.qrc"/>
  </resources>

@@ -595,6 +595,9 @@
         <property name="autoDefault">
          <bool>false</bool>
         </property>
+        <property name="default">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -727,6 +730,26 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>okButton</tabstop>
+  <tabstop>convertResolutionCheckBox</tabstop>
+  <tabstop>resolutionComboBox</tabstop>
+  <tabstop>applyMoveAllSettingsCheckBox</tabstop>
+  <tabstop>changeFrameRateCheckBox</tabstop>
+  <tabstop>sourceFramerateComboBox</tabstop>
+  <tabstop>targetFramerateComboBox</tabstop>
+  <tabstop>forceFlagsComboBox</tabstop>
+  <tabstop>scaleCheckBox</tabstop>
+  <tabstop>scaleXLineEdit</tabstop>
+  <tabstop>scaleYLineEdit</tabstop>
+  <tabstop>delayLineEdit</tabstop>
+  <tabstop>fixTooShortFramesCheckBox</tabstop>
+  <tabstop>minTimeLineEdit</tabstop>
+  <tabstop>storeButton</tabstop>
+  <tabstop>restoreButton</tabstop>
+  <tabstop>resetButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -420,12 +420,30 @@
        <property name="autoDefault">
         <bool>false</bool>
        </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>okButton</tabstop>
+  <tabstop>color1ComboBox</tabstop>
+  <tabstop>color2ComboBox</tabstop>
+  <tabstop>color3ComboBox</tabstop>
+  <tabstop>color4ComboBox</tabstop>
+  <tabstop>alpha1ComboBox</tabstop>
+  <tabstop>alpha2ComboBox</tabstop>
+  <tabstop>alpha3ComboBox</tabstop>
+  <tabstop>alpha4ComboBox</tabstop>
+  <tabstop>resetAllButton</tabstop>
+  <tabstop>setAllButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+  <tabstop>resetButton</tabstop>
+ </tabstops>
  <resources>
   <include location="bdsup2sub.qrc"/>
  </resources>

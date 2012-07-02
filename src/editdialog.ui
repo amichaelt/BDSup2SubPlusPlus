@@ -966,6 +966,9 @@
        <property name="autoDefault">
         <bool>false</bool>
        </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
@@ -979,6 +982,32 @@
    <header location="global">editpane.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>okButton</tabstop>
+  <tabstop>storePreviousButton</tabstop>
+  <tabstop>storeNextButton</tabstop>
+  <tabstop>previousButton</tabstop>
+  <tabstop>nextButton</tabstop>
+  <tabstop>verticalSlider</tabstop>
+  <tabstop>horizontalSlider</tabstop>
+  <tabstop>startTimeLineEdit</tabstop>
+  <tabstop>endTimeLineEdit</tabstop>
+  <tabstop>durationLineEdit</tabstop>
+  <tabstop>minButton</tabstop>
+  <tabstop>maxButton</tabstop>
+  <tabstop>xOffsetLineEdit</tabstop>
+  <tabstop>centerButton</tabstop>
+  <tabstop>yOffsetLineEdit</tabstop>
+  <tabstop>topButton</tabstop>
+  <tabstop>bottomButton</tabstop>
+  <tabstop>forcedCaptionCheckBox</tabstop>
+  <tabstop>excludeCheckBox</tabstop>
+  <tabstop>addErasePatchButton</tabstop>
+  <tabstop>undoErasePatchButton</tabstop>
+  <tabstop>undoAllErasePatchesButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+  <tabstop>saveButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

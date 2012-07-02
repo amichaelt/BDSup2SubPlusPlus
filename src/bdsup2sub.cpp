@@ -341,11 +341,13 @@ void BDSup2Sub::loadSettings()
     else
     {
         settings = new QSettings(newIniFilePath, QSettings::IniFormat);
+        settings->setValue("frameWidth", QVariant(784));
+        settings->setValue("frameHeight", QVariant(560));
     }
 
     QRect geometry = this->geometry();
-    int w = settings->value("frameWidth", 800).toInt();
-    int h = settings->value("frameHeight", 600).toInt();
+    int w = settings->value("frameWidth", QVariant(784)).toInt();
+    int h = settings->value("frameHeight", QVariant(560)).toInt();
     geometry.setWidth(w);
     geometry.setHeight(h);
 
@@ -749,72 +751,75 @@ void BDSup2Sub::addCLIOptions()
     options->setFlagStyle(QxtCommandOptions::DoubleDash);
 
     options->addSection("Options");
-    options->add("h",               "\tList options");
+    options->add("h",                 "\tList options");
     options->alias("h", "help");
-    options->add("load-settings",   "\tSet to load settings stored in INI file.");
-    options->add("resolution",      "\tSet resolution to 480, 576, 720 or 1080. Default: 576. "
-                                    "\tSupported values: keep, ntsc=480, pal=576, 1440x1080.",
+    options->add("load-settings",     "\tSet to load settings stored in INI file.");
+    options->add("resolution",        "\tSet resolution to 480, 576, 720 or 1080. Default: 576. "
+                                      "\tSupported values: keep, ntsc=480, pal=576, 1440x1080.",
                  QxtCommandOptions::ValueRequired);
-    options->add("fps-source",      "\tSynchronize source frame rate to <x>. Default: auto. "
-                                    "\tSupported values: 24p=23.976, 25p=25, 30p=29.967.",
+    options->add("fps-source",        "\tSynchronize source frame rate to <x>. Default: auto. "
+                                      "\tSupported values: 24p=23.976, 25p=25, 30p=29.967.",
                  QxtCommandOptions::ValueRequired);
-    options->add("fps-target",      "\tConvert the target frame rate to <x>. Default: keep. "
-                                    "\tSupported values: 24p=23.976, 25p=25, 30p=29.967.",
+    options->add("fps-target",        "\tConvert the target frame rate to <x>. Default: keep. "
+                                      "\tSupported values: 24p=23.976, 25p=25, 30p=29.967.",
                  QxtCommandOptions::ValueRequired);
-    options->add("delay",           "\tSet delay in ms. Default: 0.0. " ,
+    options->add("delay",             "\tSet delay in ms. Default: 0.0. " ,
                  QxtCommandOptions::ValueRequired);
-    options->add("filter",          "\tSet the filter to use for scaling. Default: bilinear. "
-                                    "\tSupported values: bilinear, triangle, bicubic, bell, "
-                                    "\tb-spline, hermite, lanczos3, mitchell.",
+    options->add("filter",            "\tSet the filter to use for scaling. Default: bilinear. "
+                                      "\tSupported values: bilinear, triangle, bicubic, bell, "
+                                      "\tb-spline, hermite, lanczos3, mitchell.",
                  QxtCommandOptions::ValueRequired);
-    options->add("palette-mode",    "\tPalette mode: keep, create, dither. Default: create. " ,
+    options->add("palette-mode",      "\tPalette mode: keep, create, dither. Default: create. " ,
                  QxtCommandOptions::ValueRequired);
-    options->add("minimum-time",    "\tSet the minimum display time in ms. Default: 500.",
+    options->add("minimum-time",      "\tSet the minimum display time in ms. Default: 500.",
                  QxtCommandOptions::ValueRequired);
-    options->add("merge-time",      "\tSet max time diff to merge subs in ms. Default: 200.",
+    options->add("merge-time",        "\tSet max time diff to merge subs in ms. Default: 200.",
                  QxtCommandOptions::ValueRequired);
-    options->add("move-in-ratio",   "\tMove captions from inside screen ratio <x>.",
+    options->add("move-in-ratio",     "\tMove captions from inside screen ratio <x>.",
                  QxtCommandOptions::ValueRequired, 1);
-    options->add("move-out-ratio",  "\tMove captions from outside screen ratio <x>.",
+    options->add("move-out-ratio",    "\tMove captions from outside screen ratio <x>.",
                  QxtCommandOptions::ValueRequired, 1);
-    options->add("move-y-offset",   "\tSet optional +/- offset to move captions by.",
+    options->add("move-y-offset",     "\tSet optional +/- offset to move captions by.",
                  QxtCommandOptions::ValueRequired);
-    options->add("move-x",          "\tMove captions horizontally from specified position. "
-                                    "\tSupported values: left, right, center, origin.",
+    options->add("move-x",            "\tMove captions horizontally from specified position. "
+                                      "\tSupported values: left, right, center, origin.",
                  QxtCommandOptions::ValueRequired);
-    options->add("move-x-offset",   "\tSet optional +/- offset to move captions by.",
+    options->add("move-x-offset",     "\tSet optional +/- offset to move captions by.",
                  QxtCommandOptions::ValueRequired);
-    options->add("crop-y",          "\tCrop the upper/lower n lines. Default: 0",
+    options->add("crop-y",            "\tCrop the upper/lower n lines. Default: 0",
                  QxtCommandOptions::ValueRequired);
-    options->add("alpha-crop",      "\tSet the alpha cropping threshold. Default: 10",
+    options->add("alpha-crop",        "\tSet the alpha cropping threshold. Default: 10",
                  QxtCommandOptions::ValueRequired);
-    options->add("scale-x",         "\tScale captions horizontally by factor. Default 1.0.",
+    options->add("scale-x",           "\tScale captions horizontally by factor. Default 1.0.",
                  QxtCommandOptions::ValueRequired);
-    options->add("scale-y",         "\tScale captions vertically by factor. Default 1.0.",
+    options->add("scale-y",           "\tScale captions vertically by factor. Default 1.0.",
                  QxtCommandOptions::ValueRequired);
-    options->add("export-palette",  "\tExport target palette in PGCEdit format.");
-    options->add("forced-only",     "\tExport only forced subtitles.");
-    options->add("force-all",       "\tSet or clear the forced flag for all subpictures. "
-                                    "\tSupported values: set/clear.",
+    options->add("no-export-palette", "\tDo not export palette file.");
+    options->add("export-palette",    "\tExport target palette in PGCEdit format.");
+    options->add("forced-only",       "\tExport only forced subtitles.");
+    options->add("force-all",         "\tSet or clear the forced flag for all subpictures. "
+                                      "\tSupported values: set/clear.",
                  QxtCommandOptions::ValueRequired);
-    options->add("swap",            "\tSwap Cr/Cb components.");
-    options->add("fix-invisible",   "\tFix zero alpha frame palette.");
-    options->add("verbatim",        "\tSwitch on verbatim console output mode.");
+    options->add("swap",              "\tSwap Cr/Cb components.");
+    options->add("no-fix-invisibile", "\tDo not fix zero alpha frame palette.");
+    options->add("fix-invisible",     "\tFix zero alpha frame palette.");
+    options->add("no-verbatim"        "\tSwitch off verbatim console output mode.");
+    options->add("verbatim",          "\tSwitch on verbatim console output mode.");
 
     options->addSection("Options only for SUB/IDX or SUP/IFO as target");
-    options->add("alpha-thr",       "\tSet alpha threshold 0..255. Default 80.",
+    options->add("alpha-thr",         "\tSet alpha threshold 0..255. Default 80.",
                  QxtCommandOptions::ValueRequired);
-    options->add("med-low-thr",     "\tSet luminance low/med threshold 0..255.",
+    options->add("med-low-thr",       "\tSet luminance low/med threshold 0..255.",
                  QxtCommandOptions::ValueRequired);
-    options->add("med-hi-thr",      "\tSet luminance med/hi threshold 0..255.",
+    options->add("med-hi-thr",        "\tSet luminance med/hi threshold 0..255.",
                  QxtCommandOptions::ValueRequired);
-    options->add("language",        "\tSet language to <n>. Default: de (Vobsub Only).",
+    options->add("language",          "\tSet language to <n>. Default: de (Vobsub Only).",
                  QxtCommandOptions::ValueRequired);
-    options->add("palette-file",    "\tLoad palette file <n>. Overrides default palette.",
+    options->add("palette-file",      "\tLoad palette file <n>. Overrides default palette.",
                  QxtCommandOptions::ValueRequired);
 
     options->addSection("Output");
-    options->add("o",               "\tSpecify output file.",
+    options->add("o",                 "\tSpecify output file.",
                  QxtCommandOptions::ValueRequired);
     options->alias("o", "output");
 }
@@ -1137,7 +1142,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 exit(1);
             }
             QSettings colorSettings(value, QSettings::IniFormat);
-            if (colorSettings.value("Color_0", QVariant("")).toString() == "")
+            if (!colorSettings.allKeys().contains("Color_0"))
             {
                 errorStream << "ERROR: Not a valid palette file" << endl;
                 exit(1);
@@ -1393,6 +1398,11 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             subtitleProcessor->setVerbatim(true);
             outStream << QString("OPTION: Enabled verbatim output.") << endl;
         }
+        if (options->count("no-verbatim"))
+        {
+            subtitleProcessor->setVerbatim(false);
+            outStream << QString("OPTION: Disabled verbatim output.") << endl;
+        }
 
         if (options->count("filter"))
         {
@@ -1485,11 +1495,19 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             subtitleProcessor->setWritePGCEditPal(true);
             outStream << QString("OPTION: Export target palette in PGCEDit text format") << endl;
         }
+        if (options->count("no-export-palette"))
+        {
+            subtitleProcessor->setWritePGCEditPal(false);
+        }
 
         if (options->count("fix-invisible"))
         {
             subtitleProcessor->setFixZeroAlpha(true);
             outStream << QString("OPTION: Fix zero alpha frame palette for SUB/IDX and SUP/IFO") << endl;
+        }
+        if (options->count("no-fix-invisible"))
+        {
+            subtitleProcessor->setFixZeroAlpha(false);
         }
 
         if (options->count("force-all"))

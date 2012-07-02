@@ -185,6 +185,9 @@
            <property name="autoDefault">
             <bool>false</bool>
            </property>
+           <property name="default">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -195,6 +198,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>okButton</tabstop>
+  <tabstop>colorList</tabstop>
+  <tabstop>changeColorButton</tabstop>
+  <tabstop>restoreDefaultColorsButton</tabstop>
+  <tabstop>savePaletteButton</tabstop>
+  <tabstop>loadPaletteButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

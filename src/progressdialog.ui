@@ -67,6 +67,9 @@
      <property name="text">
       <string>Cancel</string>
      </property>
+     <property name="default">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item row="6" column="2">

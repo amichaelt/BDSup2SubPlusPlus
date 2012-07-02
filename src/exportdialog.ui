@@ -188,12 +188,24 @@
        <property name="autoDefault">
         <bool>false</bool>
        </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>saveButton</tabstop>
+  <tabstop>fileNameLineEdit</tabstop>
+  <tabstop>browseButton</tabstop>
+  <tabstop>languageComboBox</tabstop>
+  <tabstop>exportForcedOnlyCheckBox</tabstop>
+  <tabstop>exportPGCEditFormatCheckBox</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
