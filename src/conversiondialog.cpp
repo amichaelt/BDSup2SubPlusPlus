@@ -154,42 +154,45 @@ void ConversionDialog::on_cancelButton_clicked()
 
 void ConversionDialog::on_okButton_clicked()
 {
-    if ((subtitleProcessor->getSubPictureSrc(0)->startTime + delayPTS) < 0)
+    if (subtitleProcessor->getNumberOfFrames() > 0)
     {
-        QMessageBox::warning(this, "Warning!", QString("First subpicture has timestamp of %1.\n"
-                             "Delay value of %2 is insufficient to correct this.")
-                             .arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime))
-                             .arg(QString::number(delayPTS)));
-        return;
-    }
+        if ((subtitleProcessor->getSubPictureSrc(0)->startTime + delayPTS) < 0)
+        {
+            QMessageBox::warning(this, "Warning!", QString("First subpicture has timestamp of %1.\n"
+                                 "Delay value of %2 is insufficient to correct this.")
+                                 .arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime))
+                                 .arg(QString::number(delayPTS)));
+            return;
+        }
 
-    subtitleProcessor->setConvertFPS(changeFPS);
-    if (changeFPS)
-    {
-        subtitleProcessor->setFPSSrc(fpsSrc);
-        subtitleProcessor->setFPSTrg(fpsTrg);
-    }
-    else
-    {
-        subtitleProcessor->setFPSTrg(fpsSrc);
-    }
-    subtitleProcessor->setDelayPTS(delayPTS);
-    subtitleProcessor->setFixShortFrames(fixShortFrames);
-    subtitleProcessor->setMinTimePTS(minTimePTS);
-    subtitleProcessor->setConvertResolution(changeResolution);
-    if (changeResolution)
-    {
-        subtitleProcessor->setOutputResolution(resolution);
-    }
-    subtitleProcessor->setApplyFreeScale(changeScale);
-    if (changeScale)
-    {
-        subtitleProcessor->setFreeScale(scaleX, scaleY);
-    }
-    subtitleProcessor->setForceAll(forcedState);
-    if (ui->applyMoveAllSettingsCheckBox->isEnabled())
-    {
-        subtitleProcessor->setMoveCaptions(moveCaptions);
+        subtitleProcessor->setConvertFPS(changeFPS);
+        if (changeFPS)
+        {
+            subtitleProcessor->setFPSSrc(fpsSrc);
+            subtitleProcessor->setFPSTrg(fpsTrg);
+        }
+        else
+        {
+            subtitleProcessor->setFPSTrg(fpsSrc);
+        }
+        subtitleProcessor->setDelayPTS(delayPTS);
+        subtitleProcessor->setFixShortFrames(fixShortFrames);
+        subtitleProcessor->setMinTimePTS(minTimePTS);
+        subtitleProcessor->setConvertResolution(changeResolution);
+        if (changeResolution)
+        {
+            subtitleProcessor->setOutputResolution(resolution);
+        }
+        subtitleProcessor->setApplyFreeScale(changeScale);
+        if (changeScale)
+        {
+            subtitleProcessor->setFreeScale(scaleX, scaleY);
+        }
+        subtitleProcessor->setForceAll(forcedState);
+        if (ui->applyMoveAllSettingsCheckBox->isEnabled())
+        {
+            subtitleProcessor->setMoveCaptions(moveCaptions);
+        }
     }
     accept();
 }
