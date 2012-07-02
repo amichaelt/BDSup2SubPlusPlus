@@ -27,12 +27,12 @@ class ZoomableImageArea : public QLabel
     Q_OBJECT
 public:
     explicit ZoomableImageArea(QWidget *parent = 0);
+    void setImage(QImage* image);
+    void updateImage();
 
+protected:
     void mousePressEvent(QMouseEvent *event);
     void paintEvent(QPaintEvent *event);
-    void setImage(QImage* image);
-
-    void updateImage();
 
 signals:
 

@@ -417,6 +417,7 @@ public:
     }
     QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     int getLanguageIdx() { return languageIdx; }
+    int getLanguageIdxRead() { return languageIdxRead; }
     void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
     QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
     bool getKeepFps() { return keepFps; }
@@ -426,13 +427,14 @@ public:
     int getWarnings() { return numberOfWarnings; }
     void resetWarnings() { numberOfWarnings = 0; }
     void loadedHook() { fpsSrcSet = false; }
+    void setIdxToRead(int value) { idxToRead = value; }
 
     void close();
 
     void readDVDSubStream(StreamID streamID, bool isVobSub);
+
     void readXml();
     void readSup();
-
     void writeSub(QString filename);
 
     void moveAllToBounds();
@@ -500,6 +502,7 @@ signals:
     void writingSubtitleFinished(const QString& errorString);
     void moveAllFinished(const QString& errorString);
     void printText(const QString &message);
+    void addLanguage(const QString &message);
 
 public slots:
     void setMaxProgress(int maxProgress);
@@ -512,6 +515,7 @@ public slots:
     void printX(const QString &message);
     void printError(const QString &message);
     void printWarning(const QString &message);
+    void onLanguageRead(const QString &message);
 
 private:
     QSharedPointer<Substream> substream;
@@ -530,6 +534,7 @@ private:
     Palette* currentDVDPalette;
     QStringList recentFiles;
     QVector<SubPicture*> subPictures;
+    int languageIdxRead;
     int maxProgress = 0, lastProgress = 0;
     int numberOfErrors, numberOfWarnings;
     int languageIdx = 0;
@@ -545,6 +550,7 @@ private:
     int moveOffsetX = 10;
     int numRecent = 5;
     int mergePTSdiff = 18000;
+    int idxToRead = -1;
     static constexpr double fpsSrcDefault = FPS_24P;
     double fpsSrc = fpsSrcDefault;
     static constexpr double fpsTrgDefault = FPS_PAL;

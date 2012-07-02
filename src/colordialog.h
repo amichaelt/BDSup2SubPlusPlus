@@ -44,7 +44,6 @@ public:
     
 private slots:
     void on_colorList_doubleClicked(const QModelIndex &index);
-
     void on_changeColorButton_clicked();
     void on_restoreDefaultColorsButton_clicked();
     void on_savePaletteButton_clicked();

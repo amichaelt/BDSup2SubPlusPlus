@@ -43,6 +43,8 @@ public:
     ~ConversionDialog();
 
     void enableOptionMove(bool enable);
+
+protected:
     void keyPressEvent(QKeyEvent *event);
     
 private slots:

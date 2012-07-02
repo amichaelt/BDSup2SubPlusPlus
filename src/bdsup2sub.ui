@@ -83,6 +83,33 @@
         <number>7</number>
        </property>
        <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLabel" name="subtitleLanguageLabel">
+           <property name="text">
+            <string>Subtitle Language</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="subtitleLanguageComboBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="editable">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <layout class="QVBoxLayout" name="subtitleNumberLayout">
          <property name="spacing">
           <number>0</number>
@@ -470,7 +497,7 @@
          <x>0</x>
          <y>0</y>
          <width>788</width>
-         <height>149</height>
+         <height>147</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -542,7 +569,7 @@
          <x>0</x>
          <y>0</y>
          <width>788</width>
-         <height>150</height>
+         <height>148</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">

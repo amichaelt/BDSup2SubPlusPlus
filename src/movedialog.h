@@ -41,15 +41,12 @@ class MoveDialog : public QDialog
 public:
     explicit MoveDialog(QWidget *parent = 0, SubtitleProcessor* subtitleProcessor = 0);
     ~MoveDialog();
-    void keyPressEvent(QKeyEvent *event);
     void setIndex(int idx);
     int getIndex() { return index; }
     double getTrgRatio() { return screenRatioTrg; }
 
-    QIntValidator* offsetXValidator;
-    QIntValidator* offsetYValidator;
-    QIntValidator* cropOffsetYValidator;
-    QDoubleValidator* aspectRatioValidator;
+protected:
+    void keyPressEvent(QKeyEvent *event);
     
 private slots:
     void on_previousButton_clicked();
@@ -89,6 +86,11 @@ private:
     QButtonGroup* xButtonGroup;
     QButtonGroup* yButtonGroup;
     QImage* image = 0;
+
+    QIntValidator* offsetXValidator;
+    QIntValidator* offsetYValidator;
+    QIntValidator* cropOffsetYValidator;
+    QDoubleValidator* aspectRatioValidator;
 
     MoveModeX moveModeX = MoveModeX::KEEP;
     MoveModeY moveModeY = MoveModeY::KEEP;

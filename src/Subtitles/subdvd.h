@@ -58,11 +58,12 @@ public:
     Palette *getSrcPalette() { return srcPalette; }
     void setSrcPalette(Palette *palette) { srcPalette = palette; }
     int getLanguageIdx() { return languageIdx; }
+    int getLanguageIdxRead() { return languageIdxRead; }
 
     Palette* decodePalette(SubPictureDVD* pic, Palette* palette);
     Bitmap* decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
 
-    void readIdx();
+    void readIdx(int idxToRead = -1);
     void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette* palette);
     void readSubFrame(SubPictureDVD* pic, long endOfs);
     void readAllSubFrames();
@@ -73,9 +74,11 @@ public:
 signals:
     void maxProgressChanged(int maxProgress);
     void currentProgressChanged(int currentProgress);
+    void addLanguage(const QString &message);
 
 private:
     int streamID = 0;
+    int languageIdxRead;
     QString idxFileName;
     QString subFileName;
     QString timeOffset = "";

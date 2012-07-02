@@ -44,6 +44,8 @@ public:
     
     void setIndex(int value);
     int getIndex() { return index; }
+
+protected:
     void keyPressEvent(QKeyEvent *event);
 
 private slots:

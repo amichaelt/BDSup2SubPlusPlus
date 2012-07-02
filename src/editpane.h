@@ -28,11 +28,6 @@ class EditPane : public QLabel
 public:
     explicit EditPane(QWidget *parent = 0, bool isLabel = true);
 
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void paintEvent(QPaintEvent *event);
-
     void setDimension(int width, int height) { this->width = width; this->height = height; }
     void setOffsets(int x, int y);
     void setCropOfsY(int ofs) { cropOfsY = ofs; }
@@ -47,6 +42,12 @@ public:
 signals:
     void onMouseClicked(QMouseEvent *event);
     void selectionPerformed(bool validSelection);
+
+protected:
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void paintEvent(QPaintEvent *event);
 
 private:
     QImage* img = 0;

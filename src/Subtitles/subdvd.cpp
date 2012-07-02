@@ -767,7 +767,7 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
     return buf;
 }
 
-void SubDVD::readIdx()
+void SubDVD::readIdx(int idxToRead)
 {
     QScopedPointer<QFile> idxFile(new QFile(idxFileName));
     if (!idxFile->open(QIODevice::ReadOnly | QIODevice::Text))
@@ -934,7 +934,7 @@ void SubDVD::readIdx()
         }
 
         // language index (e.g. "langidx: 0")
-        if (key == "langidx")
+        if (key == "langidx" && idxToRead == -1)
         {
             temp = value.toInt(&ok);
             temp = ok ? temp : -1;
@@ -944,6 +944,10 @@ void SubDVD::readIdx()
             }
             langIdx = temp;
             continue;
+        }
+        else if (key == "langidx" && idxToRead != -1)
+        {
+            langIdx = idxToRead;
         }
 
         // language id (e.g. "id: de, index: 0")
@@ -961,10 +965,23 @@ void SubDVD::readIdx()
             bool languageFound = false;
             auto subLanguages = subtitleProcessor->getLanguages();
 
+            QString longLanguageName;
             for (int i = 0; i < subLanguages.size(); ++i)
             {
+                if (id == "iw")
+                {
+                    subtitleProcessor->printWarning("IDX file uses deprecated language code: 'iw'. Changing to 'he'.\n");
+                    id = "he";
+
+                }
+                if (id == "ji")
+                {
+                    subtitleProcessor->printWarning("IDX file uses deprecated language code: 'ji'. Changing to 'yi'.\n");
+                    id = "yi";
+                }
                 if (id == subLanguages[i][1])
                 {
+                    longLanguageName = subLanguages[i][0];
                     languageFound = true;
                     break;
                 }
@@ -999,6 +1016,7 @@ void SubDVD::readIdx()
             else
             {
                 langIdxMatched = true;
+                languageIdxRead = langIdx;
                 for (int i = 0; i < subLanguages.size(); ++i)
                 {
                     if (id == subLanguages[i][1])
@@ -1009,6 +1027,8 @@ void SubDVD::readIdx()
                 streamID = temp;
                 ignore = false;
             }
+
+            emit addLanguage(QString("%1 - %2").arg(QString::number(temp), 2, QChar('0')).arg(languageFound ? longLanguageName : "?"));
             continue;
         }
 

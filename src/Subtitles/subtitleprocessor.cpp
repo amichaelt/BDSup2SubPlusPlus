@@ -1203,6 +1203,11 @@ void SubtitleProcessor::printWarning(const QString &message)
     }
 }
 
+void SubtitleProcessor::onLanguageRead(const QString &message)
+{
+    emit addLanguage(message);
+}
+
 void SubtitleProcessor::moveAllToBounds()
 {
     QString sy("");
@@ -1998,8 +2003,10 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         subDVD = QSharedPointer<SubDVD>(new SubDVD(subFileName, idxFileName, this));
         connect(subDVD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
         connect(subDVD.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
-        subDVD->readIdx();
+        connect(subDVD.data(), SIGNAL(addLanguage(QString)), this, SLOT(onLanguageRead(QString)));
+        subDVD->readIdx(idxToRead);
         subDVD->readAllSubFrames();
+        languageIdxRead = subDVD->getLanguageIdxRead();
         substream = qSharedPointerCast<Substream>(subDVD);
         inMode = InputMode::VOBSUB;
         substreamDVD = subDVD.data();

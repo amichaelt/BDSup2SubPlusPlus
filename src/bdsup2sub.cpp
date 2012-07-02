@@ -75,6 +75,33 @@ void BDSup2Sub::closeEvent(QCloseEvent *event)
     QMainWindow::closeEvent(event);
 }
 
+void BDSup2Sub::keyPressEvent(QKeyEvent *event)
+{
+    if (subtitleProcessor->getNumberOfFrames() > 0)
+    {
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier)
+        {
+            if (event->key() == Qt::Key_PageUp)
+            {
+                int currentIndex = ui->subtitleNumberComboBox->currentIndex();
+                if (currentIndex > 0)
+                {
+                    ui->subtitleNumberComboBox->setCurrentIndex(--currentIndex);
+                }
+            }
+            else if (event->key() == Qt::Key_PageDown)
+            {
+                int currentIndex = ui->subtitleNumberComboBox->currentIndex();
+                if (currentIndex < (subtitleProcessor->getNumberOfFrames() - 1))
+                {
+                    ui->subtitleNumberComboBox->setCurrentIndex(++currentIndex);
+                }
+            }
+        }
+    }
+    QMainWindow::keyPressEvent(event);
+}
+
 void BDSup2Sub::changeWindowTitle(QString newTitle)
 {
     this->setWindowTitle(newTitle);
@@ -91,8 +118,14 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
         warningDialog();
 
         int num = subtitleProcessor->getNumberOfFrames();
-        ui->subtitleNumberComboBox->clear();
+
         ui->subtitleNumberComboBox->blockSignals(true);
+        ui->alphaThresholdComboBox->blockSignals(true);
+        ui->medLowThresholdComboBox->blockSignals(true);
+        ui->hiMedThresholdComboBox->blockSignals(true);
+
+        ui->subtitleNumberComboBox->clear();
+
         subtitleNumberValidator = new QIntValidator(1, num, this);
         for (int i = 1; i <= num; ++i)
         {
@@ -100,16 +133,26 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
         }
         ui->subtitleNumberComboBox->setValidator(subtitleNumberValidator);
         ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
-        ui->subtitleNumberComboBox->blockSignals(false);
-        ui->alphaThresholdComboBox->blockSignals(true);
-        ui->medLowThresholdComboBox->blockSignals(true);
-        ui->hiMedThresholdComboBox->blockSignals(true);
         ui->alphaThresholdComboBox->setCurrentIndex(subtitleProcessor->getAlphaThreshold());
         ui->hiMedThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[0]);
         ui->medLowThresholdComboBox->setCurrentIndex(subtitleProcessor->getLuminanceThreshold()[1]);
+
+        ui->subtitleNumberComboBox->blockSignals(false);
         ui->alphaThresholdComboBox->blockSignals(false);
         ui->medLowThresholdComboBox->blockSignals(false);
         ui->hiMedThresholdComboBox->blockSignals(false);
+
+        ui->subtitleLanguageComboBox->blockSignals(true);
+        if (ui->subtitleLanguageComboBox->count() > 0)
+        {
+            ui->subtitleLanguageComboBox->setEnabled(true);
+            ui->subtitleLanguageComboBox->setCurrentIndex(subtitleProcessor->getLanguageIdxRead());
+        }
+        else
+        {
+            ui->subtitleLanguageComboBox->setEnabled(false);
+        }
+        ui->subtitleLanguageComboBox->blockSignals(false);
 
         if (subtitleProcessor->getCropOfsY() > 0)
         {
@@ -359,8 +402,11 @@ void BDSup2Sub::loadSettings()
 
     setGeometry(geometry);
 
-    loadPath = settings->value("loadPath", "").toString();
-    colorPath = settings->value("colorPath", "").toString();
+    if (!fromCLI)
+    {
+        loadPath = settings->value("loadPath", "").toString();
+        colorPath = settings->value("colorPath", "").toString();
+    }
 }
 
 void BDSup2Sub::resizeEvent(QResizeEvent *event)
@@ -604,6 +650,13 @@ void BDSup2Sub::closeFile()
     ui->targetImage->update();
 }
 
+void BDSup2Sub::onAddLanguage(const QString &language)
+{
+    ui->subtitleLanguageComboBox->blockSignals(true);
+    ui->subtitleLanguageComboBox->addItem(language);
+    ui->subtitleLanguageComboBox->blockSignals(false);
+}
+
 void BDSup2Sub::loadSubtitleFile()
 {
     QFileInfo fileInfo(loadPath);
@@ -648,6 +701,8 @@ void BDSup2Sub::loadSubtitleFile()
     enableVobSubComponents(false);
 
     subtitleProcessor->setLoadPath(loadPath);
+
+    connect(subtitleProcessor, SIGNAL(addLanguage(QString)), this, SLOT(onAddLanguage(QString)));
 
     QThread *workerThread = new QThread;
     subtitleProcessor->moveToThread(workerThread);
@@ -801,9 +856,9 @@ void BDSup2Sub::addCLIOptions()
                                       "\tSupported values: set/clear.",
                  QxtCommandOptions::ValueRequired);
     options->add("swap",              "\tSwap Cr/Cb components.");
-    options->add("no-fix-invisibile", "\tDo not fix zero alpha frame palette.");
+    options->add("no-fix-invisible",  "\tDo not fix zero alpha frame palette.");
     options->add("fix-invisible",     "\tFix zero alpha frame palette.");
-    options->add("no-verbatim"        "\tSwitch off verbatim console output mode.");
+    options->add("no-verbatim",       "\tSwitch off verbatim console output mode.");
     options->add("verbatim",          "\tSwitch on verbatim console output mode.");
 
     options->addSection("Options only for SUB/IDX or SUP/IFO as target");
@@ -855,6 +910,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
         if (QFileInfo(positional[0]).exists())
         {
             fromCLI = true;
+            loadPath = positional[0];
             return false;
         }
         else
@@ -868,11 +924,11 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
         if (options->count("load-settings"))
         {
             loadSettings();
-            subtitleProcessor = new SubtitleProcessor(this, settings);
+            subtitleProcessor = new SubtitleProcessor(0, settings);
         }
         else
         {
-            subtitleProcessor = new SubtitleProcessor(this);
+            subtitleProcessor = new SubtitleProcessor(0);
         }
 
         // parse parameters
@@ -2242,4 +2298,18 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
     {
         enableVobSubComponents(false);
     }
+}
+
+void BDSup2Sub::on_subtitleLanguageComboBox_currentIndexChanged(int index)
+{
+    subtitleProcessor->setIdxToRead(index);
+
+    connectSubtitleProcessor();
+
+    QThread *workerThread = new QThread;
+    subtitleProcessor->moveToThread(workerThread);
+    connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(readSubtitleStream()));
+    connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
+
+    workerThread->start();
 }

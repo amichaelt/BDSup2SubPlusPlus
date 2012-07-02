@@ -41,8 +41,6 @@ class BDSup2Sub : public QMainWindow
 public:
     explicit BDSup2Sub(QWidget *parent = 0);
     ~BDSup2Sub();
-    void closeEvent(QCloseEvent *event);
-
     bool execCLI(int argc, char** argv);
 
 public slots:
@@ -57,6 +55,8 @@ protected:
     void dropEvent(QDropEvent *event);
     void showEvent(QShowEvent *event);
     void resizeEvent (QResizeEvent * event);
+    void closeEvent(QCloseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
 private:
     Ui::BDSup2Sub *ui;
@@ -108,6 +108,7 @@ private slots:
     void openFile();
     void saveFile();
     void closeFile();
+    void onAddLanguage(const QString &language);
     void print(const QString &message);
     void onRecentItemClicked();
     void onEditPaneClicked(QMouseEvent *event);
@@ -133,6 +134,7 @@ private slots:
     void on_alphaThresholdComboBox_currentIndexChanged(int index);
     void on_alphaThresholdComboBox_editTextChanged(const QString &arg1);
     void on_outputFormatComboBox_currentIndexChanged(int index);
+    void on_subtitleLanguageComboBox_currentIndexChanged(int index);
 };
 
 #endif // BDSUP2SUB_H
