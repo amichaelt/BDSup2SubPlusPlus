@@ -2216,10 +2216,10 @@ void SubtitleProcessor::writePGCEditPalette(QString filename, Palette *palette)
         throw QString("PGCEdit Palette file can not be opened for writing.");
     }
     out->write("# Palette file for PGCEdit - colors given as R,G,B components (0..255)\n");
-    for (int i = palette->getSize() - 1; i >= 0; --i)
+    for (int i = 0; i < palette->getSize(); ++i)
     {
         QRgb rgb = palette->getRGB(i);
-        out->write(QString("Color_" + QString::number(i) + "=" + QString::number(qRed(rgb)) +
+        out->write(QString("Color " + QString::number(i) + "=" + QString::number(qRed(rgb)) +
                            ", " + QString::number(qGreen(rgb)) + ", " + QString::number(qBlue(rgb)) + "\n").toAscii());
     }
 }
