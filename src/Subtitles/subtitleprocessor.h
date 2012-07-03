@@ -584,7 +584,7 @@ private:
     bool fpsTrgSet = false;
     bool writePGCEditPal = false;
     bool writePGCEditPalSet = false;
-    static constexpr PaletteMode paletteModeDefault = PaletteMode::NEW;
+    static constexpr PaletteMode paletteModeDefault = PaletteMode::KEEP_EXISTING;
     PaletteMode paletteMode = paletteModeDefault;
     RunType runType;
     static constexpr OutputMode outModeDefault = OutputMode::VOBSUB;

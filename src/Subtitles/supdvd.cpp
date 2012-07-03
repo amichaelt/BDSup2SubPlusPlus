@@ -191,7 +191,7 @@ void SupDVD::readIfo()
         language += ((char)fileBuffer->getByte(0x258));
         language += ((char)fileBuffer->getByte(0x259));
         auto languages = subtitleProcessor->getLanguages();
-        for (int i=0; i< languages.size(); ++i)
+        for (int i = 0; i< languages.size(); ++i)
         {
             if (language.toLower() == languages[i][1])
             {
