@@ -119,6 +119,28 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
 
         int num = subtitleProcessor->getNumberOfFrames();
 
+        if (setImportedPalette)
+        {
+            subtitleProcessor->setCurrentSrcDVDPalette(importedPalette);
+        }
+        if (setLumaThreshold)
+        {
+            QVector<int> lumaThr = subtitleProcessor->getLuminanceThreshold();
+            if (lumThr1 > 0)
+            {
+                lumaThr.replace(0, lumThr1);
+            }
+            if (lumThr2 > 0)
+            {
+                lumaThr.replace(1, lumThr2);
+            }
+            subtitleProcessor->setLuminanceThreshold(lumaThr);
+        }
+        if (setAlphaThreshold)
+        {
+            subtitleProcessor->setAlphaThreshold(alphaThreshold);
+        }
+
         ui->subtitleNumberComboBox->blockSignals(true);
         ui->alphaThresholdComboBox->blockSignals(true);
         ui->medLowThresholdComboBox->blockSignals(true);
@@ -592,6 +614,10 @@ void BDSup2Sub::saveFile()
     {
         path += "xml";
     }
+    if (setLangIdx)
+    {
+        subtitleProcessor->setLanguageIdx(langIdx);
+    }
     ExportDialog exportDialog(this, path, subtitleProcessor);
     if (exportDialog.exec() != QDialog::Rejected)
     {
@@ -641,6 +667,7 @@ void BDSup2Sub::saveFile()
         QThread *workerThread = new QThread;
         subtitleProcessor->setLoadPath(fileName);
         subtitleProcessor->moveToThread(workerThread);
+
         connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(createSubtitleStream()));
         connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
@@ -701,6 +728,12 @@ void BDSup2Sub::loadSubtitleFile()
         QMessageBox::warning(this, "Wrong format!", "This is not a supported SUP stream");
         return;
     }
+
+    ui->subtitleLanguageComboBox->blockSignals(true);
+    ui->subtitleLanguageComboBox->clear();
+    ui->subtitleLanguageComboBox->setEnabled(false);
+    ui->subtitleLanguageComboBox->blockSignals(false);
+
     subIndex = 0;
     saveFileName = QFileInfo(loadPath).completeBaseName();
     savePath = QFileInfo(loadPath).absolutePath();
@@ -929,6 +962,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     }
     else
     {
+        outStream << progNameVer + "\n";
         // parse parameters
         QString src = positional.size() == 1 ? positional[0] : "";
         QString trg = "";
@@ -1038,7 +1072,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
         bool ok;
         int ival;
 
-        int alphaThreshold = -1;
         if (options->count("alpha-thr"))
         {
             value = options->value("alpha-thr").toString();
@@ -1052,11 +1085,10 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             else
             {
                 alphaThreshold = ival;
+                setAlphaThreshold = true;
             }
             outStream << QString("OPTION: Set alpha threshold to %1").arg(value) << endl;
         }
-
-        int lumThr1 = -1;
 
         if (options->count("med-low-thr"))
         {
@@ -1071,11 +1103,10 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             else
             {
                 lumThr1 = ival;
+                setLumaThreshold = true;
             }
             outStream << QString("OPTION: Set med/low luminance threshold to %1").arg(value) << endl;
         }
-
-        int lumThr2 = -1;
 
         if (options->count("med-hi-thr"))
         {
@@ -1090,6 +1121,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             else
             {
                 lumThr2 = ival;
+                setLumaThreshold = true;
             }
             outStream << QString("OPTION: Set med/hi luminance threshold to %1").arg(value) << endl;
         }
@@ -1159,7 +1191,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             }
         }
 
-        int langIdx = -1;
         if (options->count("language"))
         {
             value = options->value("language").toString();
@@ -1168,6 +1199,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 if (subtitleProcessor->getLanguages()[l][1] == value)
                 {
                     langIdx = l;
+                    setLangIdx = true;
                     break;
                 }
             }
@@ -1204,6 +1236,9 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 exit(1);
             }
 
+            setImportedPalette = true;
+            importedPalette = new Palette(subtitleProcessor->getDefaultDVDPalette());
+
             for (int c = 0; c < 15; ++c)
             {
                 QVariantList defaultList = { 0, 0, 0 };
@@ -1214,7 +1249,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                     int red = s[0].toInt();
                     int green = s[1].toInt();
                     int blue = s[2].toInt();
-                    subtitleProcessor->getCurrentDVDPalette()->setColor(c + 1, QColor(red, green, blue, 0));
+                    importedPalette->setColor(c + 1, QColor(red, green, blue, 0));
                 }
             }
             outStream << QString("OPTION: Loaded palette from %1").arg(value) << endl;
@@ -1237,10 +1272,11 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             value = options->value("fps-source").toString().toLower();
             if (value != "auto")
             {
-                int fps = subtitleProcessor->getFPS(value);
+                double fps = subtitleProcessor->getFPS(value);
+
                 if (fps > 0)
                 {
-                    subtitleProcessor->setFPSSrc(fps);
+                    subtitleProcessor->setFPSSrc(fps, true);
                 }
                 else
                 {
@@ -1257,7 +1293,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             value = options->value("fps-target").toString().toLower();
             if (value != "keep")
             {
-                int fps = subtitleProcessor->getFPS(value);
+                double fps = subtitleProcessor->getFPS(value);
 
                 if (fps > 0)
                 {
@@ -1283,7 +1319,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             bool ok;
 
             value = options->value("delay").toString();
-            delay = value.toDouble(&ok);
+            delay = value.toDouble(&ok) * 90.0;
 
             if (!ok)
             {
@@ -1313,7 +1349,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             int tMin = (int)subtitleProcessor->syncTimePTS((long)time, subtitleProcessor->getFPSTrg());
             subtitleProcessor->setMinTimePTS(tMin);
             subtitleProcessor->setFixShortFrames(true);
-            outStream << QString("OPTION: Set delay to %1")
+            outStream << QString("OPTION: Set minimum display time to %1")
                          .arg(QString::number(tMin / 90.0, 'g', 6)) << endl;
         }
 
@@ -1462,8 +1498,9 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 
         if (options->count("filter"))
         {
-            value = options->value("filter").toString();
+            value = options->value("filter").toString().toLower();
 
+            value[0] = value[0].toUpper();
             int idx = scalingFilters.indexOf(value);
             if (idx != -1)
             {
@@ -1522,6 +1559,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             }
 
             subtitleProcessor->setFreeScale(scaleX, scaleY);
+            subtitleProcessor->setApplyFreeScale(true);
             outStream << QString("OPTION: Set free scaling factors to %1, %2")
                          .arg(QString::number(scaleX, 'g', 6))
                          .arg(QString::number(scaleY, 'g', 6)) << endl;

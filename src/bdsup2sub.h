@@ -29,6 +29,7 @@ class ProgressDialog;
 class QSettings;
 class QxtCommandOptions;
 class QTextStream;
+class Palette;
 
 namespace Ui {
 class BDSup2Sub;
@@ -82,6 +83,17 @@ private:
     QString filter = tr("All Files (*.*);;Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
     QString ifoFilter = tr("IFO File (*.ifo)");
     QString selectedFilter = tr("Subtitle Files (*.idx *.ifo *.sub *.sup *.xml)");
+
+    int lumThr1 = -1;
+    int lumThr2 = -1;
+    int alphaThreshold = -1;
+    int langIdx = -1;
+    Palette* importedPalette;
+
+    bool setLumaThreshold = false;
+    bool setAlphaThreshold = false;
+    bool setLangIdx = false;
+    bool setImportedPalette = false;
 
     void fillComboBoxes();
     void enableCoreComponents(bool enable);

@@ -366,10 +366,10 @@ public:
     bool getFixShortFramesDefault() { return fixShortFramesDefault; }
     double restoreFpsSrc() { return settings->value("fpsSrc", QVariant(fpsSrc)).toDouble(); }
     double getFPSSrc() { return fpsSrc; }
-    void setFPSSrc(double value)
+    void setFPSSrc(double value, bool fromCLI = false)
     {
         fpsSrc = value;
-        if (settings == 0)
+        if (fromCLI)
         {
             fpsSrcSet = true;
             fpsSrcCertain = true;
