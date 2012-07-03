@@ -321,7 +321,7 @@ void BDSup2Sub::init()
     ui->consoleOutput->insertPlainText(authorDate + "\n");
     ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
 
-    if (settings == 0)
+    if (subtitleProcessor == 0)
     {
         subtitleProcessor = new SubtitleProcessor(this, settings, true);
     }
@@ -964,7 +964,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 errorStream << QString("ERROR: Unknown extension of target %1").arg(trg) << endl;
                 exit(1);
             }
-            subtitleProcessor->setOutputMode(mode);
         }
 
         // handle wildcards
@@ -1033,11 +1032,13 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             subtitleProcessor = new SubtitleProcessor(0, settings, false);
         }
 
+        subtitleProcessor->setOutputMode(mode);
 
         QString value;
         bool ok;
         int ival;
 
+        int alphaThreshold = -1;
         if (options->count("alpha-thr"))
         {
             value = options->value("alpha-thr").toString();
@@ -1050,7 +1051,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             }
             else
             {
-                subtitleProcessor->setAlphaThreshold(ival);
+                alphaThreshold = ival;
             }
             outStream << QString("OPTION: Set alpha threshold to %1").arg(value) << endl;
         }
@@ -1092,17 +1093,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             }
             outStream << QString("OPTION: Set med/hi luminance threshold to %1").arg(value) << endl;
         }
-
-        QVector<int> lumaThr = subtitleProcessor->getLuminanceThreshold();
-        if (lumThr1 > 0)
-        {
-            lumaThr.replace(0, lumThr1);
-        }
-        if (lumThr2 > 0)
-        {
-            lumaThr.replace(1, lumThr2);
-        }
-        subtitleProcessor->setLuminanceThreshold(lumaThr);
 
         if (options->count("resolution"))
         {
@@ -1169,16 +1159,15 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             }
         }
 
+        int langIdx = -1;
         if (options->count("language"))
         {
-            int langIdx = -1;
             value = options->value("language").toString();
             for (int l = 0; l < subtitleProcessor->getLanguages().size(); ++l)
             {
                 if (subtitleProcessor->getLanguages()[l][1] == value)
                 {
                     langIdx = l;
-                    subtitleProcessor->setLanguageIdx(langIdx);
                     break;
                 }
             }
@@ -1217,15 +1206,15 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 
             for (int c = 0; c < 15; ++c)
             {
-                QString s = colorSettings.value(QString("Color_%1").arg(QString::number(c)),
-                                                 QVariant("0,0,0")).toString();
-                QStringList sp = s.split(",");
-                if (sp.size() >= 3)
+                QVariantList defaultList = { 0, 0, 0 };
+                QVariantList s = colorSettings.value(QString("Color_%1").arg(QString::number(c)),
+                                                 defaultList).toList();
+                if (s.size() >= 3)
                 {
-                    int red = sp[0].trimmed().toInt();
-                    int green = sp[1].trimmed().toInt();
-                    int blue = sp[2].trimmed().toInt();
-                    subtitleProcessor->getCurrentDVDPalette()->setColor(c + 1, QColor(red, green, blue));
+                    int red = s[0].toInt();
+                    int green = s[1].toInt();
+                    int blue = s[2].toInt();
+                    subtitleProcessor->getCurrentDVDPalette()->setColor(c + 1, QColor(red, green, blue, 0));
                 }
             }
             outStream << QString("OPTION: Loaded palette from %1").arg(value) << endl;
@@ -1697,6 +1686,19 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                     errorStream << "No forced subtitles found." << endl;
                     exit(1);
                 }
+
+                QVector<int> lumaThr = subtitleProcessor->getLuminanceThreshold();
+                if (lumThr1 > 0)
+                {
+                    lumaThr.replace(0, lumThr1);
+                }
+                if (lumThr2 > 0)
+                {
+                    lumaThr.replace(1, lumThr2);
+                }
+                subtitleProcessor->setLuminanceThreshold(lumaThr);
+                subtitleProcessor->setAlphaThreshold(alphaThreshold);
+                subtitleProcessor->setLanguageIdx(langIdx);
                 subtitleProcessor->writeSub(trg);
             }
             catch(QString e)

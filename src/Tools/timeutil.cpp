@@ -97,6 +97,18 @@ QString TimeUtil::ptsToTimeStr(long pts)
                                    .arg(QString::number(time[3]), 3, QChar('0'));
 }
 
+QString TimeUtil::ptsToTimeStrIdx(long pts)
+{
+    bool ptsIsNegative = pts < 0;
+    pts = ptsIsNegative ? -pts : pts;
+    QVector<int> time = msToTime((pts + 45) / 90);
+    return QString("%1%2:%3:%4:%5").arg(ptsIsNegative ? "-" : "")
+                                   .arg(QString::number(time[0]), 2, QChar('0'))
+                                   .arg(QString::number(time[1]), 2, QChar('0'))
+                                   .arg(QString::number(time[2]), 2, QChar('0'))
+                                   .arg(QString::number(time[3]), 3, QChar('0'));
+}
+
 QVector<int> TimeUtil::msToTime(long ms)
 {
     QVector<int> time(4);

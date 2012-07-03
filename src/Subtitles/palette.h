@@ -42,7 +42,11 @@ public:
     int getSize() { return size; }
     QColor getColor(int index) { return QColor(qRed(rgba[index]), qGreen(rgba[index]),
                                                qBlue(rgba[index]), qAlpha(rgba[index])); }
-    void setColor(int index, QColor color) { setRGB(index, color.rgb()); setAlpha(index, color.alpha()); }
+    void setColor(int index, QColor color)
+    {
+        setRGB(index, color.rgb());
+        setAlpha(index, color.alpha());
+    }
     int getAlpha(int index) { return qAlpha(rgba[index]); }
     QVector<uchar> getY() { return y; }
     QVector<uchar> getCb() { return cb; }

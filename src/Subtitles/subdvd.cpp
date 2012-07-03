@@ -1131,7 +1131,7 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     {
         QRgb val = palette->getRGB(i);
         QString value = QString("%1").arg(QString::number(val, 16), 6, QChar('0'));
-        out->write(value.mid(2).toAscii());
+        out->write(value.toAscii());
         if (i != palette->getSize() - 1)
         {
             out->write(", ");
@@ -1152,7 +1152,7 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     out->write("# Vob/Cell ID: 1, 1 (PTS: 0)\n");
     for (int i = 0; i < timestamps.size(); ++i)
     {
-        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStr(timestamps[i])).toAscii());
+        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStrIdx(timestamps[i])).toAscii());
         QString value = QString("%1").arg(QString::number(offsets[i], 16), 9, QChar('0'));
         out->write(", filepos: " +  value.toAscii());
         out->write("\n");
