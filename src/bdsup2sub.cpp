@@ -505,7 +505,7 @@ void BDSup2Sub::enableVobSubComponents(bool enable)
     }
     else
     {
-        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::NEW);
+        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::KEEP_EXISTING);
     }
 
     if (!enable || subtitleProcessor->getInputMode() == InputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
