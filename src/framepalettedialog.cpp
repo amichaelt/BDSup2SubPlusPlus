@@ -20,6 +20,7 @@
 #include "framepalettedialog.h"
 #include "ui_framepalettedialog.h"
 #include "Subtitles/subtitleprocessor.h"
+#include "Subtitles/palette.h"
 
 #include <QPixmap>
 

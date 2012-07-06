@@ -18,10 +18,10 @@
  */
 
 #include "quantizefilter.h"
+
 #include <algorithm>
 #include <QHash>
 #include <QList>
-
 
 void QuantizeFilter::setNumColors(int numColors)
 {

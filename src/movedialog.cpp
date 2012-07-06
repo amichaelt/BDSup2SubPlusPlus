@@ -21,6 +21,7 @@
 #include "ui_movedialog.h"
 #include "Subtitles/subtitleprocessor.h"
 #include "Subtitles/subpicture.h"
+#include "types.h"
 
 #include <QIntValidator>
 #include <QDoubleValidator>

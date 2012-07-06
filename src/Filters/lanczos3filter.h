@@ -21,7 +21,6 @@
 #define LANCZOS3FILTER_H
 
 #include "filter.h"
-#include <cmath>
 
 class Lanczos3Filter : public Filter
 {

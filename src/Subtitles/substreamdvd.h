@@ -20,8 +20,8 @@
 #ifndef SUBSTREAMDVD_H
 #define SUBSTREAMDVD_H
 
-#include <QVector>
 #include <QScopedPointer>
+#include <QVector>
 
 class Bitmap;
 class Palette;

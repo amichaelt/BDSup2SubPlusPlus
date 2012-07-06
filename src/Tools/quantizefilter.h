@@ -20,9 +20,9 @@
 #ifndef QUANTIZEFILTER_H
 #define QUANTIZEFILTER_H
 
-#include <QVector>
 #include <QColor>
 #include <QImage>
+#include <QVector>
 
 /**
  * Floyd-Steinberg dithering matrix.

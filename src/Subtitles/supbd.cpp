@@ -29,6 +29,8 @@
 #include "types.h"
 #include "Tools/quantizefilter.h"
 #include "Tools/numberutil.h"
+#include "palette.h"
+#include "paletteinfo.h"
 
 #include <QImage>
 

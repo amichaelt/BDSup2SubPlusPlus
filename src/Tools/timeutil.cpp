@@ -20,6 +20,7 @@
 #include "timeutil.h"
 
 #include <QStringList>
+#include <QVector>
 
 TimeUtil::TimeUtil()
 {

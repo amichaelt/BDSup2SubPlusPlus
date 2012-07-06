@@ -21,18 +21,20 @@
 #define SUPXML_H
 
 #include "substream.h"
-#include "types.h"
 #include <QObject>
 #include <QFile>
 #include <QtXml/QXmlDefaultHandler>
 #include <QStringList>
 #include <QString>
+#include <QVector>
 
 class SubtitleProcessor;
 class SubPictureXML;
 class QImage;
 class BitStream;
 class XmlHandler;
+
+enum class Resolution : int;
 
 class SupXML : public QObject, public Substream
 {
@@ -108,8 +110,8 @@ signals:
 private:
     int primaryColorIndex = 0;
     int numToImport = 0;
-    double fps = FPS_24P;
-    double fpsXml = FPS_24P;
+    double fps;
+    double fpsXml;
 
     Bitmap *bitmap = 0;
 
@@ -124,7 +126,7 @@ private:
 
     QVector<SubPictureXML*> subPictures;
 
-    Resolution resolution = Resolution::HD_1080;
+    Resolution resolution;
 
     SubtitleProcessor* subtitleProcessor = 0;
 

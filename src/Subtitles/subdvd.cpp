@@ -25,14 +25,13 @@
 #include "subpicturedvd.h"
 #include "Tools/filebuffer.h"
 #include "Tools/timeutil.h"
+#include "imageobjectfragment.h"
 
 #include <QImage>
 #include <QFile>
 #include <QRect>
 #include <QTextStream>
 #include <QFileInfo>
-#include <QVector>
-#include <QMessageBox>
 
 SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor)
 {

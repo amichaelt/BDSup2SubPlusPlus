@@ -20,6 +20,7 @@
 #include "colordialog.h"
 #include "ui_colordialog.h"
 #include "Subtitles/subtitleprocessor.h"
+#include "types.h"
 
 #include <QColorDialog>
 #include <QPixmap>

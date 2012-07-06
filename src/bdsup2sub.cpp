@@ -31,6 +31,7 @@
 #include "movedialog.h"
 #include "Subtitles/subpicture.h"
 #include "Tools/timeutil.h"
+#include "Subtitles/palette.h"
 
 #ifdef Q_WS_WIN
 #include "windows.h"

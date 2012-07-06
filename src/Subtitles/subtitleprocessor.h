@@ -24,11 +24,10 @@
 #include <QString>
 #include <QStringList>
 #include <QSharedPointer>
+#include <QVector>
 #include <QSettings>
 
-#include "palette.h"
-#include "types.h"
-
+class Palette;
 class Substream;
 class SubDVD;
 class SupDVD;
@@ -39,10 +38,22 @@ class SubPictureDVD;
 class SubPicture;
 class QImage;
 class Bitmap;
+class Filter;
+
+enum class MoveModeX : int;
+enum class MoveModeY : int;
+enum class OutputMode : int;
+enum class InputMode : int;
+enum class Resolution : int;
+enum class SetState : int;
+enum class PaletteMode : int;
+enum class ScalingFilters : int;
+enum class StreamID : int;
+enum class RunType : int;
 
 static QStringList resolutionNamesXml = { "480i", "576i", "720p", "1440x1080", "1080p" };
 
-static QVector<QVector<int>> resolutions = {
+static QVector<QVector<int> > resolutions = {
     {720, 480},
     {720, 576},
     {1280, 720},
@@ -267,17 +278,9 @@ public:
     int getMoveOffsetY() { return moveOffsetY; }
     void setMoveOffsetY(int value) { moveOffsetY = value; }
     MoveModeX getMoveModeX() { return moveModeX; }
-    void setMoveModeX(MoveModeX value)
-    {
-        moveModeX = value;
-        moveCaptions = (moveModeY != MoveModeY::KEEP || moveModeX != MoveModeX::KEEP);
-    }
+    void setMoveModeX(MoveModeX value);
     MoveModeY getMoveModeY() { return moveModeY; }
-    void setMoveModeY(MoveModeY value)
-    {
-        moveModeY = value;
-        moveCaptions = (moveModeY != MoveModeY::KEEP || moveModeX != MoveModeX::KEEP);
-    }
+    void setMoveModeY(MoveModeY value);
     int getAlphaCrop() { return alphaCrop; }
     void setAlphaCrop(int value)
     {
@@ -326,14 +329,7 @@ public:
     int getCropOfsY() { return cropOfsY; }
     int setCropOfsY(int ofs) { return cropOfsY = ofs; }
     OutputMode getOutputMode() { return outMode; }
-    void setOutputMode(OutputMode mode)
-    {
-        outMode = mode;
-        if (settings != 0)
-        {
-            settings->setValue("outputMode", QVariant(modes[(int)mode]));
-        }
-    }
+    void setOutputMode(OutputMode mode);
     InputMode getInputMode() { return inMode; }
     bool getMoveCaptions() { return moveCaptions; }
     void setMoveCaptions(bool value) { moveCaptions = value; }
@@ -385,14 +381,7 @@ public:
     bool getFpsSrcCertain() { return fpsSrcCertain; }
     QStringList getRecentFiles() { return recentFiles; }
     PaletteMode getPaletteMode() { return paletteMode; }
-    void setPaletteMode(PaletteMode value)
-    {
-        paletteMode = value;
-        if (settings != 0)
-        {
-            settings->setValue("paletteMode", QVariant(paletteModeNames[(int)value]));
-        }
-    }
+    void setPaletteMode(PaletteMode value);
     bool isCancelled() { return isActive; }
     int getMergePTSdiff() { return mergePTSdiff; }
     void setMergePTSdiff(int value)
@@ -407,14 +396,8 @@ public:
     bool getSwapCrCb() { return swapCrCb; }
     void setSwapCrCb(bool value) { swapCrCb = value; }
     ScalingFilters getScalingFilter() { return scalingFilter; }
-    void setScalingFilter(ScalingFilters value)
-    {
-        scalingFilter = value;
-        if (settings != 0)
-        {
-            settings->setValue("filter", QVariant(scalingFilters[(int)value]));
-        }
-    }
+    void setScalingFilter(ScalingFilters value);
+    Filter* scaleFilter;
     QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     int getLanguageIdx() { return languageIdx; }
     int getLanguageIdxRead() { return languageIdxRead; }
@@ -551,10 +534,8 @@ private:
     int numRecent = 5;
     int mergePTSdiff = 18000;
     int idxToRead = -1;
-    static constexpr double fpsSrcDefault = FPS_24P;
-    double fpsSrc = fpsSrcDefault;
-    static constexpr double fpsTrgDefault = FPS_PAL;
-    double fpsTrg = fpsTrgDefault;
+    double fpsSrc;
+    double fpsTrg;
     static constexpr double freeScaleXdefault = 1.0;
     double freeScaleX = freeScaleXdefault;
     static constexpr double freeScaleYdefault = 1.0;
@@ -584,20 +565,16 @@ private:
     bool fpsTrgSet = false;
     bool writePGCEditPal = false;
     bool writePGCEditPalSet = false;
-    static constexpr PaletteMode paletteModeDefault = PaletteMode::KEEP_EXISTING;
-    PaletteMode paletteMode = paletteModeDefault;
+    PaletteMode paletteMode;
     RunType runType;
-    static constexpr OutputMode outModeDefault = OutputMode::VOBSUB;
-    OutputMode outMode = outModeDefault;
+    OutputMode outMode;
     bool outModeSet = false;
-    InputMode inMode = InputMode::VOBSUB;
-    static constexpr Resolution resolutionTrgDefault = Resolution::PAL;
-    Resolution resolutionTrg = resolutionTrgDefault;
-    SetState forceAll = SetState::KEEP;
-    MoveModeY moveModeY = MoveModeY::KEEP;
-    MoveModeX moveModeX = MoveModeX::KEEP;
-    static constexpr ScalingFilters scalingFilterDefault = ScalingFilters::BILINEAR;
-    ScalingFilters scalingFilter = scalingFilterDefault;
+    InputMode inMode;
+    Resolution resolutionTrg;
+    SetState forceAll;
+    MoveModeY moveModeY;
+    MoveModeX moveModeX;
+    ScalingFilters scalingFilter;
     bool isActive = false;
 
     QString fileName = "";

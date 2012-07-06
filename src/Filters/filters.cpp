@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "filter.h"
+#include "types.h"
 #include "filters.h"
 #include "bellfilter.h"
 #include "bicubicfilter.h"
@@ -27,6 +27,14 @@
 #include "mitchellfilter.h"
 #include "trianglefilter.h"
 
+static BellFilter* bellFilter = 0;
+static BiCubicFilter* biCubicFilter = 0;
+static BSplineFilter* bSplineFilter = 0;
+static HermiteFilter* hermiteFilter = 0;
+static Lanczos3Filter* lanczos3Filter = 0;
+static MitchellFilter* mitchellFilter = 0;
+static TriangleFilter* triangleFilter = 0;
+
 Filters::Filters()
 {
 }
@@ -35,65 +43,65 @@ Filter *Filters::getFilter(ScalingFilters scalingFilter)
 {
     switch (scalingFilter)
     {
-        case ScalingFilters::BELL:
+    case ScalingFilters::BELL:
+    {
+        if (bellFilter == 0)
         {
-            if (bellFilter == 0)
-            {
-                bellFilter = new BellFilter;
-            }
-            return bellFilter;
-        } break;
-        case ScalingFilters::BICUBIC:
-        {
-            if (biCubicFilter == 0)
-            {
-                biCubicFilter = new BiCubicFilter;
-            }
-            return biCubicFilter;
-        }    break;
-        case ScalingFilters::BSPLINE:
-        {
-            if (bSplineFilter == 0)
-            {
-                bSplineFilter = new BSplineFilter;
-            }
-            return bSplineFilter;
-        }   break;
-        case ScalingFilters::HERMITE:
-        {
-            if (hermiteFilter == 0)
-            {
-                hermiteFilter = new HermiteFilter;
-            }
-            return hermiteFilter;
-        }    break;
-        case ScalingFilters::LANCZOS3:
-        {
-            if (lanczos3Filter == 0)
-            {
-                lanczos3Filter = new Lanczos3Filter;
-            }
-            return lanczos3Filter;
-        }   break;
-        case ScalingFilters::MITCHELL:
-        {
-            if (mitchellFilter == 0)
-            {
-                mitchellFilter = new MitchellFilter;
-            }
-            return mitchellFilter;
-        }   break;
-        case ScalingFilters::TRIANGLE:
-        {
-            if (triangleFilter == 0)
-            {
-                triangleFilter = new TriangleFilter;
-            }
-            return triangleFilter;
-        }   break;
-        default:
-        {
-            return 0;
+            bellFilter = new BellFilter;
         }
+        return bellFilter;
+    } break;
+    case ScalingFilters::BICUBIC:
+    {
+        if (biCubicFilter == 0)
+        {
+            biCubicFilter = new BiCubicFilter;
+        }
+        return biCubicFilter;
+    }    break;
+    case ScalingFilters::BSPLINE:
+    {
+        if (bSplineFilter == 0)
+        {
+            bSplineFilter = new BSplineFilter;
+        }
+        return bSplineFilter;
+    }   break;
+    case ScalingFilters::HERMITE:
+    {
+        if (hermiteFilter == 0)
+        {
+            hermiteFilter = new HermiteFilter;
+        }
+        return hermiteFilter;
+    }    break;
+    case ScalingFilters::LANCZOS3:
+    {
+        if (lanczos3Filter == 0)
+        {
+            lanczos3Filter = new Lanczos3Filter;
+        }
+        return lanczos3Filter;
+    }   break;
+    case ScalingFilters::MITCHELL:
+    {
+        if (mitchellFilter == 0)
+        {
+            mitchellFilter = new MitchellFilter;
+        }
+        return mitchellFilter;
+    }   break;
+    case ScalingFilters::TRIANGLE:
+    {
+        if (triangleFilter == 0)
+        {
+            triangleFilter = new TriangleFilter;
+        }
+        return triangleFilter;
+    }   break;
+    default:
+    {
+        return 0;
+    }
     }
 }

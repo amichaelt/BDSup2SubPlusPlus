@@ -23,6 +23,7 @@
 #include "substream.h"
 #include <QObject>
 #include <QString>
+#include <QVector>
 
 class SubtitleProcessor;
 class SubPictureHD;

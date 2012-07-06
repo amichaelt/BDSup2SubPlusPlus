@@ -24,6 +24,7 @@
 #include "imageobjectfragment.h"
 #include "subpicturedvd.h"
 #include "bitmap.h"
+#include "palette.h"
 
 SupDVD::SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subtitleProcessor) :
     supFileName(supFileName),

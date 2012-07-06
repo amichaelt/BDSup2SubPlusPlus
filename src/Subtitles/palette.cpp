@@ -26,28 +26,28 @@ Palette::Palette()
 
 Palette::Palette(const Palette &other) :
     size(other.size),
+    useBT601(other.useBT601),
     rgba(other.rgba),
     y(other.y),
     cb(other.cb),
-    cr(other.cr),
-    useBT601(other.useBT601)
+    cr(other.cr)
 {
 }
 
 Palette::Palette(const Palette *other) :
     size(other->size),
+    useBT601(other->useBT601),
     rgba(other->rgba),
     y(other->y),
     cb(other->cb),
-    cr(other->cr),
-    useBT601(other->useBT601)
+    cr(other->cr)
 {
 }
 
 Palette::Palette(int paletteSize, bool use601) :
     size(paletteSize),
-    rgba(paletteSize, 0),
-    useBT601(use601)
+    useBT601(use601),
+    rgba(paletteSize, 0)
 {
     QVector<int> yCbCr;
     for (int i = 0; i < paletteSize; ++i)

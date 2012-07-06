@@ -21,8 +21,9 @@
 #define TIMEUTIL_H
 
 #include <QString>
-#include <QVector>
 #include <QRegExp>
+
+template <typename T> class QVector;
 
 static QRegExp timePattern = QRegExp("(\\d+):(\\d+):(\\d+)[:\\.](\\d+)");
 

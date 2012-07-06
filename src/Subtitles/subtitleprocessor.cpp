@@ -32,16 +32,28 @@
 #include "bitmap.h"
 #include "palettebitmap.h"
 #include "Tools/timeutil.h"
+#include "palette.h"
+#include "types.h"
+#include "Filters/filters.h"
 
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
-#include <QMessageBox>
 #include <QTextStream>
 #include <cmath>
 
-SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool loadSettings)
+SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool loadSettings) :
+    fpsSrc(FPS_24P),
+    fpsTrg(FPS_PAL),
+    paletteMode(PaletteMode::KEEP_EXISTING),
+    outMode(OutputMode::VOBSUB),
+    inMode(InputMode::VOBSUB),
+    resolutionTrg(Resolution::PAL),
+    forceAll(SetState::KEEP),
+    moveModeY(MoveModeY::KEEP),
+    moveModeX(MoveModeX::KEEP),
+    scalingFilter(ScalingFilters::BILINEAR)
 {
     this->parent = parent;
     this->settings = settings;
@@ -66,9 +78,10 @@ void SubtitleProcessor::SetValuesFromSettings()
     mergePTSdiff = settings->value("mergePTSdiff", QVariant(18000)).toInt();
     alphaCrop = settings->value("alphaCrop", QVariant(14)).toInt();
     fixZeroAlpha = settings->value("fixZeroAlpha", QVariant(false)).toBool();
-    scalingFilter = (ScalingFilters)scalingFilters.indexOf(settings->value("filter", QVariant(scalingFilters[(int)scalingFilterDefault])).toString());
-    paletteMode = (PaletteMode)paletteModeNames.indexOf(settings->value("paletteMode", QVariant(paletteModeNames[(int)paletteModeDefault])).toString());
-    outMode = (OutputMode)modes.indexOf(settings->value("outputMode", QVariant(modes[(int)outModeDefault])).toString());
+    scalingFilter = (ScalingFilters)scalingFilters.indexOf(settings->value("filter", QVariant(scalingFilters[(int)ScalingFilters::BILINEAR])).toString());
+    scaleFilter = Filters::getFilter(scalingFilter);
+    paletteMode = (PaletteMode)paletteModeNames.indexOf(settings->value("paletteMode", QVariant(paletteModeNames[(int)PaletteMode::KEEP_EXISTING])).toString());
+    outMode = (OutputMode)modes.indexOf(settings->value("outputMode", QVariant(modes[(int)OutputMode::VOBSUB])).toString());
     for (QString key : settings->allKeys())
     {
         if (key.contains("recent"))
@@ -1314,8 +1327,6 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
 
     if (!skipScaling)
     {
-        Filter* scaleFilter = Filters::getFilter(scalingFilter);
-
         Bitmap* targetBitmap;
         Palette* targetPalette = trgPal;
         // create scaled bitmap
@@ -2273,5 +2284,45 @@ QVector<int> SubtitleProcessor::getResolutions(Resolution resolution)
     else
     {
         return resolutions[4];
+    }
+}
+
+void SubtitleProcessor::setMoveModeX(MoveModeX value)
+{
+    moveModeX = value;
+    moveCaptions = (moveModeY != MoveModeY::KEEP || moveModeX != MoveModeX::KEEP);
+}
+
+void SubtitleProcessor::setMoveModeY(MoveModeY value)
+{
+    moveModeY = value;
+    moveCaptions = (moveModeY != MoveModeY::KEEP || moveModeX != MoveModeX::KEEP);
+}
+
+void SubtitleProcessor::setOutputMode(OutputMode mode)
+{
+    outMode = mode;
+    if (settings != 0)
+    {
+        settings->setValue("outputMode", QVariant(modes[(int)mode]));
+    }
+}
+
+void SubtitleProcessor::setPaletteMode(PaletteMode value)
+{
+    paletteMode = value;
+    if (settings != 0)
+    {
+        settings->setValue("paletteMode", QVariant(paletteModeNames[(int)value]));
+    }
+}
+
+void SubtitleProcessor::setScalingFilter(ScalingFilters value)
+{
+    scalingFilter = value;
+    scaleFilter = Filters::getFilter(scalingFilter);
+    if (settings != 0)
+    {
+        settings->setValue("filter", QVariant(scalingFilters[(int)value]));
     }
 }

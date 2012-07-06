@@ -21,9 +21,10 @@
 #define SUBPICTUREDVD_H
 
 #include "subpicture.h"
-#include "imageobjectfragment.h"
 
 #include <QVector>
+
+class ImageObjectFragment;
 
 class SubPictureDVD : public SubPicture
 {

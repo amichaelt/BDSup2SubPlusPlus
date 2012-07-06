@@ -20,8 +20,8 @@
 #ifndef NUMBERUTIL_H
 #define NUMBERUTIL_H
 
-#include <QVector>
 #include <QString>
+#include <QVector>
 
 class NumberUtil
 {

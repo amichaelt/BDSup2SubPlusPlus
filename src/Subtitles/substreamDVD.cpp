@@ -24,6 +24,7 @@
 #include "bitmap.h"
 #include "types.h"
 #include "subtitleprocessor.h"
+#include "imageobjectfragment.h"
 
 #include <QImage>
 

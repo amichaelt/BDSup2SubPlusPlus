@@ -26,8 +26,8 @@ public:
     ImageObjectFragment();
     ImageObjectFragment(const ImageObjectFragment& other)
     {
-        this->imageBufferOfs = other.imageBufferOfs;
-        this->imagePacketSize = other.imagePacketSize;
+        imageBufferOfs = other.imageBufferOfs;
+        imagePacketSize = other.imagePacketSize;
     }
 
     int imagePacketSize = 0;

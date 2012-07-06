@@ -18,6 +18,7 @@
  */
 
 #include "subpicturedvd.h"
+#include "imageobjectfragment.h"
 
 SubPictureDVD::SubPictureDVD()
 {

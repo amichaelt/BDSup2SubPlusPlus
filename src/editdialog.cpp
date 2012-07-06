@@ -22,6 +22,7 @@
 #include "Subtitles/subtitleprocessor.h"
 #include "Subtitles/subpicture.h"
 #include "Tools/timeutil.h"
+#include "types.h"
 
 #include <QPalette>
 #include <QKeyEvent>

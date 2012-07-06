@@ -22,6 +22,7 @@
 #include "Subtitles/subtitleprocessor.h"
 #include "Subtitles/subpicture.h"
 #include "Tools/timeutil.h"
+#include "types.h"
 
 #include <QDoubleValidator>
 #include <QRegExpValidator>
@@ -32,7 +33,8 @@
 
 ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleProcessor, QSettings* settings) :
     QDialog(parent),
-    ui(new Ui::ConversionDialog)
+    ui(new Ui::ConversionDialog),
+    forcedState(SetState::KEEP)
 {
     ui->setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);

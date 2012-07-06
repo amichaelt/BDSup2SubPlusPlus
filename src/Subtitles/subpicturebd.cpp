@@ -19,6 +19,7 @@
 
 #include "subpicturebd.h"
 #include "imageobject.h"
+#include "paletteinfo.h"
 
 SubPictureBD::SubPictureBD()
 {

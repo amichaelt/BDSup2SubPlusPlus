@@ -20,24 +20,8 @@
 #ifndef FILTERS_H
 #define FILTERS_H
 
-#include "types.h"
-
+enum class ScalingFilters : int;
 class Filter;
-class BellFilter;
-class BiCubicFilter;
-class BSplineFilter;
-class HermiteFilter;
-class Lanczos3Filter;
-class MitchellFilter;
-class TriangleFilter;
-
-static BellFilter* bellFilter = 0;
-static BiCubicFilter* biCubicFilter = 0;
-static BSplineFilter* bSplineFilter = 0;
-static HermiteFilter* hermiteFilter = 0;
-static Lanczos3Filter* lanczos3Filter = 0;
-static MitchellFilter* mitchellFilter = 0;
-static TriangleFilter* triangleFilter = 0;
 
 class Filters
 {

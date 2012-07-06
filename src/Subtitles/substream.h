@@ -20,7 +20,6 @@
 #ifndef SUBSTREAM_H
 #define SUBSTREAM_H
 
-#include <QVector>
 #include <QSharedData>
 
 class Palette;

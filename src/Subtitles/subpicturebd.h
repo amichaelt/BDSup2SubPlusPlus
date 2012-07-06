@@ -21,8 +21,7 @@
 #define SUBPICTUREBD_H
 
 #include "subpicture.h"
-#include "imageobjectfragment.h"
-#include "paletteinfo.h"
+
 #include <QVector>
 
 class ImageObject;

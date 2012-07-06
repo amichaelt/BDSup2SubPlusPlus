@@ -20,8 +20,8 @@
 #ifndef FILTEROP_H
 #define FILTEROP_H
 
-#include <QVector>
 #include <QColor>
+#include <QVector>
 
 class Filter;
 class Bitmap;
@@ -41,10 +41,10 @@ public:
     class SubSamplingData {
     public:
         SubSamplingData(QVector<int> s, QVector<int> p, QVector<float> w, int width) :
+            matrixWidth(width),
             numberOfSamples(s),
             pixelPositions(p),
-            weights(w),
-            matrixWidth(width)
+            weights(w)
         { }
         int matrixWidth;
         QVector<int> numberOfSamples;

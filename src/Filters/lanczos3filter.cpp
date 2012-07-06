@@ -18,6 +18,7 @@
  */
 
 #include "lanczos3filter.h"
+#include <cmath>
 
 Lanczos3Filter::Lanczos3Filter() : PI_FLOAT(std::atan(1.0) * 4)
 {

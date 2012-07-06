@@ -20,8 +20,6 @@
 #ifndef CONVERSIONDIALOG_H
 #define CONVERSIONDIALOG_H
 
-#include "types.h"
-
 #include <QDialog>
 
 class QPalette;
@@ -29,6 +27,9 @@ class SubtitleProcessor;
 class QDoubleValidator;
 class QRegExpValidator;
 class QSettings;
+
+enum class Resolution : int;
+enum class SetState : int;
 
 namespace Ui {
 class ConversionDialog;
@@ -107,7 +108,7 @@ private:
     double scaleX = 1;
     double scaleY = 1;
     bool fpsSrcCertain;
-    SetState forcedState = SetState::KEEP;
+    SetState forcedState;
     bool moveCaptions;
 
     void fillDialog();

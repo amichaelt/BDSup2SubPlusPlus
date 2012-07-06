@@ -21,7 +21,6 @@
 #define MOVEDIALOG_H
 
 #include <QDialog>
-#include "types.h"
 
 class SubtitleProcessor;
 class SubPicture;
@@ -29,6 +28,9 @@ class QImage;
 class QButtonGroup;
 class QIntValidator;
 class QDoubleValidator;
+
+enum class MoveModeX : int;
+enum class MoveModeY: int;
 
 namespace Ui {
 class MoveDialog;
@@ -92,8 +94,8 @@ private:
     QIntValidator* cropOffsetYValidator;
     QDoubleValidator* aspectRatioValidator;
 
-    MoveModeX moveModeX = MoveModeX::KEEP;
-    MoveModeY moveModeY = MoveModeY::KEEP;
+    MoveModeX moveModeX;
+    MoveModeY moveModeY;
 
     int index;
     int originalX;

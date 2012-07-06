@@ -24,6 +24,7 @@
 #include <QObject>
 #include <QString>
 #include <QScopedPointer>
+#include <QVector>
 
 class SubtitleProcessor;
 class SubPictureBD;

@@ -24,7 +24,6 @@
 
 #include <cmath>
 #include <QImage>
-#include <vector>
 
 FilterOp::FilterOp()
 {

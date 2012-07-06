@@ -24,6 +24,7 @@
 #include "subpicturexml.h"
 #include "Tools/timeutil.h"
 #include "Tools/quantizefilter.h"
+#include "types.h"
 #include <QImage>
 #include <QFileInfo>
 #include <QtXml/QXmlSimpleReader>
@@ -32,7 +33,10 @@
 #include <QDir>
 
 SupXML::SupXML(QString fileName, SubtitleProcessor* subtitleProcessor) :
-    xmlFileName(fileName)
+    fps(FPS_24P),
+    fpsXml(FPS_24P),
+    xmlFileName(fileName),
+    resolution(Resolution::HD_1080)
 {
     pathName = QFileInfo(fileName).absolutePath() + QDir::separator();
     this->subtitleProcessor = subtitleProcessor;
