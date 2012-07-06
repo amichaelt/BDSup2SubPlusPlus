@@ -263,11 +263,13 @@ Bitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filt
     // select nearest colors in existing palette
     QHash<QRgb, int> p;
     int offset = 0;
-    QImage *image = bm->getImage(palette);
+
+    QImage image(bm->getImg().bits(), bm->getImg().width(), bm->getImg().height(), bm->getImg().format());
+    image.setColorTable(palette.getColorTable());
 
     for (int y = 0; y < bm->getImg().height(); ++y)
     {
-        uchar* pixels = image->scanLine(y);
+        uchar* pixels = image.scanLine(y);
         for (int x = 0; x < bm->getImg().width(); ++x)
         {
             offset = (y * sizeX) + x;
@@ -359,11 +361,12 @@ Bitmap *Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaT
     // select nearest colors in existing palette
     QHash<QRgb, int> p;
     int offset = 0;
-    QImage *image = bm->getImage(palette);
+    QImage image(bm->getImg().bits(), bm->getImg().width(), bm->getImg().height(), bm->getImg().format());
+    image.setColorTable(palette.getColorTable());
 
     for (int y = 0; y < bm->getImg().height(); ++y)
     {
-        uchar* pixels = image->scanLine(y);
+        uchar* pixels = image.scanLine(y);
         for (int x = 0; x < bm->getImg().width(); ++x)
         {
             offset = (y * sizeX) + x;

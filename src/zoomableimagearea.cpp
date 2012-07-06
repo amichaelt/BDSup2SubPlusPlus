@@ -64,10 +64,11 @@ void ZoomableImageArea::setZoomScale(int scale)
         int drawHeight = target.height() > visibleArea.height() ? target.height() : visibleArea.height();
         int drawWidth = target.width() > visibleArea.width() ? target.width() : visibleArea.width();
 
-        drawPixmap = new QPixmap(drawWidth, drawHeight);
+
+        drawPixmap.reset(new QPixmap(drawWidth, drawHeight));
         drawPixmap->fill();
 
-        painter->begin(drawPixmap);
+        painter->begin(drawPixmap.data());
         QLinearGradient gradient(0, 0, drawPixmap->width(), drawPixmap->height());
         gradient.setColorAt(0, Qt::blue);
         gradient.setColorAt(1, Qt::black);

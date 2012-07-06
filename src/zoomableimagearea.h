@@ -43,7 +43,7 @@ private:
     double scaleFactor = 0.0;
     bool settingPixmap = false;
     QScopedPointer<QImage> image;
-    QPixmap* drawPixmap = 0;
+    QScopedPointer<QPixmap> drawPixmap;
     QPainter* painter = new QPainter();
     QSize originalSize;
 
