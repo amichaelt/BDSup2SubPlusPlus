@@ -901,6 +901,7 @@ void SubtitleProcessor::createSubtitleStream()
     QString returnMessage;
     maxProgress = substream->getNumFrames();
     lastProgress = 0;
+    setCurrentProgress(0);
 
     emit progressDialogTitleChanged("Exporting");
     if (outMode == OutputMode::VOBSUB)
