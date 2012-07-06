@@ -484,10 +484,10 @@ public:
     QVector<int> getResolutions(Resolution resolution);
     QImage* getTrgImagePatched(SubPicture* subPicture);
     SubPicture* getSubPictureTrg(int index);
-    QVector<int>& getFrameAlpha(int index);
-    QVector<int>& getOriginalFrameAlpha(int index);
-    QVector<int>& getFramePal(int index);
-    QVector<int>& getOriginalFramePal(int index);
+    QVector<int> getFrameAlpha(int index);
+    QVector<int> getOriginalFrameAlpha(int index);
+    QVector<int> getFramePal(int index);
+    QVector<int> getOriginalFramePal(int index);
 
     void storeFreeScale(double xScale, double yScale);
     void storeSettings();

@@ -35,19 +35,27 @@ class Substream : public QSharedData
 {
 public:
     virtual ~Substream() { }
-    virtual Palette *getPalette() = 0;
-    virtual Bitmap *getBitmap() = 0;
-    virtual QImage *getImage() = 0;
-    virtual QImage *getImage(Bitmap *bitmap) = 0;
-    virtual int getPrimaryColorIndex() = 0;
+
     virtual void decode(int index) = 0;
+
+    virtual int getPrimaryColorIndex() = 0;
     virtual int getNumFrames() = 0;
     virtual int getNumForcedFrames() = 0;
-    virtual bool isForced(int index) = 0;
+
     virtual long getEndTime(int index) = 0;
     virtual long getStartTime(int index) = 0;
     virtual long getStartOffset(int index) = 0;
+
+    virtual bool isForced(int index) = 0;
+
+    virtual Bitmap *getBitmap() = 0;
+
+    virtual Palette *getPalette() = 0;
+
     virtual SubPicture *getSubPicture(int index) = 0;
+
+    virtual QImage *getImage() = 0;
+    virtual QImage *getImage(Bitmap *bitmap) = 0;
 
 protected:
     int numForcedFrames = 0;

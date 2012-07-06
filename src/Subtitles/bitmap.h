@@ -37,25 +37,30 @@ public:
     Bitmap(int width, int height, int color);
     Bitmap(int width, int height, QImage* image) { this->width = width; this->height = height; this->img = image; }
 
-    QRect getBounds(Palette* palette, int alphaThreshold);
     void clear(int color);
-    int getWidth() { return width; }
+    void fillRect(int x, int y, int width, int height, int color);
+    void setImg(QImage* newImage);
+
     int getHeight() { return height; }
-    Bitmap* crop(int x, int y, int width, int height);
+    int getHighestColorIndex(Palette* pal);
     int getPrimaryColorIndex(Palette* palette, int alphaThreshold);
-    QImage* getImage(Palette* palette);
+    int getWidth() { return width; }
+
+    Bitmap* crop(int x, int y, int width, int height);
     Bitmap* convertLm(Palette* palette, int alphaThreshold, QVector<int> lumaThreshold);
     Bitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter);
-    PaletteBitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter, bool dither);
     Bitmap* scaleFilterLm(int sizeX, int sizeY, Palette* palette, int alphaThreshold, QVector<int> lumaThreshold, Filter* filter);
     Bitmap* scaleBilinear(int sizeX, int sizeY, Palette* palette);
-    PaletteBitmap* scaleBilinear(int sizeX, int sizeY, Palette* palette, bool dither);
     Bitmap* scaleBilinearLm(int sizeX, int sizeY, Palette* palette, int alphaThreshold, QVector<int> lumaThreshold);
-    void fillRect(int x, int y, int width, int height, int color);
+
+    PaletteBitmap* scaleFilter(int sizeX, int sizeY, Palette* palette, Filter* filter, bool dither);
+    PaletteBitmap* scaleBilinear(int sizeX, int sizeY, Palette* palette, bool dither);
+
     QImage* getImg();
-    void setImg(QImage* newImage);
-    int getHighestColorIndex(Palette* pal);
     QImage* toARGB(Palette* pal);
+    QImage* getImage(Palette* palette);
+
+    QRect getBounds(Palette* palette, int alphaThreshold);
 
 private:
     int width, height;

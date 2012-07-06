@@ -53,43 +53,51 @@ class QuantizeFilter
         };
 
     public:
-        void setup(int numColors);
         void addPixels(QImage* image);
-        int getIndexForColor(QRgb argb);
-        QVector<QRgb> buildColorTable();
         void buildColorTable(QVector<QRgb> inPixels, QVector<QRgb>& table);
+        void setup(int numColors);
+
+        int getIndexForColor(QRgb argb);
+
+        QVector<QRgb> buildColorTable();
 
     private:
         static constexpr int MAX_LEVEL = 5;
-        int nodes = 0;
-        OctTreeNode* root = new OctTreeNode;
-        int maximumColors = 256;
-        int reduceColors = 512;
+
         int colors = 0;
+        int maximumColors = 256;
+        int nodes = 0;
+        int reduceColors = 512;
+
+        OctTreeNode* root = new OctTreeNode;
+
         QVector<QVector<OctTreeNode*> > colorList = QVector<QVector<OctTreeNode*> >(MAX_LEVEL + 1);
 
         void insertColor(QRgb rgb);
         void reduceTree(int numColors);
         int buildColorTable(OctTreeNode* node, QVector<QRgb>& table, int index);
-
     };
 
 public:
      void setNumColors(int numColors);
-     int getNumColors() { return numColors; }
      void setDither(bool dither) { this->dither = dither; }
-     bool getDither() { return dither; }
      void setSerpentine(bool serpentine) { this->serpentine = serpentine; }
+
+     int clamp(int c);
+     int getNumColors() { return numColors; }
+
+     bool getDither() { return dither; }
      bool getSerpentine() { return serpentine; }
-    QVector<QRgb> quantize(QImage *inImage, QImage *outImage, int width, int height,
+
+     QVector<QRgb> quantize(QImage *inImage, QImage *outImage, int width, int height,
                            int numColors, bool dither, bool serpentine);
-    int clamp(int c);
 
 private:
     static constexpr int sum = 3 + 5 + 7 + 1;
+    int numColors = 255;
+
     bool dither = false;
     bool serpentine = false;
-    int numColors = 255;
 };
 
 #endif // QUANTIZEFILTER_H

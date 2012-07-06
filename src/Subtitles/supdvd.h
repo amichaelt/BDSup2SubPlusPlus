@@ -36,31 +36,38 @@ class SupDVD : public QObject, public Substream, public SubstreamDVD
 public:
     SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subtitleProcessor);
 
-    Palette *getPalette() { return palette; }
-    Bitmap *getBitmap() { return bitmap; }
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
-    int getNumFrames();
-    int getNumForcedFrames() { return numForcedFrames; }
-    bool isForced(int index);
-    long getEndTime(int index);
-    long getStartTime(int index);
-    long getStartOffset(int index);
-    SubPicture *getSubPicture(int index);
-    QVector<int>& getFrameAlpha(int index);
-    QVector<int>& getFramePal(int index);
-    QVector<int>& getOriginalFrameAlpha(int index);
-    QVector<int>& getOriginalFramePal(int index);
-    Palette *getSrcPalette() { return srcPalette; }
-    void setSrcPalette(Palette *palette) { srcPalette = palette; }
-    int getLanguageIdx() { return languageIdx; }
-
     void readIfo();
     void writeIfo(QString filename, SubPicture *subPicture, Palette *palette);
     void readAllSupFrames();
+    void setSrcPalette(Palette *palette) { srcPalette = palette; }
+
+    int getLanguageIdx() { return languageIdx; }
+    int getPrimaryColorIndex() { return primaryColorIndex; }
+    int getNumFrames();
+    int getNumForcedFrames() { return numForcedFrames; }
+
+    long getEndTime(int index);
+    long getStartTime(int index);
+    long getStartOffset(int index);
+
+    bool isForced(int index);
+
+    Bitmap *getBitmap() { return bitmap; }
+
+    Palette *getPalette() { return palette; }
+    Palette *getSrcPalette() { return srcPalette; }
+
+    QImage *getImage();
+    QImage *getImage(Bitmap *bitmap);
+
     QVector<uchar> createSupFrame(SubPictureDVD* subPicture, Bitmap* bitmap);
+    QVector<int> getFrameAlpha(int index);
+    QVector<int> getFramePal(int index);
+    QVector<int> getOriginalFrameAlpha(int index);
+    QVector<int> getOriginalFramePal(int index);
+
+    SubPicture *getSubPicture(int index);
 
 signals:
     void maxProgressChanged(int maxProgress);

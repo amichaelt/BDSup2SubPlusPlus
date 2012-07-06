@@ -36,35 +36,43 @@ public:
 
     void setAlpha(int index, int alpha);
     void setRGB(int index, QRgb rgb);
-    QRgb getRGB(int index) { return rgba[index]; }
     void setARGB(int index, QRgb inColor);
-    QRgb getARGB(int index) { return rgba[index]; }
-    int getSize() { return size; }
-    QColor getColor(int index) { return QColor(qRed(rgba[index]), qGreen(rgba[index]),
-                                               qBlue(rgba[index]), qAlpha(rgba[index])); }
     void setColor(int index, QColor color)
     {
         setRGB(index, color.rgb());
         setAlpha(index, color.alpha());
     }
+    void setYCbCr(int index, int yn, int cbn, int crn);
+
+    int getSize() { return size; }
     int getAlpha(int index) { return qAlpha(rgba[index]); }
+    int getTransparentIndex();
+
+    QColor getColor(int index) { return QColor(qRed(rgba[index]), qGreen(rgba[index]),
+                                               qBlue(rgba[index]), qAlpha(rgba[index])); }
+
+    QRgb getRGB(int index) { return rgba[index]; }
+    QRgb getARGB(int index) { return rgba[index]; }
+
     QVector<uchar> getY() { return y; }
     QVector<uchar> getCb() { return cb; }
     QVector<uchar> getCr() { return cr; }
-    QVector<QRgb> getColorTable() { return rgba; }
-    int getTransparentIndex();
-    void setYCbCr(int index, int yn, int cbn, int crn);
+
     QVector<int> getYCbCr(int index);
+
+    QVector<QRgb> getColorTable() { return rgba; }
 
     static QVector<int> RGB2YCbCr(QRgb rgb, bool use601);
 
 private:
     int size = 0;
+
+    bool useBT601 = false;
+
     QVector<QRgb> rgba;
     QVector<uchar> y;
     QVector<uchar> cb;
     QVector<uchar> cr;
-    bool useBT601 = false;
 
     QRgb YCbCr2RGB(int y, int cb, int cr, bool useBT601);
 };

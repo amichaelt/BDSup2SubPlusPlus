@@ -38,38 +38,44 @@ class SubDVD : public QObject, public Substream, public SubstreamDVD
 public:
     SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor);
 
-    Palette *getPalette() { return palette; }
-    Bitmap *getBitmap() { return bitmap; }
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
-    int getNumFrames();
-    int getNumForcedFrames() { return numForcedFrames; }
-    bool isForced(int index);
-    long getEndTime(int index);
-    long getStartTime(int index);
-    long getStartOffset(int index);
-    SubPicture *getSubPicture(int index);
-    QVector<int>& getFrameAlpha(int index);
-    QVector<int>& getFramePal(int index);
-    QVector<int>& getOriginalFrameAlpha(int index);
-    QVector<int>& getOriginalFramePal(int index);
-    Palette *getSrcPalette() { return srcPalette; }
     void setSrcPalette(Palette *palette) { srcPalette = palette; }
-    int getLanguageIdx() { return languageIdx; }
-    int getLanguageIdxRead() { return languageIdxRead; }
-
-    Palette* decodePalette(SubPictureDVD* pic, Palette* palette);
-    Bitmap* decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
-
     void readIdx(int idxToRead = -1);
     void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette* palette);
     void readSubFrame(SubPictureDVD* pic, long endOfs);
     void readAllSubFrames();
+    void setTimeOffset(QString value) { timeOffset = value; }
+
+    int getPrimaryColorIndex() { return primaryColorIndex; }
+    int getNumFrames();
+    int getNumForcedFrames() { return numForcedFrames; }
+    int getLanguageIdx() { return languageIdx; }
+    int getLanguageIdxRead() { return languageIdxRead; }
+
+    long getEndTime(int index);
+    long getStartTime(int index);
+    long getStartOffset(int index);
+
+    bool isForced(int index);
+
+    Bitmap *getBitmap() { return bitmap; }
+    Bitmap* decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
+
+    QImage *getImage();
+    QImage *getImage(Bitmap *bitmap);
+
+    Palette *getPalette() { return palette; }
+    Palette *getSrcPalette() { return srcPalette; }
+    Palette* decodePalette(SubPictureDVD* pic, Palette* palette);
+
+    SubPicture *getSubPicture(int index);
+
     QVector<uchar> createSubFrame(SubPictureDVD* subPicture, Bitmap* bitmap);
 
-    void setTimeOffset(QString value) { timeOffset = value; }
+    QVector<int> getFrameAlpha(int index);
+    QVector<int> getFramePal(int index);
+    QVector<int> getOriginalFrameAlpha(int index);
+    QVector<int> getOriginalFramePal(int index);
 
 signals:
     void maxProgressChanged(int maxProgress);
@@ -77,12 +83,13 @@ signals:
     void addLanguage(const QString &message);
 
 private:
+    int delay = -1;
     int streamID = 0;
     int languageIdxRead;
+
     QString idxFileName;
     QString subFileName;
     QString timeOffset = "";
-    int delay = -1;
 
     QVector<SubPictureDVD*> subPictures;
 

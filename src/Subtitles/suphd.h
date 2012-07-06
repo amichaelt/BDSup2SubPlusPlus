@@ -37,40 +37,52 @@ public:
     SupHD(QString fileName, SubtitleProcessor* subtitleProcessor);
     ~SupHD();
 
-    Palette *getPalette() { return palette; }
-    Bitmap *getBitmap() { return bitmap; }
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
+    void readAllSupFrames();
+
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     int getNumFrames();
     int getNumForcedFrames() { return 0; }
-    bool isForced(int index) { return false; }
+
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index);
-    SubPicture *getSubPicture(int index);
+    bool isForced(int index) { return false; }
 
-    void readAllSupFrames();
+    Bitmap *getBitmap() { return bitmap; }
+
+    Palette *getPalette() { return palette; }
+
+    QImage *getImage();
+    QImage *getImage(Bitmap *bitmap);
+
+    SubPicture *getSubPicture(int index);
 
 signals:
     void maxProgressChanged(int maxProgress);
     void currentProgressChanged(int currentProgress);
 
 private:
-    QString supFileName;
-    QVector<SubPictureHD*> subPictures;
-    QScopedPointer<FileBuffer> fileBuffer;
-    Palette *palette = 0;
-    Bitmap *bitmap = 0;
     int primaryColorIndex = 0;
+
+    Bitmap *bitmap = 0;
+
+    Palette *palette = 0;
+
+    QScopedPointer<FileBuffer> fileBuffer;
+
+    QString supFileName;
+
+    QVector<SubPictureHD*> subPictures;
+
     SubtitleProcessor* subtitleProcessor = 0;
 
     void decode(SubPictureHD* subPicture);
     void decodeLine(QImage* trg, int trgOfs, int width, int maxPixels, BitStream* src);
-    Palette* decodePalette(SubPictureHD* subPicture);
+
     Bitmap* decodeImage(SubPictureHD* subPicture, int transparentIndex);
 
+    Palette* decodePalette(SubPictureHD* subPicture);
 };
 
 #endif // SUPHD_H

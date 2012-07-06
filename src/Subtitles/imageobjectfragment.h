@@ -30,8 +30,9 @@ public:
         this->imagePacketSize = other.imagePacketSize;
     }
 
-    long imageBufferOfs = 0;
     int imagePacketSize = 0;
+
+    long imageBufferOfs = 0;
 };
 
 #endif // IMAGEOBJECTFRAGMENT_H

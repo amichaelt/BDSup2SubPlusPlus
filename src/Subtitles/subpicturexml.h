@@ -33,6 +33,7 @@ public:
 
     int originalX;
     int originalY;
+
     QString fileName;
 
     void setOriginal() { originalX = getOfsX(); originalY = getOfsY(); }

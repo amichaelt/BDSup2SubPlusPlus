@@ -42,68 +42,90 @@ class SupXML : public QObject, public Substream
     {
     public:
         XmlHandler(SupXML* parent) { this->parent = parent; }
+
         bool characters(const QString &ch);
         bool endElement(const QString &namespaceURI, const QString &localName, const QString &qName);
         bool startElement(const QString &namespaceURI, const QString &localName, const QString &qName, const QXmlAttributes &atts);
 
     private:
-        enum class XmlState { BDN, DESCRIPT, NAME, LANGUAGE, FORMAT, EVENTS, EVENT, GRAPHIC, UNKNOWN };
+
+        bool valid = false;
+
         QStringList xmlStates = { "bdn", "description", "name", "language", "format", "events", "event", "graphic" };
 
-        XmlState state;
         QString txt;
-        bool valid = false;
+
+        QVector<int> getResolutions(Resolution resolution);
+
+        Resolution getResolution (QString string);
+
         SubPictureXML* subPicture;
+
         SupXML* parent;
 
+        enum class XmlState { BDN, DESCRIPT, NAME, LANGUAGE, FORMAT, EVENTS, EVENT, GRAPHIC, UNKNOWN };
+
+        XmlState state;
         XmlState findState(QString string);
-        Resolution getResolution (QString string);
-        QVector<int> getResolutions(Resolution resolution);
     };
 
 public:
     SupXML(QString fileName, SubtitleProcessor* subtitleProcessor);
     ~SupXML();
 
-    Palette *getPalette() { return palette; }
-    Bitmap *getBitmap() { return bitmap; }
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
+    void readAllImages();
+    void writeXml(QString filename, QVector<SubPicture*> pics);
+
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
-    bool isForced(int index);
+
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index) { return 0; }
-    SubPicture *getSubPicture(int index);
 
-    void readAllImages();
-    QString getLanguage() { return language; }
     double getFps() { return fps; }
+
+    bool isForced(int index);
+
+    Bitmap *getBitmap() { return bitmap; }
+
+    Palette *getPalette() { return palette; }
+
+    QImage *getImage();
+    QImage *getImage(Bitmap *bitmap);
+
+    QString getLanguage() { return language; }
     QString getPNGname(QString filename, int idx);
-    void writeXml(QString filename, QVector<SubPicture*> pics);
+
+    SubPicture *getSubPicture(int index);
 
 signals:
     void maxProgressChanged(int maxProgress);
     void currentProgressChanged(int currentProgress);
 
 private:
-    QString xmlFileName;
-    QScopedPointer<QFile> xmlFile;
-    QString title = "";
-    QString pathName;
-    QString language = "deu";
-    Resolution resolution = Resolution::HD_1080;
-    QVector<SubPictureXML*> subPictures;
-    FileBuffer *fileBuffer = 0;
-    Palette *palette = 0;
-    Bitmap *bitmap = 0;
     int primaryColorIndex = 0;
     int numToImport = 0;
     double fps = FPS_24P;
     double fpsXml = FPS_24P;
+
+    Bitmap *bitmap = 0;
+
+    Palette *palette = 0;
+
+    QScopedPointer<QFile> xmlFile;
+
+    QString title = "";
+    QString pathName;
+    QString language = "deu";
+    QString xmlFileName;
+
+    QVector<SubPictureXML*> subPictures;
+
+    Resolution resolution = Resolution::HD_1080;
+
     SubtitleProcessor* subtitleProcessor = 0;
 
     double XmlFps(double fps);

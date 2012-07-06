@@ -42,14 +42,17 @@ public:
     int getDWordLE(long ofs);
 
 private:
-    void readBuffer(long ofs);
-
-    QByteArray buf;
-    QString fileName;
-    QScopedPointer<QFile> file;
     long offset = 0;
     long offsetEnd = 0;
     long length = 0;
+
+    QByteArray buf;
+
+    QScopedPointer<QFile> file;
+
+    QString fileName;
+
+    void readBuffer(long ofs);
 };
 
 #endif // FILEBUFFER_H

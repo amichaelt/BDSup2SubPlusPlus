@@ -84,22 +84,22 @@ SubPicture *SupDVD::getSubPicture(int index)
     return subPictures.at(index);
 }
 
-QVector<int>& SupDVD::getFrameAlpha(int index)
+QVector<int> SupDVD::getFrameAlpha(int index)
 {
     return subPictures.at(index)->alpha;
 }
 
-QVector<int>& SupDVD::getFramePal(int index)
+QVector<int> SupDVD::getFramePal(int index)
 {
     return subPictures.at(index)->pal;
 }
 
-QVector<int>& SupDVD::getOriginalFrameAlpha(int index)
+QVector<int> SupDVD::getOriginalFrameAlpha(int index)
 {
     return subPictures.at(index)->originalAlpha;
 }
 
-QVector<int>& SupDVD::getOriginalFramePal(int index)
+QVector<int> SupDVD::getOriginalFramePal(int index)
 {
     return subPictures.at(index)->originalPal;
 }

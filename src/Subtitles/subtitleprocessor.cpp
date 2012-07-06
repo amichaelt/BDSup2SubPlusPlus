@@ -167,7 +167,7 @@ int SubtitleProcessor::getNumForcedFrames()
     return substream->getNumForcedFrames();
 }
 
-QVector<int>& SubtitleProcessor::getFrameAlpha(int index)
+QVector<int> SubtitleProcessor::getFrameAlpha(int index)
 {
     if (inMode == InputMode::VOBSUB)
     {
@@ -176,7 +176,7 @@ QVector<int>& SubtitleProcessor::getFrameAlpha(int index)
     return supDVD->getFrameAlpha(index);
 }
 
-QVector<int>& SubtitleProcessor::getOriginalFrameAlpha(int index)
+QVector<int> SubtitleProcessor::getOriginalFrameAlpha(int index)
 {
     if (inMode == InputMode::VOBSUB)
     {
@@ -185,7 +185,7 @@ QVector<int>& SubtitleProcessor::getOriginalFrameAlpha(int index)
     return supDVD->getOriginalFrameAlpha(index);
 }
 
-QVector<int>& SubtitleProcessor::getFramePal(int index)
+QVector<int> SubtitleProcessor::getFramePal(int index)
 {
     if (inMode == InputMode::VOBSUB)
     {
@@ -194,7 +194,7 @@ QVector<int>& SubtitleProcessor::getFramePal(int index)
     return supDVD->getFramePal(index);
 }
 
-QVector<int>& SubtitleProcessor::getOriginalFramePal(int index)
+QVector<int> SubtitleProcessor::getOriginalFramePal(int index)
 {
     if (inMode == InputMode::VOBSUB)
     {

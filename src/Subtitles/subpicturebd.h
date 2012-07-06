@@ -35,20 +35,23 @@ public:
     SubPictureBD(SubPictureBD* other);
 
     int objectID = 0;
-    QVector<ImageObject*> imageObjectList = QVector<ImageObject*>();
     int winWidth = 0;
     int winHeight = 0;
     int xWinOfs = 0;
     int yWinOfs = 0;
     int type = 0;
-    QVector<QVector<PaletteInfo*> > palettes = QVector<QVector<PaletteInfo*> >();
 
-    ImageObject* getImgObj(int index) { return imageObjectList.at(index); }
-    ImageObject* getImgObj() { return imageObjectList.at(objectID); }
+    QVector<ImageObject*> imageObjectList;
+
+    QVector<QVector<PaletteInfo*> > palettes;
+
     int getImageWidth();
     int getImageHeight();
     int getOfsX();
     int getOfsY();
+
+    ImageObject* getImgObj(int index) { return imageObjectList.at(index); }
+    ImageObject* getImgObj() { return imageObjectList.at(objectID); }
 };
 
 #endif // SUBSPICTUREBD_H

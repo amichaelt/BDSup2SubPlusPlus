@@ -37,23 +37,31 @@ public:
     SupBD(QString fileName, SubtitleProcessor* subtitleProcessor);
     ~SupBD();
 
-    Palette *getPalette() { return palette; }
-    Bitmap *getBitmap() { return bitmap; }
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
-    int getPrimaryColorIndex() { return primaryColorIndex; }
     void decode(int index);
+    void readAllSupFrames();
+
+    int getPrimaryColorIndex() { return primaryColorIndex; }
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
-    bool isForced(int index);
+
     long getEndTime(int index);
     long getStartTime(int index);
     long getStartOffset(int index);
+
+    double getFps(int index);
+
+    bool isForced(int index);
+
+    Bitmap *getBitmap() { return bitmap; }
+
+    Palette *getPalette() { return palette; }
+
+    QImage *getImage();
+    QImage *getImage(Bitmap *bitmap);
+
     SubPicture *getSubPicture(int index);
 
-    void readAllSupFrames();
     QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap* bm, Palette* pal);
-    double getFps(int index);
 
 signals:
     void maxProgressChanged(int maxProgress);
@@ -82,27 +90,41 @@ private:
         INVALID
     };
 
-    SupSegment* readSegment(int offset);
-    bool picMergable(SubPictureBD* a, SubPictureBD* b);
-    void parsePCS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
-    int parsePDS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
-    bool parseODS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
-    void parseWDS(SupSegment* segment, SubPictureBD* subPicture);
-    CompositionState getCompositionState(SupSegment* segment);
-    void decode(SubPictureBD* subPicture);
-    Palette* decodePalette(SubPictureBD* subPicture);
-    Bitmap* decodeImage(SubPictureBD* subPicture, int transIdx);
-    double getFpsFromID(int id);
-    QVector<uchar> encodeImage(Bitmap* bm);
-    int getFpsId(double fps);
+    int primaryColorIndex = 0;
+
+    Bitmap *bitmap = 0;
+
+    Palette *palette = 0;
+
+    QScopedPointer<FileBuffer> fileBuffer;
 
     QString supFileName;
+
     QVector<SubPictureBD*> subPictures;
-    QScopedPointer<FileBuffer> fileBuffer;
-    Palette *palette = 0;
-    Bitmap *bitmap = 0;
-    int primaryColorIndex = 0;
+
     SubtitleProcessor* subtitleProcessor = 0;
+
+    void decode(SubPictureBD* subPicture);
+    void parsePCS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
+    void parseWDS(SupSegment* segment, SubPictureBD* subPicture);
+
+    int getFpsId(double fps);
+    int parsePDS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
+
+    double getFpsFromID(int id);
+
+    bool picMergable(SubPictureBD* a, SubPictureBD* b);
+    bool parseODS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
+
+    Bitmap* decodeImage(SubPictureBD* subPicture, int transIdx);
+
+    CompositionState getCompositionState(SupSegment* segment);
+
+    Palette* decodePalette(SubPictureBD* subPicture);
+
+    QVector<uchar> encodeImage(Bitmap* bm);
+
+    SupSegment* readSegment(int offset);
 
     QVector<uchar> packetHeader =
     {

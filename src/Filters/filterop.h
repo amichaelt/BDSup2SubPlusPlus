@@ -33,7 +33,9 @@ class FilterOp
 public:
     FilterOp();
     void setFilter(Filter* value) { internalFilter = value; }
+
     Filter* getFilter() { return internalFilter; }
+
     QVector<QRgb> filter(Bitmap* src, Palette* palette, int w, int h);
 
     class SubSamplingData {
@@ -44,10 +46,10 @@ public:
             weights(w),
             matrixWidth(width)
         { }
+        int matrixWidth;
         QVector<int> numberOfSamples;
         QVector<int> pixelPositions;
         QVector<float> weights;
-        int matrixWidth;
     };
 
 private:
@@ -55,15 +57,18 @@ private:
     int srcHeight = 0;
     int dstWidth = 0;
     int dstHeight = 0;
-    QVector<QRgb> rgba;
+
+    Filter* internalFilter = 0;
 
     SubSamplingData* horizontalSubsamplingData;
     SubSamplingData* verticalSubsamplingData;
-    Filter* internalFilter = 0;
 
-    SubSamplingData* createSubSampling(int srcSize, int dstSize, float scale);
+    QVector<QRgb> rgba;
+
     void filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg);
     void filterHorizontally(QImage* src, QVector<QRgb>& trg);
+
+    SubSamplingData* createSubSampling(int srcSize, int dstSize, float scale);
 };
 
 #endif // FILTEROP_H

@@ -27,15 +27,17 @@ class BitStream
 public:
     BitStream(QVector<uchar> buffer);
 
-    int bitsLeft() { return (8 * (buf.size() - byteOfs)) - (8 - bits); }
-    int readBits(int n);
     void syncToByte();
 
+    int bitsLeft() { return (8 * (buf.size() - byteOfs)) - (8 - bits); }
+    int readBits(int n);
+
 private:
-    QVector<uchar> buf = QVector<uchar>();
     int byteOfs;
     int b;
     int bits;
+
+    QVector<uchar> buf;
 };
 
 #endif // BITSTREAM_H

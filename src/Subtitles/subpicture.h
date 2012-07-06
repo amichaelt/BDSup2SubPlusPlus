@@ -31,15 +31,17 @@ public:
     SubPicture(const SubPicture& other);
     SubPicture(const SubPicture* other);
 
-    SubPicture* copy();
-    virtual int getImageWidth() { return imageWidth; }
-    virtual int getImageHeight() {  return imageHeight; }
-    virtual int getOfsX() { return xOfs; }
-    virtual int getOfsY() { return yOfs; }
     void setImageWidth(int w) { imageWidth = w; }
     void setImageHeight(int h) { imageHeight = h; }
     void setOfsX(int ofs) { xOfs = ofs; }
     void setOfsY(int ofs) { yOfs = ofs; }
+
+    virtual int getImageWidth() { return imageWidth; }
+    virtual int getImageHeight() {  return imageHeight; }
+    virtual int getOfsX() { return xOfs; }
+    virtual int getOfsY() { return yOfs; }
+
+    SubPicture* copy();
 
     int width;
     int height;
@@ -49,7 +51,8 @@ public:
     int compNum;
     bool wasDecoded;
     bool exclude;
-    QVector<ErasePatch*> erasePatch = QVector<ErasePatch*>();
+
+    QVector<ErasePatch*> erasePatch;
 
 private:
     int imageWidth;

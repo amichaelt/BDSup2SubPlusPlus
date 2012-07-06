@@ -36,25 +36,33 @@ class SubstreamDVD
 public:
     SubstreamDVD();
     ~SubstreamDVD();
-    virtual QVector<int>& getFrameAlpha(int index) = 0;
-    virtual QVector<int>& getFramePal(int index) = 0;
-    virtual QVector<int>& getOriginalFrameAlpha(int index) = 0;
-    virtual QVector<int>& getOriginalFramePal(int index) = 0;
-    virtual Palette *getSrcPalette() = 0;
+
     virtual void setSrcPalette(Palette *palette) = 0;
-    virtual int getLanguageIdx() = 0;
     void decode(SubPictureDVD* pic, SubtitleProcessor* subtitleProcessor);
+
+    virtual int getLanguageIdx() = 0;
+
+    virtual Palette *getSrcPalette() = 0;
     static Palette* decodePalette(SubPictureDVD *pic, Palette *palette, int alphaCrop);
+
     QVector<uchar> encodeLines(Bitmap* bitmap, bool even);
+    virtual QVector<int> getFrameAlpha(int index) = 0;
+    virtual QVector<int> getFramePal(int index) = 0;
+    virtual QVector<int> getOriginalFrameAlpha(int index) = 0;
+    virtual QVector<int> getOriginalFramePal(int index) = 0;
 
 protected:
-    Palette *srcPalette;
-    QScopedPointer<FileBuffer> fileBuffer;
-    Palette *palette = 0;
     Bitmap *bitmap = 0;
+
+    Palette *srcPalette;
+    Palette *palette = 0;
+
     SubtitleProcessor* subtitleProcessor = 0;
 
+    QScopedPointer<FileBuffer> fileBuffer;
+
     QVector<int> lastAlpha = { 0, 0xf, 0xf, 0xf };
+    QVector<SubPictureDVD*> subPictures;
 
     int screenWidth = 720;
     int screenHeight = 576;
@@ -63,11 +71,11 @@ protected:
     int delayGlob = 0;
     int languageIdx = 0;
     int primaryColorIndex = 0;
-    QVector<SubPictureDVD*> subPictures = QVector<SubPictureDVD*>(0);
 
 private:
-    Bitmap* decodeImage(SubPictureDVD* pic, int transIdx);
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage* trg, int trgOfs, int width, int maxPixels);
+
+    Bitmap* decodeImage(SubPictureDVD* pic, int transIdx);
 };
 
 #endif // SUBSTREAMDVD_H

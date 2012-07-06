@@ -30,22 +30,24 @@ class SubPictureDVD : public SubPicture
 public:
     SubPictureDVD();
 
-    void setOriginal();
-    void copyInfo(SubPicture* subPicture);
-
     long offset = 0;
     int rleSize = 0;
     int evenOfs = 0;
     int oddOfs = 0;
-    QVector<ImageObjectFragment*> rleFragments = QVector<ImageObjectFragment*>();
     int originalWidth = 0;
     int originalHeight = 0;
     int originalX = 0;
     int originalY = 0;
+
     QVector<int> originalAlpha = QVector<int>(4);
     QVector<int> originalPal = QVector<int>(4);
     QVector<int> alpha = QVector<int>(4);
     QVector<int> pal = QVector<int>(4);
+
+    QVector<ImageObjectFragment*> rleFragments;
+
+    void setOriginal();
+    void copyInfo(SubPicture* subPicture);
 };
 
 #endif // SUBPICTUREDVD_H
