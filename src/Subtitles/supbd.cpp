@@ -50,12 +50,12 @@ SupBD::~SupBD()
 
 QImage *SupBD::getImage()
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 QImage *SupBD::getImage(Bitmap *bitmap)
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 void SupBD::decode(int index)
@@ -496,7 +496,7 @@ QVector<uchar> SupBD::encodeImage(Bitmap *bm)
 
     for (int y = 0; y < bm->getHeight(); ++y)
     {
-        uchar* pixels = bm->getImg()->scanLine(y);
+        uchar* pixels = bm->getImg().scanLine(y);
         ofs = 0;
         int x;
         for (x = 0; x < bm->getWidth(); x += len, ofs += len)
@@ -594,7 +594,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
         // quantize image
         QuantizeFilter qf;
         Bitmap* bmQ = new Bitmap(bm->getWidth(), bm->getHeight());
-        QVector<QRgb> ct = qf.quantize(bm->toARGB(pal), bmQ->getImg(), bm->getWidth(), bm->getHeight(), 255, false, false);
+        QVector<QRgb> ct = qf.quantize(bm->toARGB(*pal), &bmQ->getImg(), bm->getWidth(), bm->getHeight(), 255, false, false);
         int size = ct.size();
 
         subtitleProcessor->print(QString("Palette had to be reduced from %1 to %2 entries.\n")
@@ -638,7 +638,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
 
     // a typical frame consists of 8 packets. It can be enlonged by additional
     // object frames
-    int palSize = bm->getHighestColorIndex(pal) + 1;
+    int palSize = bm->getHighestColorIndex(*pal) + 1;
     int size = packetHeader.size() * (8 + numAddPackets);
     size += headerPCSStart.size() + headerPCSEnd.size();
     size += (2 * headerWDS.size()) + headerODSFirst.size();
@@ -1089,9 +1089,9 @@ SupBD::CompositionState SupBD::getCompositionState(SupBD::SupSegment *segment)
 
 void SupBD::decode(SubPictureBD *subPicture)
 {
-    palette = decodePalette(subPicture);
-    bitmap = decodeImage(subPicture, palette->getTransparentIndex());
-    primaryColorIndex = bitmap->getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    palette.reset(decodePalette(subPicture));
+    bitmap.reset(decodeImage(subPicture, palette->getTransparentIndex()));
+    primaryColorIndex = bitmap->getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
 }
 
 Palette *SupBD::decodePalette(SubPictureBD *subPicture)
@@ -1208,10 +1208,10 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
             if (b == 0)
             {
                 // next line
-                ofs = (ofs / (w + (bm->getImg()->bytesPerLine() - w))) * (w + (bm->getImg()->bytesPerLine() - w));
-                if (xpos < (w + (bm->getImg()->bytesPerLine() - w)))
+                ofs = (ofs / (w + (bm->getImg().bytesPerLine() - w))) * (w + (bm->getImg().bytesPerLine() - w));
+                if (xpos < (w + (bm->getImg().bytesPerLine() - w)))
                 {
-                    ofs += (w + (bm->getImg()->bytesPerLine() - w));
+                    ofs += (w + (bm->getImg().bytesPerLine() - w));
                 }
                 xpos = 0;
             }
@@ -1222,7 +1222,7 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
                     // 00 4x xx -> xxx zeroes
                     size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
 
-                    uchar* pixels = bm->getImg()->bits();
+                    uchar* pixels = bm->getImg().bits();
                     for (int i = 0; i < size; ++i)
                     {
                         pixels[ofs++] = 0; /*(uchar)b;*/
@@ -1235,7 +1235,7 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
                     size = (b - 0x80);
                     b = buf[index++] & 0xff;
 
-                    uchar* pixels = bm->getImg()->bits();
+                    uchar* pixels = bm->getImg().bits();
                     for (int i = 0; i < size; ++i)
                     {
                         pixels[ofs++] = (uchar)b;
@@ -1248,7 +1248,7 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
                     size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
                     b = buf[index++] & 0xff;
 
-                    uchar* pixels = bm->getImg()->bits();
+                    uchar* pixels = bm->getImg().bits();
                     for (int i = 0; i < size; ++i)
                     {
                         pixels[ofs++] = (uchar)b;
@@ -1257,7 +1257,7 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
                 }
                 else
                 {
-                    uchar* pixels = bm->getImg()->bits();
+                    uchar* pixels = bm->getImg().bits();
                     // 00 xx -> xx times 0
                     for (int i = 0; i < b; ++i)
                     {
@@ -1269,7 +1269,7 @@ Bitmap* SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
         }
         else
         {
-            uchar* pixels = bm->getImg()->bits();
+            uchar* pixels = bm->getImg().bits();
             pixels[ofs++] = (uchar)b;
             xpos++;
         }

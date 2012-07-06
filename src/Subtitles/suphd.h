@@ -24,6 +24,7 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
+#include <QScopedPointer>
 
 class SubtitleProcessor;
 class SubPictureHD;
@@ -50,9 +51,9 @@ public:
     long getStartOffset(int index);
     bool isForced(int index) { return false; }
 
-    Bitmap *getBitmap() { return bitmap; }
+    Bitmap *getBitmap() { return bitmap.data(); }
 
-    Palette *getPalette() { return palette; }
+    Palette *getPalette() { return palette.data(); }
 
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
@@ -66,9 +67,9 @@ signals:
 private:
     int primaryColorIndex = 0;
 
-    Bitmap *bitmap = 0;
+    QScopedPointer<Bitmap> bitmap;
 
-    Palette *palette = 0;
+    QScopedPointer<Palette> palette;
 
     QScopedPointer<FileBuffer> fileBuffer;
 

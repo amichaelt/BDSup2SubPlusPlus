@@ -35,6 +35,9 @@ public:
     explicit ProgressDialog(QWidget *parent = 0);
     ~ProgressDialog();
 
+signals:
+    void operationCancelled();
+
 public slots:
     void setText(QString newText);
     void setCurrentValue(int value);

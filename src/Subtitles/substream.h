@@ -20,17 +20,15 @@
 #ifndef SUBSTREAM_H
 #define SUBSTREAM_H
 
-#include <QSharedData>
-
+class Bitmap;
+class FileBuffer;
 class Palette;
 class QImage;
-class Bitmap;
 class SubPicture;
 class SubPictureDVD;
-class FileBuffer;
 class SubtitleProcessor;
 
-class Substream : public QSharedData
+class Substream
 {
 public:
     virtual ~Substream() { }

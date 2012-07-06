@@ -25,19 +25,17 @@
 #include <cmath>
 #include <QImage>
 
-FilterOp::FilterOp()
+FilterOp::FilterOp(Filter& filter) :
+    internalFilter(filter)
 {
-    internalFilter = new MitchellFilter();
 }
 
-QVector<QRgb> FilterOp::filter(Bitmap *src, Palette *palette, int w, int h)
+QVector<QRgb> FilterOp::filter(Bitmap &src, Palette &palette, int w, int h)
 {
     dstWidth = w;
     dstHeight = h;
-    srcWidth = src->getWidth();
-    srcHeight = src->getHeight();
-
-    rgba = palette->getColorTable();
+    srcWidth = src.getWidth();
+    srcHeight = src.getHeight();
 
     float xscale = (float)(dstWidth - 1) / (float)(srcWidth - 1);
     float yscale = (float)(dstHeight - 1) / (float)(srcHeight - 1);
@@ -47,7 +45,7 @@ QVector<QRgb> FilterOp::filter(Bitmap *src, Palette *palette, int w, int h)
     verticalSubsamplingData = createSubSampling(srcHeight, dstHeight, yscale);
 
     QVector<QRgb> workPixels(srcHeight * dstWidth);
-    filterHorizontally(src->getImage(palette), workPixels);
+    filterHorizontally(*src.getImage(palette), workPixels, palette.getColorTable());
 
     QVector<QRgb> outPixels(dstHeight * dstWidth);
     filterVertically(workPixels, outPixels);
@@ -55,14 +53,14 @@ QVector<QRgb> FilterOp::filter(Bitmap *src, Palette *palette, int w, int h)
     return outPixels;
 }
 
-FilterOp::SubSamplingData* FilterOp::createSubSampling(int srcSize, int dstSize, float scale)
+FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, float scale)
 {
     QVector<int> arrN(dstSize);
     int numContributors;
     QVector<float> arrWeight;
     QVector<int> arrPixel;
 
-    float fwidth = internalFilter->getRadius();
+    float fwidth = internalFilter.getRadius();
 
     if (scale < 1.0f)
     {
@@ -84,7 +82,7 @@ FilterOp::SubSamplingData* FilterOp::createSubSampling(int srcSize, int dstSize,
             for (int j = left; j <= right; ++j)
             {
                 float weight;
-                weight = internalFilter->value((center - j) * fNormFac);
+                weight = internalFilter.value((center - j) * fNormFac);
 
                 if (weight == 0.0f)
                 {
@@ -146,7 +144,7 @@ FilterOp::SubSamplingData* FilterOp::createSubSampling(int srcSize, int dstSize,
             int right = (int)ceil(center + fwidth);
             for (int j = left; j <= right; ++j)
             {
-                float weight = internalFilter->value(center - j);
+                float weight = internalFilter.value(center - j);
                 if (weight == 0.0f)
                 {
                     continue;
@@ -191,7 +189,7 @@ FilterOp::SubSamplingData* FilterOp::createSubSampling(int srcSize, int dstSize,
             }
         }
     }
-    return new SubSamplingData(arrN, arrPixel, arrWeight, numContributors);
+    return SubSamplingData(arrN, arrPixel, arrWeight, numContributors);
 }
 
 void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
@@ -200,8 +198,8 @@ void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
     {
         for (int y = dstHeight - 1; y >= 0 ; --y)
         {
-            int yTimesNumContributors = y * verticalSubsamplingData->matrixWidth;
-            int max = verticalSubsamplingData->numberOfSamples[y];
+            int yTimesNumContributors = y * verticalSubsamplingData.matrixWidth;
+            int max = verticalSubsamplingData.numberOfSamples[y];
             int ofsY = dstWidth * y;
             float red = 0;
             float green = 0;
@@ -211,8 +209,8 @@ void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
             int index = yTimesNumContributors;
             for (int j = max - 1; j >= 0 ; --j)
             {
-                int color = src[x + (dstWidth * verticalSubsamplingData->pixelPositions[index])];
-                float w = verticalSubsamplingData->weights[index];
+                int color = src[x + (dstWidth * verticalSubsamplingData.pixelPositions[index])];
+                float w = verticalSubsamplingData.weights[index];
                 alpha += qAlpha(color) * w;
                 red += qRed(color) * w;
                 green += qGreen(color) * w;
@@ -261,12 +259,12 @@ void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
     }
 }
 
-void FilterOp::filterHorizontally(QImage* src, QVector<QRgb>& trg)
+void FilterOp::filterHorizontally(QImage &src, QVector<QRgb>& trg, QVector<QRgb> rgba)
 {
     for (int k = 0; k < srcHeight; ++k)
     {
         int destOfsY = dstWidth * k;
-        uchar* pixels = src->scanLine(k);
+        uchar* pixels = src.scanLine(k);
         for (int i = dstWidth - 1; i >= 0 ; --i)
         {
             float red = 0;
@@ -274,14 +272,14 @@ void FilterOp::filterHorizontally(QImage* src, QVector<QRgb>& trg)
             float blue = 0;
             float alpha = 0;
 
-            int max = horizontalSubsamplingData->numberOfSamples[i];
-            int index = i * horizontalSubsamplingData->matrixWidth;
+            int max = horizontalSubsamplingData.numberOfSamples[i];
+            int index = i * horizontalSubsamplingData.matrixWidth;
 
             for (int j = max - 1; j >= 0; --j)
             {
-                int ofsX = horizontalSubsamplingData->pixelPositions[index];
+                int ofsX = horizontalSubsamplingData.pixelPositions[index];
                 int palIdx = pixels[ofsX] & 0xff;
-                float w = horizontalSubsamplingData->weights[index];
+                float w = horizontalSubsamplingData.weights[index];
                 red += qRed(rgba[palIdx]) * w;
                 green += qGreen(rgba[palIdx]) * w;
                 blue+= qBlue(rgba[palIdx]) * w;

@@ -78,6 +78,10 @@ Palette::Palette(QVector<uchar> inRed, QVector<uchar> inGreen, QVector<uchar> in
     size = rgba.size();
 }
 
+Palette::~Palette()
+{
+}
+
 void Palette::setAlpha(int index, int alpha)
 {
     rgba.replace(index, qRgba(qRed(rgba.at(index)), qGreen(rgba.at(index)), qBlue(rgba.at(index)), alpha));

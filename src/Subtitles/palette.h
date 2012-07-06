@@ -20,6 +20,7 @@
 #ifndef PALETTE_H
 #define PALETTE_H
 
+#include <QtGlobal>
 #include <QVector>
 #include <QColor>
 
@@ -29,9 +30,9 @@ public:
     Palette();
     Palette(const Palette& other);
     Palette(const Palette* other);
-    Palette(int paletteSize) : Palette(paletteSize, false) { }
-    Palette(int paletteSize, bool use601);
+    Palette(int paletteSize, bool use601 = false);
     Palette(QVector<uchar> r, QVector<uchar> g, QVector<uchar> b, QVector<uchar> a, bool use601);
+    ~Palette();
 
     void setAlpha(int index, int alpha);
     void setRGB(int index, QRgb rgb);

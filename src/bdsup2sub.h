@@ -120,6 +120,7 @@ private slots:
     void openFile();
     void saveFile();
     void closeFile();
+    void onOperationCancelled();
     void onAddLanguage(const QString &language);
     void print(const QString &message);
     void onRecentItemClicked();

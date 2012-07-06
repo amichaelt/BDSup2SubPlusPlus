@@ -43,12 +43,12 @@ SupHD::~SupHD()
 
 QImage *SupHD::getImage()
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 QImage *SupHD::getImage(Bitmap *bitmap)
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 void SupHD::decode(int index)
@@ -272,9 +272,9 @@ void SupHD::readAllSupFrames()
 
 void SupHD::decode(SubPictureHD *subPicture)
 {
-    palette = decodePalette(subPicture);
-    bitmap = decodeImage(subPicture, palette->getTransparentIndex());
-    primaryColorIndex = bitmap->getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    palette.reset(decodePalette(subPicture));
+    bitmap.reset(decodeImage(subPicture, palette->getTransparentIndex()));
+    primaryColorIndex = bitmap->getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
 }
 
 void SupHD::decodeLine(QImage *trg, int trgOfs, int width, int maxPixels, BitStream* src)
@@ -439,10 +439,10 @@ Bitmap *SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
     }
     // decode even lines
     BitStream even = BitStream(evenBuf);
-    decodeLine(bm->getImg(), 0, w, w * ((h / 2) + (h & 1)), &even);
+    decodeLine(&bm->getImg(), 0, w, w * ((h / 2) + (h & 1)), &even);
     // decode odd lines
     BitStream odd  = BitStream(oddBuf);
-    decodeLine(bm->getImg(), w + (bm->getImg()->bytesPerLine() - w), w, (h / 2) * w, &odd);
+    decodeLine(&bm->getImg(), w + (bm->getImg().bytesPerLine() - w), w, (h / 2) * w, &odd);
 
     if (warnings > 0)
     {

@@ -23,24 +23,22 @@
 #include <QColor>
 #include <QVector>
 
-class Filter;
 class Bitmap;
+class Filter;
 class Palette;
 class QImage;
 
 class FilterOp
 {
 public:
-    FilterOp();
-    void setFilter(Filter* value) { internalFilter = value; }
+    FilterOp(Filter& filter);
 
-    Filter* getFilter() { return internalFilter; }
-
-    QVector<QRgb> filter(Bitmap* src, Palette* palette, int w, int h);
+    QVector<QRgb> filter(Bitmap &src, Palette &palette, int w, int h);
 
     class SubSamplingData {
     public:
-        SubSamplingData(QVector<int> s, QVector<int> p, QVector<float> w, int width) :
+        SubSamplingData() { }
+        SubSamplingData(QVector<int>& s, QVector<int>& p, QVector<float>& w, int width) :
             matrixWidth(width),
             numberOfSamples(s),
             pixelPositions(p),
@@ -58,17 +56,15 @@ private:
     int dstWidth = 0;
     int dstHeight = 0;
 
-    Filter* internalFilter = 0;
+    Filter& internalFilter;
 
-    SubSamplingData* horizontalSubsamplingData;
-    SubSamplingData* verticalSubsamplingData;
-
-    QVector<QRgb> rgba;
+    SubSamplingData horizontalSubsamplingData;
+    SubSamplingData verticalSubsamplingData;
 
     void filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg);
-    void filterHorizontally(QImage* src, QVector<QRgb>& trg);
+    void filterHorizontally(QImage &src, QVector<QRgb>& trg, QVector<QRgb> rgba);
 
-    SubSamplingData* createSubSampling(int srcSize, int dstSize, float scale);
+    SubSamplingData createSubSampling(int srcSize, int dstSize, float scale);
 };
 
 #endif // FILTEROP_H

@@ -33,14 +33,18 @@ SupDVD::SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subt
     this->subtitleProcessor = subtitleProcessor;
 }
 
+SupDVD::~SupDVD()
+{
+}
+
 QImage *SupDVD::getImage()
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 QImage *SupDVD::getImage(Bitmap *bitmap)
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 void SupDVD::decode(int index)
@@ -327,6 +331,11 @@ void SupDVD::readAllSupFrames()
     emit currentProgressChanged(i);
 
     subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
+}
+
+void SupDVD::setSrcPalette(Palette *palette)
+{
+    srcPalette.reset(palette);
 }
 
 QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap *bitmap)

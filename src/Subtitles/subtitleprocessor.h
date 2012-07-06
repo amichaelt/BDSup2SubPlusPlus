@@ -266,6 +266,7 @@ public:
     QWidget* parent;
     QSettings* settings;
 
+    void setActive(bool value) { isActive = value; }
     QVector<QVector<QString>>& getLanguages() { return languages; }
     Palette* getDefaultDVDPalette() { return defaultDVDPalette; }
     Palette* getCurrentDVDPalette() { return currentDVDPalette; }
@@ -382,7 +383,7 @@ public:
     QStringList getRecentFiles() { return recentFiles; }
     PaletteMode getPaletteMode() { return paletteMode; }
     void setPaletteMode(PaletteMode value);
-    bool isCancelled() { return isActive; }
+    bool isCancelled() { return !isActive; }
     int getMergePTSdiff() { return mergePTSdiff; }
     void setMergePTSdiff(int value)
     {
@@ -449,24 +450,24 @@ public:
     }
     double getFPS(QString string);
     double getDefaultFPS(Resolution resolution);
-    QImage* getSrcImage();
+    QImage *getSrcImage();
     QString getSrcInfoStr(int index);
     QString getTrgInfoStr(int index);
     int getTrgWidth(int index);
     int getTrgHeight(int index);
     int getTrgOfsX(int index);
     int getTrgOfsY(int index);
-    QImage* getTrgImage();
+    QImage *getTrgImage();
     int getTrgImgWidth(int index);
     int getTrgImgHeight(int index);
     bool getTrgExcluded(int index);
     Resolution restoreResolution() { return (Resolution)resolutionNames.indexOf(settings->value("resolutionTrg", QVariant(getResolutionName(resolutionTrg))).toString()); }
     Resolution getResolution(int width, int height);
-    SubPicture* getSubPictureSrc(int index);
+    SubPicture *getSubPictureSrc(int index);
     Resolution getResolution(QString string);
     QVector<int> getResolutions(Resolution resolution);
-    QImage* getTrgImagePatched(SubPicture* subPicture);
-    SubPicture* getSubPictureTrg(int index);
+    QImage *getTrgImagePatched(SubPicture* subPicture);
+    SubPicture *getSubPictureTrg(int index);
     QVector<int> getFrameAlpha(int index);
     QVector<int> getOriginalFrameAlpha(int index);
     QVector<int> getFramePal(int index);
@@ -493,7 +494,6 @@ public slots:
     void readSubtitleStream();
     void createSubtitleStream();
     void moveAll();
-    void cancelLoading();
     void print(const QString &message);
     void printX(const QString &message);
     void printError(const QString &message);
@@ -501,22 +501,27 @@ public slots:
     void onLanguageRead(const QString &message);
 
 private:
+    Bitmap *trgBitmap;
+    Bitmap *trgBitmapUnpatched;
+    Palette *defaultSourceDVDPalette = 0;
+    Palette *currentSourceDVDPalette = 0;
+    Palette *trgPal;
+    Palette *defaultDVDPalette;
+    Palette *currentDVDPalette;
+
     QSharedPointer<Substream> substream;
     QSharedPointer<SubDVD> subDVD;
     QSharedPointer<SupDVD> supDVD;
     QSharedPointer<SupXML> supXML;
     QSharedPointer<SupHD> supHD;
     QSharedPointer<SupBD> supBD;
-    SubPictureDVD* subVobTrg = 0;
-    Bitmap* trgBitmap = 0;
-    Bitmap* trgBitmapUnpatched = 0;
-    Palette* defaultSourceDVDPalette = 0;
-    Palette* currentSourceDVDPalette = 0;
-    Palette* trgPal = 0;
-    Palette* defaultDVDPalette;
-    Palette* currentDVDPalette;
+
     QStringList recentFiles;
+
+    SubPictureDVD* subVobTrg = 0;
+
     QVector<SubPicture*> subPictures;
+
     int languageIdxRead;
     int maxProgress = 0, lastProgress = 0;
     int numberOfErrors, numberOfWarnings;
@@ -592,7 +597,7 @@ private:
     QVector<int> getResolution(Resolution resolution);
     void determineFramePalette(int index);
     bool updateTrgPic(int index);
-    QImage* getSrcImage(int index);
+    QImage *getSrcImage(int index);
 };
 
 #endif // SUBTITLEPROCESSOR_H

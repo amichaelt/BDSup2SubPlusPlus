@@ -203,6 +203,7 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
                 connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(moveAll()));
                 connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), workerThread, SLOT(deleteLater()));
 
+                subtitleProcessor->setActive(true);
                 workerThread->start();
             }
             convertSup();
@@ -463,6 +464,7 @@ void BDSup2Sub::connectSubtitleProcessor()
     connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), this, SLOT(onWritingSubtitleFileFinished(QString)));
     connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), this, SLOT(onMoveAllFinished(QString)));
     connect(subtitleProcessor, SIGNAL(printText(QString)), this, SLOT(print(QString)));
+    connect(progressDialog, SIGNAL(operationCancelled()), this, SLOT(onOperationCancelled()));
 }
 
 void BDSup2Sub::fillComboBoxes()
@@ -672,6 +674,7 @@ void BDSup2Sub::saveFile()
         connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(createSubtitleStream()));
         connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
+        subtitleProcessor->setActive(true);
         workerThread->start();
     }
 }
@@ -684,6 +687,11 @@ void BDSup2Sub::closeFile()
     ui->sourceImage->update();
     ui->targetImage->setImage(0);
     ui->targetImage->update();
+}
+
+void BDSup2Sub::onOperationCancelled()
+{
+    subtitleProcessor->setActive(false);
 }
 
 void BDSup2Sub::onAddLanguage(const QString &language)
@@ -751,6 +759,7 @@ void BDSup2Sub::loadSubtitleFile()
     connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(readSubtitleStream()));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
+    subtitleProcessor->setActive(true);
     workerThread->start();
 }
 
@@ -2060,8 +2069,7 @@ void BDSup2Sub::resetCropOffset_triggered()
 
 void BDSup2Sub::refreshSrcFrame(int index)
 {
-    QImage* image = subtitleProcessor->getSrcImage();
-    ui->sourceImage->setImage(image);
+    ui->sourceImage->setImage(subtitleProcessor->getSrcImage());
     ui->sourceImage->updateImage();
     ui->sourceInfoLabel->setText(subtitleProcessor->getSrcInfoStr(index));
 }
@@ -2073,8 +2081,7 @@ void BDSup2Sub::refreshTrgFrame(int index)
     ui->subtitleImage->setCropOfsY(subtitleProcessor->getCropOfsY());
     ui->subtitleImage->setImage(subtitleProcessor->getTrgImage(), subtitleProcessor->getTrgImgWidth(index), subtitleProcessor->getTrgImgHeight(index));
     ui->subtitleImage->setExcluded(subtitleProcessor->getTrgExcluded(index));
-    QImage *image = subtitleProcessor->getTrgImage();
-    ui->targetImage->setImage(image);
+    ui->targetImage->setImage(subtitleProcessor->getTrgImage());
     ui->targetImage->updateImage();
     ui->targetInfoLabel->setText(subtitleProcessor->getTrgInfoStr(index));
 }
@@ -2376,5 +2383,6 @@ void BDSup2Sub::on_subtitleLanguageComboBox_currentIndexChanged(int index)
     connect(workerThread, SIGNAL(started()), subtitleProcessor, SLOT(readSubtitleStream()));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), workerThread, SLOT(deleteLater()));
 
+    subtitleProcessor->setActive(true);
     workerThread->start();
 }

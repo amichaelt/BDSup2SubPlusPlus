@@ -50,7 +50,7 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 private:
-    QImage* img = 0;
+    QScopedPointer<QImage> img;
     QColor color1 = Qt::blue;
     QColor color2 = Qt::black;
     int width = 1920;

@@ -21,8 +21,8 @@
 #include "bitmap.h"
 #include "palette.h"
 
-PaletteBitmap::PaletteBitmap(Bitmap *bitmap, Palette *palette)
+PaletteBitmap::PaletteBitmap(Bitmap* inBitmap, Palette* inPalette)
 {
-    this->bitmap = bitmap;
-    this->palette = palette;
+    bitmap.reset(inBitmap);
+    palette.reset(inPalette);
 }

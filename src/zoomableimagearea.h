@@ -42,7 +42,7 @@ private:
     int zoomScale = 0;
     double scaleFactor = 0.0;
     bool settingPixmap = false;
-    QImage* image = 0;
+    QScopedPointer<QImage> image;
     QPixmap* drawPixmap = 0;
     QPainter* painter = new QPainter();
     QSize originalSize;

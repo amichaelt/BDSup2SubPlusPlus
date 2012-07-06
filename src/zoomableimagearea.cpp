@@ -29,9 +29,9 @@ ZoomableImageArea::ZoomableImageArea(QWidget *parent) :
 {
 }
 
-void ZoomableImageArea::setImage(QImage* image)
+void ZoomableImageArea::setImage(QImage* inImage)
 {
-    this->image = image;
+    image.reset(inImage);
     if (zoomScale == 0)
     {
         setZoomScale(1);
@@ -53,7 +53,7 @@ void ZoomableImageArea::setZoomScale(int scale)
     {
         zoomScale = scale;
     }
-    if (image != 0 && !image->isNull())
+    if (!image.isNull() && !image->isNull())
     {
         QRect target = image->rect();
         target.setWidth(image->width() * zoomScale);
@@ -80,7 +80,7 @@ void ZoomableImageArea::setZoomScale(int scale)
 
 void ZoomableImageArea::paintEvent(QPaintEvent *event)
 {
-    if (image == 0)
+    if (image.isNull() || image->isNull())
     {
         painter->begin(this);
         QLinearGradient gradient(0, 0, this->width(), this->height());

@@ -20,10 +20,10 @@
 #include "bitstream.h"
 
 BitStream::BitStream(QVector<uchar> buffer) :
-    buf(buffer),
     byteOfs(0),
     b(buf[0] & 0xff),
-    bits(8)
+    bits(8),
+    buf(buffer)
 {
 }
 

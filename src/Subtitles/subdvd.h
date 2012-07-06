@@ -22,14 +22,16 @@
 
 #include "substream.h"
 #include "substreamdvd.h"
+
 #include <QObject>
 #include <QString>
 #include <QFile>
 #include <QVector>
 
+class FileBuffer;
+class Palette;
 class SubtitleProcessor;
 class SubPictureDVD;
-class FileBuffer;
 
 class SubDVD : public QObject, public Substream, public SubstreamDVD
 {
@@ -37,9 +39,10 @@ class SubDVD : public QObject, public Substream, public SubstreamDVD
 
 public:
     SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subtitleProcessor);
+    ~SubDVD();
 
     void decode(int index);
-    void setSrcPalette(Palette *palette) { srcPalette = palette; }
+    void setSrcPalette(Palette *palette);
     void readIdx(int idxToRead = -1);
     void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette* palette);
     void readSubFrame(SubPictureDVD* pic, long endOfs);
@@ -58,14 +61,14 @@ public:
 
     bool isForced(int index);
 
-    Bitmap *getBitmap() { return bitmap; }
-    Bitmap* decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
+    Bitmap *getBitmap() { return bitmap.data(); }
+    Bitmap *decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
 
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
 
-    Palette *getPalette() { return palette; }
-    Palette *getSrcPalette() { return srcPalette; }
+    Palette *getPalette() { return palette.data(); }
+    Palette *getSrcPalette() { return srcPalette.data(); }
     Palette* decodePalette(SubPictureDVD* pic, Palette* palette);
 
     SubPicture *getSubPicture(int index);

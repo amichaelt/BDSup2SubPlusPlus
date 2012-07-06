@@ -27,6 +27,7 @@
 #include <QString>
 #include <QFile>
 
+class Palette;
 class SubtitleProcessor;
 
 class SupDVD : public QObject, public Substream, public SubstreamDVD
@@ -35,12 +36,13 @@ class SupDVD : public QObject, public Substream, public SubstreamDVD
 
 public:
     SupDVD(QString supFileName, QString ifoFileName, SubtitleProcessor* subtitleProcessor);
+    ~SupDVD();
 
     void decode(int index);
     void readIfo();
     void writeIfo(QString filename, SubPicture *subPicture, Palette *palette);
     void readAllSupFrames();
-    void setSrcPalette(Palette *palette) { srcPalette = palette; }
+    void setSrcPalette(Palette *palette);
 
     int getLanguageIdx() { return languageIdx; }
     int getPrimaryColorIndex() { return primaryColorIndex; }
@@ -53,10 +55,10 @@ public:
 
     bool isForced(int index);
 
-    Bitmap *getBitmap() { return bitmap; }
+    Bitmap *getBitmap() { return bitmap.data(); }
 
-    Palette *getPalette() { return palette; }
-    Palette *getSrcPalette() { return srcPalette; }
+    Palette *getPalette() { return palette.data(); }
+    Palette *getSrcPalette() { return srcPalette.data(); }
 
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);

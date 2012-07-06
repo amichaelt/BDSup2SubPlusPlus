@@ -45,5 +45,6 @@ void ProgressDialog::setCurrentValue(int value)
 
 void ProgressDialog::on_pushButton_clicked()
 {
+    emit operationCancelled();
     this->close();
 }

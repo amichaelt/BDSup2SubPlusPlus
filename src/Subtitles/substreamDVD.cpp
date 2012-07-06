@@ -30,7 +30,7 @@
 
 SubstreamDVD::SubstreamDVD()
 {
-    srcPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
+    srcPalette.reset(new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true));
 }
 
 SubstreamDVD::~SubstreamDVD()
@@ -80,7 +80,7 @@ QVector<uchar> SubstreamDVD::encodeLines(Bitmap *bitmap, bool even)
 
     for (; y < bitmap->getHeight(); y += 2)
     {
-        uchar* pixels = bitmap->getImg()->scanLine(y);
+        uchar* pixels = bitmap->getImg().scanLine(y);
         ofs = 0;
         for (int x = 0; x < bitmap->getWidth(); x += len, ofs += len)
         {
@@ -201,8 +201,8 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
         index += fragment->imagePacketSize;
     }
 
-    decodeLine(buf, pic->evenOfs, sizeEven, bm->getImg(), 0, width,  width * ((height / 2) + (height & 1)));
-    decodeLine(buf, pic->oddOfs, sizeOdd, bm->getImg(), width + (bm->getImg()->bytesPerLine() - width), width, (height / 2) * width);
+    decodeLine(buf, pic->evenOfs, sizeEven, &bm->getImg(), 0, width,  width * ((height / 2) + (height & 1)));
+    decodeLine(buf, pic->oddOfs, sizeOdd, &bm->getImg(), width + (bm->getImg().bytesPerLine() - width), width, (height / 2) * width);
 
     if (warnings > 0)
     {
@@ -214,10 +214,10 @@ Bitmap *SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 
 void SubstreamDVD::decode(SubPictureDVD *pic, SubtitleProcessor* subtitleProcessor)
 {
-    palette = decodePalette(pic, srcPalette, subtitleProcessor->getAlphaCrop());
-    bitmap = decodeImage(pic, palette->getTransparentIndex());
+    palette.reset(decodePalette(pic, srcPalette.data(), subtitleProcessor->getAlphaCrop()));
+    bitmap.reset(decodeImage(pic, palette->getTransparentIndex()));
 
-    QRect bounds = bitmap->getBounds(palette, subtitleProcessor->getAlphaCrop());
+    const QRect &bounds = bitmap->getBounds(*palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
         bounds.bottomRight().x() < (bitmap->getWidth() - 1) ||
         bounds.bottomRight().y() < (bitmap->getHeight() - 1))
@@ -233,14 +233,14 @@ void SubstreamDVD::decode(SubPictureDVD *pic, SubtitleProcessor* subtitleProcess
         {
             height = 2;
         }
-        bitmap = bitmap->crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
+        bitmap.reset(bitmap->crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height));
         pic->setImageWidth(width);
         pic->setImageHeight(height);
         pic->setOfsX(pic->originalX + bounds.topLeft().x());
         pic->setOfsY(pic->originalY + bounds.topLeft().y());
     }
 
-    primaryColorIndex = bitmap->getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    primaryColorIndex = bitmap->getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
 }
 
 void SubstreamDVD::decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage* trg, int trgOfs, int width, int maxPixels)

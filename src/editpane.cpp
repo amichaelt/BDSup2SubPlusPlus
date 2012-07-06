@@ -134,7 +134,7 @@ void EditPane::paintEvent(QPaintEvent *event)
     xScaleCaption = sx;
     yScaleCaption = sy;
 
-    if (imgWidth > 0 && img != 0)
+    if (!img.isNull() && !img->isNull() && imgWidth > 0)
     {
         int wi = ((int)(imgWidth * sx) + 0.5);
         int hi = ((int)(imgHeight * sy) + 0.5);
@@ -216,7 +216,7 @@ void EditPane::setOffsets(int x, int y)
 
 void EditPane::setImage(QImage *image, int width, int height)
 {
-    img = image;
+    img.reset(image);
     imgWidth = width;
     imgHeight = height;
     update();

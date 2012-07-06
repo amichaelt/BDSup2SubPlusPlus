@@ -28,12 +28,12 @@ SubPictureBD::SubPictureBD()
 SubPictureBD::SubPictureBD(SubPictureBD *other) :
     SubPicture(other),
     objectID(other->objectID),
-    imageObjectList(other->imageObjectList),
     winWidth(other->winWidth),
     winHeight(other->winHeight),
     xWinOfs(other->xWinOfs),
     yWinOfs(other->yWinOfs),
     type(other->type),
+    imageObjectList(other->imageObjectList),
     palettes(other->palettes)
 {
 }

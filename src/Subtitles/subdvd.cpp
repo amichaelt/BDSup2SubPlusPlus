@@ -19,13 +19,13 @@
 
 #include "subdvd.h"
 #include "bitmap.h"
-#include "palette.h"
 #include "types.h"
 #include "subtitleprocessor.h"
 #include "subpicturedvd.h"
 #include "Tools/filebuffer.h"
 #include "Tools/timeutil.h"
 #include "imageobjectfragment.h"
+#include "palette.h"
 
 #include <QImage>
 #include <QFile>
@@ -38,18 +38,22 @@ SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subt
     this->subtitleProcessor = subtitleProcessor;
     this->subFileName = subFileName;
     this->idxFileName = idxFileName;
-    palette = new Palette(4, true);
-    bitmap = new Bitmap(0, 0);
+    palette.reset(new Palette(4, true));
+    bitmap.reset(new Bitmap(0, 0));
+}
+
+SubDVD::~SubDVD()
+{
 }
 
 QImage *SubDVD::getImage()
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 QImage *SubDVD::getImage(Bitmap *bitmap)
 {
-    return bitmap->getImage(palette);
+    return bitmap->getImage(*palette);
 }
 
 void SubDVD::decode(int index)
@@ -62,6 +66,11 @@ void SubDVD::decode(int index)
     {
         throw QString("Index: %1 out of bounds.\n").arg(QString::number(index));
     }
+}
+
+void SubDVD::setSrcPalette(Palette *palette)
+{
+    srcPalette.reset(palette);
 }
 
 int SubDVD::getNumFrames()
