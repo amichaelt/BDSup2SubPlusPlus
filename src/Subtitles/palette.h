@@ -20,7 +20,6 @@
 #ifndef PALETTE_H
 #define PALETTE_H
 
-#include <QtGlobal>
 #include <QVector>
 #include <QColor>
 
