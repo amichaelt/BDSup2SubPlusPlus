@@ -271,7 +271,7 @@ QImage *SubtitleProcessor::getTrgImagePatched(SubPicture *subPicture)
     }
     else
     {
-        return trgBitmapUnpatched->getImage(*trgPal);
+        return trgBitmapUnpatched.getImage(*trgPal);
     }
 }
 
@@ -1044,7 +1044,7 @@ void SubtitleProcessor::writeSub(QString filename)
                     supXML = QSharedPointer<SupXML>(new SupXML("", this));
                 }
                 QString fnp = supXML->getPNGname(fn, i + 1);
-                trgBitmap->getImage(*trgPal)->save(fnp, "PNG");
+                trgBitmap.getImage(*trgPal)->save(fnp, "PNG");
             }
             frameNum += 2;
         }
@@ -1323,7 +1323,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
 
     if (!skipScaling)
     {
-        Bitmap* targetBitmap;
+        Bitmap targetBitmap;
         Palette* targetPalette = trgPal;
         // create scaled bitmap
         if (outMode == OutputMode::VOBSUB || outMode == OutputMode::SUPIFO)
@@ -1338,7 +1338,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                 }
                 else
                 {
-                    targetBitmap = substream->getBitmap()->convertLm(*substream->getPalette(), alphaThreshold, luminanceThreshold); // reduce palette
+                    targetBitmap = substream->getBitmap().convertLm(*substream->getPalette(), alphaThreshold, luminanceThreshold); // reduce palette
                 }
             }
             else
@@ -1349,11 +1349,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     // keep palette
                     if (scaleFilter != 0)
                     {
-                        targetBitmap = substream->getBitmap()->scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter);
+                        targetBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter);
                     }
                     else
                     {
-                        targetBitmap = substream->getBitmap()->scaleBilinear(trgWidth, trgHeight, *substream->getPalette());
+                        targetBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette());
                     }
                 }
                 else
@@ -1361,11 +1361,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     // reduce palette
                     if (scaleFilter != 0)
                     {
-                        targetBitmap = substream->getBitmap()->scaleFilterLm(trgWidth, trgHeight, *substream->getPalette(), alphaThreshold, luminanceThreshold, *scaleFilter);
+                        targetBitmap = substream->getBitmap().scaleFilterLm(trgWidth, trgHeight, *substream->getPalette(), alphaThreshold, luminanceThreshold, *scaleFilter);
                     }
                     else
                     {
-                        targetBitmap = substream->getBitmap()->scaleBilinearLm(trgWidth, trgHeight, *substream->getPalette(), alphaThreshold, luminanceThreshold);
+                        targetBitmap = substream->getBitmap().scaleBilinearLm(trgWidth, trgHeight, *substream->getPalette(), alphaThreshold, luminanceThreshold);
                     }
                 }
             }
@@ -1386,11 +1386,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     // keep palette
                     if (scaleFilter != 0)
                     {
-                        targetBitmap = substream->getBitmap()->scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter);
+                        targetBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter);
                     }
                     else
                     {
-                        targetBitmap = substream->getBitmap()->scaleBilinear(trgWidth, trgHeight, *substream->getPalette());
+                        targetBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette());
                     }
                 }
                 else
@@ -1400,11 +1400,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     PaletteBitmap* paletteBitmap;
                     if (scaleFilter != 0)
                     {
-                        paletteBitmap = substream->getBitmap()->scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter, dither);
+                        paletteBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter, dither);
                     }
                     else
                     {
-                        paletteBitmap = substream->getBitmap()->scaleBilinear(trgWidth, trgHeight, *substream->getPalette(), dither);
+                        paletteBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette(), dither);
                     }
                     targetBitmap = paletteBitmap->bitmap.data();
                     targetPalette = paletteBitmap->palette.data();
@@ -1417,7 +1417,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
             int col = targetPalette->getTransparentIndex();
             for (auto erasePatch : picTrg->erasePatch)
             {
-                targetBitmap->fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, col);
+                targetBitmap.fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, col);
             }
         }
         else
@@ -1825,7 +1825,7 @@ int SubtitleProcessor::getTrgOfsY(int index)
 
 QImage *SubtitleProcessor::getTrgImage()
 {
-    return trgBitmap->getImage(*trgPal);
+    return trgBitmap.getImage(*trgPal);
 }
 
 int SubtitleProcessor::getTrgImgWidth(int index)

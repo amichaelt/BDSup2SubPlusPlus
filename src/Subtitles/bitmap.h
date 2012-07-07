@@ -32,11 +32,13 @@ class QRect;
 class Bitmap
 {
 public:
+    Bitmap();
     Bitmap(Bitmap &other);
     Bitmap(Bitmap *other);
     Bitmap(int width, int height);
     Bitmap(int width, int height, int color);
-    Bitmap(int width, int height, QImage &image);
+    Bitmap(int width, int height, QImage image);
+    ~Bitmap();
 
     void clear(int color);
     void fillRect(int x, int y, int width, int height, int color);

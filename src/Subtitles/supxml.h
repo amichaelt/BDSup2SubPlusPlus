@@ -92,7 +92,7 @@ public:
 
     bool isForced(int index);
 
-    Bitmap *getBitmap() { return bitmap.data(); }
+    Bitmap &getBitmap() { return *bitmap; }
 
     Palette *getPalette() { return palette.data(); }
 

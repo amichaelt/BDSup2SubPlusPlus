@@ -20,6 +20,8 @@
 #ifndef SUBTITLEPROCESSOR_H
 #define SUBTITLEPROCESSOR_H
 
+#include "Subtitles/bitmap.h"
+
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
@@ -37,7 +39,6 @@ class SupBD;
 class SubPictureDVD;
 class SubPicture;
 class QImage;
-class Bitmap;
 class Filter;
 
 enum class MoveModeX : int;
@@ -501,8 +502,8 @@ public slots:
     void onLanguageRead(const QString &message);
 
 private:
-    Bitmap *trgBitmap;
-    Bitmap *trgBitmapUnpatched;
+    Bitmap trgBitmap;
+    Bitmap trgBitmapUnpatched;
     Palette *defaultSourceDVDPalette = 0;
     Palette *currentSourceDVDPalette = 0;
     Palette *trgPal;

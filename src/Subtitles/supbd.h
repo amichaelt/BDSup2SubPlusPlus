@@ -53,7 +53,7 @@ public:
 
     bool isForced(int index);
 
-    Bitmap *getBitmap() { return bitmap.data(); }
+    Bitmap &getBitmap() { return *bitmap; }
 
     Palette *getPalette() { return palette.data(); }
 
@@ -62,7 +62,7 @@ public:
 
     SubPicture *getSubPicture(int index);
 
-    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap* bm, Palette* pal);
+    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap &bm, Palette* pal);
 
 signals:
     void maxProgressChanged(int maxProgress);
@@ -123,7 +123,7 @@ private:
 
     Palette* decodePalette(SubPictureBD* subPicture);
 
-    QVector<uchar> encodeImage(Bitmap* bm);
+    QVector<uchar> encodeImage(Bitmap &bm);
 
     SupSegment* readSegment(int offset);
 

@@ -51,7 +51,7 @@ public:
     long getStartOffset(int index);
     bool isForced(int index) { return false; }
 
-    Bitmap *getBitmap() { return bitmap.data(); }
+    Bitmap &getBitmap() { return *bitmap; }
 
     Palette *getPalette() { return palette.data(); }
 

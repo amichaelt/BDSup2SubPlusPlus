@@ -487,22 +487,22 @@ void SupBD::readAllSupFrames()
                               .arg(QString::number(numForcedFrames)));
 }
 
-QVector<uchar> SupBD::encodeImage(Bitmap *bm)
+QVector<uchar> SupBD::encodeImage(Bitmap &bm)
 {
     QVector<uchar> bytes;
     uchar color;
     int ofs;
     int len;
 
-    for (int y = 0; y < bm->getHeight(); ++y)
+    for (int y = 0; y < bm.getHeight(); ++y)
     {
-        uchar* pixels = bm->getImg().scanLine(y);
+        uchar* pixels = bm.getImg().scanLine(y);
         ofs = 0;
         int x;
-        for (x = 0; x < bm->getWidth(); x += len, ofs += len)
+        for (x = 0; x < bm.getWidth(); x += len, ofs += len)
         {
             color = pixels[ofs];
-            for (len = 1; (x + len) < bm->getWidth(); ++len)
+            for (len = 1; (x + len) < bm.getWidth(); ++len)
             {
                 if (pixels[ofs + len] != color)
                 {
@@ -551,7 +551,7 @@ QVector<uchar> SupBD::encodeImage(Bitmap *bm)
                 }
             }
         }
-        if (x == bm->getWidth())
+        if (x == bm.getWidth())
         {
             bytes.push_back(0); // rle id
             bytes.push_back(0);
@@ -586,15 +586,15 @@ int SupBD::getFpsId(double fps)
     return 0x10;
 }
 
-QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette *pal)
+QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette *pal)
 {
     // the last palette entry must be transparent
     if (pal->getSize() > 255 && pal->getAlpha(255) > 0)
     {
         // quantize image
         QuantizeFilter qf;
-        Bitmap* bmQ = new Bitmap(bm->getWidth(), bm->getHeight());
-        QVector<QRgb> ct = qf.quantize(bm->toARGB(*pal), &bmQ->getImg(), bm->getWidth(), bm->getHeight(), 255, false, false);
+        Bitmap* bmQ = new Bitmap(bm.getWidth(), bm.getHeight());
+        QVector<QRgb> ct = qf.quantize(bm.toARGB(*pal), &bmQ->getImg(), bm.getWidth(), bm.getHeight(), 255, false, false);
         int size = ct.size();
 
         subtitleProcessor->print(QString("Palette had to be reduced from %1 to %2 entries.\n")
@@ -638,7 +638,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
 
     // a typical frame consists of 8 packets. It can be enlonged by additional
     // object frames
-    int palSize = bm->getHighestColorIndex(*pal) + 1;
+    int palSize = bm.getHighestColorIndex(*pal) + 1;
     int size = packetHeader.size() * (8 + numAddPackets);
     size += headerPCSStart.size() + headerPCSEnd.size();
     size += (2 * headerWDS.size()) + headerODSFirst.size();
@@ -673,10 +673,10 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
     /* time (in 90kHz resolution) needed to initialize (clear) the window area
        based on the composition pixel rate of 256e6 bit/s - always rounded up
        Note: no cropping etc. -> window size == image size */
-    int windowInitTime = (((bm->getWidth() * bm->getHeight()) * 9) + 3199) / 3200;
+    int windowInitTime = (((bm.getWidth() * bm.getHeight()) * 9) + 3199) / 3200;
     /* time (in 90kHz resolution) needed to decode the image
        based on the decoding pixel rate of 128e6 bit/s - always rounded up  */
-    int imageDecodeTime = (((bm->getWidth() * bm->getHeight()) * 9) + 1599) / 1600;
+    int imageDecodeTime = (((bm.getWidth() * bm.getHeight()) * 9) + 1599) / 1600;
     // write PCS start
     packetHeader.replace(10, 0x16);                                             // ID
     int dts = (int)subPicture->startTime - (frameInitTime + windowInitTime);
@@ -710,8 +710,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
     }
     NumberUtil::setWord(headerWDS, 2, subPicture->getOfsX());
     NumberUtil::setWord(headerWDS, 4, yOfs);
-    NumberUtil::setWord(headerWDS, 6, bm->getWidth());
-    NumberUtil::setWord(headerWDS, 8, bm->getHeight());
+    NumberUtil::setWord(headerWDS, 6, bm.getWidth());
+    NumberUtil::setWord(headerWDS, 8, bm.getHeight());
     for (int i = 0; i < headerWDS.size(); ++i)
     {
         buf.replace(index++, headerWDS[i]);
@@ -755,8 +755,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
     }
     int marker = ((numAddPackets == 0) ? 0xC0000000 : 0x80000000);
     NumberUtil::setDWord(headerODSFirst, 3, marker | (rleBuf.size() + 4));
-    NumberUtil::setWord(headerODSFirst, 7, bm->getWidth());
-    NumberUtil::setWord(headerODSFirst, 9, bm->getHeight());
+    NumberUtil::setWord(headerODSFirst, 7, bm.getWidth());
+    NumberUtil::setWord(headerODSFirst, 9, bm.getHeight());
     for (int i = 0; i < headerODSFirst.size(); ++i)
     {
         buf.replace(index++, headerODSFirst[i]);
@@ -831,8 +831,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap *bm, Palette
     }
     NumberUtil::setWord(headerWDS, 2, subPicture->getOfsX());
     NumberUtil::setWord(headerWDS, 4, yOfs);
-    NumberUtil::setWord(headerWDS, 6, bm->getWidth());
-    NumberUtil::setWord(headerWDS, 8, bm->getHeight());
+    NumberUtil::setWord(headerWDS, 6, bm.getWidth());
+    NumberUtil::setWord(headerWDS, 8, bm.getHeight());
     for (int i = 0; i < headerWDS.size(); ++i)
     {
         buf.replace(index++, headerWDS[i]);

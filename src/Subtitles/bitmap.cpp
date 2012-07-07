@@ -29,6 +29,10 @@
 #include <QRect>
 #include <QVector>
 
+Bitmap::Bitmap()
+{
+}
+
 Bitmap::Bitmap(Bitmap &other) :
     width(other.width),
     height(other.height)
@@ -58,10 +62,14 @@ Bitmap::Bitmap(int width, int height, int color) :
     clear(color);
 }
 
-Bitmap::Bitmap(int width, int height, QImage &image) :
+Bitmap::Bitmap(int width, int height, QImage image) :
     width(width),
     height(height),
     img(image)
+{
+}
+
+Bitmap::~Bitmap()
 {
 }
 
@@ -143,8 +151,7 @@ void Bitmap::clear(int color)
 
 Bitmap *Bitmap::crop(int x, int y, int width, int height)
 {
-    QImage &&newImage = img.copy(x, y, width, height);
-    Bitmap *bm = new Bitmap(width, height, newImage);
+    Bitmap *bm = new Bitmap(width, height, img.copy(x, y, width, height));
 
     return bm;
 }

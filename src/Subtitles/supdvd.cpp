@@ -39,7 +39,7 @@ SupDVD::~SupDVD()
 
 QImage *SupDVD::getImage()
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(*palette);
 }
 
 QImage *SupDVD::getImage(Bitmap *bitmap)
@@ -338,7 +338,7 @@ void SupDVD::setSrcPalette(Palette *palette)
     srcPalette.reset(palette);
 }
 
-QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
+QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
 {
     /* create RLE buffers */
     QVector<uchar> even = encodeLines(bitmap, true);
@@ -409,7 +409,7 @@ QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
 
     /* coordinates of subtitle */
     controlHeader.replace(1 + 10, (uchar)((subPicture->getOfsX() >> 4) & 0xff));
-    tmp = subPicture->getOfsX()+bitmap->getWidth()-1;
+    tmp = (subPicture->getOfsX() + bitmap.getWidth()) - 1;
     controlHeader.replace(1 + 11, (uchar)(((subPicture->getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 12, (uchar)(tmp & 0xff));
 
@@ -428,7 +428,7 @@ QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
     }
 
     controlHeader.replace(1 + 13, (uchar)((yOfs >> 4) & 0xff));
-    tmp = (yOfs + bitmap->getHeight()) - 1;
+    tmp = (yOfs + bitmap.getHeight()) - 1;
     controlHeader.replace(1 + 14, (uchar)(((yOfs & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 15, (uchar)(tmp & 0xff));
 

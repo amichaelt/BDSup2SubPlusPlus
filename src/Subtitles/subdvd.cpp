@@ -39,7 +39,6 @@ SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subt
     this->subFileName = subFileName;
     this->idxFileName = idxFileName;
     palette.reset(new Palette(4, true));
-    bitmap.reset(new Bitmap(0, 0));
 }
 
 SubDVD::~SubDVD()
@@ -48,7 +47,7 @@ SubDVD::~SubDVD()
 
 QImage *SubDVD::getImage()
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(*palette);
 }
 
 QImage *SubDVD::getImage(Bitmap *bitmap)
@@ -487,7 +486,7 @@ void SubDVD::readAllSubFrames()
     subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
 }
 
-QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
+QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
 {
     QVector<uchar> even = encodeLines(bitmap, true);
     QVector<uchar> odd = encodeLines(bitmap, false);
@@ -531,9 +530,9 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
 
     /* coordinates of subtitle */
     controlHeader.replace(1 + 10, (uchar)((subPicture->getOfsX() >> 4) & 0xff));
-    tmp = (subPicture->getOfsX() + bitmap->getWidth()) - 1;
+    tmp = (subPicture->getOfsX() + bitmap.getWidth()) - 1;
     controlHeader.replace(1 + 11, (uchar)(((subPicture->getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
-    controlHeader.replace(1 + 12, (uchar)(tmp&0xff));
+    controlHeader.replace(1 + 12, (uchar)(tmp & 0xff));
 
     int yOfs = subPicture->getOfsY() - subtitleProcessor->getCropOfsY();
     if (yOfs < 0)
@@ -550,7 +549,7 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap *bitmap)
     }
 
     controlHeader.replace(1 + 13, (uchar)((yOfs >> 4) & 0xff));
-    tmp = (yOfs + bitmap->getHeight()) - 1;
+    tmp = (yOfs + bitmap.getHeight()) - 1;
     controlHeader.replace(1 + 14, (uchar)(((yOfs & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 15, (uchar)(tmp & 0xff));
 

@@ -55,7 +55,7 @@ public:
 
     bool isForced(int index);
 
-    Bitmap *getBitmap() { return bitmap.data(); }
+    Bitmap &getBitmap() { return bitmap; }
 
     Palette *getPalette() { return palette.data(); }
     Palette *getSrcPalette() { return srcPalette.data(); }
@@ -63,7 +63,7 @@ public:
     QImage *getImage();
     QImage *getImage(Bitmap *bitmap);
 
-    QVector<uchar> createSupFrame(SubPictureDVD* subPicture, Bitmap* bitmap);
+    QVector<uchar> createSupFrame(SubPictureDVD* subPicture, Bitmap &bitmap);
     QVector<int> getFrameAlpha(int index);
     QVector<int> getFramePal(int index);
     QVector<int> getOriginalFrameAlpha(int index);

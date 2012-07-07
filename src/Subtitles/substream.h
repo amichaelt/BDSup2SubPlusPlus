@@ -45,7 +45,7 @@ public:
 
     virtual bool isForced(int index) = 0;
 
-    virtual Bitmap *getBitmap() = 0;
+    virtual Bitmap &getBitmap() = 0;
 
     virtual Palette *getPalette() = 0;
 

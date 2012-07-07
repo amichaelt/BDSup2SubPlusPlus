@@ -61,7 +61,7 @@ public:
 
     bool isForced(int index);
 
-    Bitmap *getBitmap() { return bitmap.data(); }
+    Bitmap &getBitmap() { return bitmap; }
     Bitmap *decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
 
     QImage *getImage();
@@ -73,7 +73,7 @@ public:
 
     SubPicture *getSubPicture(int index);
 
-    QVector<uchar> createSubFrame(SubPictureDVD* subPicture, Bitmap* bitmap);
+    QVector<uchar> createSubFrame(SubPictureDVD* subPicture, Bitmap &bitmap);
 
     QVector<int> getFrameAlpha(int index);
     QVector<int> getFramePal(int index);
