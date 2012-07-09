@@ -25,13 +25,12 @@
 class MitchellFilter : public Filter
 {
 public:
-    MitchellFilter();
-
     float getRadius() { return 2.0f; }
     float value(float value);
 
 private:
-    const float B, C;
+    static constexpr float B = 1.0f / 3.0f;
+    static constexpr float C = 1.0f / 3.0f;
 };
 
 #endif // MITCHELLFILTER_H

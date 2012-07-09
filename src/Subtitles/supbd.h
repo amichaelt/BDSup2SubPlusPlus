@@ -21,6 +21,9 @@
 #define SUPBD_H
 
 #include "substream.h"
+#include "bitmap.h"
+#include "palette.h"
+
 #include <QObject>
 #include <QString>
 #include <QScopedPointer>
@@ -53,16 +56,16 @@ public:
 
     bool isForced(int index);
 
-    Bitmap &getBitmap() { return *bitmap; }
+    Bitmap &getBitmap() { return bitmap; }
 
-    Palette *getPalette() { return palette.data(); }
+    Palette &getPalette() { return palette; }
 
     QImage getImage();
-    QImage getImage(Bitmap *bitmap);
+    QImage getImage(Bitmap &bitmap);
 
     SubPicture *getSubPicture(int index);
 
-    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap &bm, Palette* pal);
+    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap &bm, Palette &pal);
 
 signals:
     void maxProgressChanged(int maxProgress);
@@ -93,9 +96,9 @@ private:
 
     int primaryColorIndex = 0;
 
-    QScopedPointer<Bitmap> bitmap;
+    Bitmap bitmap;
 
-    QScopedPointer<Palette> palette;
+    Palette palette;
 
     QScopedPointer<FileBuffer> fileBuffer;
 
@@ -117,11 +120,11 @@ private:
     bool picMergable(SubPictureBD* a, SubPictureBD* b);
     bool parseODS(SupSegment* segment, SubPictureBD* subPicture, QString msg);
 
-    Bitmap* decodeImage(SubPictureBD* subPicture, int transIdx);
+    Bitmap decodeImage(SubPictureBD* subPicture, int transIdx);
 
     CompositionState getCompositionState(SupSegment* segment);
 
-    Palette* decodePalette(SubPictureBD* subPicture);
+    Palette decodePalette(SubPictureBD* subPicture);
 
     QVector<uchar> encodeImage(Bitmap &bm);
 

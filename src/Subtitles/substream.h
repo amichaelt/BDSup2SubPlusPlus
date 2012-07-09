@@ -47,12 +47,12 @@ public:
 
     virtual Bitmap &getBitmap() = 0;
 
-    virtual Palette *getPalette() = 0;
+    virtual Palette &getPalette() = 0;
 
     virtual SubPicture *getSubPicture(int index) = 0;
 
     virtual QImage getImage() = 0;
-    virtual QImage getImage(Bitmap *bitmap) = 0;
+    virtual QImage getImage(Bitmap &bitmap) = 0;
 
 protected:
     int numForcedFrames = 0;

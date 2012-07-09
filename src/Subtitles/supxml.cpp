@@ -54,12 +54,12 @@ SupXML::~SupXML()
 
 QImage SupXML::getImage()
 {
-    return bitmap.getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
-QImage SupXML::getImage(Bitmap *bitmap)
+QImage SupXML::getImage(Bitmap &bitmap)
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
 void SupXML::decode(int index)
@@ -72,7 +72,7 @@ void SupXML::decode(int index)
     int width = image.width();
     int height = image.height();
 
-    palette.reset(0);
+    palette = Palette(0, true);
 
     // first try to read image and palette directly from imported image
     if (image.format() == QImage::Format_Indexed8)
@@ -81,17 +81,17 @@ void SupXML::decode(int index)
         if (colorTable.size() < 255 || (image.hasAlphaChannel() && qAlpha(colorTable[255]) == 0))
         {
             // create palette
-            palette.reset(new Palette(256));
+            palette = Palette(256);
             for (int i = 0; i < colorTable.size(); ++i)
             {
                 int alpha = (colorTable[i] >> 24) & 0xff;
                 if (alpha >= subtitleProcessor->getAlphaCrop())
                 {
-                    palette->setARGB(i, colorTable[i]);
+                    palette.setARGB(i, colorTable[i]);
                 }
                 else
                 {
-                    palette->setARGB(i, 0);
+                    palette.setARGB(i, 0);
                 }
             }
             bitmap = Bitmap(image.width(), image.height(), image);
@@ -99,7 +99,7 @@ void SupXML::decode(int index)
     }
 
     // if this failed, assume RGB image and quantize palette
-    if (palette.isNull())
+    if (palette.getSize() == 0)
     {
         // quantize image
         QuantizeFilter qf;
@@ -112,24 +112,24 @@ void SupXML::decode(int index)
             size = 255;
         }
         // create palette
-        palette.reset(new Palette(256));
+        palette= Palette(256);
         for (int i = 0; i < size; ++i)
         {
             int alpha = qAlpha(ct[i]);
             if (alpha >= subtitleProcessor->getAlphaCrop())
             {
-                palette->setARGB(i, ct[i]);
+                palette.setARGB(i, ct[i]);
             }
             else
             {
-                palette->setARGB(i, 0);
+                palette.setARGB(i, 0);
             }
         }
     }
 
-    primaryColorIndex = bitmap.getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
+    primaryColorIndex = bitmap.getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
     // crop
-    const QRect& bounds = bitmap.getBounds(*palette, subtitleProcessor->getAlphaCrop());
+    const QRect& bounds = bitmap.getBounds(palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
         bounds.bottomRight().x() < (bitmap.getWidth() - 1) ||
         bounds.bottomRight().y() < (bitmap.getHeight() - 1))

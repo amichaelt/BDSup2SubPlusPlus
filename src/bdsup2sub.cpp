@@ -1246,7 +1246,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                     int red = s[0].toInt();
                     int green = s[1].toInt();
                     int blue = s[2].toInt();
-                    importedPalette->setColor(c + 1, QColor(red, green, blue, 0));
+                    importedPalette.setColor(c + 1, QColor(red, green, blue, 0));
                 }
             }
             outStream << QString("OPTION: Loaded palette from %1").arg(value) << endl;
@@ -1924,8 +1924,8 @@ void BDSup2Sub::editDefaultDVDPalette_triggered()
 
     for (int i = 0; i < colorNames.size(); ++i)
     {
-        colors.push_back(subtitleProcessor->getCurrentDVDPalette()->getColor(i));
-        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette()->getColor(i));
+        colors.push_back(subtitleProcessor->getCurrentDVDPalette().getColor(i));
+        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette().getColor(i));
     }
 
     colorDialog.setParameters(colorNames, colors, defaultColors);
@@ -1936,7 +1936,7 @@ void BDSup2Sub::editDefaultDVDPalette_triggered()
         colorPath = colorDialog.getPath();
         for (int i = 0; i < colors.size(); ++i)
         {
-            subtitleProcessor->getCurrentDVDPalette()->setColor(i, colors[i]);
+            subtitleProcessor->getCurrentDVDPalette().setColor(i, colors[i]);
         }
         if (subtitleProcessor->getNumberOfFrames() > 0)
         {
@@ -1968,8 +1968,8 @@ void BDSup2Sub::editImportedDVDPalette_triggered()
 
     for (int i = 0; i < 16; ++i)
     {
-        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette()->getColor(i));
-        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette()->getColor(i));
+        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette().getColor(i));
+        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette().getColor(i));
     }
 
     colorDialog.setParameters(colorNames, colors, defaultColors);
@@ -1978,10 +1978,10 @@ void BDSup2Sub::editImportedDVDPalette_triggered()
     {
         colors = colorDialog.getColors();
         colorPath = colorDialog.getPath();
-        Palette* palette = new Palette(colors.size(), true);
+        Palette palette(colors.size(), true);
         for (int i = 0; i < colors.size(); ++i)
         {
-            palette->setColor(i, colors[i]);
+            palette.setColor(i, colors[i]);
         }
         subtitleProcessor->setCurrentSrcDVDPalette(palette);
         if (subtitleProcessor->getNumberOfFrames() > 0)
@@ -2090,31 +2090,6 @@ void BDSup2Sub::on_subtitleNumberComboBox_currentIndexChanged(int index)
     refreshTrgFrame(subIndex);
 }
 
-void BDSup2Sub::on_subtitleNumberComboBox_editTextChanged(const QString &index)
-{
-    if (index.isEmpty() || index.isNull())
-    {
-        ui->subtitleNumberComboBox->setPalette(*errorBackground);
-        return;
-    }
-    ui->subtitleNumberComboBox->setPalette(*okBackground);
-
-    ui->subtitleNumberComboBox->blockSignals(true);
-    subIndex = index.toInt() - 1;
-    try
-    {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
-    }
-    catch (QString e)
-    {
-        errorDialog(e);
-        return;
-    }
-    refreshSrcFrame(subIndex);
-    refreshTrgFrame(subIndex);
-    ui->subtitleNumberComboBox->blockSignals(false);
-}
-
 void BDSup2Sub::openConversionSettings()
 {
     Resolution oldResolution = subtitleProcessor->getOutputResolution();
@@ -2212,31 +2187,6 @@ void BDSup2Sub::on_hiMedThresholdComboBox_currentIndexChanged(int index)
     ui->hiMedThresholdComboBox->setCurrentIndex(idx);
 }
 
-void BDSup2Sub::on_hiMedThresholdComboBox_editTextChanged(const QString &arg1)
-{
-    QVector<int> lumaThreshold = subtitleProcessor->getLuminanceThreshold();
-    if (arg1.isEmpty() || arg1.isNull() || arg1.toInt() <= lumaThreshold[1])
-    {
-        ui->hiMedThresholdComboBox->setPalette(*errorBackground);
-        return;
-    }
-    ui->hiMedThresholdComboBox->setPalette(*okBackground);
-    ui->hiMedThresholdComboBox->blockSignals(true);
-    lumaThreshold[0] = arg1.toInt();
-    subtitleProcessor->setLuminanceThreshold(lumaThreshold);
-    try
-    {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
-    }
-    catch (QString e)
-    {
-        errorDialog(e);
-        return;
-    }
-    refreshTrgFrame(subIndex);
-    ui->hiMedThresholdComboBox->blockSignals(false);
-}
-
 void BDSup2Sub::on_medLowThresholdComboBox_currentIndexChanged(int index)
 {
     int idx = index;
@@ -2272,31 +2222,6 @@ void BDSup2Sub::on_medLowThresholdComboBox_currentIndexChanged(int index)
     ui->medLowThresholdComboBox->setCurrentIndex(idx);
 }
 
-void BDSup2Sub::on_medLowThresholdComboBox_editTextChanged(const QString &arg1)
-{
-    QVector<int> lumaThreshold = subtitleProcessor->getLuminanceThreshold();
-    if (arg1.isEmpty() || arg1.isNull() || arg1.toInt() >= lumaThreshold[0])
-    {
-        ui->medLowThresholdComboBox->setPalette(*errorBackground);
-        return;
-    }
-    ui->medLowThresholdComboBox->setPalette(*okBackground);
-    ui->medLowThresholdComboBox->blockSignals(true);
-    lumaThreshold[1] = arg1.toInt();
-    subtitleProcessor->setLuminanceThreshold(lumaThreshold);
-    try
-    {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
-    }
-    catch (QString e)
-    {
-        errorDialog(e);
-        return;
-    }
-    refreshTrgFrame(subIndex);
-    ui->medLowThresholdComboBox->blockSignals(false);
-}
-
 void BDSup2Sub::on_alphaThresholdComboBox_currentIndexChanged(int index)
 {
     subtitleProcessor->setAlphaThreshold(index);
@@ -2310,29 +2235,6 @@ void BDSup2Sub::on_alphaThresholdComboBox_currentIndexChanged(int index)
         return;
     }
     refreshTrgFrame(subIndex);
-}
-
-void BDSup2Sub::on_alphaThresholdComboBox_editTextChanged(const QString &arg1)
-{
-    if (arg1.isEmpty() || arg1.isNull())
-    {
-        ui->alphaThresholdComboBox->setPalette(*errorBackground);
-        return;
-    }
-    ui->alphaThresholdComboBox->setPalette(*okBackground);
-    ui->alphaThresholdComboBox->blockSignals(true);
-    subtitleProcessor->setAlphaThreshold(arg1.toInt());
-    try
-    {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
-    }
-    catch (QString e)
-    {
-        errorDialog(e);
-        return;
-    }
-    refreshTrgFrame(subIndex);
-    ui->alphaThresholdComboBox->blockSignals(false);
 }
 
 void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)

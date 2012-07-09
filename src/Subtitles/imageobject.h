@@ -27,12 +27,26 @@ class ImageObjectFragment;
 class ImageObject
 {
 public:
-    ImageObject();
+    int paletteID() { return paletteId; }
+    void setPaletteID(int id) { paletteId = id; }
+    int bufferSize() { return bufSize; }
+    void setBufferSize(int size) { bufSize = size; }
+    int width() { return w; }
+    void setWidth(int width) { w = width; }
+    int height() { return h; }
+    void setHeight(int height) { h = height; }
+    int xOffset() { return xOfs; }
+    void setXOffset(int offset) { xOfs = offset; }
+    int yOffset() { return yOfs; }
+    void setYOffset(int offset) { yOfs = offset; }
 
-    int paletteID = 0;
-    int bufferSize = 0;
-    int width = 0;
-    int height = 0;
+    QVector<ImageObjectFragment*> getFragmentList() { return fragmentList; }
+
+private:
+    int paletteId = 0;
+    int bufSize = 0;
+    int w = 0;
+    int h = 0;
     int xOfs = 0;
     int yOfs = 0;
 

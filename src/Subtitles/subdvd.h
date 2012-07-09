@@ -42,9 +42,9 @@ public:
     ~SubDVD();
 
     void decode(int index);
-    void setSrcPalette(Palette *palette);
+    void setSrcPalette(Palette &palette);
     void readIdx(int idxToRead = -1);
-    void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette* palette);
+    void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette &palette);
     void readSubFrame(SubPictureDVD* pic, long endOfs);
     void readAllSubFrames();
     void setTimeOffset(QString value) { timeOffset = value; }
@@ -64,11 +64,11 @@ public:
     Bitmap &getBitmap() { return bitmap; }
 
     QImage getImage();
-    QImage getImage(Bitmap *bitmap);
+    QImage getImage(Bitmap &bitmap);
 
-    Palette *getPalette() { return palette.data(); }
-    Palette *getSrcPalette() { return srcPalette.data(); }
-    Palette* decodePalette(SubPictureDVD* pic, Palette* palette);
+    Palette &getPalette() { return palette; }
+    Palette &getSrcPalette() { return srcPalette; }
+    Palette &decodePalette(SubPictureDVD* pic, Palette &palette);
 
     SubPicture *getSubPicture(int index);
 

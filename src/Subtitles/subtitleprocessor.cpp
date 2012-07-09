@@ -44,6 +44,8 @@
 #include <cmath>
 
 SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool loadSettings) :
+    defaultDVDPalette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true),
+    currentDVDPalette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true),
     fpsSrc(FPS_24P),
     fpsTrg(FPS_PAL),
     paletteMode(PaletteMode::KEEP_EXISTING),
@@ -57,8 +59,6 @@ SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool 
 {
     this->parent = parent;
     this->settings = settings;
-    defaultDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
-    currentDVDPalette = new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true);
 
     if (settings != 0 && loadSettings)
     {
@@ -261,13 +261,14 @@ QImage SubtitleProcessor::getTrgImagePatched(SubPicture *subPicture)
 {
     if (!subPicture->erasePatch.isEmpty())
     {
-        Bitmap* trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
+        Bitmap trgBitmapPatched(trgBitmapUnpatched);
         int color = trgPal.getTransparentIndex();
         for (auto erasePatch : subPicture->erasePatch)
         {
-            trgBitmapPatched->fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, color);
+            trgBitmapPatched.fillRect(erasePatch->x(), erasePatch->y(), erasePatch->width(),
+                                      erasePatch->height(), color);
         }
-        return trgBitmapPatched->getImage(trgPal);
+        return trgBitmapPatched.getImage(trgPal);
     }
     else
     {
@@ -694,10 +695,10 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         double fy = (factY * fsYNew) / fsYOld;
         for (auto ep : subPictures[i]->erasePatch)
         {
-            ep->x = (int)((ep->x * fx) + 0.5);
-            ep->y = (int)((ep->y * fy) + 0.5);
-            ep->w = (int)((ep->w * fx) + 0.5);
-            ep->h = (int)((ep->h * fy) + 0.5);
+            ep->setX((int)((ep->x() * fx) + 0.5));
+            ep->setY((int)((ep->y() * fy) + 0.5));
+            ep->setWidth((int)((ep->width() * fx) + 0.5));
+            ep->setHeight((int)((ep->height() * fy) + 0.5));
         }
     }
 
@@ -1032,7 +1033,7 @@ void SubtitleProcessor::writeSub(QString filename)
                 {
                     supBD = QSharedPointer<SupBD>(new SupBD("", this));
                 }
-                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, &trgPal);
+                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
             }
             else
@@ -1060,7 +1061,7 @@ void SubtitleProcessor::writeSub(QString filename)
         importedDVDPalette = false;
     }
 
-    Palette* trgPallete = 0;
+    Palette trgPallete(0, true);
     if (outMode == OutputMode::VOBSUB)
     {
         // VobSub - write IDX
@@ -1114,7 +1115,7 @@ void SubtitleProcessor::writeSub(QString filename)
     }
 
     // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
-    if (trgPallete != 0 && writePGCEditPal)
+    if (trgPallete.getSize() != 0 && writePGCEditPal)
     {
         QString fnp = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".txt";
 
@@ -1286,11 +1287,6 @@ void SubtitleProcessor::moveAllToBounds()
     }
 }
 
-void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax)
-{
-    convertSup(index, displayNumber, displayMax, false);
-}
-
 void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax, bool skipScaling)
 {
     int width, height;
@@ -1338,7 +1334,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                 }
                 else
                 {
-                    targetBitmap = substream->getBitmap().convertLm(*substream->getPalette(), alphaThreshold, luminanceThreshold); // reduce palette
+                    targetBitmap = substream->getBitmap().convertLm(substream->getPalette(), alphaThreshold, luminanceThreshold); // reduce palette
                 }
             }
             else
@@ -1349,11 +1345,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     // keep palette
                     if (scaleFilter != 0)
                     {
-                        targetBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter);
+                        targetBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, substream->getPalette(), *scaleFilter);
                     }
                     else
                     {
-                        targetBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette());
+                        targetBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, substream->getPalette());
                     }
                 }
                 else
@@ -1361,11 +1357,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     // reduce palette
                     if (scaleFilter != 0)
                     {
-                        targetBitmap = substream->getBitmap().scaleFilterLm(trgWidth, trgHeight, *substream->getPalette(), alphaThreshold, luminanceThreshold, *scaleFilter);
+                        targetBitmap = substream->getBitmap().scaleFilterLm(trgWidth, trgHeight, substream->getPalette(), alphaThreshold, luminanceThreshold, *scaleFilter);
                     }
                     else
                     {
-                        targetBitmap = substream->getBitmap().scaleBilinearLm(trgWidth, trgHeight, *substream->getPalette(), alphaThreshold, luminanceThreshold);
+                        targetBitmap = substream->getBitmap().scaleBilinearLm(trgWidth, trgHeight, substream->getPalette(), alphaThreshold, luminanceThreshold);
                     }
                 }
             }
@@ -1386,11 +1382,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     // keep palette
                     if (scaleFilter != 0)
                     {
-                        targetBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter);
+                        targetBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, substream->getPalette(), *scaleFilter);
                     }
                     else
                     {
-                        targetBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette());
+                        targetBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, substream->getPalette());
                     }
                 }
                 else
@@ -1400,11 +1396,11 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     PaletteBitmap paletteBitmap;
                     if (scaleFilter != 0)
                     {
-                        paletteBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter, dither);
+                        paletteBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, substream->getPalette(), *scaleFilter, dither);
                     }
                     else
                     {
-                        paletteBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette(), dither);
+                        paletteBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, substream->getPalette(), dither);
                     }
                     targetBitmap = paletteBitmap.bitmap;
                     targetPalette = &paletteBitmap.palette;
@@ -1413,11 +1409,12 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
         }
         if (!picTrg->erasePatch.isEmpty())
         {
-            trgBitmapUnpatched = new Bitmap(targetBitmap);
+            trgBitmapUnpatched = Bitmap(targetBitmap);
             int col = targetPalette.getTransparentIndex();
             for (auto erasePatch : picTrg->erasePatch)
             {
-                targetBitmap.fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, col);
+                targetBitmap.fillRect(erasePatch->x(), erasePatch->y(), erasePatch->width(),
+                                      erasePatch->height(), col);
             }
         }
         else
@@ -1439,17 +1436,17 @@ void SubtitleProcessor::determineFramePalette(int index)
     if ((inMode != InputMode::VOBSUB && inMode != InputMode::SUPIFO) || paletteMode != PaletteMode::KEEP_EXISTING)
     {
         // get the primary color from the source palette
-        QRgb rgbSrc(substream->getPalette()->getRGB(substream->getPrimaryColorIndex()));
+        QRgb rgbSrc(substream->getPalette().getRGB(substream->getPrimaryColorIndex()));
 
         // match with primary color from 16 color target palette
         // note: skip index 0 , primary colors at even positions
         // special treatment for index 1:  white
-        Palette* trgPalette = currentDVDPalette;
+        Palette trgPalette = currentDVDPalette;
         int minDistance = 0xffffff; // init > 0xff*0xff*3 = 0x02fa03
         int colIdx = 0;
-        for (int idx = 1; idx < trgPalette->getSize(); idx += 2 )
+        for (int idx = 1; idx < trgPalette.getSize(); idx += 2 )
         {
-            QRgb rgb(trgPalette->getRGB(idx));
+            QRgb rgb(trgPalette.getRGB(idx));
             // distance vector (skip sqrt)
             int rd = qRed(rgbSrc) - qRed(rgb);
             int gd = qGreen(rgbSrc) - qGreen(rgb);
@@ -1495,7 +1492,7 @@ void SubtitleProcessor::determineFramePalette(int index)
     {
         SubstreamDVD* substreamDVD;
         // use palette from loaded VobSub or SUP/IFO
-        Palette* miniPal = new Palette(4, true);
+        Palette miniPal(4, true);
         QVector<int> alpha;
         QVector<int> paletteFrame;
 
@@ -1516,12 +1513,12 @@ void SubtitleProcessor::determineFramePalette(int index)
             int a = (alpha[i] * 0xff) / 0xf;
             if (a >= alphaCrop)
             {
-                miniPal->setARGB(i, currentSourceDVDPalette->getARGB(paletteFrame[i]));
-                miniPal->setAlpha(i, a);
+                miniPal.setARGB(i, currentSourceDVDPalette.getARGB(paletteFrame[i]));
+                miniPal.setAlpha(i, a);
             }
             else
             {
-                miniPal->setARGB(i, 0);
+                miniPal.setARGB(i, 0);
             }
         }
         subVobTrg->alpha = alpha;
@@ -1950,7 +1947,7 @@ void SubtitleProcessor::readXml()
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion
-    int maxLum = substream->getPalette()->getY()[substream->getPrimaryColorIndex()] & 0xff;
+    int maxLum = substream->getPalette().getY()[substream->getPrimaryColorIndex()] & 0xff;
     if (maxLum > 30)
     {
         luminanceThreshold.replace(0, (maxLum * 2) / 3);
@@ -2059,20 +2056,20 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
 
     substream->decode(0);
     subVobTrg = new SubPictureDVD;
-    defaultSourceDVDPalette = substreamDVD->getSrcPalette();
-    currentSourceDVDPalette = new Palette(defaultSourceDVDPalette);
+    defaultSourceDVDPalette = Palette(substreamDVD->getSrcPalette());
+    currentSourceDVDPalette = Palette(defaultSourceDVDPalette);
 
     int primaryColorIndex = substream->getPrimaryColorIndex();
-    int yMax = substream->getPalette()->getY()[primaryColorIndex] & 0xff;
+    int yMax = substream->getPalette().getY()[primaryColorIndex] & 0xff;
 
     if (yMax > 10)
     {
         int yMin = yMax;
-        Palette* palette = substream->getPalette();
+        Palette palette = substream->getPalette();
         for (int i = 0; i < 4; ++i)
         {
-            int y = palette->getY()[i] & 0xff;
-            int a = palette->getAlpha(i);
+            int y = palette.getY()[i] & 0xff;
+            int a = palette.getAlpha(i);
             if (y < yMin && a > alphaThreshold)
             {
                 yMin = y;
@@ -2162,7 +2159,7 @@ void SubtitleProcessor::readSup()
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion
-    int maxLum = substream->getPalette()->getY()[substream->getPrimaryColorIndex()] & 0xff;
+    int maxLum = substream->getPalette().getY()[substream->getPrimaryColorIndex()] & 0xff;
     if (maxLum > 30)
     {
         luminanceThreshold.replace(0, (maxLum * 2) / 3);
@@ -2222,7 +2219,7 @@ int SubtitleProcessor::countIncluded()
     return n;
 }
 
-void SubtitleProcessor::writePGCEditPalette(QString filename, Palette *palette)
+void SubtitleProcessor::writePGCEditPalette(QString filename, Palette &palette)
 {
     QScopedPointer<QFile> out(new QFile(filename));
     if (!out->open(QIODevice::WriteOnly | QIODevice::Text))
@@ -2230,9 +2227,9 @@ void SubtitleProcessor::writePGCEditPalette(QString filename, Palette *palette)
         throw QString("PGCEdit Palette file can not be opened for writing.");
     }
     out->write("# Palette file for PGCEdit - colors given as R,G,B components (0..255)\n");
-    for (int i = 0; i < palette->getSize(); ++i)
+    for (int i = 0; i < palette.getSize(); ++i)
     {
-        QRgb rgb = palette->getRGB(i);
+        QRgb rgb = palette.getRGB(i);
         out->write(QString("Color " + QString::number(i) + "=" + QString::number(qRed(rgb)) +
                            ", " + QString::number(qGreen(rgb)) + ", " + QString::number(qBlue(rgb)) + "\n").toAscii());
     }

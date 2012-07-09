@@ -25,14 +25,11 @@
 class BiCubicFilter : public Filter
 {
 public:
-    BiCubicFilter();
-    BiCubicFilter(float a);
-
     float getRadius() { return 2.0f; }
     float value(float value);
 
 protected:
-    float a;
+    float a = -0.5;
 };
 
 #endif // BICUBICFILTER_H

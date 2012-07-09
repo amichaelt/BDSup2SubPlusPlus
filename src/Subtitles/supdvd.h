@@ -40,9 +40,9 @@ public:
 
     void decode(int index);
     void readIfo();
-    void writeIfo(QString filename, SubPicture *subPicture, Palette *palette);
+    void writeIfo(QString filename, SubPicture *subPicture, Palette &palette);
     void readAllSupFrames();
-    void setSrcPalette(Palette *palette);
+    void setSrcPalette(Palette &palette);
 
     int getLanguageIdx() { return languageIdx; }
     int getPrimaryColorIndex() { return primaryColorIndex; }
@@ -57,11 +57,11 @@ public:
 
     Bitmap &getBitmap() { return bitmap; }
 
-    Palette *getPalette() { return palette.data(); }
-    Palette *getSrcPalette() { return srcPalette.data(); }
+    Palette &getPalette() { return palette; }
+    Palette &getSrcPalette() { return srcPalette; }
 
     QImage getImage();
-    QImage getImage(Bitmap *bitmap);
+    QImage getImage(Bitmap &bitmap);
 
     QVector<uchar> createSupFrame(SubPictureDVD* subPicture, Bitmap &bitmap);
     QVector<int> getFrameAlpha(int index);

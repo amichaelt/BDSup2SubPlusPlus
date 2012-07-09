@@ -21,6 +21,9 @@
 #define SUPHD_H
 
 #include "substream.h"
+#include "bitmap.h"
+#include "palette.h"
+
 #include <QObject>
 #include <QString>
 #include <QVector>
@@ -51,12 +54,12 @@ public:
     long getStartOffset(int index);
     bool isForced(int index) { return false; }
 
-    Bitmap &getBitmap() { return *bitmap; }
+    Bitmap &getBitmap() { return bitmap; }
 
-    Palette *getPalette() { return palette.data(); }
+    Palette &getPalette() { return palette; }
 
     QImage getImage();
-    QImage getImage(Bitmap *bitmap);
+    QImage getImage(Bitmap &bitmap);
 
     SubPicture *getSubPicture(int index);
 
@@ -67,9 +70,9 @@ signals:
 private:
     int primaryColorIndex = 0;
 
-    QScopedPointer<Bitmap> bitmap;
+    Bitmap bitmap;
 
-    QScopedPointer<Palette> palette;
+    Palette palette;
 
     QScopedPointer<FileBuffer> fileBuffer;
 
@@ -80,11 +83,11 @@ private:
     SubtitleProcessor* subtitleProcessor = 0;
 
     void decode(SubPictureHD* subPicture);
-    void decodeLine(QImage* trg, int trgOfs, int width, int maxPixels, BitStream* src);
+    void decodeLine(QImage &trg, int trgOfs, int width, int maxPixels, BitStream* src);
 
-    Bitmap* decodeImage(SubPictureHD* subPicture, int transparentIndex);
+    Bitmap decodeImage(SubPictureHD* subPicture, int transparentIndex);
 
-    Palette* decodePalette(SubPictureHD* subPicture);
+    Palette decodePalette(SubPictureHD* subPicture);
 };
 
 #endif // SUPHD_H

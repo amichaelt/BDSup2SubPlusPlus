@@ -31,7 +31,7 @@ FramePaletteDialog::FramePaletteDialog(QWidget *parent, SubtitleProcessor* subti
     ui->setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
     this->subtitleProcessor = subtitleProcessor;
-    Palette* palette = this->subtitleProcessor->getCurrentSrcDVDPalette();
+    Palette palette = this->subtitleProcessor->getCurrentSrcDVDPalette();
     ui->color1ComboBox->blockSignals(true);
     ui->color2ComboBox->blockSignals(true);
     ui->color3ComboBox->blockSignals(true);
@@ -40,11 +40,11 @@ FramePaletteDialog::FramePaletteDialog(QWidget *parent, SubtitleProcessor* subti
     ui->alpha2ComboBox->blockSignals(true);
     ui->alpha3ComboBox->blockSignals(true);
     ui->alpha4ComboBox->blockSignals(true);
-    for (int i = 0; i < palette->getSize(); ++i)
+    for (int i = 0; i < palette.getSize(); ++i)
     {
-        QPixmap* pixmap = new QPixmap(12, 12);
-        pixmap->fill(QColor(palette->getARGB(i)));
-        colorIcons.insert(i, QIcon(*pixmap));
+        QPixmap &&pixmap = QPixmap(12, 12);
+        pixmap.fill(QColor(palette.getARGB(i)));
+        colorIcons.insert(i, QIcon(pixmap));
         ui->color1ComboBox->addItem(colorIcons[i], colorNames[i]);
         ui->color2ComboBox->addItem(colorIcons[i], colorNames[i]);
         ui->color3ComboBox->addItem(colorIcons[i], colorNames[i]);

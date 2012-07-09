@@ -19,10 +19,6 @@
 
 #include "hermitefilter.h"
 
-HermiteFilter::HermiteFilter()
-{
-}
-
 float HermiteFilter::value(float value)
 {
     if (value < 0.0f)

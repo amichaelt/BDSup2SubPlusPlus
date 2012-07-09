@@ -40,20 +40,20 @@ SubPictureBD::SubPictureBD(SubPictureBD *other) :
 
 int SubPictureBD::getImageWidth()
 {
-    return imageObjectList.at(objectID)->width;
+    return imageObjectList.at(objectID)->width();
 }
 
 int SubPictureBD::getImageHeight()
 {
-    return imageObjectList.at(objectID)->height;
+    return imageObjectList.at(objectID)->height();
 }
 
 int SubPictureBD::getOfsX()
 {
-    return imageObjectList.at(objectID)->xOfs;
+    return imageObjectList.at(objectID)->xOffset();
 }
 
 int SubPictureBD::getOfsY()
 {
-    return imageObjectList.at(objectID)->yOfs;
+    return imageObjectList.at(objectID)->yOffset();
 }

@@ -19,10 +19,6 @@
 
 #include "bsplinefilter.h"
 
-BSplineFilter::BSplineFilter()
-{
-}
-
 float BSplineFilter::value(float value)
 {
     if (value < 0.0f)

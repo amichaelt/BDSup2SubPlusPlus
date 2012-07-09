@@ -19,10 +19,6 @@
 
 #include "trianglefilter.h"
 
-TriangleFilter::TriangleFilter()
-{
-}
-
 float TriangleFilter::value(float value)
 {
     if (value < 0.0f)

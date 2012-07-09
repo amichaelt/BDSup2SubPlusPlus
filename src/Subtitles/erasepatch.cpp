@@ -23,10 +23,10 @@ ErasePatch::ErasePatch()
 {
 }
 
-ErasePatch::ErasePatch(int xp, int yp, int wp, int hp):
-    x(xp),
-    y(yp),
-    w(wp),
-    h(hp)
+ErasePatch::ErasePatch(int x, int y, int width, int height):
+    x1(x),
+    y1(y),
+    w(width),
+    h(height)
 {
 }

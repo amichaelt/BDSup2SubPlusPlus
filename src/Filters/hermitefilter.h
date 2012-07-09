@@ -25,8 +25,6 @@
 class HermiteFilter : public Filter
 {
 public:
-    HermiteFilter();
-
     float getRadius() { return 1.0f; }
     float value(float value);
 };

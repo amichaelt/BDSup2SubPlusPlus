@@ -26,9 +26,7 @@ class Filter;
 class Filters
 {
 public:
-    Filters();
-
-    static Filter* getFilter(ScalingFilters scalingFilter);
+    static Filter *getFilter(ScalingFilters scalingFilter);
 };
 
 #endif // FILTERS_H

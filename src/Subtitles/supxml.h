@@ -20,8 +20,9 @@
 #ifndef SUPXML_H
 #define SUPXML_H
 
-#include "bitmap.h"
 #include "substream.h"
+#include "bitmap.h"
+#include "palette.h"
 
 #include <QObject>
 #include <QFile>
@@ -96,10 +97,10 @@ public:
 
     Bitmap &getBitmap() { return bitmap; }
 
-    Palette *getPalette() { return palette.data(); }
+    Palette &getPalette() { return palette; }
 
     QImage getImage();
-    QImage getImage(Bitmap *bitmap);
+    QImage getImage(Bitmap &bitmap);
 
     QString getLanguage() { return language; }
     QString getPNGname(QString filename, int idx);
@@ -118,7 +119,7 @@ private:
 
     Bitmap bitmap;
 
-    QScopedPointer<Palette> palette;
+    Palette palette;
 
     QScopedPointer<QFile> xmlFile;
 

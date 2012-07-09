@@ -39,12 +39,12 @@ SupDVD::~SupDVD()
 
 QImage SupDVD::getImage()
 {
-    return bitmap.getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
-QImage SupDVD::getImage(Bitmap *bitmap)
+QImage SupDVD::getImage(Bitmap &bitmap)
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
 void SupDVD::decode(int index)
@@ -231,11 +231,11 @@ void SupDVD::readIfo()
         int y  = fileBuffer->getByte(index + 0xA4 + 4 * i + 1) & 0xff;
         int cb = fileBuffer->getByte(index + 0xA4 + 4 * i + 2) & 0xff;
         int cr = fileBuffer->getByte(index + 0xA4 + 4 * i + 3) & 0xff;
-        srcPalette->setYCbCr(i, y, cb, cr);
+        srcPalette.setYCbCr(i, y, cb, cr);
     }
 }
 
-void SupDVD::writeIfo(QString filename, SubPicture *subPicture, Palette *palette)
+void SupDVD::writeIfo(QString filename, SubPicture *subPicture, Palette &palette)
 {
     QVector<uchar> buf(0x1800);
     int index = 0;
@@ -290,7 +290,7 @@ void SupDVD::writeIfo(QString filename, SubPicture *subPicture, Palette *palette
     NumberUtil::setByte(buf, index + 0x03, 0x01);                   // Number of Cells
     for (int i = 0; i < 16; ++i)
     {
-        QVector<int> ycbcr = palette->getYCbCr(i);
+        QVector<int> ycbcr = palette.getYCbCr(i);
         NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 1, ycbcr[0]);
         NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 2, ycbcr[1]);
         NumberUtil::setByte(buf, index + 0xA4 + (4 * i) + 3, ycbcr[2]);
@@ -333,9 +333,9 @@ void SupDVD::readAllSupFrames()
     subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
 }
 
-void SupDVD::setSrcPalette(Palette *palette)
+void SupDVD::setSrcPalette(Palette &palette)
 {
-    srcPalette.reset(palette);
+    srcPalette = palette;
 }
 
 QVector<uchar> SupDVD::createSupFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
@@ -499,8 +499,8 @@ long SupDVD::readSupFrame(long ofs)
     ofs += 2;
     pic->rleFragments = QVector<ImageObjectFragment*>();
     rleFrag = new ImageObjectFragment();
-    rleFrag->imageBufferOfs = ofs;
-    rleFrag->imagePacketSize = rleSize;
+    rleFrag->setImageBufferOffset(ofs);
+    rleFrag->setImagePacketSize(rleSize);
     pic->rleFragments.push_back(rleFrag);
     pic->rleSize = rleSize;
 

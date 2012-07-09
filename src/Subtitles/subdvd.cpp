@@ -38,7 +38,6 @@ SubDVD::SubDVD(QString subFileName, QString idxFileName, SubtitleProcessor* subt
     this->subtitleProcessor = subtitleProcessor;
     this->subFileName = subFileName;
     this->idxFileName = idxFileName;
-    palette.reset(new Palette(4, true));
 }
 
 SubDVD::~SubDVD()
@@ -47,12 +46,12 @@ SubDVD::~SubDVD()
 
 QImage SubDVD::getImage()
 {
-    return bitmap.getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
-QImage SubDVD::getImage(Bitmap *bitmap)
+QImage SubDVD::getImage(Bitmap &bitmap)
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
 void SubDVD::decode(int index)
@@ -67,9 +66,9 @@ void SubDVD::decode(int index)
     }
 }
 
-void SubDVD::setSrcPalette(Palette *palette)
+void SubDVD::setSrcPalette(Palette &palette)
 {
-    srcPalette.reset(palette);
+    srcPalette = palette;
 }
 
 int SubDVD::getNumFrames()
@@ -229,12 +228,12 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             ctrlHeader.replace(ctrlHeaderCopied, (uchar)fileBuffer->getByte(ctrlOfs + i + copied));
             ++ctrlHeaderCopied;
         }
-        rleFrag = new ImageObjectFragment();
-        rleFrag->imageBufferOfs = ofs;
-        rleFrag->imagePacketSize = (((length - headerSize) - diff) + packHeaderSize);
+        rleFrag = new ImageObjectFragment;
+        rleFrag->setImageBufferOffset(ofs);
+        rleFrag->setImagePacketSize(((length - headerSize) - diff) + packHeaderSize);
         pic->rleFragments.push_back(rleFrag);
 
-        rleBufferFound += rleFrag->imagePacketSize;
+        rleBufferFound += rleFrag->imagePacketSize();
 
         if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
         {
@@ -929,7 +928,7 @@ void SubDVD::readIdx(int idxToRead)
                     throw QString("Illegal palette entry: %1").arg(paletteValues[i]);
                 }
                 color = temp;
-                srcPalette->setARGB(i, color);
+                srcPalette.setARGB(i, color);
             }
             continue;
         }
@@ -1093,7 +1092,8 @@ void SubDVD::readIdx(int idxToRead)
     emit maxProgressChanged(subPictures.size());
 }
 
-void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> offsets, QVector<int> timestamps, Palette *palette)
+void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> offsets,
+                      QVector<int> timestamps, Palette &palette)
 {
     QScopedPointer<QFile> out(new QFile(filename));
     if (!out->open(QIODevice::WriteOnly | QIODevice::Text))
@@ -1134,12 +1134,12 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     out->write("# The palette of the generated file\n");
     out->write("palette: ");
     //Palette pal = Core.getCurrentDVDPalette();
-    for (int i = 0; i < palette->getSize(); ++i)
+    for (int i = 0; i < palette.getSize(); ++i)
     {
-        QRgb val = palette->getRGB(i);
+        QRgb val = palette.getRGB(i);
         QString value = QString("%1").arg(QString::number(val, 16), 6, QChar('0'));
         out->write(value.toAscii());
-        if (i != palette->getSize() - 1)
+        if (i != palette.getSize() - 1)
         {
             out->write(", ");
         }

@@ -41,7 +41,6 @@ SOURCES += main.cpp\
     Subtitles/suphd.cpp \
     Subtitles/supbd.cpp \
     Subtitles/subpicturebd.cpp \
-    Subtitles/imageobject.cpp \
     Subtitles/paletteinfo.cpp \
     Subtitles/substreamdvd.cpp \
     Subtitles/subpicturehd.cpp \

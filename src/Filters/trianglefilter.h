@@ -25,8 +25,6 @@
 class TriangleFilter : public Filter
 {
 public:
-    TriangleFilter();
-
     float getRadius() { return 1.0f; }
     float value(float value);
 };

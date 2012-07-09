@@ -35,16 +35,16 @@ Bitmap::Bitmap()
 
 Bitmap::Bitmap(Bitmap &other) :
     width(other.width),
-    height(other.height)
+    height(other.height),
+    img(other.img)
 {
-    img = other.img;
 }
 
 Bitmap::Bitmap(Bitmap *other) :
     width(other->width),
-    height(other->height)
+    height(other->height),
+    img(other->img)
 {
-    img = other->img;
 }
 
 Bitmap::Bitmap(int width, int height) :
@@ -66,10 +66,6 @@ Bitmap::Bitmap(int width, int height, QImage image) :
     width(width),
     height(height),
     img(image)
-{
-}
-
-Bitmap::~Bitmap()
 {
 }
 
@@ -349,13 +345,13 @@ PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter
         size = 255;
     }
     // create palette
-    Palette* trgPal = new Palette(256);
+    Palette trgPal(256);
     for (int i = 0; i < size; ++i)
     {
-        trgPal->setARGB(i,ct[i]);
+        trgPal.setARGB(i,ct[i]);
     }
 
-    PaletteBitmap bitmap(bm, *trgPal);
+    PaletteBitmap bitmap(bm, trgPal);
     return bitmap;
 }
 
@@ -628,12 +624,12 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
         size = 255;
     }
     // create palette
-    Palette* trgPal = new Palette(256);
+    Palette trgPal(256);
     for (int i = 0; i < size; ++i)
     {
-        trgPal->setARGB(i, ct[i]);
+        trgPal.setARGB(i, ct[i]);
     }
-    PaletteBitmap bitmap(bm, *trgPal);
+    PaletteBitmap bitmap(bm, trgPal);
 
     return bitmap;
 }

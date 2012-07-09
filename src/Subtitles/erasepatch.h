@@ -24,10 +24,20 @@ class ErasePatch
 {
 public:
     ErasePatch();
-    ErasePatch(int xp, int yp, int wp, int hp);
+    ErasePatch(int x, int y, int width, int height);
 
-    int x;
-    int y;
+    int x() { return x1; }
+    void setX(int x) { x1 = x; }
+    int y() { return y1; }
+    void setY(int y) { y1 = y; }
+    int width() { return w; }
+    void setWidth(int width) { w = width; }
+    int height() { return h; }
+    void setHeight(int height) { h = height; }
+
+private:
+    int x1;
+    int y1;
     int w;
     int h;
 };

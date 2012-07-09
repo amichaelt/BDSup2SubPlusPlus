@@ -28,9 +28,10 @@
 #include <QImage>
 
 SubstreamDVD::SubstreamDVD() :
-    bitmap(0, 0)
+    bitmap(0, 0),
+    srcPalette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true),
+    palette(4, true)
 {
-    srcPalette.reset(new Palette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true));
 }
 
 SubstreamDVD::~SubstreamDVD()
@@ -41,21 +42,21 @@ SubstreamDVD::~SubstreamDVD()
     }
 }
 
-Palette *SubstreamDVD::decodePalette(SubPictureDVD *pic, Palette *palette, int alphaCrop)
+Palette SubstreamDVD::decodePalette(SubPictureDVD *pic, Palette &palette, int alphaCrop)
 {
-    Palette* miniPalette = new Palette(4, true);
+    Palette miniPalette(4, true);
 
-    for (int i = 0; i < miniPalette->getSize(); ++i)
+    for (int i = 0; i < miniPalette.getSize(); ++i)
     {
         int a = (pic->alpha[i] * 0xff) / 0xf;
         if (a >= alphaCrop)
         {
-            miniPalette->setRGB(i, palette->getColorTable()[pic->pal[i]]);
-            miniPalette->setAlpha(i, a);
+            miniPalette.setRGB(i, palette.getColorTable()[pic->pal[i]]);
+            miniPalette.setAlpha(i, a);
         }
         else
         {
-            miniPalette->setARGB(i, 0);
+            miniPalette.setARGB(i, 0);
         }
     }
     return miniPalette;
@@ -156,7 +157,7 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
     int warnings = 0;
 
     ImageObjectFragment* fragment = pic->rleFragments.at(0);
-    long startOfs = fragment->imageBufferOfs;
+    long startOfs = fragment->imageBufferOffset();
 
     if (width > pic->width || height > pic->height)
     {
@@ -194,15 +195,15 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
     {
         // copy data of all packet to one common buffer
         fragment = pic->rleFragments.at(p);
-        for (int i = 0; i < fragment->imagePacketSize; ++i)
+        for (int i = 0; i < fragment->imagePacketSize(); ++i)
         {
-            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment->imageBufferOfs + i));
+            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment->imageBufferOffset() + i));
         }
-        index += fragment->imagePacketSize;
+        index += fragment->imagePacketSize();
     }
 
-    decodeLine(buf, pic->evenOfs, sizeEven, &bm.getImg(), 0, width,  width * ((height / 2) + (height & 1)));
-    decodeLine(buf, pic->oddOfs, sizeOdd, &bm.getImg(), width + (bm.getImg().bytesPerLine() - width), width, (height / 2) * width);
+    decodeLine(buf, pic->evenOfs, sizeEven, bm.getImg(), 0, width,  width * ((height / 2) + (height & 1)));
+    decodeLine(buf, pic->oddOfs, sizeOdd, bm.getImg(), width + (bm.getImg().bytesPerLine() - width), width, (height / 2) * width);
 
     if (warnings > 0)
     {
@@ -214,10 +215,10 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD *pic, int transIdx)
 
 void SubstreamDVD::decode(SubPictureDVD *pic, SubtitleProcessor* subtitleProcessor)
 {
-    palette.reset(decodePalette(pic, srcPalette.data(), subtitleProcessor->getAlphaCrop()));
-    bitmap = decodeImage(pic, palette->getTransparentIndex());
+    palette = decodePalette(pic, srcPalette, subtitleProcessor->getAlphaCrop());
+    bitmap = decodeImage(pic, palette.getTransparentIndex());
 
-    const QRect &bounds = bitmap.getBounds(*palette, subtitleProcessor->getAlphaCrop());
+    const QRect &bounds = bitmap.getBounds(palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
         bounds.bottomRight().x() < (bitmap.getWidth() - 1) ||
         bounds.bottomRight().y() < (bitmap.getHeight() - 1))
@@ -240,10 +241,11 @@ void SubstreamDVD::decode(SubPictureDVD *pic, SubtitleProcessor* subtitleProcess
         pic->setOfsY(pic->originalY + bounds.topLeft().y());
     }
 
-    primaryColorIndex = bitmap.getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
+    primaryColorIndex = bitmap.getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
 }
 
-void SubstreamDVD::decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage* trg, int trgOfs, int width, int maxPixels)
+void SubstreamDVD::decodeLine(QVector<uchar> src, int srcOfs, int srcLen,
+                              QImage &trg, int trgOfs, int width, int maxPixels)
 {
     QVector<uchar> nibbles(srcLen * 2);
     int b;
@@ -319,13 +321,13 @@ void SubstreamDVD::decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage
         sumPixels += len;
 
 
-        uchar* pixels = trg->bits();
+        uchar* pixels = trg.bits();
         for (int i = 0; i < len; ++i)
         {
             pixels[trgOfs + x] = (uchar)col;
             if (++x >= width)
             {
-                trgOfs += (2 * (width + (trg->bytesPerLine() - width))); // lines are interlaced!
+                trgOfs += (2 * (width + (trg.bytesPerLine() - width))); // lines are interlaced!
                 x = 0;
                 if ((index & 1) == 1)
                 {

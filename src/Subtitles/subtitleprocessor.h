@@ -38,7 +38,6 @@ class SupHD;
 class SupBD;
 class SubPictureDVD;
 class SubPicture;
-class QImage;
 class Filter;
 
 enum class MoveModeX : int;
@@ -267,13 +266,14 @@ public:
     QWidget* parent;
     QSettings* settings;
 
+    void convertSup(int index, int displayNumber, int displayMax, bool skipScaling = false);
     void setActive(bool value) { isActive = value; }
     QVector<QVector<QString>>& getLanguages() { return languages; }
-    Palette* getDefaultDVDPalette() { return defaultDVDPalette; }
-    Palette* getCurrentDVDPalette() { return currentDVDPalette; }
-    Palette* getCurrentSrcDVDPalette() { return currentSourceDVDPalette; }
-    void setCurrentSrcDVDPalette(Palette* value) { currentSourceDVDPalette = value; }
-    Palette* getDefaultSrcDVDPalette() { return defaultSourceDVDPalette; }
+    Palette &getDefaultDVDPalette() { return defaultDVDPalette; }
+    Palette &getCurrentDVDPalette() { return currentDVDPalette; }
+    Palette &getCurrentSrcDVDPalette() { return currentSourceDVDPalette; }
+    void setCurrentSrcDVDPalette(Palette &value) { currentSourceDVDPalette = value; }
+    Palette &getDefaultSrcDVDPalette() { return defaultSourceDVDPalette; }
     void setCineBarFactor(double value) { cineBarFactor = value; }
     int getMoveOffsetX() { return moveOffsetX; }
     void setMoveOffsetX(int value) { moveOffsetX = value; }
@@ -399,7 +399,7 @@ public:
     void setSwapCrCb(bool value) { swapCrCb = value; }
     ScalingFilters getScalingFilter() { return scalingFilter; }
     void setScalingFilter(ScalingFilters value);
-    Filter* scaleFilter;
+    Filter *scaleFilter;
     QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     int getLanguageIdx() { return languageIdx; }
     int getLanguageIdxRead() { return languageIdxRead; }
@@ -424,8 +424,6 @@ public:
 
     void moveAllToBounds();
     void moveToBounds(SubPicture* picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX moveModeX, MoveModeY moveModeY, int cropOffsetY);
-
-    void convertSup(int index, int displayNumber, int displayMax);
 
     void scanSubtitles();
     void reScanSubtitles(Resolution oldResolution, double fpsTrgOld, int delayOld,
@@ -504,11 +502,11 @@ public slots:
 private:
     Bitmap trgBitmap;
     Bitmap trgBitmapUnpatched;
-    Palette *defaultSourceDVDPalette = 0;
-    Palette *currentSourceDVDPalette = 0;
+    Palette defaultSourceDVDPalette;
+    Palette currentSourceDVDPalette;
     Palette trgPal;
-    Palette *defaultDVDPalette;
-    Palette *currentDVDPalette;
+    Palette defaultDVDPalette;
+    Palette currentDVDPalette;
 
     QSharedPointer<Substream> substream;
     QSharedPointer<SubDVD> subDVD;
@@ -591,8 +589,7 @@ private:
     void SetValuesFromSettings();
     int countForcedIncluded();
     int countIncluded();
-    void writePGCEditPalette(QString filename, Palette* palette);
-    void convertSup(int index, int displayNumber, int displayMax, bool skipScaling);
+    void writePGCEditPalette(QString filename, Palette &palette);
     void validateTimes(int index, SubPicture* subPicture, SubPicture* subPictureNext,
                        SubPicture* subPicturePrevious);
     QVector<int> getResolution(Resolution resolution);

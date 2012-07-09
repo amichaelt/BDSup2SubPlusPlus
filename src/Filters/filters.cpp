@@ -35,10 +35,6 @@ static Lanczos3Filter* lanczos3Filter = 0;
 static MitchellFilter* mitchellFilter = 0;
 static TriangleFilter* triangleFilter = 0;
 
-Filters::Filters()
-{
-}
-
 Filter *Filters::getFilter(ScalingFilters scalingFilter)
 {
     switch (scalingFilter)

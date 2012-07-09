@@ -19,10 +19,6 @@
 
 #include "mitchellfilter.h"
 
-MitchellFilter::MitchellFilter() : B(1.0f / 3.0f), C(1.0f / 3.0f)
-{
-}
-
 float MitchellFilter::value(float value)
 {
     if (value < 0.0f)

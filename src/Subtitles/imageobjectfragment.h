@@ -24,15 +24,22 @@ class ImageObjectFragment
 {
 public:
     ImageObjectFragment();
-    ImageObjectFragment(const ImageObjectFragment& other)
+    ImageObjectFragment(const ImageObjectFragment& other) :
+        packetSize(other.packetSize),
+        bufferOfs(other.bufferOfs)
     {
-        imageBufferOfs = other.imageBufferOfs;
-        imagePacketSize = other.imagePacketSize;
+        packetSize = other.packetSize;
+        bufferOfs = other.bufferOfs;
     }
 
-    int imagePacketSize = 0;
+    int imagePacketSize() { return packetSize; }
+    void setImagePacketSize(int imagePacketSize) { packetSize = imagePacketSize; }
+    int imageBufferOffset() { return bufferOfs; }
+    void setImageBufferOffset(int imageBufferOffset) { bufferOfs = imageBufferOffset; }
 
-    long imageBufferOfs = 0;
+private:
+    int packetSize = 0;
+    long bufferOfs = 0;
 };
 
 #endif // IMAGEOBJECTFRAGMENT_H

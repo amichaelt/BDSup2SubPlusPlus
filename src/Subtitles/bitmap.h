@@ -38,7 +38,6 @@ public:
     Bitmap(int width, int height);
     Bitmap(int width, int height, int color);
     Bitmap(int width, int height, QImage image);
-    ~Bitmap();
 
     void clear(int color);
     void fillRect(int x, int y, int width, int height, int color);

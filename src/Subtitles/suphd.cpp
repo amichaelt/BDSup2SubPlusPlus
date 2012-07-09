@@ -43,12 +43,12 @@ SupHD::~SupHD()
 
 QImage SupHD::getImage()
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
-QImage SupHD::getImage(Bitmap *bitmap)
+QImage SupHD::getImage(Bitmap &bitmap)
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(palette);
 }
 
 void SupHD::decode(int index)
@@ -272,12 +272,12 @@ void SupHD::readAllSupFrames()
 
 void SupHD::decode(SubPictureHD *subPicture)
 {
-    palette.reset(decodePalette(subPicture));
-    bitmap.reset(decodeImage(subPicture, palette->getTransparentIndex()));
-    primaryColorIndex = bitmap->getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
+    palette = decodePalette(subPicture);
+    bitmap = decodeImage(subPicture, palette.getTransparentIndex());
+    primaryColorIndex = bitmap.getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
 }
 
-void SupHD::decodeLine(QImage *trg, int trgOfs, int width, int maxPixels, BitStream* src)
+void SupHD::decodeLine(QImage &trg, int trgOfs, int width, int maxPixels, BitStream* src)
 {
     int x = 0;
     int pixelsLeft = 0;
@@ -340,7 +340,7 @@ void SupHD::decodeLine(QImage *trg, int trgOfs, int width, int maxPixels, BitStr
             pixelsLeft = 0;
         }
 
-        uchar* pixels = trg->bits();
+        uchar* pixels = trg.bits();
         for (int i = 0; i < numPixels; ++i)
         {
             pixels[trgOfs + x + i] = (uchar)color;
@@ -348,8 +348,8 @@ void SupHD::decodeLine(QImage *trg, int trgOfs, int width, int maxPixels, BitStr
 
         if (lf == true)
         {
-            trgOfs += ((x + numPixels + (trg->bytesPerLine() - (x + numPixels)))
-                    + (width + (trg->bytesPerLine() - width))); // skip odd/even line
+            trgOfs += ((x + numPixels + (trg.bytesPerLine() - (x + numPixels)))
+                    + (width + (trg.bytesPerLine() - width))); // skip odd/even line
             x = pixelsLeft;
             lf = false;
         }
@@ -366,13 +366,13 @@ void SupHD::decodeLine(QImage *trg, int trgOfs, int width, int maxPixels, BitStr
     }
 }
 
-Palette *SupHD::decodePalette(SubPictureHD *subPicture)
+Palette SupHD::decodePalette(SubPictureHD *subPicture)
 {
     int ofs = subPicture->paletteOfs;
     int alphaOfs = subPicture->alphaOfs;
 
-    Palette* palette = new Palette(256);
-    for (int i = 0; i < palette->getSize(); ++i)
+    Palette palette(256);
+    for (int i = 0; i < palette.getSize(); ++i)
     {
         // each palette entry consists of 3 bytes
         int y = fileBuffer->getByte(ofs++);
@@ -391,18 +391,18 @@ Palette *SupHD::decodePalette(SubPictureHD *subPicture)
         int alpha = 0xff - fileBuffer->getByte(alphaOfs++);
         if (alpha < subtitleProcessor->getAlphaCrop()) // to not mess with scaling algorithms, make transparent color black
         {
-            palette->setRGB(i, qRgb(0, 0, 0));
+            palette.setRGB(i, qRgb(0, 0, 0));
         }
         else
         {
-            palette->setYCbCr(i, y, cb, cr);
+            palette.setYCbCr(i, y, cb, cr);
         }
-        palette->setAlpha(i, alpha);
+        palette.setAlpha(i, alpha);
     }
     return palette;
 }
 
-Bitmap *SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
+Bitmap SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
 {
     int w = subPicture->getImageWidth();
     int h = subPicture->getImageHeight();
@@ -416,7 +416,7 @@ Bitmap *SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
                 .arg(QString::number(subPicture->imageBufferOfsEven, 16), 8, QChar('0'));
     }
 
-    Bitmap* bm = new Bitmap(w, h, transparentIndex);
+    Bitmap bm(w, h, transparentIndex);
 
     int sizeEven = subPicture->imageBufferOfsOdd - subPicture->imageBufferOfsEven;
     int sizeOdd = (subPicture->imageBufferSize + subPicture->imageBufferOfsEven) - subPicture->imageBufferOfsOdd;
@@ -439,10 +439,10 @@ Bitmap *SupHD::decodeImage(SubPictureHD *subPicture, int transparentIndex)
     }
     // decode even lines
     BitStream even = BitStream(evenBuf);
-    decodeLine(&bm->getImg(), 0, w, w * ((h / 2) + (h & 1)), &even);
+    decodeLine(bm.getImg(), 0, w, w * ((h / 2) + (h & 1)), &even);
     // decode odd lines
     BitStream odd  = BitStream(oddBuf);
-    decodeLine(&bm->getImg(), w + (bm->getImg().bytesPerLine() - w), w, (h / 2) * w, &odd);
+    decodeLine(bm.getImg(), w + (bm.getImg().bytesPerLine() - w), w, (h / 2) * w, &odd);
 
     if (warnings > 0)
     {

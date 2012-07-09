@@ -19,10 +19,6 @@
 
 #include "bellfilter.h"
 
-BellFilter::BellFilter()
-{
-}
-
 float BellFilter::value(float value)
 {
     if (value < 0.0f)

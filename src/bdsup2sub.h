@@ -20,6 +20,8 @@
 #ifndef BDSUP2SUB_H
 #define BDSUP2SUB_H
 
+#include "Subtitles/palette.h"
+
 #include <QMainWindow>
 #include <QColor>
 #include <QIntValidator>
@@ -29,7 +31,6 @@ class ProgressDialog;
 class QSettings;
 class QxtCommandOptions;
 class QTextStream;
-class Palette;
 
 namespace Ui {
 class BDSup2Sub;
@@ -88,7 +89,7 @@ private:
     int lumThr2 = -1;
     int alphaThreshold = -1;
     int langIdx = -1;
-    Palette* importedPalette;
+    Palette importedPalette;
 
     bool setLumaThreshold = false;
     bool setAlphaThreshold = false;
@@ -135,19 +136,15 @@ private slots:
     void editDVDFramePalette_triggered();
     void moveAllCaptions_triggered();
     void resetCropOffset_triggered();
+    void on_subtitleLanguageComboBox_currentIndexChanged(int index);
     void on_subtitleNumberComboBox_currentIndexChanged(int index);
-    void on_subtitleNumberComboBox_editTextChanged(const QString &index);
     void openConversionSettings();
     void on_paletteComboBox_currentIndexChanged(int index);
     void on_filterComboBox_currentIndexChanged(int index);
     void on_hiMedThresholdComboBox_currentIndexChanged(int index);
-    void on_hiMedThresholdComboBox_editTextChanged(const QString &arg1);
     void on_medLowThresholdComboBox_currentIndexChanged(int index);
-    void on_medLowThresholdComboBox_editTextChanged(const QString &arg1);
     void on_alphaThresholdComboBox_currentIndexChanged(int index);
-    void on_alphaThresholdComboBox_editTextChanged(const QString &arg1);
     void on_outputFormatComboBox_currentIndexChanged(int index);
-    void on_subtitleLanguageComboBox_currentIndexChanged(int index);
 };
 
 #endif // BDSUP2SUB_H

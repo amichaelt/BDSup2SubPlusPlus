@@ -22,13 +22,13 @@
 
 #include <QtCore/QScopedPointer>
 #include <QVector>
-#include <Subtitles/bitmap.h>
+#include <QImage>
 
-//class Bitmap;
-class Palette;
+#include <Subtitles/bitmap.h>
+#include <Subtitles/palette.h>
+
 class SubPictureDVD;
 class FileBuffer;
-class QImage;
 class SubtitleProcessor;
 
 class SubstreamDVD
@@ -38,13 +38,13 @@ public:
     SubstreamDVD();
     virtual ~SubstreamDVD();
 
-    virtual void setSrcPalette(Palette *palette) = 0;
+    virtual void setSrcPalette(Palette &palette) = 0;
     void decode(SubPictureDVD* pic, SubtitleProcessor* subtitleProcessor);
 
     virtual int getLanguageIdx() = 0;
 
-    virtual Palette *getSrcPalette() = 0;
-    static Palette* decodePalette(SubPictureDVD *pic, Palette *palette, int alphaCrop);
+    virtual Palette &getSrcPalette() = 0;
+    static Palette decodePalette(SubPictureDVD *pic, Palette &palette, int alphaCrop);
 
     QVector<uchar> encodeLines(Bitmap &bitmap, bool even);
     virtual QVector<int> getFrameAlpha(int index) = 0;
@@ -55,8 +55,8 @@ public:
 protected:
     Bitmap bitmap;
 
-    QScopedPointer<Palette> srcPalette;
-    QScopedPointer<Palette> palette;
+    Palette srcPalette;
+    Palette palette;
 
     SubtitleProcessor* subtitleProcessor = 0;
 
@@ -74,7 +74,7 @@ protected:
     int primaryColorIndex = 0;
 
 private:
-    void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage* trg, int trgOfs, int width, int maxPixels);
+    void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage &trg, int trgOfs, int width, int maxPixels);
 
     Bitmap decodeImage(SubPictureDVD* pic, int transIdx);
 };
