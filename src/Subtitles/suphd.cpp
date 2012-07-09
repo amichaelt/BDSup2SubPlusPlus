@@ -41,12 +41,12 @@ SupHD::~SupHD()
     }
 }
 
-QImage *SupHD::getImage()
+QImage SupHD::getImage()
 {
     return bitmap->getImage(*palette);
 }
 
-QImage *SupHD::getImage(Bitmap *bitmap)
+QImage SupHD::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(*palette);
 }

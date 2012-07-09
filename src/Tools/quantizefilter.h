@@ -53,8 +53,8 @@ class QuantizeFilter
         };
 
     public:
-        void addPixels(QImage* image);
-        void buildColorTable(QVector<QRgb> inPixels, QVector<QRgb>& table);
+        void addPixels(QImage &image);
+        void buildColorTable(QVector<QRgb> inPixels, QVector<QRgb> &table);
         void setup(int numColors);
 
         int getIndexForColor(QRgb argb);
@@ -89,7 +89,7 @@ public:
      bool getDither() { return dither; }
      bool getSerpentine() { return serpentine; }
 
-     QVector<QRgb> quantize(QImage *inImage, QImage *outImage, int width, int height,
+     QVector<QRgb> quantize(QImage inImage, QImage *outImage, int width, int height,
                            int numColors, bool dither, bool serpentine);
 
 private:

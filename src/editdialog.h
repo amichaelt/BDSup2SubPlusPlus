@@ -83,7 +83,7 @@ private slots:
 
 private:
     Ui::EditDialog *ui;
-    QImage *image = 0;
+    QImage image;
     SubtitleProcessor* subtitleProcessor = 0;
     SubPicture* subPicture;
     SubPicture* subPictureNext = 0;

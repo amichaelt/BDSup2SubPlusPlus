@@ -28,7 +28,7 @@ void QuantizeFilter::setNumColors(int numColors)
     this->numColors = std::min(std::max(numColors, 8), 256);
 }
 
-QVector<QRgb> QuantizeFilter::quantize(QImage *inImage, QImage *outImage, int width, int height,
+QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int width, int height,
                                       int numColors, bool dither, bool serpentine)
 {
     QuantizeFilter::OctTreeQuantizer quantizer;
@@ -52,7 +52,7 @@ QVector<QRgb> QuantizeFilter::quantize(QImage *inImage, QImage *outImage, int wi
             {
                 direction = 1;
             }
-            QRgb* inPixels = (QRgb*)inImage->scanLine(y);
+            QRgb* inPixels = (QRgb*)inImage.scanLine(y);
             uchar* outPixels = outImage->scanLine(y);
             for (int x = 0; x < width; ++x)
             {
@@ -123,11 +123,11 @@ QVector<QRgb> QuantizeFilter::quantize(QImage *inImage, QImage *outImage, int wi
     // create palette
     QVector<QRgb> p;
 
-    for (int y = 0; y < inImage->height(); ++y)
+    for (int y = 0; y < inImage.height(); ++y)
     {
-        QRgb* inPixels = (QRgb*)inImage->scanLine(y);
+        QRgb* inPixels = (QRgb*)inImage.scanLine(y);
         uchar* outPixels = outImage->scanLine(y);
-        for (int x = 0; x < inImage->width(); ++x)
+        for (int x = 0; x < inImage.width(); ++x)
         {
             int color;
             if (dither)
@@ -174,12 +174,12 @@ void QuantizeFilter::OctTreeQuantizer::setup(int numColors)
     reduceColors = std::max(512, numColors * 2);
 }
 
-void QuantizeFilter::OctTreeQuantizer::addPixels(QImage* image)
+void QuantizeFilter::OctTreeQuantizer::addPixels(QImage &image)
 {
-    for (int y = 0; y < image->height(); ++y)
+    for (int y = 0; y < image.height(); ++y)
     {
-        QRgb* pixels = (QRgb*)image->scanLine(y);
-        for (int x = 0; x < image->width(); ++x)
+        QRgb* pixels = (QRgb*)image.scanLine(y);
+        for (int x = 0; x < image.width(); ++x)
         {
             insertColor(pixels[x]);
             if (colors > reduceColors)

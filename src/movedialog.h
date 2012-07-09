@@ -87,7 +87,7 @@ private:
     SubPicture* subPicture;
     QButtonGroup* xButtonGroup;
     QButtonGroup* yButtonGroup;
-    QImage* image = 0;
+    QImage image;
 
     QIntValidator* offsetXValidator;
     QIntValidator* offsetYValidator;

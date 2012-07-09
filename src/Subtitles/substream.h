@@ -51,8 +51,8 @@ public:
 
     virtual SubPicture *getSubPicture(int index) = 0;
 
-    virtual QImage *getImage() = 0;
-    virtual QImage *getImage(Bitmap *bitmap) = 0;
+    virtual QImage getImage() = 0;
+    virtual QImage getImage(Bitmap *bitmap) = 0;
 
 protected:
     int numForcedFrames = 0;

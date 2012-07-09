@@ -37,12 +37,12 @@ SupDVD::~SupDVD()
 {
 }
 
-QImage *SupDVD::getImage()
+QImage SupDVD::getImage()
 {
     return bitmap.getImage(*palette);
 }
 
-QImage *SupDVD::getImage(Bitmap *bitmap)
+QImage SupDVD::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(*palette);
 }

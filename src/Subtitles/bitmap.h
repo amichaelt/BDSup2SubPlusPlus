@@ -49,22 +49,22 @@ public:
     int getPrimaryColorIndex(Palette &palette, int alphaThreshold);
     int getWidth() { return width; }
 
-    Bitmap *crop(int x, int y, int width, int height);
-    Bitmap *convertLm(Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold);
+    Bitmap crop(int x, int y, int width, int height);
+    Bitmap convertLm(Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold);
 
-    Bitmap *scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter);
-    Bitmap *scaleFilterLm(int sizeX, int sizeY, Palette &palette,
+    Bitmap scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter);
+    Bitmap scaleFilterLm(int sizeX, int sizeY, Palette &palette,
                           int alphaThreshold, QVector<int> &lumaThreshold, Filter& filter);
-    Bitmap *scaleBilinear(int sizeX, int sizeY, Palette &palette);
-    Bitmap *scaleBilinearLm(int sizeX, int sizeY, Palette &palette,
+    Bitmap scaleBilinear(int sizeX, int sizeY, Palette &palette);
+    Bitmap scaleBilinearLm(int sizeX, int sizeY, Palette &palette,
                             int alphaThreshold, QVector<int> &lumaThreshold);
 
-    PaletteBitmap *scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter, bool dither);
-    PaletteBitmap *scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither);
+    PaletteBitmap scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter, bool dither);
+    PaletteBitmap scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither);
 
     QImage &getImg();
-    QImage *toARGB(Palette &palette);
-    QImage *getImage(Palette &palette);
+    QImage toARGB(Palette &palette);
+    QImage getImage(Palette &palette);
 
     const QRect &getBounds(Palette &palette, int alphaThreshold);
 

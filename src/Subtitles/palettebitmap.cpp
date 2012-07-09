@@ -18,11 +18,17 @@
  */
 
 #include "palettebitmap.h"
-#include "bitmap.h"
-#include "palette.h"
 
-PaletteBitmap::PaletteBitmap(Bitmap* inBitmap, Palette* inPalette)
+PaletteBitmap::PaletteBitmap()
 {
-    bitmap.reset(inBitmap);
-    palette.reset(inPalette);
+}
+
+PaletteBitmap::PaletteBitmap(Bitmap &inBitmap, Palette &inPalette) :
+    bitmap(inBitmap),
+    palette(inPalette)
+{
+}
+
+PaletteBitmap::~PaletteBitmap()
+{
 }

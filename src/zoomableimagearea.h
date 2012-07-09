@@ -27,7 +27,7 @@ class ZoomableImageArea : public QLabel
     Q_OBJECT
 public:
     explicit ZoomableImageArea(QWidget *parent = 0);
-    void setImage(QImage* image);
+    void setImage(QImage image);
     void updateImage();
 
 protected:
@@ -42,7 +42,7 @@ private:
     int zoomScale = 0;
     double scaleFactor = 0.0;
     bool settingPixmap = false;
-    QScopedPointer<QImage> image;
+    QImage image;
     QScopedPointer<QPixmap> drawPixmap;
     QPainter* painter = new QPainter();
     QSize originalSize;

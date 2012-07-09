@@ -149,9 +149,9 @@ void Bitmap::clear(int color)
     img.fill(color);
 }
 
-Bitmap *Bitmap::crop(int x, int y, int width, int height)
+Bitmap Bitmap::crop(int x, int y, int width, int height)
 {
-    Bitmap *bm = new Bitmap(width, height, img.copy(x, y, width, height));
+    Bitmap bm(width, height, img.copy(x, y, width, height));
 
     return bm;
 }
@@ -195,19 +195,19 @@ int Bitmap::getPrimaryColorIndex(Palette &palette, int alphaThreshold)
     return color;
 }
 
-QImage *Bitmap::getImage(Palette &palette)
+QImage Bitmap::getImage(Palette &palette)
 {
-    QImage *newImage = new QImage(img.bits(), img.width(), img.height(), img.format());
-    newImage->setColorTable(palette.getColorTable());
+    QImage newImage(img.bits(), img.width(), img.height(), img.format());
+    newImage.setColorTable(palette.getColorTable());
     return newImage;
 }
 
-Bitmap *Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lumaThreshold)
+Bitmap Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lumaThreshold)
 {
     QVector<uchar> cy = palette.getY();
     QVector<QRgb> a = palette.getColorTable();
-    Bitmap* bm = new Bitmap(width, height);
-    QImage &destImage = bm->getImg();
+    Bitmap bm(width, height);
+    QImage &destImage = bm.getImg();
 
     // select nearest colors in existing palette
     QHash<int, int> p;
@@ -258,26 +258,26 @@ Bitmap *Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lu
     return bm;
 }
 
-Bitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter)
+Bitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter)
 {
     QVector<QRgb> rgb = palette.getColorTable();
 
     FilterOp filterOp(filter);
     QVector<QRgb> trg = filterOp.filter(*this, palette, sizeX, sizeY);
 
-    Bitmap* bm = new Bitmap(sizeX, sizeY);
+    Bitmap bm(sizeX, sizeY);
 
     // select nearest colors in existing palette
     QHash<QRgb, int> p;
     int offset = 0;
 
-    QImage image(bm->getImg().bits(), bm->getImg().width(), bm->getImg().height(), bm->getImg().format());
+    QImage image(bm.getImg().bits(), bm.getImg().width(), bm.getImg().height(), bm.getImg().format());
     image.setColorTable(palette.getColorTable());
 
-    for (int y = 0; y < bm->getImg().height(); ++y)
+    for (int y = 0; y < bm.getImg().height(); ++y)
     {
         uchar* pixels = image.scanLine(y);
-        for (int x = 0; x < bm->getImg().width(); ++x)
+        for (int x = 0; x < bm.getImg().width(); ++x)
         {
             offset = (y * sizeX) + x;
             QRgb color = trg[offset];
@@ -322,17 +322,17 @@ Bitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filt
     return bm;
 }
 
-PaletteBitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter, bool dither)
+PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter, bool dither)
 {
     FilterOp fOp(filter);
     QVector<QRgb> trgPixels = fOp.filter(*this, palette, sizeX, sizeY);
 
-    QImage* trg = new QImage(sizeX, sizeY, QImage::Format_ARGB32);
+    QImage trg(sizeX, sizeY, QImage::Format_ARGB32);
     int offset = 0;
-    for (int y = 0; y < trg->height(); ++y)
+    for (int y = 0; y < trg.height(); ++y)
     {
-        QRgb* pixels = (QRgb*)trg->scanLine(y);
-        for (int x = 0; x < trg->width(); ++x)
+        QRgb* pixels = (QRgb*)trg.scanLine(y);
+        for (int x = 0; x < trg.width(); ++x)
         {
             offset = (y * sizeX) + x;
             pixels[x] = trgPixels[offset];
@@ -341,8 +341,8 @@ PaletteBitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filte
 
     // quantize image
     QuantizeFilter qf;
-    Bitmap* bm = new Bitmap(sizeX, sizeY);
-    QVector<QRgb> ct = qf.quantize(trg, &bm->getImg(), sizeX, sizeY, 255, dither, dither);
+    Bitmap bm(sizeX, sizeY);
+    QVector<QRgb> ct = qf.quantize(trg, &bm.getImg(), sizeX, sizeY, 255, dither, dither);
     int size = ct.size();
     if (size > 255)
     {
@@ -355,26 +355,27 @@ PaletteBitmap *Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filte
         trgPal->setARGB(i,ct[i]);
     }
 
-    return new PaletteBitmap(bm, trgPal);
+    PaletteBitmap bitmap(bm, *trgPal);
+    return bitmap;
 }
 
-Bitmap *Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold, Filter &filter)
+Bitmap Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold, Filter &filter)
 {
     FilterOp filterOp(filter);
     QVector<QRgb> trg = filterOp.filter(*this, palette, sizeX, sizeY);
 
-    Bitmap* bm = new Bitmap(sizeX, sizeY);
+    Bitmap bm(sizeX, sizeY);
 
     // select nearest colors in existing palette
     QHash<QRgb, int> p;
     int offset = 0;
-    QImage image(bm->getImg().bits(), bm->getImg().width(), bm->getImg().height(), bm->getImg().format());
+    QImage image(bm.getImg().bits(), bm.getImg().width(), bm.getImg().height(), bm.getImg().format());
     image.setColorTable(palette.getColorTable());
 
-    for (int y = 0; y < bm->getImg().height(); ++y)
+    for (int y = 0; y < bm.getImg().height(); ++y)
     {
         uchar* pixels = image.scanLine(y);
-        for (int x = 0; x < bm->getImg().width(); ++x)
+        for (int x = 0; x < bm.getImg().width(); ++x)
         {
             offset = (y * sizeX) + x;
             QRgb color = trg[offset];
@@ -418,7 +419,7 @@ Bitmap *Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaT
     return bm;
 }
 
-Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
 {
     QVector<QRgb> rgb = palette.getColorTable();
 
@@ -431,7 +432,7 @@ Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
     int lastA = 0;
     int lastColIdx = palette.getTransparentIndex();
 
-    Bitmap* trg = new Bitmap(sizeX, sizeY);
+    Bitmap trg(sizeX, sizeY);
 
     for (int yt = 0; yt < sizeY; ++yt)
     {
@@ -529,20 +530,20 @@ Bitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
                 lastColIdx = colIdx;
             }
             // write target pixel
-            trg->getImg().scanLine(yt)[xt] = (uchar)colIdx;
+            trg.getImg().scanLine(yt)[xt] = (uchar)colIdx;
         }
     }
     return trg;
 }
 
-PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither)
+PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither)
 {
     QVector<QRgb> rgb = palette.getColorTable();
 
     double scaleX = (double)(width - 1) / (sizeX - 1);
     double scaleY = (double)(height - 1) / (sizeY - 1);
 
-    QImage* trg = new QImage(sizeX, sizeY, QImage::Format_ARGB32);
+    QImage trg(sizeX, sizeY, QImage::Format_ARGB32);
 
     for (int yt = 0; yt < sizeY; ++yt)
     {
@@ -613,14 +614,14 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, boo
             int gti = (int)(gt);
             int bti = (int)(bt);
 
-            QRgb* pixels = (QRgb*)trg->scanLine(yt);
+            QRgb* pixels = (QRgb*)trg.scanLine(yt);
             pixels[xt] = qRgba(rti, gti, bti, ati);;
         }
     }
     // quantize image
     QuantizeFilter qf;
-    Bitmap* bm = new Bitmap(sizeX, sizeY, QImage::Format_Indexed8);
-    QVector<QRgb> ct = qf.quantize(trg, &bm->getImg(), sizeX, sizeY, 255, dither, dither);
+    Bitmap bm(sizeX, sizeY, QImage::Format_Indexed8);
+    QVector<QRgb> ct = qf.quantize(trg, &bm.getImg(), sizeX, sizeY, 255, dither, dither);
     int size = ct.size();
     if (size > 255)
     {
@@ -632,11 +633,12 @@ PaletteBitmap *Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, boo
     {
         trgPal->setARGB(i, ct[i]);
     }
+    PaletteBitmap bitmap(bm, *trgPal);
 
-    return new PaletteBitmap(bm, trgPal);
+    return bitmap;
 }
 
-Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold)
+Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold)
 {
     QVector<uchar> cy = palette.getY();
     QVector<QRgb> a = palette.getColorTable();
@@ -648,7 +650,7 @@ Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alph
     int lastA  = 0;
     int lastColIdx = 0; // 0 is the transparent color
 
-    Bitmap* trg = new Bitmap(sizeX, sizeY);
+    Bitmap trg(sizeX, sizeY);
 
     for (int yt = 0; yt < sizeY; ++yt)
     {
@@ -732,7 +734,7 @@ Bitmap *Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alph
                 lastColIdx = colIdx;
             }
             // write target pixel
-            trg->getImg().scanLine(yt)[xt] = (uchar)colIdx;
+            trg.getImg().scanLine(yt)[xt] = (uchar)colIdx;
         }
     }
     return trg;
@@ -789,14 +791,14 @@ int Bitmap::getHighestColorIndex(Palette &palette)
     return maxIdx;
 }
 
-QImage *Bitmap::toARGB(Palette &palette)
+QImage Bitmap::toARGB(Palette &palette)
 {
-    QImage* newImage = new QImage(img.width(), img.height(), QImage::Format_ARGB32);
-    for (int y = 0; y < newImage->height(); ++y)
+    QImage newImage(img.width(), img.height(), QImage::Format_ARGB32);
+    for (int y = 0; y < newImage.height(); ++y)
     {
         uchar* pixels = img.scanLine(y);
-        QRgb* newPixels = (QRgb*)newImage->scanLine(y);
-        for (int x = 0; x < newImage->width(); ++x)
+        QRgb* newPixels = (QRgb*)newImage.scanLine(y);
+        for (int x = 0; x < newImage.width(); ++x)
         {
             newPixels[x] = palette.getARGB(pixels[x]);
         }

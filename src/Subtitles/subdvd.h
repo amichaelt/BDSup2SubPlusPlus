@@ -62,10 +62,9 @@ public:
     bool isForced(int index);
 
     Bitmap &getBitmap() { return bitmap; }
-    Bitmap *decodeImage(SubPictureDVD* pic, FileBuffer* fileBuffer, int transIdx);
 
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
+    QImage getImage();
+    QImage getImage(Bitmap *bitmap);
 
     Palette *getPalette() { return palette.data(); }
     Palette *getSrcPalette() { return srcPalette.data(); }

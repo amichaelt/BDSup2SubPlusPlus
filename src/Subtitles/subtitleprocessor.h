@@ -21,6 +21,7 @@
 #define SUBTITLEPROCESSOR_H
 
 #include "Subtitles/bitmap.h"
+#include "Subtitles/palette.h"
 
 #include <QByteArray>
 #include <QString>
@@ -29,7 +30,6 @@
 #include <QVector>
 #include <QSettings>
 
-class Palette;
 class Substream;
 class SubDVD;
 class SupDVD;
@@ -451,14 +451,14 @@ public:
     }
     double getFPS(QString string);
     double getDefaultFPS(Resolution resolution);
-    QImage *getSrcImage();
+    QImage getSrcImage();
     QString getSrcInfoStr(int index);
     QString getTrgInfoStr(int index);
     int getTrgWidth(int index);
     int getTrgHeight(int index);
     int getTrgOfsX(int index);
     int getTrgOfsY(int index);
-    QImage *getTrgImage();
+    QImage getTrgImage();
     int getTrgImgWidth(int index);
     int getTrgImgHeight(int index);
     bool getTrgExcluded(int index);
@@ -467,7 +467,7 @@ public:
     SubPicture *getSubPictureSrc(int index);
     Resolution getResolution(QString string);
     QVector<int> getResolutions(Resolution resolution);
-    QImage *getTrgImagePatched(SubPicture* subPicture);
+    QImage getTrgImagePatched(SubPicture* subPicture);
     SubPicture *getSubPictureTrg(int index);
     QVector<int> getFrameAlpha(int index);
     QVector<int> getOriginalFrameAlpha(int index);
@@ -506,7 +506,7 @@ private:
     Bitmap trgBitmapUnpatched;
     Palette *defaultSourceDVDPalette = 0;
     Palette *currentSourceDVDPalette = 0;
-    Palette *trgPal;
+    Palette trgPal;
     Palette *defaultDVDPalette;
     Palette *currentDVDPalette;
 
@@ -598,7 +598,7 @@ private:
     QVector<int> getResolution(Resolution resolution);
     void determineFramePalette(int index);
     bool updateTrgPic(int index);
-    QImage *getSrcImage(int index);
+    QImage getSrcImage(int index);
 };
 
 #endif // SUBTITLEPROCESSOR_H

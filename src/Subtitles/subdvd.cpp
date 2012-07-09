@@ -45,12 +45,12 @@ SubDVD::~SubDVD()
 {
 }
 
-QImage *SubDVD::getImage()
+QImage SubDVD::getImage()
 {
     return bitmap.getImage(*palette);
 }
 
-QImage *SubDVD::getImage(Bitmap *bitmap)
+QImage SubDVD::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(*palette);
 }

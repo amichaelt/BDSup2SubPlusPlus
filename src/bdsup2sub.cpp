@@ -100,7 +100,10 @@ void BDSup2Sub::keyPressEvent(QKeyEvent *event)
             }
         }
     }
-    QMainWindow::keyPressEvent(event);
+    else
+    {
+        QMainWindow::keyPressEvent(event);
+    }
 }
 
 void BDSup2Sub::changeWindowTitle(QString newTitle)
@@ -416,23 +419,7 @@ void BDSup2Sub::loadSettings()
     else
     {
         settings = new QSettings(newIniFilePath, QSettings::IniFormat);
-        settings->setValue("frameWidth", QVariant(784));
-        settings->setValue("frameHeight", QVariant(560));
     }
-
-    QRect geometry = this->geometry();
-    int w = settings->value("frameWidth", QVariant(784)).toInt();
-    int h = settings->value("frameHeight", QVariant(560)).toInt();
-    geometry.setWidth(w);
-    geometry.setHeight(h);
-
-    QPoint center = QDesktopWidget().availableGeometry().center();
-    center.setX(center.x() - (geometry.width() / 2));
-    center.setY(center.y() - (geometry.height() / 2));
-    geometry.setX(settings->value("framePosX", center.x()).toInt());
-    geometry.setY(settings->value("framePosY", center.y()).toInt());
-
-    setGeometry(geometry);
 
     if (!fromCLI)
     {
@@ -683,9 +670,9 @@ void BDSup2Sub::closeFile()
 {
     closeSubtitle();
     subtitleProcessor->close();
-    ui->sourceImage->setImage(0);
+    ui->sourceImage->setImage(QImage(0,0));
     ui->sourceImage->update();
-    ui->targetImage->setImage(0);
+    ui->targetImage->setImage(QImage(0,0));
     ui->targetImage->update();
 }
 
@@ -1809,11 +1796,11 @@ void BDSup2Sub::closeSubtitle()
     ui->actionEdit_imported_DVD_Palette->setEnabled(false);
     ui->actionEdit_DVD_Frame_Palette->setEnabled(false);
 
-    ui->subtitleImage->setImage(0, 1, 1);
+    ui->subtitleImage->setImage(QImage(0, 0), 1, 1);
     ui->subtitleImage->update();
-    ui->sourceImage->setImage(0);
+    ui->sourceImage->setImage(QImage(0, 0));
     ui->sourceImage->updateImage();
-    ui->targetImage->setImage(0);
+    ui->targetImage->setImage(QImage(0, 0));
     ui->targetImage->updateImage();
 
     ui->sourceInfoLabel->setText("");
@@ -2079,9 +2066,10 @@ void BDSup2Sub::refreshTrgFrame(int index)
     ui->subtitleImage->setDimension(subtitleProcessor->getTrgWidth(index), subtitleProcessor->getTrgHeight(index));
     ui->subtitleImage->setOffsets(subtitleProcessor->getTrgOfsX(index), subtitleProcessor->getTrgOfsY(index));
     ui->subtitleImage->setCropOfsY(subtitleProcessor->getCropOfsY());
-    ui->subtitleImage->setImage(subtitleProcessor->getTrgImage(), subtitleProcessor->getTrgImgWidth(index), subtitleProcessor->getTrgImgHeight(index));
+    QImage image = subtitleProcessor->getTrgImage();
+    ui->subtitleImage->setImage(image.copy(image.rect()), subtitleProcessor->getTrgImgWidth(index), subtitleProcessor->getTrgImgHeight(index));
     ui->subtitleImage->setExcluded(subtitleProcessor->getTrgExcluded(index));
-    ui->targetImage->setImage(subtitleProcessor->getTrgImage());
+    ui->targetImage->setImage(image.copy(image.rect()));
     ui->targetImage->updateImage();
     ui->targetInfoLabel->setText(subtitleProcessor->getTrgInfoStr(index));
 }

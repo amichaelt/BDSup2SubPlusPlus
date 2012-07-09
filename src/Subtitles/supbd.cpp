@@ -48,12 +48,12 @@ SupBD::~SupBD()
     }
 }
 
-QImage *SupBD::getImage()
+QImage SupBD::getImage()
 {
     return bitmap->getImage(*palette);
 }
 
-QImage *SupBD::getImage(Bitmap *bitmap)
+QImage SupBD::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(*palette);
 }

@@ -246,32 +246,32 @@ void SubtitleProcessor::storeSettings()
     }
 }
 
-QImage *SubtitleProcessor::getSrcImage()
+QImage SubtitleProcessor::getSrcImage()
 {
     return substream->getImage();
 }
 
-QImage *SubtitleProcessor::getSrcImage(int index)
+QImage SubtitleProcessor::getSrcImage(int index)
 {
     substream->decode(index);
     return substream->getImage();
 }
 
-QImage *SubtitleProcessor::getTrgImagePatched(SubPicture *subPicture)
+QImage SubtitleProcessor::getTrgImagePatched(SubPicture *subPicture)
 {
     if (!subPicture->erasePatch.isEmpty())
     {
         Bitmap* trgBitmapPatched = new Bitmap(trgBitmapUnpatched);
-        int color = trgPal->getTransparentIndex();
+        int color = trgPal.getTransparentIndex();
         for (auto erasePatch : subPicture->erasePatch)
         {
             trgBitmapPatched->fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, color);
         }
-        return trgBitmapPatched->getImage(*trgPal);
+        return trgBitmapPatched->getImage(trgPal);
     }
     else
     {
-        return trgBitmapUnpatched.getImage(*trgPal);
+        return trgBitmapUnpatched.getImage(trgPal);
     }
 }
 
@@ -1032,7 +1032,7 @@ void SubtitleProcessor::writeSub(QString filename)
                 {
                     supBD = QSharedPointer<SupBD>(new SupBD("", this));
                 }
-                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal);
+                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, &trgPal);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
             }
             else
@@ -1044,7 +1044,7 @@ void SubtitleProcessor::writeSub(QString filename)
                     supXML = QSharedPointer<SupXML>(new SupXML("", this));
                 }
                 QString fnp = supXML->getPNGname(fn, i + 1);
-                trgBitmap.getImage(*trgPal)->save(fnp, "PNG");
+                trgBitmap.getImage(trgPal).save(fnp, "PNG");
             }
             frameNum += 2;
         }
@@ -1324,7 +1324,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
     if (!skipScaling)
     {
         Bitmap targetBitmap;
-        Palette* targetPalette = trgPal;
+        Palette targetPalette = trgPal;
         // create scaled bitmap
         if (outMode == OutputMode::VOBSUB || outMode == OutputMode::SUPIFO)
         {
@@ -1397,7 +1397,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                 {
                     // create new palette
                     bool dither = paletteMode == PaletteMode::CREATE_DITHERED;
-                    PaletteBitmap* paletteBitmap;
+                    PaletteBitmap paletteBitmap;
                     if (scaleFilter != 0)
                     {
                         paletteBitmap = substream->getBitmap().scaleFilter(trgWidth, trgHeight, *substream->getPalette(), *scaleFilter, dither);
@@ -1406,15 +1406,15 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
                     {
                         paletteBitmap = substream->getBitmap().scaleBilinear(trgWidth, trgHeight, *substream->getPalette(), dither);
                     }
-                    targetBitmap = paletteBitmap->bitmap.data();
-                    targetPalette = paletteBitmap->palette.data();
+                    targetBitmap = paletteBitmap.bitmap;
+                    targetPalette = &paletteBitmap.palette;
                 }
             }
         }
         if (!picTrg->erasePatch.isEmpty())
         {
             trgBitmapUnpatched = new Bitmap(targetBitmap);
-            int col = targetPalette->getTransparentIndex();
+            int col = targetPalette.getTransparentIndex();
             for (auto erasePatch : picTrg->erasePatch)
             {
                 targetBitmap.fillRect(erasePatch->x, erasePatch->y, erasePatch->w, erasePatch->h, col);
@@ -1823,9 +1823,9 @@ int SubtitleProcessor::getTrgOfsY(int index)
     return subPictures.at(index)->getOfsY();
 }
 
-QImage *SubtitleProcessor::getTrgImage()
+QImage SubtitleProcessor::getTrgImage()
 {
-    return trgBitmap.getImage(*trgPal);
+    return trgBitmap.getImage(trgPal);
 }
 
 int SubtitleProcessor::getTrgImgWidth(int index)

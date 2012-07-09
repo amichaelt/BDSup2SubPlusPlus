@@ -19,7 +19,6 @@
 
 #include "zoomableimagearea.h"
 #include <QSize>
-#include <QMessageBox>
 #include <QPainter>
 #include <QLinearGradient>
 #include <QScrollArea>
@@ -29,9 +28,9 @@ ZoomableImageArea::ZoomableImageArea(QWidget *parent) :
 {
 }
 
-void ZoomableImageArea::setImage(QImage* inImage)
+void ZoomableImageArea::setImage(QImage inImage)
 {
-    image.reset(inImage);
+    image = inImage;
     if (zoomScale == 0)
     {
         setZoomScale(1);
@@ -53,11 +52,11 @@ void ZoomableImageArea::setZoomScale(int scale)
     {
         zoomScale = scale;
     }
-    if (!image.isNull() && !image->isNull())
+    if (!image.isNull() && image.width() != 0)
     {
-        QRect target = image->rect();
-        target.setWidth(image->width() * zoomScale);
-        target.setHeight(image->height() * zoomScale);
+        QRect target = image.rect();
+        target.setWidth(image.width() * zoomScale);
+        target.setHeight(image.height() * zoomScale);
 
         QRect visibleArea = this->parentWidget()->visibleRegion().boundingRect();
 
@@ -73,7 +72,7 @@ void ZoomableImageArea::setZoomScale(int scale)
         gradient.setColorAt(0, Qt::blue);
         gradient.setColorAt(1, Qt::black);
         painter->fillRect(0, 0, drawPixmap->width(), drawPixmap->height(), gradient);
-        painter->drawImage(target, *image, image->rect());
+        painter->drawImage(target, image, image.rect());
         painter->end();
         this->setPixmap(*drawPixmap);
     }
@@ -81,7 +80,7 @@ void ZoomableImageArea::setZoomScale(int scale)
 
 void ZoomableImageArea::paintEvent(QPaintEvent *event)
 {
-    if (image.isNull() || image->isNull())
+    if (image.isNull() || image.width() == 0)
     {
         painter->begin(this);
         QLinearGradient gradient(0, 0, this->width(), this->height());

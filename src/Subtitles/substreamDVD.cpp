@@ -233,7 +233,7 @@ void SubstreamDVD::decode(SubPictureDVD *pic, SubtitleProcessor* subtitleProcess
         {
             height = 2;
         }
-        bitmap = *bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
+        bitmap = bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         pic->setImageWidth(width);
         pic->setImageHeight(height);
         pic->setOfsX(pic->originalX + bounds.topLeft().x());

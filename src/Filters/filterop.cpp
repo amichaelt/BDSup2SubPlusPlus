@@ -45,7 +45,8 @@ QVector<QRgb> FilterOp::filter(Bitmap &src, Palette &palette, int w, int h)
     verticalSubsamplingData = createSubSampling(srcHeight, dstHeight, yscale);
 
     QVector<QRgb> workPixels(srcHeight * dstWidth);
-    filterHorizontally(*src.getImage(palette), workPixels, palette.getColorTable());
+    QImage inImage = src.getImage(palette);
+    filterHorizontally(inImage, workPixels, palette.getColorTable());
 
     QVector<QRgb> outPixels(dstHeight * dstWidth);
     filterVertically(workPixels, outPixels);

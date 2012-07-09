@@ -31,7 +31,7 @@ public:
     void setDimension(int width, int height) { this->width = width; this->height = height; }
     void setOffsets(int x, int y);
     void setCropOfsY(int ofs) { cropOfsY = ofs; }
-    void setImage(QImage* image, int width, int height);
+    void setImage(QImage image, int width, int height);
     void setExcluded(bool excluded) { this->excluded = excluded; }
     void setAllowSelection(bool value) { allowSelection = value; }
     void setIsLabel(bool value) { isLabel = value; }
@@ -50,7 +50,7 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 private:
-    QScopedPointer<QImage> img;
+    QImage img;
     QColor color1 = Qt::blue;
     QColor color2 = Qt::black;
     int width = 1920;

@@ -57,8 +57,8 @@ public:
 
     Palette *getPalette() { return palette.data(); }
 
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
+    QImage getImage();
+    QImage getImage(Bitmap *bitmap);
 
     SubPicture *getSubPicture(int index);
 

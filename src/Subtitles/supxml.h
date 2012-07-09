@@ -20,7 +20,9 @@
 #ifndef SUPXML_H
 #define SUPXML_H
 
+#include "bitmap.h"
 #include "substream.h"
+
 #include <QObject>
 #include <QFile>
 #include <QtXml/QXmlDefaultHandler>
@@ -92,12 +94,12 @@ public:
 
     bool isForced(int index);
 
-    Bitmap &getBitmap() { return *bitmap; }
+    Bitmap &getBitmap() { return bitmap; }
 
     Palette *getPalette() { return palette.data(); }
 
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
+    QImage getImage();
+    QImage getImage(Bitmap *bitmap);
 
     QString getLanguage() { return language; }
     QString getPNGname(QString filename, int idx);
@@ -114,7 +116,7 @@ private:
     double fps;
     double fpsXml;
 
-    QScopedPointer<Bitmap> bitmap;
+    Bitmap bitmap;
 
     QScopedPointer<Palette> palette;
 

@@ -134,7 +134,7 @@ void EditPane::paintEvent(QPaintEvent *event)
     xScaleCaption = sx;
     yScaleCaption = sy;
 
-    if (!img.isNull() && !img->isNull() && imgWidth > 0)
+    if (!img.isNull() && img.width() != 0 && imgWidth > 0)
     {
         int wi = ((int)(imgWidth * sx) + 0.5);
         int hi = ((int)(imgHeight * sy) + 0.5);
@@ -143,7 +143,7 @@ void EditPane::paintEvent(QPaintEvent *event)
 
         painter.setPen(Qt::green);
         painter.drawRect(xi, yi, wi - 1, hi - 1);
-        painter.drawImage(QRect(xi, yi, wi, hi), *img, img->rect());
+        painter.drawImage(QRect(xi, yi, wi, hi), img, img.rect());
 
         if (validSelection && !leftButtonPressed)
         {
@@ -214,9 +214,9 @@ void EditPane::setOffsets(int x, int y)
     }
 }
 
-void EditPane::setImage(QImage *image, int width, int height)
+void EditPane::setImage(QImage image, int width, int height)
 {
-    img.reset(image);
+    img = image;
     imgWidth = width;
     imgHeight = height;
     update();

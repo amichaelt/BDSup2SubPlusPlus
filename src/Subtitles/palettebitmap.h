@@ -20,18 +20,19 @@
 #ifndef PALETTEBITMAP_H
 #define PALETTEBITMAP_H
 
-#include <QScopedPointer>
-
-class Bitmap;
-class Palette;
+#include "bitmap.h"
+#include "palette.h"
 
 class PaletteBitmap
 {
 public:
-    PaletteBitmap(Bitmap* inBitmap, Palette* inPalette);
+    PaletteBitmap();
+    PaletteBitmap(Bitmap &inBitmap, Palette &inPalette);
+    PaletteBitmap(PaletteBitmap &inBitmap);
+    ~PaletteBitmap();
 
-    QScopedPointer<Bitmap> bitmap;
-    QScopedPointer<Palette> palette;
+    Bitmap bitmap;
+    Palette palette;
 };
 
 #endif // PALETTEBITMAP_H

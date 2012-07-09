@@ -60,8 +60,8 @@ public:
     Palette *getPalette() { return palette.data(); }
     Palette *getSrcPalette() { return srcPalette.data(); }
 
-    QImage *getImage();
-    QImage *getImage(Bitmap *bitmap);
+    QImage getImage();
+    QImage getImage(Bitmap *bitmap);
 
     QVector<uchar> createSupFrame(SubPictureDVD* subPicture, Bitmap &bitmap);
     QVector<int> getFrameAlpha(int index);

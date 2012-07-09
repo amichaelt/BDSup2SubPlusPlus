@@ -52,12 +52,12 @@ SupXML::~SupXML()
     }
 }
 
-QImage *SupXML::getImage()
+QImage SupXML::getImage()
 {
-    return bitmap->getImage(*palette);
+    return bitmap.getImage(*palette);
 }
 
-QImage *SupXML::getImage(Bitmap *bitmap)
+QImage SupXML::getImage(Bitmap *bitmap)
 {
     return bitmap->getImage(*palette);
 }
@@ -68,17 +68,17 @@ void SupXML::decode(int index)
     {
         throw QString("File: '%1' not found").arg(subPictures.at(index)->fileName);
     }
-    QImage* image = new QImage(subPictures.at(index)->fileName);
-    int width = image->width();
-    int height = image->height();
+    QImage image(subPictures.at(index)->fileName);
+    int width = image.width();
+    int height = image.height();
 
     palette.reset(0);
 
     // first try to read image and palette directly from imported image
-    if (image->format() == QImage::Format_Indexed8)
+    if (image.format() == QImage::Format_Indexed8)
     {
-        QVector<QRgb> colorTable = image->colorTable();
-        if (colorTable.size() < 255 || (image->hasAlphaChannel() && qAlpha(colorTable[255]) == 0))
+        QVector<QRgb> colorTable = image.colorTable();
+        if (colorTable.size() < 255 || (image.hasAlphaChannel() && qAlpha(colorTable[255]) == 0))
         {
             // create palette
             palette.reset(new Palette(256));
@@ -94,7 +94,7 @@ void SupXML::decode(int index)
                     palette->setARGB(i, 0);
                 }
             }
-            bitmap.reset(new Bitmap(image->width(), image->height(), *image));
+            bitmap = Bitmap(image.width(), image.height(), image);
         }
     }
 
@@ -103,8 +103,8 @@ void SupXML::decode(int index)
     {
         // quantize image
         QuantizeFilter qf;
-        bitmap.reset(new Bitmap(image->width(), image->height()));
-        QVector<QRgb> ct = qf.quantize(image, &bitmap->getImg(), width, height, 255, false, false);
+        bitmap = Bitmap(image.width(), image.height());
+        QVector<QRgb> ct = qf.quantize(image, &bitmap.getImg(), width, height, 255, false, false);
         int size = ct.size();
         if (size > 255)
         {
@@ -127,12 +127,12 @@ void SupXML::decode(int index)
         }
     }
 
-    primaryColorIndex = bitmap->getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
+    primaryColorIndex = bitmap.getPrimaryColorIndex(*palette, subtitleProcessor->getAlphaThreshold());
     // crop
-    const QRect& bounds = bitmap->getBounds(*palette, subtitleProcessor->getAlphaCrop());
+    const QRect& bounds = bitmap.getBounds(*palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
-        bounds.bottomRight().x() < (bitmap->getWidth() - 1) ||
-        bounds.bottomRight().y() < (bitmap->getHeight() - 1))
+        bounds.bottomRight().x() < (bitmap.getWidth() - 1) ||
+        bounds.bottomRight().y() < (bitmap.getHeight() - 1))
     {
         width = bounds.width();
         height = bounds.height();
@@ -145,7 +145,7 @@ void SupXML::decode(int index)
         {
             height = 2;
         }
-        bitmap.reset(bitmap->crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height));
+        bitmap = bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         // update picture
         SubPictureXML* pic = subPictures.at(index);
         pic->setImageWidth(width);
