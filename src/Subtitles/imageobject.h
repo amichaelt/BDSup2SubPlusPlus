@@ -40,7 +40,7 @@ public:
     int yOffset() { return yOfs; }
     void setYOffset(int offset) { yOfs = offset; }
 
-    QVector<ImageObjectFragment*> getFragmentList() { return fragmentList; }
+    QVector<ImageObjectFragment*> &getFragmentList() { return fragmentList; }
 
 private:
     int paletteId = 0;
