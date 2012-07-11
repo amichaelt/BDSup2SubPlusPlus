@@ -52,8 +52,6 @@ public:
     int subPictureType() { return type; }
     void setSubPictureType(int subPictureType) { type = subPictureType; }
 
-    bool isEmpty() { return empty; }
-
     QVector<ImageObject*> imageObjectList;
 
     QVector<QVector<PaletteInfo*> > palettes;
@@ -68,7 +66,6 @@ private:
     int xWinOfs = 0;
     int yWinOfs = 0;
     int type = 0;
-    bool empty;
 };
 
 #endif // SUBSPICTUREBD_H

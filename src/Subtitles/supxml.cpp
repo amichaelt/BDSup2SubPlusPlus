@@ -64,11 +64,11 @@ QImage SupXML::getImage(Bitmap &bitmap)
 
 void SupXML::decode(int index)
 {
-    if (!QFileInfo(subPictures[index].fileName).exists())
+    if (!QFileInfo(subPictures[index]->fileName).exists())
     {
-        throw QString("File: '%1' not found").arg(subPictures[index].fileName);
+        throw QString("File: '%1' not found").arg(subPictures[index]->fileName);
     }
-    QImage image(subPictures[index].fileName);
+    QImage image(subPictures[index]->fileName);
     int width = image.width();
     int height = image.height();
 
@@ -162,22 +162,22 @@ int SupXML::getNumFrames()
 
 bool SupXML::isForced(int index)
 {
-    return subPictures[index].isForced();
+    return subPictures[index]->isForced();
 }
 
 long SupXML::getEndTime(int index)
 {
-    return subPictures[index].endTime();
+    return subPictures[index]->endTime();
 }
 
 long SupXML::getStartTime(int index)
 {
-    return subPictures[index].startTime();
+    return subPictures[index]->startTime();
 }
 
 SubPicture *SupXML::getSubPicture(int index)
 {
-    return &subPictures[index];
+    return subPictures[index];
 }
 
 void SupXML::readAllImages()

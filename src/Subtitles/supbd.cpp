@@ -257,6 +257,7 @@ void SupBD::readAllSupFrames()
                     {
                         picLast = pic;
                     }
+
                     pic = new SubPictureBD();
                     subPictures.push_back(pic); // add to list
                     pic->setStartTime(segment->timestamp);
