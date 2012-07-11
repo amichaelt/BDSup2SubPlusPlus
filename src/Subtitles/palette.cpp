@@ -25,9 +25,9 @@ Palette::Palette()
 }
 
 Palette::Palette(const Palette &other) :
-    size(other.size),
+    paletteSize(other.paletteSize),
     useBT601(other.useBT601),
-    rgba(other.rgba),
+    colors(other.colors),
     y(other.y),
     cb(other.cb),
     cr(other.cr)
@@ -35,9 +35,9 @@ Palette::Palette(const Palette &other) :
 }
 
 Palette::Palette(const Palette *other) :
-    size(other->size),
+    paletteSize(other->paletteSize),
     useBT601(other->useBT601),
-    rgba(other->rgba),
+    colors(other->colors),
     y(other->y),
     cb(other->cb),
     cr(other->cr)
@@ -45,9 +45,9 @@ Palette::Palette(const Palette *other) :
 }
 
 Palette::Palette(int paletteSize, bool use601) :
-    size(paletteSize),
+    paletteSize(paletteSize),
     useBT601(use601),
-    rgba(paletteSize, 0)
+    colors(paletteSize, 0)
 {
     QVector<int> yCbCr;
     for (int i = 0; i < paletteSize; ++i)
@@ -64,18 +64,18 @@ Palette::Palette(QVector<uchar> inRed, QVector<uchar> inGreen, QVector<uchar> in
 {
     for (int i = 0; i < inRed.size(); ++i)
     {
-        rgba.push_back(qRgba(inRed.at(i), inGreen.at(i), inBlue.at(i), inAlpha.at(i)));
+        colors.push_back(qRgba(inRed.at(i), inGreen.at(i), inBlue.at(i), inAlpha.at(i)));
     }
 
     QVector<int> yCbCr;
-    for (int i = 0; i < rgba.size(); ++i)
+    for (int i = 0; i < colors.size(); ++i)
     {
-        yCbCr = RGB2YCbCr(rgba.at(i), useBT601);
+        yCbCr = RGB2YCbCr(colors.at(i), useBT601);
         y.push_back(yCbCr[0]);
         cb.push_back(yCbCr[1]);
         cr.push_back(yCbCr[2]);
     }
-    size = rgba.size();
+    paletteSize = colors.size();
 }
 
 Palette::~Palette()
@@ -84,12 +84,12 @@ Palette::~Palette()
 
 void Palette::setAlpha(int index, int alpha)
 {
-    rgba.replace(index, qRgba(qRed(rgba.at(index)), qGreen(rgba.at(index)), qBlue(rgba.at(index)), alpha));
+    colors.replace(index, qRgba(qRed(colors.at(index)), qGreen(colors.at(index)), qBlue(colors.at(index)), alpha));
 }
 
 void Palette::setRGB(int index, QRgb rgb)
 {
-    rgba.replace(index, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb), qAlpha(rgba.at(index))));
+    colors.replace(index, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb), qAlpha(colors.at(index))));
     QVector<int> yCbCr = RGB2YCbCr(rgb, useBT601);
     y.replace(index, yCbCr[0]);
     cb.replace(index, yCbCr[1]);
@@ -195,15 +195,15 @@ void Palette::setARGB(int index, QRgb inColor)
     setAlpha(index, qAlpha(inColor));
 }
 
-int Palette::getTransparentIndex()
+int Palette::transparentIndex()
 {
     int transparentIndex = 0;
     int minimumAlpha = 0x100;
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < paletteSize; ++i)
     {
-        if (qAlpha(rgba.at(i)) < minimumAlpha)
+        if (qAlpha(colors.at(i)) < minimumAlpha)
         {
-            minimumAlpha = qAlpha(rgba.at(i));
+            minimumAlpha = qAlpha(colors.at(i));
             transparentIndex = i;
             if (minimumAlpha == 0)
             {
@@ -222,10 +222,10 @@ void Palette::setYCbCr(int index, int yn, int cbn, int crn)
 
     QRgb rgb = YCbCr2RGB(yn, cbn, crn, useBT601);
 
-    rgba.replace(index, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb), qAlpha(rgba.at(index))));
+    colors.replace(index, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb), qAlpha(colors.at(index))));
 }
 
-QVector<int> Palette::getYCbCr(int index)
+QVector<int> Palette::YCbCr(int index)
 {
     QVector<int> yCbCr;
     yCbCr.push_back(y[index] & 0xff);

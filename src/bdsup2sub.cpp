@@ -60,15 +60,6 @@ BDSup2Sub::~BDSup2Sub()
 
 void BDSup2Sub::closeEvent(QCloseEvent *event)
 {
-    if (!isMaximized())
-    {
-        QRect geometry = this->geometry();
-        settings->setValue("frameWidth", QVariant(geometry.width()));
-        settings->setValue("frameHeight", QVariant(geometry.height()));
-        // store frame pos
-        settings->setValue("framePosX", QVariant(geometry.x()));
-        settings->setValue("framePosY", QVariant(geometry.y()));
-    }
     settings->setValue("loadPath", QVariant(loadPath));
     settings->setValue("colorPath", QVariant(colorPath));
 
@@ -188,10 +179,11 @@ void BDSup2Sub::onLoadingSubtitleFileFinished(const QString &errorString)
             }
         }
 
-        if (subtitleProcessor->getSubPictureSrc(0)->startTime < 0)
+        if (subtitleProcessor->getSubPictureSrc(0)->startTime() < 0)
         {
             QMessageBox::warning(this, "Warning!", QString("First subpicture has timestamp of %1.\n"
-                                 "Please specify proper delay value to correct this.").arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime)));
+                                 "Please specify proper delay value to correct this.")
+                                 .arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime())));
         }
 
         ConversionDialog conversionDialog(this, subtitleProcessor, settings);
@@ -1924,8 +1916,8 @@ void BDSup2Sub::editDefaultDVDPalette_triggered()
 
     for (int i = 0; i < colorNames.size(); ++i)
     {
-        colors.push_back(subtitleProcessor->getCurrentDVDPalette().getColor(i));
-        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette().getColor(i));
+        colors.push_back(subtitleProcessor->getCurrentDVDPalette().color(i));
+        defaultColors.push_back(subtitleProcessor->getDefaultDVDPalette().color(i));
     }
 
     colorDialog.setParameters(colorNames, colors, defaultColors);
@@ -1968,8 +1960,8 @@ void BDSup2Sub::editImportedDVDPalette_triggered()
 
     for (int i = 0; i < 16; ++i)
     {
-        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette().getColor(i));
-        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette().getColor(i));
+        colors.push_back(subtitleProcessor->getCurrentSrcDVDPalette().color(i));
+        defaultColors.push_back(subtitleProcessor->getDefaultSrcDVDPalette().color(i));
     }
 
     colorDialog.setParameters(colorNames, colors, defaultColors);
@@ -2003,22 +1995,25 @@ void BDSup2Sub::editImportedDVDPalette_triggered()
 
 void BDSup2Sub::editDVDFramePalette_triggered()
 {
-    FramePaletteDialog framePaletteDialog(this, subtitleProcessor);
-    framePaletteDialog.setIndex(subIndex);
-    framePaletteDialog.exec();
     if (subtitleProcessor->getNumberOfFrames() > 0)
     {
-        try
+        FramePaletteDialog framePaletteDialog(this, subtitleProcessor);
+        framePaletteDialog.setIndex(subIndex);
+
+        if (framePaletteDialog.exec() != QDialog::Rejected)
         {
-            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            try
+            {
+                subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+            }
+            catch (QString e)
+            {
+                errorDialog(e);
+                return;
+            }
+            refreshSrcFrame(subIndex);
+            refreshTrgFrame(subIndex);
         }
-        catch (QString e)
-        {
-            errorDialog(e);
-            return;
-        }
-        refreshSrcFrame(subIndex);
-        refreshTrgFrame(subIndex);
     }
 }
 

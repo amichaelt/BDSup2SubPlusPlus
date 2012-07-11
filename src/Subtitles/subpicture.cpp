@@ -19,72 +19,59 @@
 
 #include "subpicture.h"
 
-SubPicture::SubPicture() :
-    width(0),
-    height(0),
-    startTime(0),
-    endTime(0),
-    isForced(false),
-    compNum(0),
-    wasDecoded(false),
-    exclude(false),
-    erasePatch(),
-    imageWidth(0),
-    imageHeight(0),
-    xOfs(0),
-    yOfs(0)
+SubPicture::SubPicture()
 {
 }
 
 SubPicture::SubPicture(const SubPicture &other) :
-    width(other.width),
-    height(other.height),
-    startTime(other.startTime),
-    endTime(other.endTime),
-    isForced(other.isForced),
-    compNum(other.compNum),
-    wasDecoded(other.wasDecoded),
-    exclude(other.exclude),
     erasePatch(other.erasePatch),
+    screenWidth(other.screenWidth),
+    screenHeight(other.screenHeight),
+    start(other.start),
+    end(other.end),
+    compositionNumber(other.compositionNumber),
     imageWidth(other.imageWidth),
     imageHeight(other.imageHeight),
     xOfs(other.xOfs),
-    yOfs(other.yOfs)
+    yOfs(other.yOfs),
+    forced(other.forced),
+    decoded(other.decoded),
+    excluded(other.excluded)
 {
 }
 
 SubPicture::SubPicture(const SubPicture *other) :
-    width(other->width),
-    height(other->height),
-    startTime(other->startTime),
-    endTime(other->endTime),
-    isForced(other->isForced),
-    compNum(other->compNum),
-    wasDecoded(other->wasDecoded),
-    exclude(other->exclude),
     erasePatch(other->erasePatch),
+    screenWidth(other->screenWidth),
+    screenHeight(other->screenHeight),
+    start(other->start),
+    end(other->end),
+    compositionNumber(other->compositionNumber),
     imageWidth(other->imageWidth),
     imageHeight(other->imageHeight),
     xOfs(other->xOfs),
-    yOfs(other->yOfs)
+    yOfs(other->yOfs),
+    forced(other->forced),
+    decoded(other->decoded),
+    excluded(other->excluded)
 {
 }
 
 SubPicture* SubPicture::copy()
 {
     SubPicture* sp = new SubPicture;
-    sp->width = width;
-    sp->height = height;
-    sp->startTime = startTime;
-    sp->endTime = endTime;
-    sp->isForced = isForced;
-    sp->compNum = compNum;
+    sp->screenHeight = screenHeight;
+    sp->screenWidth = screenWidth;
+    sp->start = start;
+    sp->end = end;
+    sp->forced = forced;
+    sp->compositionNumber = compositionNumber;
     sp->setImageWidth(getImageWidth());
     sp->setImageHeight(getImageHeight());
     sp->setOfsX(getOfsX());
     sp->setOfsY(getOfsY());
-    sp->exclude = exclude;
-    sp->wasDecoded = wasDecoded;
+    sp->excluded = excluded;
+    sp->decoded = decoded;
     if (!erasePatch.empty())
     {
         sp->erasePatch = erasePatch;

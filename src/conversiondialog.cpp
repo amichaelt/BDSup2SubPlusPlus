@@ -63,7 +63,7 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
 
     if (!changeResolution && subtitleProcessor->getNumberOfFrames() > 0)
     {
-        resolution = subtitleProcessor->getResolution(subtitleProcessor->getSubPictureSrc(0)->width, subtitleProcessor->getSubPictureSrc(0)->height);
+        resolution = subtitleProcessor->getResolution(subtitleProcessor->getSubPictureSrc(0)->width(), subtitleProcessor->getSubPictureSrc(0)->height());
     }
     else
     {
@@ -158,11 +158,11 @@ void ConversionDialog::on_okButton_clicked()
 {
     if (subtitleProcessor->getNumberOfFrames() > 0)
     {
-        if ((subtitleProcessor->getSubPictureSrc(0)->startTime + delayPTS) < 0)
+        if ((subtitleProcessor->getSubPictureSrc(0)->startTime() + delayPTS) < 0)
         {
             QMessageBox::warning(this, "Warning!", QString("First subpicture has timestamp of %1.\n"
                                  "Delay value of %2 is insufficient to correct this.")
-                                 .arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime))
+                                 .arg(TimeUtil::ptsToTimeStr(subtitleProcessor->getSubPictureSrc(0)->startTime()))
                                  .arg(QString::number(delayPTS)));
             return;
         }

@@ -40,10 +40,10 @@ FramePaletteDialog::FramePaletteDialog(QWidget *parent, SubtitleProcessor* subti
     ui->alpha2ComboBox->blockSignals(true);
     ui->alpha3ComboBox->blockSignals(true);
     ui->alpha4ComboBox->blockSignals(true);
-    for (int i = 0; i < palette.getSize(); ++i)
+    for (int i = 0; i < palette.size(); ++i)
     {
         QPixmap &&pixmap = QPixmap(12, 12);
-        pixmap.fill(QColor(palette.getARGB(i)));
+        pixmap.fill(QColor(palette.rgba(i)));
         colorIcons.insert(i, QIcon(pixmap));
         ui->color1ComboBox->addItem(colorIcons[i], colorNames[i]);
         ui->color2ComboBox->addItem(colorIcons[i], colorNames[i]);
@@ -166,8 +166,8 @@ void FramePaletteDialog::on_setAllButton_clicked()
 {
     for (int j = 0; j < subtitleProcessor->getNumberOfFrames(); ++j)
     {
-        QVector<int> a = subtitleProcessor->getFrameAlpha(j);
-        QVector<int> p = subtitleProcessor->getFramePal(j);
+        QVector<int> &a = subtitleProcessor->getFrameAlpha(j);
+        QVector<int> &p = subtitleProcessor->getFramePal(j);
         if (!a.isEmpty())
         {
             for (int i = 0; i < a.size(); ++i)
@@ -194,8 +194,8 @@ void FramePaletteDialog::on_resetButton_clicked()
 {
     QVector<int> originalAlpha = subtitleProcessor->getOriginalFrameAlpha(index);
     QVector<int> originalPalette = subtitleProcessor->getOriginalFramePal(index);
-    QVector<int> a = subtitleProcessor->getFrameAlpha(index);
-    QVector<int> p = subtitleProcessor->getFramePal(index);
+    QVector<int> &a = subtitleProcessor->getFrameAlpha(index);
+    QVector<int> &p = subtitleProcessor->getFramePal(index);
 
     if (!a.isEmpty() && !originalAlpha.isEmpty())
     {
@@ -216,8 +216,8 @@ void FramePaletteDialog::on_resetButton_clicked()
 
 void FramePaletteDialog::on_okButton_clicked()
 {
-    QVector<int> a = subtitleProcessor->getFrameAlpha(index);
-    QVector<int> p = subtitleProcessor->getFramePal(index);
+    QVector<int> &a = subtitleProcessor->getFrameAlpha(index);
+    QVector<int> &p = subtitleProcessor->getFramePal(index);
     if (!a.isEmpty())
     {
         for (int i = 0; i < a.size(); ++i)

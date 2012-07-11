@@ -54,21 +54,21 @@ SupXML::~SupXML()
 
 QImage SupXML::getImage()
 {
-    return bitmap.getImage(palette);
+    return bitmap.image(palette);
 }
 
 QImage SupXML::getImage(Bitmap &bitmap)
 {
-    return bitmap.getImage(palette);
+    return bitmap.image(palette);
 }
 
 void SupXML::decode(int index)
 {
-    if (!QFileInfo(subPictures.at(index)->fileName).exists())
+    if (!QFileInfo(subPictures[index].fileName).exists())
     {
-        throw QString("File: '%1' not found").arg(subPictures.at(index)->fileName);
+        throw QString("File: '%1' not found").arg(subPictures[index].fileName);
     }
-    QImage image(subPictures.at(index)->fileName);
+    QImage image(subPictures[index].fileName);
     int width = image.width();
     int height = image.height();
 
@@ -94,17 +94,17 @@ void SupXML::decode(int index)
                     palette.setARGB(i, 0);
                 }
             }
-            bitmap = Bitmap(image.width(), image.height(), image);
+            bitmap = Bitmap(image);
         }
     }
 
     // if this failed, assume RGB image and quantize palette
-    if (palette.getSize() == 0)
+    if (palette.size() == 0)
     {
         // quantize image
         QuantizeFilter qf;
         bitmap = Bitmap(image.width(), image.height());
-        QVector<QRgb> ct = qf.quantize(image, &bitmap.getImg(), width, height, 255, false, false);
+        QVector<QRgb> ct = qf.quantize(image, &bitmap.image(), width, height, 255, false, false);
         int size = ct.size();
         if (size > 255)
         {
@@ -127,12 +127,12 @@ void SupXML::decode(int index)
         }
     }
 
-    primaryColorIndex = bitmap.getPrimaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
     // crop
-    const QRect& bounds = bitmap.getBounds(palette, subtitleProcessor->getAlphaCrop());
+    QRect bounds = bitmap.bounds(palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
-        bounds.bottomRight().x() < (bitmap.getWidth() - 1) ||
-        bounds.bottomRight().y() < (bitmap.getHeight() - 1))
+        bounds.bottomRight().x() < (bitmap.width() - 1) ||
+        bounds.bottomRight().y() < (bitmap.height() - 1))
     {
         width = bounds.width();
         height = bounds.height();
@@ -147,11 +147,11 @@ void SupXML::decode(int index)
         }
         bitmap = bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         // update picture
-        SubPictureXML* pic = subPictures.at(index);
-        pic->setImageWidth(width);
-        pic->setImageHeight(height);
-        pic->setOfsX(pic->originalX + bounds.topLeft().x());
-        pic->setOfsY(pic->originalY + bounds.topLeft().y());
+        SubPictureXML pic(subPictures[index]);
+        pic.setImageWidth(width);
+        pic.setImageHeight(height);
+        pic.setOfsX(pic.originalX + bounds.topLeft().x());
+        pic.setOfsY(pic.originalY + bounds.topLeft().y());
     }
 }
 
@@ -162,22 +162,22 @@ int SupXML::getNumFrames()
 
 bool SupXML::isForced(int index)
 {
-    return subPictures.at(index)->isForced;
+    return subPictures[index].isForced();
 }
 
 long SupXML::getEndTime(int index)
 {
-    return subPictures.at(index)->endTime;
+    return subPictures[index].endTime();
 }
 
 long SupXML::getStartTime(int index)
 {
-    return subPictures.at(index)->startTime;
+    return subPictures[index].startTime();
 }
 
 SubPicture *SupXML::getSubPicture(int index)
 {
-    return subPictures.at(index);
+    return &subPictures[index];
 }
 
 void SupXML::readAllImages()
@@ -203,7 +203,7 @@ QString SupXML::getPNGname(QString filename, int idx)
     return QString("%1/%2_%3.png").arg(info.absolutePath()).arg(info.completeBaseName()).arg(QString::number(idx), 4, QChar('0'));
 }
 
-void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
+void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
 {
     double fps = subtitleProcessor->getFPSTrg();
     double fpsXml = XmlFps(fps);
@@ -221,13 +221,13 @@ void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
     out->write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toAscii());
     QString res = subtitleProcessor->getResolutionNameXml((int)subtitleProcessor->getOutputResolution());
     out->write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 6) + "\" DropFrame=\"False\"/>\n").toAscii());
-    t = pics[0]->startTime;
+    t = pics[0]->startTime();
     if (fps != fpsXml)
     {
         t = ((t * 2000) + 1001) / 2002;
     }
     QString ts = TimeUtil::ptsToTimeStrXml(t, fpsXml);
-    t = pics[pics.size() - 1]->endTime;
+    t = pics[pics.size() - 1]->endTime();
     if (fps != fpsXml)
     {
         t = ((t * 2000) + 1001) / 2002;
@@ -239,19 +239,19 @@ void SupXML::writeXml(QString filename, QVector<SubPicture *> pics)
     for (int idx = 0; idx < pics.size(); ++idx)
     {
         SubPicture* p = pics[idx];
-        t = p->startTime;
+        t = p->startTime();
         if (fps != fpsXml)
         {
             t = ((t * 2000) + 1001) / 2002;
         }
         ts = TimeUtil::ptsToTimeStrXml(t, fpsXml);
-        t = p->endTime;
+        t = p->endTime();
         if (fps != fpsXml)
         {
             t = ((t * 2000) + 1001) / 2002;
         }
         te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
-        QString forced = p->isForced ? "True": "False";
+        QString forced = p->isForced() ? "True": "False";
         out->write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toAscii());
 
         QString pname = QFileInfo(getPNGname(name, idx + 1)).fileName();
@@ -402,44 +402,44 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         at = atts.value("InTC");
         if (!at.isEmpty())
         {
-            subPicture->startTime = TimeUtil::timeStrXmlToPTS(at, parent->fpsXml);
-            if (subPicture->startTime == -1)
+            subPicture->setStartTime(TimeUtil::timeStrXmlToPTS(at, parent->fpsXml));
+            if (subPicture->startTime() == -1)
             {
-                subPicture->startTime = 0;
+                subPicture->setStartTime(0);
                 parent->subtitleProcessor->printWarning(QString("Invalid start time %1\n").arg(at));
             }
         }
         at = atts.value("OutTC");
         if (!at.isEmpty())
         {
-            subPicture->endTime = TimeUtil::timeStrXmlToPTS(at, parent->fpsXml);
-            if (subPicture->endTime == -1)
+            subPicture->setEndTime(TimeUtil::timeStrXmlToPTS(at, parent->fpsXml));
+            if (subPicture->endTime() == -1)
             {
-                subPicture->endTime = 0;
+                subPicture->setEndTime(0);
                 parent->subtitleProcessor->printWarning(QString("Invalid end time %1\n").arg(at));
             }
         }
         if (parent->fps != parent->fpsXml)
         {
-            subPicture->startTime = ((subPicture->startTime * 1001) + 500) / 1000;
-            subPicture->endTime   = ((subPicture->endTime * 1001) + 500) / 1000;
+            subPicture->setStartTime(((subPicture->startTime() * 1001) + 500) / 1000);
+            subPicture->setEndTime(((subPicture->endTime() * 1001) + 500) / 1000);
         }
         at = atts.value("Forced");
         if (!at.isEmpty())
         {
-            subPicture->isForced  = at.toLower() == "true";
+            subPicture->setForced(at.toLower() == "true");
         }
         else
         {
-            subPicture->isForced = false;
+            subPicture->setForced(false);
         }
-        if (subPicture->isForced)
+        if (subPicture->isForced())
         {
             parent->numForcedFrames++;
         }
         QVector<int> dim = parent->subtitleProcessor->getResolutions(parent->resolution);
-        subPicture->width  = dim.at(0);
-        subPicture->height = dim.at(1);
+        subPicture->setWidth(dim.at(0));
+        subPicture->setHeight(dim.at(1));
     } break;
     case (int)SupXML::XmlHandler::XmlState::GRAPHIC:
     {

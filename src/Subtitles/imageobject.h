@@ -20,9 +20,9 @@
 #ifndef IMAGEOBJECT_H
 #define IMAGEOBJECT_H
 
-#include <QVector>
+#include "imageobjectfragment.h"
 
-class ImageObjectFragment;
+#include <QVector>
 
 class ImageObject
 {
@@ -40,7 +40,7 @@ public:
     int yOffset() { return yOfs; }
     void setYOffset(int offset) { yOfs = offset; }
 
-    QVector<ImageObjectFragment*> &getFragmentList() { return fragmentList; }
+    QVector<ImageObjectFragment> &getFragmentList() { return fragmentList; }
 
 private:
     int paletteId = 0;
@@ -50,7 +50,7 @@ private:
     int xOfs = 0;
     int yOfs = 0;
 
-    QVector<ImageObjectFragment*> fragmentList;
+    QVector<ImageObjectFragment> fragmentList;
 };
 
 #endif // IMAGEOBJECT_H

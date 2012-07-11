@@ -23,7 +23,7 @@ SubPictureHD::SubPictureHD()
 {
 }
 
-SubPictureHD::SubPictureHD(SubPictureHD &other) :
+SubPictureHD::SubPictureHD(const SubPictureHD &other) :
     SubPicture(other),
     paletteOfs(other.paletteOfs),
     alphaOfs(other.alphaOfs),
@@ -33,7 +33,7 @@ SubPictureHD::SubPictureHD(SubPictureHD &other) :
 {
 }
 
-SubPictureHD::SubPictureHD(SubPictureHD *other) :
+SubPictureHD::SubPictureHD(const SubPictureHD *other) :
     SubPicture(other),
     paletteOfs(other->paletteOfs),
     alphaOfs(other->alphaOfs),

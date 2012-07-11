@@ -27,13 +27,13 @@
 #include "mitchellfilter.h"
 #include "trianglefilter.h"
 
-static BellFilter* bellFilter = 0;
-static BiCubicFilter* biCubicFilter = 0;
-static BSplineFilter* bSplineFilter = 0;
-static HermiteFilter* hermiteFilter = 0;
-static Lanczos3Filter* lanczos3Filter = 0;
-static MitchellFilter* mitchellFilter = 0;
-static TriangleFilter* triangleFilter = 0;
+BellFilter* bellFilter = 0;
+BiCubicFilter* biCubicFilter = 0;
+BSplineFilter* bSplineFilter = 0;
+HermiteFilter* hermiteFilter = 0;
+Lanczos3Filter* lanczos3Filter = 0;
+MitchellFilter* mitchellFilter = 0;
+TriangleFilter* triangleFilter = 0;
 
 Filter *Filters::getFilter(ScalingFilters scalingFilter)
 {

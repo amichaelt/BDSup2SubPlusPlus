@@ -28,8 +28,8 @@ class SubPictureXML : public SubPicture
 {
 public:
     SubPictureXML();
-    SubPictureXML(SubPictureXML& other);
-    SubPictureXML(SubPictureXML* other);
+    SubPictureXML(const SubPictureXML& other);
+    SubPictureXML(const SubPictureXML* other);
 
     int originalX;
     int originalY;

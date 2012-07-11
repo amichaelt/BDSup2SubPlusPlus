@@ -25,35 +25,48 @@ SubPictureBD::SubPictureBD()
 {
 }
 
-SubPictureBD::SubPictureBD(SubPictureBD *other) :
+SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
-    objectID(other->objectID),
+    imageObjectList(other->imageObjectList),
+    palettes(other->palettes),
+    objectId(other->objectId),
     winWidth(other->winWidth),
     winHeight(other->winHeight),
     xWinOfs(other->xWinOfs),
     yWinOfs(other->yWinOfs),
-    type(other->type),
-    imageObjectList(other->imageObjectList),
-    palettes(other->palettes)
+    type(other->type)
+{
+}
+
+SubPictureBD::SubPictureBD(const SubPictureBD &other) :
+    SubPicture(other),
+    imageObjectList(other.imageObjectList),
+    palettes(other.palettes),
+    objectId(other.objectId),
+    winWidth(other.winWidth),
+    winHeight(other.winHeight),
+    xWinOfs(other.xWinOfs),
+    yWinOfs(other.yWinOfs),
+    type(other.type)
 {
 }
 
 int SubPictureBD::getImageWidth()
 {
-    return imageObjectList.at(objectID)->width();
+    return imageObjectList[objectId]->width();
 }
 
 int SubPictureBD::getImageHeight()
 {
-    return imageObjectList.at(objectID)->height();
+    return imageObjectList[objectId]->height();
 }
 
 int SubPictureBD::getOfsX()
 {
-    return imageObjectList.at(objectID)->xOffset();
+    return imageObjectList[objectId]->xOffset();
 }
 
 int SubPictureBD::getOfsY()
 {
-    return imageObjectList.at(objectID)->yOffset();
+    return imageObjectList[objectId]->yOffset();
 }

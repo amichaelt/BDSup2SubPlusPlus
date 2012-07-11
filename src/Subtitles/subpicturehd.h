@@ -26,8 +26,8 @@ class SubPictureHD : public SubPicture
 {
 public:
     SubPictureHD();
-    SubPictureHD(SubPictureHD& other);
-    SubPictureHD(SubPictureHD* other);
+    SubPictureHD(const SubPictureHD& other);
+    SubPictureHD(const SubPictureHD* other);
 
     int paletteOfs = 0;
     int alphaOfs = 0;

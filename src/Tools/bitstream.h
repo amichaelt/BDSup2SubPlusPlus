@@ -25,7 +25,7 @@
 class BitStream
 {
 public:
-    BitStream(QVector<uchar> buffer);
+    BitStream(QVector<uchar> &buffer);
 
     void syncToByte();
 

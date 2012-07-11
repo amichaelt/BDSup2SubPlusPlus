@@ -65,7 +65,7 @@ class SupXML : public QObject, public Substream
 
         Resolution getResolution (QString string);
 
-        SubPictureXML* subPicture;
+        SubPictureXML *subPicture;
 
         SupXML* parent;
 
@@ -128,7 +128,7 @@ private:
     QString language = "deu";
     QString xmlFileName;
 
-    QVector<SubPictureXML*> subPictures;
+    QVector<SubPictureXML> subPictures;
 
     Resolution resolution;
 

@@ -179,11 +179,11 @@ void MoveDialog::setIndex(int idx)
                            .arg(QString::number(subtitleProcessor->getNumberOfFrames())));
     move();
     ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
-    ui->subtitleImage->setDimension(subPicture->width, subPicture->height);
+    ui->subtitleImage->setDimension(subPicture->width(), subPicture->height());
     ui->subtitleImage->setImage(image, subPicture->getImageWidth(), subPicture->getImageHeight());
     ui->subtitleImage->setScreenRatio(screenRatioTrg);
     ui->subtitleImage->setCropOfsY(cropOfsY);
-    ui->subtitleImage->setExcluded(subPicture->exclude);
+    ui->subtitleImage->setExcluded(subPicture->exclude());
     ui->subtitleImage->update();
 }
 
@@ -282,9 +282,9 @@ void MoveDialog::on_xOffsetLineEdit_editingFinished()
         {
             x = -originalX;
         }
-        else if ((subPicture->getImageWidth() + scaledX) > subPicture->width)
+        else if ((subPicture->getImageWidth() + scaledX) > subPicture->width())
         {
-            x = (subPicture->width - (subPicture->getImageWidth() + originalX));
+            x = (subPicture->width() - (subPicture->getImageWidth() + originalX));
         }
 
         if (x != offsetX)
@@ -301,9 +301,9 @@ void MoveDialog::on_xOffsetLineEdit_editingFinished()
         {
             x = 0;
         }
-        else if (x > subPicture->width / 3)
+        else if (x > subPicture->width() / 3)
         {
-            x = subPicture->width / 3;
+            x = subPicture->width() / 3;
         }
 
         if (x != offsetX)
@@ -322,7 +322,7 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
     if (moveModeX == MoveModeX::ORIGIN)
     {
         int scaledX = originalX + x;
-        if (scaledX < 0 || (subPicture->getImageWidth() + scaledX) > subPicture->width)
+        if (scaledX < 0 || (subPicture->getImageWidth() + scaledX) > subPicture->width())
         {
             ui->xOffsetLineEdit->setPalette(*errorBackground);
         }
@@ -339,7 +339,7 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
     }
     else
     {
-        if (x < 0 || x > subPicture->width / 3)
+        if (x < 0 || x > subPicture->width() / 3)
         {
             ui->xOffsetLineEdit->setPalette(*errorBackground);
         }
@@ -361,16 +361,16 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
 
     if (moveModeY == MoveModeY::ORIGIN)
     {
-        int scaledY = subPicture->height - ((subPicture->getImageHeight() + originalY) - y);
+        int scaledY = subPicture->height() - ((subPicture->getImageHeight() + originalY) - y);
 
         if (scaledY < 0)
         {
-            y = -(subPicture->height - (subPicture->getImageHeight() + originalY));
+            y = -(subPicture->height() - (subPicture->getImageHeight() + originalY));
         }
-        else if (scaledY > subPicture->height / 3)
+        else if (scaledY > subPicture->height() / 3)
         {
-            scaledY = subPicture->height / 3;
-            y = (subPicture->height - originalY) - scaledY;
+            scaledY = subPicture->height() / 3;
+            y = (subPicture->height() - originalY) - scaledY;
         }
 
         if (y != offsetY)
@@ -387,9 +387,9 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
         {
             y = 0;
         }
-        else if (y > subPicture->height / 3)
+        else if (y > subPicture->height() / 3)
         {
-            y = subPicture->height / 3;
+            y = subPicture->height() / 3;
         }
 
         if (y != offsetY)
@@ -408,9 +408,9 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
     if (moveModeY == MoveModeY::ORIGIN)
     {
         int yPos = subPicture->getImageHeight() + originalY - y;
-        y = subPicture->height - yPos;
+        y = subPicture->height() - yPos;
     }
-    if (y < 0 || y > subPicture->height / 3)
+    if (y < 0 || y > subPicture->height() / 3)
     {
         ui->yOffsetLineEdit->setPalette(*errorBackground);
     }
@@ -488,9 +488,9 @@ void MoveDialog::on_cropOffsetYLineEdit_editingFinished()
     {
         y = 0;
     }
-    else if (y > subPicture->height / 3)
+    else if (y > subPicture->height() / 3)
     {
-        y = subPicture->height / 3;
+        y = subPicture->height() / 3;
     }
 
     if (y != cropOfsY)
@@ -506,7 +506,7 @@ void MoveDialog::on_cropOffsetYLineEdit_textChanged(const QString &arg1)
 {
     int y = arg1.toInt();
 
-    if (y < 0 || y > subPicture->height / 3)
+    if (y < 0 || y > subPicture->height() / 3)
     {
         ui->cropOffsetYLineEdit->setPalette(*errorBackground);
     }
@@ -524,7 +524,7 @@ void MoveDialog::on_cropOffsetYLineEdit_textChanged(const QString &arg1)
 
 void MoveDialog::on_cropBarsButton_clicked()
 {
-    cropOfsY = (int)((subPicture->height * cineBarFactor) + .5);
+    cropOfsY = (int)((subPicture->height() * cineBarFactor) + .5);
     ui->subtitleImage->setCropOfsY(cropOfsY);
     setRatio(screenRatioTrg);
     ui->cropOffsetYLineEdit->setText(QString::number(cropOfsY));

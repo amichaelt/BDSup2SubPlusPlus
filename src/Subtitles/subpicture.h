@@ -36,6 +36,23 @@ public:
     void setOfsX(int ofs) { xOfs = ofs; }
     void setOfsY(int ofs) { yOfs = ofs; }
 
+    int width() { return screenWidth; }
+    void setWidth(int width) { screenWidth = width; }
+    int height() { return screenHeight; }
+    void setHeight(int height) { screenHeight = height; }
+    int startTime() { return start; }
+    void setStartTime(int startTime) { start = startTime; }
+    int endTime() { return end; }
+    void setEndTime(int endTime) { end = endTime; }
+    int compNum() { return compositionNumber; }
+    void setCompNum(int compNum) { compositionNumber = compNum; }
+    bool isForced() { return forced; }
+    void setForced(bool isForced) { forced = isForced; }
+    bool wasDecoded() { return decoded; }
+    void setDecoded(bool wasDecoded) { decoded = wasDecoded; }
+    bool exclude() { return excluded; }
+    void setExclude(bool exclude) { excluded = exclude; }
+
     virtual int getImageWidth() { return imageWidth; }
     virtual int getImageHeight() {  return imageHeight; }
     virtual int getOfsX() { return xOfs; }
@@ -43,22 +60,22 @@ public:
 
     SubPicture* copy();
 
-    int width;
-    int height;
-    long startTime;
-    long endTime;
-    bool isForced;
-    int compNum;
-    bool wasDecoded;
-    bool exclude;
-
     QVector<ErasePatch*> erasePatch;
 
 private:
-    int imageWidth;
-    int imageHeight;
-    int xOfs;
-    int yOfs;
+    int screenWidth = 0;
+    int screenHeight = 0;
+    long start = -1;
+    long end = 0;
+    int compositionNumber = 0;
+    int imageWidth = 0;
+    int imageHeight = 0;
+    int xOfs = 0;
+    int yOfs = 0;
+
+    bool forced = false;
+    bool decoded = false;
+    bool excluded = false;
 };
 
 #endif // SUBPICTURE_H

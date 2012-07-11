@@ -46,19 +46,19 @@ SubDVD::~SubDVD()
 
 QImage SubDVD::getImage()
 {
-    return bitmap.getImage(palette);
+    return bitmap.image(palette);
 }
 
 QImage SubDVD::getImage(Bitmap &bitmap)
 {
-    return bitmap.getImage(palette);
+    return bitmap.image(palette);
 }
 
 void SubDVD::decode(int index)
 {
     if (index < subPictures.size())
     {
-        SubstreamDVD::decode(subPictures.at(index), subtitleProcessor);
+        SubstreamDVD::decode(subPictures[index], subtitleProcessor);
     }
     else
     {
@@ -78,52 +78,52 @@ int SubDVD::getNumFrames()
 
 bool SubDVD::isForced(int index)
 {
-    return subPictures.at(index)->isForced;
+    return subPictures[index].isForced();
 }
 
 long SubDVD::getEndTime(int index)
 {
-    return subPictures.at(index)->endTime;
+    return subPictures[index].endTime();
 }
 
 long SubDVD::getStartTime(int index)
 {
-    return subPictures.at(index)->startTime;
+    return subPictures[index].startTime();
 }
 
 long SubDVD::getStartOffset(int index)
 {
-    return subPictures.at(index)->offset;
+    return subPictures[index].offset;
 }
 
 SubPicture *SubDVD::getSubPicture(int index)
 {
-    return subPictures.at(index);
+    return &subPictures[index];
 }
 
-QVector<int> SubDVD::getFrameAlpha(int index)
+QVector<int> &SubDVD::getFrameAlpha(int index)
 {
-    return subPictures.at(index)->alpha;
+    return subPictures[index].alpha;
 }
 
-QVector<int> SubDVD::getFramePal(int index)
+QVector<int> &SubDVD::getFramePal(int index)
 {
-    return subPictures.at(index)->pal;
+    return subPictures[index].pal;
 }
 
 QVector<int> SubDVD::getOriginalFrameAlpha(int index)
 {
-    return subPictures.at(index)->originalAlpha;
+    return subPictures[index].originalAlpha;
 }
 
 QVector<int> SubDVD::getOriginalFramePal(int index)
 {
-    return subPictures.at(index)->originalPal;
+    return subPictures[index].originalPal;
 }
 
-void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
+void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
 {
-    long ofs = pic->offset;
+    long ofs = pic.offset;
     long ctrlOfs = -1;
     long nextOfs;
     int  ctrlOfsRel = 0;
@@ -231,7 +231,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         rleFrag = new ImageObjectFragment;
         rleFrag->setImageBufferOffset(ofs);
         rleFrag->setImagePacketSize(((length - headerSize) - diff) + packHeaderSize);
-        pic->rleFragments.push_back(rleFrag);
+        pic.rleFragments.push_back(rleFrag);
 
         rleBufferFound += rleFrag->imagePacketSize();
 
@@ -265,7 +265,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         subtitleProcessor->printWarning("RLE buffer size inconsistent.\n");
     }
 
-    pic->rleSize = rleBufferFound;
+    pic.rleSize = rleBufferFound;
     int alphaSum = 0;
     QVector<int> alphaUpdate(4);
     int alphaUpdateSum;
@@ -293,7 +293,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         {
         case 0: // forced (?)
         {
-            pic->isForced = true;
+            pic.setForced(true);
             numForcedFrames++;
         } break;
         case 1: // start display
@@ -301,61 +301,61 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         case 3: // palette info
         {
             b = ctrlHeader[index++] & 0xff;
-            pic->pal.replace(3, (b >> 4));
-            pic->pal.replace(2, (b & 0x0f));
+            pic.pal.replace(3, (b >> 4));
+            pic.pal.replace(2, (b & 0x0f));
             b = ctrlHeader[index++] & 0xff;
-            pic->pal.replace(1, (b >> 4));
-            pic->pal.replace(0, (b & 0x0f));
+            pic.pal.replace(1, (b >> 4));
+            pic.pal.replace(0, (b & 0x0f));
 
             subtitleProcessor->print(QString("Palette:   %1, %2, %3, %4\n")
-                                     .arg(QString::number(pic->pal[0])).arg(QString::number(pic->pal[1]))
-                                     .arg(QString::number(pic->pal[2])).arg(QString::number(pic->pal[3])));
+                                     .arg(QString::number(pic.pal[0])).arg(QString::number(pic.pal[1]))
+                                     .arg(QString::number(pic.pal[2])).arg(QString::number(pic.pal[3])));
 
         } break;
         case 4: // alpha info
         {
             b = ctrlHeader[index++] & 0xff;
-            pic->alpha.replace(3, (b >> 4));
-            pic->alpha.replace(2, (b & 0x0f));
+            pic.alpha.replace(3, (b >> 4));
+            pic.alpha.replace(2, (b & 0x0f));
             b = ctrlHeader[index++] & 0xff;
-            pic->alpha.replace(1, (b >> 4));
-            pic->alpha.replace(0, (b & 0x0f));
+            pic.alpha.replace(1, (b >> 4));
+            pic.alpha.replace(0, (b & 0x0f));
             for (int i = 0; i<4; i++)
             {
-                alphaSum += pic->alpha[i] & 0xff;
+                alphaSum += pic.alpha[i] & 0xff;
             }
 
             subtitleProcessor->print(QString("Alpha:     %1, %2, %3, %4\n")
-                                     .arg(QString::number(pic->alpha[0])).arg(QString::number(pic->alpha[1]))
-                                     .arg(QString::number(pic->alpha[2])).arg(QString::number(pic->alpha[3])));
+                                     .arg(QString::number(pic.alpha[0])).arg(QString::number(pic.alpha[1]))
+                                     .arg(QString::number(pic.alpha[2])).arg(QString::number(pic.alpha[3])));
         } break;
         case 5: // coordinates
         {
             int xOfs = ((ctrlHeader[index] & 0xff) << 4) | ((ctrlHeader[index + 1] & 0xff) >> 4);
-            pic->setOfsX(ofsXglob + xOfs);
+            pic.setOfsX(ofsXglob + xOfs);
             int imageWidth = ((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index + 2] & 0xff));
-            pic->setImageWidth((imageWidth - xOfs) + 1);
+            pic.setImageWidth((imageWidth - xOfs) + 1);
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
-            pic->setOfsY(ofsYglob + yOfs);
+            pic.setOfsY(ofsYglob + yOfs);
             int imageHeight = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff));
-            pic->setImageHeight((imageHeight - yOfs) + 1);
+            pic.setImageHeight((imageHeight - yOfs) + 1);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
-                                     .arg(QString::number(pic->getOfsX())).arg(QString::number(pic->getOfsY()))
-                                     .arg(QString::number((pic->getOfsX() + pic->getImageWidth()) - 1))
-                                     .arg(QString::number((pic->getOfsY() + pic->getImageHeight()) - 1)));
+                                     .arg(QString::number(pic.getOfsX())).arg(QString::number(pic.getOfsY()))
+                                     .arg(QString::number((pic.getOfsX() + pic.getImageWidth()) - 1))
+                                     .arg(QString::number((pic.getOfsY() + pic.getImageHeight()) - 1)));
 
             index += 6;
         } break;
         case 6: // offset to RLE buffer
         {
-            pic->evenOfs = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4;
-            pic->oddOfs = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
+            pic.evenOfs = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4;
+            pic.oddOfs = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
             index += 4;
 
             subtitleProcessor->print(QString("RLE ofs:   %1, %2\n")
-                                     .arg(QString::number(pic->evenOfs, 16), 4, QChar('0'))
-                                     .arg(QString::number(pic->oddOfs, 16), 4, QChar('0')));
+                                     .arg(QString::number(pic.evenOfs, 16), 4, QChar('0'))
+                                     .arg(QString::number(pic.oddOfs, 16), 4, QChar('0')));
         } break;
         case 7: // color/alpha update
         {
@@ -376,14 +376,14 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
             if (alphaUpdateSum > alphaSum) {
                 alphaSum = alphaUpdateSum;
                 for (int i = 0; i<4; i++)
-                    pic->alpha.replace(i, alphaUpdate[i]);
+                    pic.alpha.replace(i, alphaUpdate[i]);
                 // take over frame palette
                 b =ctrlHeader[index + 8] & 0xff;
-                pic->pal.replace(3, (b >> 4));
-                pic->pal.replace(2, (b & 0x0f));
+                pic.pal.replace(3, (b >> 4));
+                pic.pal.replace(2, (b & 0x0f));
                 b = ctrlHeader[index + 9];
-                pic->pal.replace(1, (b >> 4));
-                pic->pal.replace(0, (b & 0x0f));
+                pic.pal.replace(1, (b >> 4));
+                pic.pal.replace(0, (b & 0x0f));
             }
             // search end sequence
             index = endSeqOfs;
@@ -424,11 +424,11 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         {
             subtitleProcessor->printWarning("Control sequence(s) ignored - result may be erratic.");
         }
-        pic->endTime = pic->startTime + delay;
+        pic.setEndTime(pic.startTime() + delay);
     }
     else
     {
-        pic->endTime = pic->startTime;
+        pic.setEndTime(pic.startTime());
     }
 
     if (ColAlphaUpdate)
@@ -442,7 +442,7 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         {
             for (int i=0; i < 4; i++)
             {
-                pic->alpha.replace(i, lastAlpha[i]);
+                pic.alpha.replace(i, lastAlpha[i]);
             }
 
             subtitleProcessor->printWarning("Invisible caption due to zero alpha - used alpha info of last caption.\n");
@@ -453,9 +453,9 @@ void SubDVD::readSubFrame(SubPictureDVD *pic, long endOfs)
         }
     }
 
-    lastAlpha = pic->alpha;
+    lastAlpha = pic.alpha;
 
-    pic->setOriginal();
+    pic.setOriginal();
 }
 
 void SubDVD::readAllSubFrames()
@@ -471,13 +471,13 @@ void SubDVD::readAllSubFrames()
         long nextOfs;
         if (i < subPictures.size() - 1)
         {
-            nextOfs = subPictures.at(i + 1)->offset;
+            nextOfs = subPictures[i + 1].offset;
         }
         else
         {
             nextOfs = fileBuffer->getSize();
         }
-        readSubFrame(subPictures.at(i), nextOfs);
+        readSubFrame(subPictures[i], nextOfs);
     }
 
     emit currentProgressChanged(subPictures.size());
@@ -485,7 +485,7 @@ void SubDVD::readAllSubFrames()
     subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
 }
 
-QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
+QVector<uchar> SubDVD::createSubFrame(SubPictureDVD &subPicture, Bitmap &bitmap)
 {
     QVector<uchar> even = encodeLines(bitmap, true);
     QVector<uchar> odd = encodeLines(bitmap, false);
@@ -493,7 +493,7 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
 
     int forcedOfs;
     int controlHeaderLen;
-    if (subPicture->isForced)
+    if (subPicture.isForced())
     {
         forcedOfs = 0;
         controlHeader.replace(2, 0x01); // display
@@ -512,7 +512,7 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
     // fill out all info but the offets (determined later)
 
     /* header - contains PTM */
-    int ptm = (int)subPicture->startTime; // should be end time, but STC writes start time?
+    int ptm = (int)subPicture.startTime(); // should be end time, but STC writes start time?
     headerFirst.replace(9, (uchar)(((ptm >> 29) & 0x0E) | 0x21));
     headerFirst.replace(10, (uchar)(ptm >> 22));
     headerFirst.replace(11, (uchar)((ptm >> 14) | 1));
@@ -521,26 +521,26 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
 
     /* control header */
     /* palette (store reversed) */
-    controlHeader.replace(1 + 4, (uchar)(((subPicture->pal[3] & 0xf) << 4) | (subPicture->pal[2] & 0x0f)));
-    controlHeader.replace(1 + 5, (uchar)(((subPicture->pal[1] & 0xf) << 4) | (subPicture->pal[0] & 0x0f)));
+    controlHeader.replace(1 + 4, (uchar)(((subPicture.pal[3] & 0xf) << 4) | (subPicture.pal[2] & 0x0f)));
+    controlHeader.replace(1 + 5, (uchar)(((subPicture.pal[1] & 0xf) << 4) | (subPicture.pal[0] & 0x0f)));
     /* alpha (store reversed) */
-    controlHeader.replace(1 + 7, (uchar)(((subPicture->alpha[3] & 0xf) << 4) | (subPicture->alpha[2] & 0x0f)));
-    controlHeader.replace(1 + 8, (uchar)(((subPicture->alpha[1] & 0xf) << 4) | (subPicture->alpha[0] & 0x0f)));
+    controlHeader.replace(1 + 7, (uchar)(((subPicture.alpha[3] & 0xf) << 4) | (subPicture.alpha[2] & 0x0f)));
+    controlHeader.replace(1 + 8, (uchar)(((subPicture.alpha[1] & 0xf) << 4) | (subPicture.alpha[0] & 0x0f)));
 
     /* coordinates of subtitle */
-    controlHeader.replace(1 + 10, (uchar)((subPicture->getOfsX() >> 4) & 0xff));
-    tmp = (subPicture->getOfsX() + bitmap.getWidth()) - 1;
-    controlHeader.replace(1 + 11, (uchar)(((subPicture->getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
+    controlHeader.replace(1 + 10, (uchar)((subPicture.getOfsX() >> 4) & 0xff));
+    tmp = (subPicture.getOfsX() + bitmap.width()) - 1;
+    controlHeader.replace(1 + 11, (uchar)(((subPicture.getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 12, (uchar)(tmp & 0xff));
 
-    int yOfs = subPicture->getOfsY() - subtitleProcessor->getCropOfsY();
+    int yOfs = subPicture.getOfsY() - subtitleProcessor->getCropOfsY();
     if (yOfs < 0)
     {
         yOfs = 0;
     }
     else
     {
-        int yMax = (subPicture->height - subPicture->getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
+        int yMax = (subPicture.height() - subPicture.getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
         if (yOfs > yMax)
         {
             yOfs = yMax;
@@ -548,7 +548,7 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
     }
 
     controlHeader.replace(1 + 13, (uchar)((yOfs >> 4) & 0xff));
-    tmp = (yOfs + bitmap.getHeight()) - 1;
+    tmp = (yOfs + bitmap.height()) - 1;
     controlHeader.replace(1 + 14, (uchar)(((yOfs & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 15, (uchar)(tmp & 0xff));
 
@@ -562,12 +562,12 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD *subPicture, Bitmap &bitmap)
     controlHeader.replace(1 + 20, (uchar)(tmp & 0xff));
 
     /* display duration in frames */
-    tmp = (int)((subPicture->endTime-subPicture->startTime) / 1024); // 11.378ms resolution????
+    tmp = (int)((subPicture.endTime() - subPicture.startTime()) / 1024); // 11.378ms resolution????
     controlHeader.replace(1 + 22, (uchar)((tmp >> 8) & 0xff));
     controlHeader.replace(1 + 23, (uchar)(tmp & 0xff));
 
     /* offset to end sequence - 22 is the offset of the end sequence */
-    tmp = even.size() + odd.size() + 22 + (subPicture->isForced ? 1 : 0) + 4;
+    tmp = even.size() + odd.size() + 22 + (subPicture.isForced() ? 1 : 0) + 4;
     controlHeader.replace(forcedOfs + 0, (uchar)((tmp >> 8) & 0xff));
     controlHeader.replace(forcedOfs + 1, (uchar)(tmp & 0xff));
     controlHeader.replace(1 + 24, (uchar)((tmp >> 8) & 0xff));
@@ -1068,11 +1068,11 @@ void SubDVD::readIdx(int idxToRead)
                     throw QString("Illegal filepos: %1").arg(vals[1]);
                 }
 
-                SubPictureDVD* pic = new SubPictureDVD;
-                pic->offset = hex;
-                pic->width = screenWidth;
-                pic->height = screenHeight;
-                pic->startTime = time + delayGlob;
+                SubPictureDVD pic;
+                pic.offset = hex;
+                pic.setWidth(screenWidth);
+                pic.setHeight(screenHeight);
+                pic.setStartTime(time + delayGlob);
                 subPictures.push_back(pic);
             }
         }
@@ -1092,7 +1092,7 @@ void SubDVD::readIdx(int idxToRead)
     emit maxProgressChanged(subPictures.size());
 }
 
-void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> offsets,
+void SubDVD::writeIdx(QString filename, SubPicture &subPicture, QVector<int> offsets,
                       QVector<int> timestamps, Palette &palette)
 {
     QScopedPointer<QFile> out(new QFile(filename));
@@ -1105,7 +1105,8 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     out->write(QString("# Created by " + progNameVer + "\n").toAscii());
     out->write("\n");
     out->write("# Frame size\n");
-    out->write(QString("size: " + QString::number(subPicture->width) + "x" + QString::number((subPicture->height - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toAscii());
+    out->write(QString("size: " + QString::number(subPicture.width()) + "x" +
+               QString::number((subPicture.height() - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toAscii());
     out->write("\n");
     out->write("# Origin - upper-left corner\n");
     out->write("org: 0, 0\n");
@@ -1134,12 +1135,12 @@ void SubDVD::writeIdx(QString filename, SubPicture *subPicture, QVector<int> off
     out->write("# The palette of the generated file\n");
     out->write("palette: ");
     //Palette pal = Core.getCurrentDVDPalette();
-    for (int i = 0; i < palette.getSize(); ++i)
+    for (int i = 0; i < palette.size(); ++i)
     {
-        QRgb val = palette.getRGB(i);
+        QRgb val = palette.rgb(i);
         QString value = QString("%1").arg(QString::number(val, 16), 6, QChar('0'));
         out->write(value.toAscii());
-        if (i != palette.getSize() - 1)
+        if (i != palette.size() - 1)
         {
             out->write(", ");
         }

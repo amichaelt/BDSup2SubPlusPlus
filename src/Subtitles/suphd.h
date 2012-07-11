@@ -78,16 +78,16 @@ private:
 
     QString supFileName;
 
-    QVector<SubPictureHD*> subPictures;
+    QVector<SubPictureHD> subPictures;
 
     SubtitleProcessor* subtitleProcessor = 0;
 
-    void decode(SubPictureHD* subPicture);
+    void decode(SubPictureHD &subPicture);
     void decodeLine(QImage &trg, int trgOfs, int width, int maxPixels, BitStream* src);
 
-    Bitmap decodeImage(SubPictureHD* subPicture, int transparentIndex);
+    Bitmap decodeImage(SubPictureHD &subPicture, int transparentIndex);
 
-    Palette decodePalette(SubPictureHD* subPicture);
+    Palette decodePalette(SubPictureHD &subPicture);
 };
 
 #endif // SUPHD_H

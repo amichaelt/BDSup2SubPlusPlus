@@ -44,32 +44,32 @@ public:
     }
     void setYCbCr(int index, int yn, int cbn, int crn);
 
-    int getSize() { return size; }
-    int getAlpha(int index) { return qAlpha(rgba[index]); }
-    int getTransparentIndex();
+    int size() { return paletteSize; }
+    int alpha(int index) { return qAlpha(colors[index]); }
+    int transparentIndex();
 
-    QColor getColor(int index) { return QColor(qRed(rgba[index]), qGreen(rgba[index]),
-                                               qBlue(rgba[index]), qAlpha(rgba[index])); }
+    QColor color(int index) { return QColor(qRed(colors[index]), qGreen(colors[index]),
+                                               qBlue(colors[index]), qAlpha(colors[index])); }
 
-    QRgb getRGB(int index) { return rgba[index]; }
-    QRgb getARGB(int index) { return rgba[index]; }
+    QRgb rgb(int index) { return qRgba(qRed(colors[index]), qGreen(colors[index]), qBlue(colors[index]), 0); }
+    QRgb rgba(int index) { return colors[index]; }
 
-    QVector<uchar> getY() { return y; }
-    QVector<uchar> getCb() { return cb; }
-    QVector<uchar> getCr() { return cr; }
+    QVector<uchar> Y() { return y; }
+    QVector<uchar> Cb() { return cb; }
+    QVector<uchar> Cr() { return cr; }
 
-    QVector<int> getYCbCr(int index);
+    QVector<int> YCbCr(int index);
 
-    QVector<QRgb> getColorTable() { return rgba; }
+    QVector<QRgb> colorTable() { return colors; }
 
     static QVector<int> RGB2YCbCr(QRgb rgb, bool use601);
 
 private:
-    int size = 0;
+    int paletteSize = 0;
 
     bool useBT601 = false;
 
-    QVector<QRgb> rgba;
+    QVector<QRgb> colors;
     QVector<uchar> y;
     QVector<uchar> cb;
     QVector<uchar> cr;

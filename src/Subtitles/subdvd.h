@@ -44,8 +44,8 @@ public:
     void decode(int index);
     void setSrcPalette(Palette &palette);
     void readIdx(int idxToRead = -1);
-    void writeIdx(QString filename, SubPicture* subPicture, QVector<int> offsets, QVector<int> timestamps, Palette &palette);
-    void readSubFrame(SubPictureDVD* pic, long endOfs);
+    void writeIdx(QString filename, SubPicture &subPicture, QVector<int> offsets, QVector<int> timestamps, Palette &palette);
+    void readSubFrame(SubPictureDVD &pic, long endOfs);
     void readAllSubFrames();
     void setTimeOffset(QString value) { timeOffset = value; }
 
@@ -68,14 +68,14 @@ public:
 
     Palette &getPalette() { return palette; }
     Palette &getSrcPalette() { return srcPalette; }
-    Palette &decodePalette(SubPictureDVD* pic, Palette &palette);
+    Palette &decodePalette(SubPictureDVD &pic, Palette &palette);
 
     SubPicture *getSubPicture(int index);
 
-    QVector<uchar> createSubFrame(SubPictureDVD* subPicture, Bitmap &bitmap);
+    QVector<uchar> createSubFrame(SubPictureDVD &subPicture, Bitmap &bitmap);
 
-    QVector<int> getFrameAlpha(int index);
-    QVector<int> getFramePal(int index);
+    QVector<int> &getFrameAlpha(int index);
+    QVector<int> &getFramePal(int index);
     QVector<int> getOriginalFrameAlpha(int index);
     QVector<int> getOriginalFramePal(int index);
 
@@ -93,9 +93,9 @@ private:
     QString subFileName;
     QString timeOffset = "";
 
-    QVector<SubPictureDVD*> subPictures;
+    QVector<SubPictureDVD> subPictures;
 
-    void decode(SubPictureDVD* pic);
+    void decode(SubPictureDVD &pic);
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage *trg, int trgOfs, int width, int maxPixels);
 
     QVector<uchar> packHeader = {

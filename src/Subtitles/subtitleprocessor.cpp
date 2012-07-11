@@ -180,7 +180,7 @@ int SubtitleProcessor::getNumForcedFrames()
     return substream->getNumForcedFrames();
 }
 
-QVector<int> SubtitleProcessor::getFrameAlpha(int index)
+QVector<int> &SubtitleProcessor::getFrameAlpha(int index)
 {
     if (inMode == InputMode::VOBSUB)
     {
@@ -198,7 +198,7 @@ QVector<int> SubtitleProcessor::getOriginalFrameAlpha(int index)
     return supDVD->getOriginalFrameAlpha(index);
 }
 
-QVector<int> SubtitleProcessor::getFramePal(int index)
+QVector<int> &SubtitleProcessor::getFramePal(int index)
 {
     if (inMode == InputMode::VOBSUB)
     {
@@ -262,17 +262,17 @@ QImage SubtitleProcessor::getTrgImagePatched(SubPicture *subPicture)
     if (!subPicture->erasePatch.isEmpty())
     {
         Bitmap trgBitmapPatched(trgBitmapUnpatched);
-        int color = trgPal.getTransparentIndex();
+        int color = trgPal.transparentIndex();
         for (auto erasePatch : subPicture->erasePatch)
         {
             trgBitmapPatched.fillRect(erasePatch->x(), erasePatch->y(), erasePatch->width(),
                                       erasePatch->height(), color);
         }
-        return trgBitmapPatched.getImage(trgPal);
+        return trgBitmapPatched.image(trgPal);
     }
     else
     {
-        return trgBitmapUnpatched.getImage(trgPal);
+        return trgBitmapUnpatched.image(trgPal);
     }
 }
 
@@ -389,7 +389,7 @@ void SubtitleProcessor::scanSubtitles()
     // change target resolution to source resolution if no conversion is needed
     if (!convertResolution && getNumberOfFrames() > 0)
     {
-        resolutionTrg = getResolution(getSubPictureSrc(0)->width, getSubPictureSrc(0)->height);
+        resolutionTrg = getResolution(getSubPictureSrc(0)->width(), getSubPictureSrc(0)->height());
     }
 
     double fx;
@@ -410,32 +410,32 @@ void SubtitleProcessor::scanSubtitles()
     {
         picSrc = substream->getSubPicture(i);
         subPictures.replace(i, picSrc->copy());
-        long ts = picSrc->startTime;
-        long te = picSrc->endTime;
+        long ts = picSrc->startTime();
+        long te = picSrc->endTime();
         // copy time stamps and apply speedup/speeddown
         if (!convertFPS)
         {
-            subPictures.at(i)->startTime = ts + delayPTS;
-            subPictures.at(i)->endTime = te + delayPTS;
+            subPictures.at(i)->setStartTime(ts + delayPTS);
+            subPictures.at(i)->setEndTime(te + delayPTS);
         }
         else
         {
-            subPictures.at(i)->startTime = (long)((ts * factTS) + 0.5) + delayPTS;
-            subPictures.at(i)->endTime = (long)((te * factTS) + 0.5) + delayPTS;
+            subPictures.at(i)->setStartTime((long)((ts * factTS) + 0.5) + delayPTS);
+            subPictures.at(i)->setEndTime((long)((te * factTS) + 0.5) + delayPTS);
         }
         // synchronize to target frame rate
-        subPictures.at(i)->startTime = syncTimePTS(subPictures.at(i)->startTime, fpsTrg);
-        subPictures.at(i)->endTime = syncTimePTS(subPictures.at(i)->endTime, fpsTrg);
+        subPictures.at(i)->setStartTime(syncTimePTS(subPictures.at(i)->startTime(), fpsTrg));
+        subPictures.at(i)->setEndTime(syncTimePTS(subPictures.at(i)->endTime(), fpsTrg));
 
         // set forced flag
         SubPicture* picTrg = subPictures.at(i);
         switch ((int)forceAll)
         {
             case (int)SetState::SET:
-                picTrg->isForced = true;
+                picTrg->setForced(true);
                 break;
             case (int)SetState::CLEAR:
-                picTrg->isForced = false;
+                picTrg->setForced(false);
                 break;
         }
 
@@ -445,15 +445,15 @@ void SubtitleProcessor::scanSubtitles()
         {
             // adjust image sizes and offsets
             // determine scaling factors
-            picTrg->width = getResolution(resolutionTrg)[0];
-            picTrg->height = getResolution(resolutionTrg)[1];
-            scaleX = (double)picTrg->width / picSrc->width;
-            scaleY = (double)picTrg->height / picSrc->height;
+            picTrg->setWidth(getResolution(resolutionTrg)[0]);
+            picTrg->setHeight(getResolution(resolutionTrg)[1]);
+            scaleX = (double)picTrg->width() / picSrc->width();
+            scaleY = (double)picTrg->height() / picSrc->height();
         }
         else
         {
-            picTrg->width = picSrc->width;
-            picTrg->height = picSrc->height;
+            picTrg->setWidth(picSrc->width());
+            picTrg->setHeight(picSrc->height());
             scaleX = 1.0;
             scaleY = 1.0;
         }
@@ -463,9 +463,9 @@ void SubtitleProcessor::scanSubtitles()
         {
             width = picSrc->getImageWidth();
         }
-        else if (width > picTrg->width)
+        else if (width > picTrg->width())
         {
-            width = picTrg->width;
+            width = picTrg->width();
         }
 
         int height = (int)(((picSrc->getImageHeight() * scaleY) * fy) + 0.5);
@@ -473,35 +473,35 @@ void SubtitleProcessor::scanSubtitles()
         {
             height = picSrc->getImageHeight();
         }
-        else if (height > picTrg->height)
+        else if (height > picTrg->height())
         {
-            height = picTrg->height;
+            height = picTrg->height();
         }
 
         picTrg->setImageWidth(width);
         picTrg->setImageHeight(height);
 
         int xOfs = (int)((picSrc->getOfsX() * scaleX) + 0.5);
-        int spaceSrc = (int)(((picSrc->width - picSrc->getImageWidth()) * scaleX) + 0.5);
-        int spaceTrg = picTrg->width - width;
+        int spaceSrc = (int)(((picSrc->width() - picSrc->getImageWidth()) * scaleX) + 0.5);
+        int spaceTrg = picTrg->width() - width;
         xOfs += ((spaceTrg - spaceSrc) / 2);
         if (xOfs < 0)
         {
             xOfs = 0;
         }
-        else if (xOfs+width > picTrg->width)
+        else if (xOfs + width > picTrg->width())
         {
-            xOfs = picTrg->width - width;
+            xOfs = picTrg->width() - width;
         }
         picTrg->setOfsX(xOfs);
 
         int yOfs = (int)(picSrc->getOfsY() * scaleY + 0.5);
-        spaceSrc = (int)((picSrc->height-picSrc->getImageHeight())*scaleY + 0.5);
-        spaceTrg = picTrg->height - height;
+        spaceSrc = (int)((picSrc->height() - picSrc->getImageHeight()) * scaleY + 0.5);
+        spaceTrg = picTrg->height() - height;
         yOfs += ((spaceTrg - spaceSrc) / 2);
-        if (yOfs+height > picTrg->height)
+        if (yOfs+height > picTrg->height())
         {
-            yOfs = picTrg->height - height;
+            yOfs = picTrg->height() - height;
         }
         picTrg->setOfsY(yOfs);
     }
@@ -560,7 +560,7 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
     // change target resolution to source resolution if no conversion is needed
     if (!convertResolution && getNumberOfFrames() > 0)
     {
-        resolutionTrg = getResolution(getSubPictureSrc(0)->width, getSubPictureSrc(0)->height);
+        resolutionTrg = getResolution(getSubPictureSrc(0)->width(), getSubPictureSrc(0)->height());
     }
 
     if (oldResolution != resolutionTrg)
@@ -588,45 +588,45 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
         case (int)SetState::SET:
         {
-            subPictures[i]->isForced = true;
+            subPictures[i]->setForced(true);
         } break;
         case (int)SetState::CLEAR:
         {
-            subPictures[i]->isForced = false;
+            subPictures[i]->setForced(false);
         } break;
         }
 
-        long ts = picOld->startTime;
-        long te = picOld->endTime;
+        long ts = picOld->startTime();
+        long te = picOld->endTime();
         // copy time stamps and apply speedup/speeddown
         if (factTS == 1.0)
         {
-            subPictures[i]->startTime = (ts - delayOld) + delayPTS;
-            subPictures[i]->endTime = (te - delayOld) + delayPTS;
+            subPictures[i]->setStartTime((ts - delayOld) + delayPTS);
+            subPictures[i]->setEndTime((te - delayOld) + delayPTS);
         }
         else
         {
-            subPictures[i]->startTime= (long)(((ts * factTS) + 0.5) - delayOld) + delayPTS;
-            subPictures[i]->endTime = (long)(((te * factTS) + 0.5) - delayOld) + delayPTS;
+            subPictures[i]->setStartTime((long)(((ts * factTS) + 0.5) - delayOld) + delayPTS);
+            subPictures[i]->setEndTime((long)(((te * factTS) + 0.5) - delayOld) + delayPTS);
         }
         // synchronize to target frame rate
-        subPictures[i]->startTime = syncTimePTS(subPictures[i]->startTime, fpsTrg);
-        subPictures[i]->endTime = syncTimePTS(subPictures[i]->endTime, fpsTrg);
+        subPictures[i]->setStartTime(syncTimePTS(subPictures[i]->startTime(), fpsTrg));
+        subPictures[i]->setEndTime(syncTimePTS(subPictures[i]->endTime(), fpsTrg));
         // adjust image sizes and offsets
         // determine scaling factors
         double scaleX;
         double scaleY;
         if (convertResolution)
         {
-            subPictures[i]->width = getResolution(resolutionTrg)[0];
-            subPictures[i]->height = getResolution(resolutionTrg)[1];
-            scaleX = (double)subPictures[i]->width / picSrc->width;
-            scaleY = (double)subPictures[i]->height / picSrc->height;
+            subPictures[i]->setWidth(getResolution(resolutionTrg)[0]);
+            subPictures[i]->setHeight(getResolution(resolutionTrg)[1]);
+            scaleX = (double)subPictures[i]->width() / picSrc->width();
+            scaleY = (double)subPictures[i]->height() / picSrc->height();
         }
         else
         {
-            subPictures[i]->width = picSrc->width;
-            subPictures[i]->height = picSrc->height;
+            subPictures[i]->setWidth(picSrc->width());
+            subPictures[i]->setHeight(picSrc->height());
             scaleX = 1.0;
             scaleY = 1.0;
         }
@@ -636,9 +636,9 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
             w = picSrc->getImageWidth();
         }
-        else if (w > subPictures[i]->width)
+        else if (w > subPictures[i]->width())
         {
-            w = subPictures[i]->width;
+            w = subPictures[i]->width();
             fsXNew = ((double)w / (double)picSrc->getImageWidth()) / scaleX;
         }
         int h = (int)(((picSrc->getImageHeight() * scaleY) * fsYNew) + 0.5);
@@ -646,9 +646,9 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
             h = picSrc->getImageHeight();
         }
-        else if (h > subPictures[i]->height)
+        else if (h > subPictures[i]->height())
         {
-            h = subPictures[i]->height;
+            h = subPictures[i]->height();
             fsYNew = ((double)h / (double)picSrc->getImageHeight()) / scaleY;
         }
 
@@ -659,34 +659,34 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         int xOfs = (int)((picOld->getOfsX() * factX) + 0.5);
         if (fsXNew != fsXOld)
         {
-            int spaceTrgOld = (int)(((picOld->width - picOld->getImageWidth()) * factX) + 0.5);
-            int spaceTrg = subPictures[i]->width - w;
+            int spaceTrgOld = (int)(((picOld->width() - picOld->getImageWidth()) * factX) + 0.5);
+            int spaceTrg = subPictures[i]->width() - w;
             xOfs += (spaceTrg - spaceTrgOld) / 2;
         }
         if (xOfs < 0)
         {
             xOfs = 0;
         }
-        else if ((xOfs + w) > subPictures[i]->width)
+        else if ((xOfs + w) > subPictures[i]->width())
         {
-            xOfs = subPictures[i]->width - w;
+            xOfs = subPictures[i]->width() - w;
         }
         subPictures[i]->setOfsX(xOfs);
 
         int yOfs = (int)((picOld->getOfsY() * factY) + 0.5);
         if (fsYNew != fsYOld)
         {
-            int spaceTrgOld = (int)(((picOld->height - picOld->getImageHeight()) * factY) + 0.5);
-            int spaceTrg = subPictures[i]->height - h;
+            int spaceTrgOld = (int)(((picOld->height() - picOld->getImageHeight()) * factY) + 0.5);
+            int spaceTrg = subPictures[i]->height() - h;
             yOfs += (spaceTrg - spaceTrgOld) / 2;
         }
         if (yOfs < 0)
         {
             yOfs = 0;
         }
-        if ((yOfs + h) > subPictures[i]->height)
+        if ((yOfs + h) > subPictures[i]->height())
         {
-            yOfs = subPictures[i]->height - h;
+            yOfs = subPictures[i]->height() - h;
         }
         subPictures[i]->setOfsY(yOfs);
 
@@ -730,8 +730,8 @@ QVector<int> SubtitleProcessor::getResolution(Resolution resolution)
 
 void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPicture *subPictureNext, SubPicture *subPicturePrevious)
 {
-    long startTime = subPicture->startTime;    // start time
-    long endTime = subPicture->endTime;        // end time
+    long startTime = subPicture->startTime();    // start time
+    long endTime = subPicture->endTime();        // end time
     long delay = 5000 * 90;                    // default delay for missing end time (5 seconds)
 
     index += 1; // only used for display
@@ -740,7 +740,7 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
     long lastFrameEndTime;
     if (subPicturePrevious != 0)
     {
-        lastFrameEndTime = subPicturePrevious->endTime;
+        lastFrameEndTime = subPicturePrevious->endTime();
     }
     else
     {
@@ -758,7 +758,7 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
     long nextFrameStartTime;
     if (subPictureNext != 0)
     {
-        nextFrameStartTime = subPictureNext->startTime;
+        nextFrameStartTime = subPictureNext->startTime();
     }
     else
     {
@@ -820,13 +820,13 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
         }
     }
 
-    if (subPicture->startTime != startTime)
+    if (subPicture->startTime() != startTime)
     {
-        subPicture->startTime = syncTimePTS(startTime, fpsTrg);
+        subPicture->setStartTime(syncTimePTS(startTime, fpsTrg));
     }
-    if (subPicture->endTime != endTime)
+    if (subPicture->endTime() != endTime)
     {
-        subPicture->endTime = syncTimePTS(endTime, fpsTrg);
+        subPicture->setEndTime(syncTimePTS(endTime, fpsTrg));
     }
 }
 
@@ -998,7 +998,7 @@ void SubtitleProcessor::writeSub(QString filename)
         }
         setCurrentProgress(i);
 
-        if (!subPictures[i]->exclude && (!exportForced || subPictures[i]->isForced))
+        if (!subPictures[i]->exclude() && (!exportForced || subPictures[i]->isForced()))
         {
             if (outMode == OutputMode::VOBSUB)
             {
@@ -1008,11 +1008,11 @@ void SubtitleProcessor::writeSub(QString filename)
                 {
                     subDVD = QSharedPointer<SubDVD>(new SubDVD("", "", this));
                 }
-                QVector<uchar> buf = subDVD->createSubFrame(subVobTrg, trgBitmap);
+                QVector<uchar> buf = subDVD->createSubFrame(*subVobTrg, trgBitmap);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
                 offset += buf.size();
                 offsets.push_back(offset);
-                timestamps.push_back((int)subPictures[i]->startTime);
+                timestamps.push_back((int)subPictures[i]->startTime());
             }
             else if (outMode == OutputMode::SUPIFO)
             {
@@ -1022,18 +1022,18 @@ void SubtitleProcessor::writeSub(QString filename)
                 {
                     supDVD = QSharedPointer<SupDVD>(new SupDVD("", "", this));
                 }
-                QVector<uchar> buf = supDVD->createSupFrame(subVobTrg, trgBitmap);
+                QVector<uchar> buf = supDVD->createSupFrame(*subVobTrg, trgBitmap);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
             }
             else if (outMode == OutputMode::BDSUP)
             {
-                subPictures[i]->compNum = frameNum;
+                subPictures[i]->setCompNum(frameNum);
                 convertSup(i, (frameNum / 2) + 1, maxNum);
                 if (supBD.isNull())
                 {
                     supBD = QSharedPointer<SupBD>(new SupBD("", this));
                 }
-                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal);
+                QVector<uchar> buf = supBD->createSupFrame(*subPictures[i], trgBitmap, trgPal);
                 out->write(QByteArray((char*)buf.data(), buf.size()));
             }
             else
@@ -1045,7 +1045,7 @@ void SubtitleProcessor::writeSub(QString filename)
                     supXML = QSharedPointer<SupXML>(new SupXML("", this));
                 }
                 QString fnp = supXML->getPNGname(fn, i + 1);
-                trgBitmap.getImage(trgPal).save(fnp, "PNG");
+                trgBitmap.image(trgPal).save(fnp, "PNG");
             }
             frameNum += 2;
         }
@@ -1088,7 +1088,7 @@ void SubtitleProcessor::writeSub(QString filename)
         {
             trgPallete = currentSourceDVDPalette;
         }
-        subDVD->writeIdx(filename, subPictures[0], ofs, ts, trgPallete);
+        subDVD->writeIdx(filename, *subPictures[0], ofs, ts, trgPallete);
     }
     else if (outMode == OutputMode::XML)
     {
@@ -1111,11 +1111,11 @@ void SubtitleProcessor::writeSub(QString filename)
 
         printX(QString("\nWriting %1\n").arg(filename));
 
-        supDVD->writeIfo(filename, subPictures[0], trgPallete);
+        supDVD->writeIfo(filename, *subPictures[0], trgPallete);
     }
 
     // only possible for SUB/IDX and SUP/IFO (else there is no public palette)
-    if (trgPallete.getSize() != 0 && writePGCEditPal)
+    if (trgPallete.size() != 0 && writePGCEditPal)
     {
         QString fnp = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".txt";
 
@@ -1278,7 +1278,7 @@ void SubtitleProcessor::moveAllToBounds()
         for (int idx = 0; idx < subPictures.size(); ++idx)
         {
             setCurrentProgress(idx);
-            if (!subPictures.at(idx)->wasDecoded)
+            if (!subPictures.at(idx)->wasDecoded())
             {
                 convertSup(idx, idx + 1, subPictures.size(), true);
             }
@@ -1306,7 +1306,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
     }
     updateTrgPic(index);
     SubPicture* picTrg = subPictures.at(index);
-    picTrg->wasDecoded = true;
+    picTrg->setDecoded(true);
 
     int trgWidth = picTrg->getImageWidth();
     int trgHeight = picTrg->getImageHeight();
@@ -1410,7 +1410,7 @@ void SubtitleProcessor::convertSup(int index, int displayNumber, int displayMax,
         if (!picTrg->erasePatch.isEmpty())
         {
             trgBitmapUnpatched = Bitmap(targetBitmap);
-            int col = targetPalette.getTransparentIndex();
+            int col = targetPalette.transparentIndex();
             for (auto erasePatch : picTrg->erasePatch)
             {
                 targetBitmap.fillRect(erasePatch->x(), erasePatch->y(), erasePatch->width(),
@@ -1436,7 +1436,7 @@ void SubtitleProcessor::determineFramePalette(int index)
     if ((inMode != InputMode::VOBSUB && inMode != InputMode::SUPIFO) || paletteMode != PaletteMode::KEEP_EXISTING)
     {
         // get the primary color from the source palette
-        QRgb rgbSrc(substream->getPalette().getRGB(substream->getPrimaryColorIndex()));
+        QRgb rgbSrc(substream->getPalette().rgb(substream->getPrimaryColorIndex()));
 
         // match with primary color from 16 color target palette
         // note: skip index 0 , primary colors at even positions
@@ -1444,9 +1444,9 @@ void SubtitleProcessor::determineFramePalette(int index)
         Palette trgPalette = currentDVDPalette;
         int minDistance = 0xffffff; // init > 0xff*0xff*3 = 0x02fa03
         int colIdx = 0;
-        for (int idx = 1; idx < trgPalette.getSize(); idx += 2 )
+        for (int idx = 1; idx < trgPalette.size(); idx += 2 )
         {
-            QRgb rgb(trgPalette.getRGB(idx));
+            QRgb rgb(trgPalette.rgb(idx));
             // distance vector (skip sqrt)
             int rd = qRed(rgbSrc) - qRed(rgb);
             int gd = qGreen(rgbSrc) - qGreen(rgb);
@@ -1486,7 +1486,7 @@ void SubtitleProcessor::determineFramePalette(int index)
         subVobTrg->alpha = alphaDefault;
         subVobTrg->pal = paletteFrame;
 
-        trgPal = SubstreamDVD::decodePalette(subVobTrg, trgPalette, alphaCrop);
+        trgPal = SubstreamDVD::decodePalette(*subVobTrg, trgPalette, alphaCrop);
     }
     else
     {
@@ -1513,7 +1513,7 @@ void SubtitleProcessor::determineFramePalette(int index)
             int a = (alpha[i] * 0xff) / 0xf;
             if (a >= alphaCrop)
             {
-                miniPal.setARGB(i, currentSourceDVDPalette.getARGB(paletteFrame[i]));
+                miniPal.setARGB(i, currentSourceDVDPalette.rgba(paletteFrame[i]));
                 miniPal.setAlpha(i, a);
             }
             else
@@ -1531,8 +1531,8 @@ bool SubtitleProcessor::updateTrgPic(int index)
 {
     SubPicture* picSrc = substream->getSubPicture(index);
     SubPicture* picTrg = subPictures.at(index);
-    double scaleX = (double)picTrg->width / picSrc->width;
-    double scaleY = (double)picTrg->height / picSrc->height;
+    double scaleX = (double)picTrg->width() / picSrc->width();
+    double scaleY = (double)picTrg->height() / picSrc->height();
     double fx;
     double fy;
     if (applyFreeScale)
@@ -1553,46 +1553,46 @@ bool SubtitleProcessor::updateTrgPic(int index)
     {
         wNew = picSrc->getImageWidth();
     }
-    else if (wNew > picTrg->width)
+    else if (wNew > picTrg->width())
     {
-        wNew = picTrg->width;
+        wNew = picTrg->width();
     }
     int hNew = (int)(((picSrc->getImageHeight() * scaleY) * fy) + 0.5);
     if (hNew < minDim)
     {
         hNew = picSrc->getImageHeight();
     }
-    else if (hNew > picTrg->height)
+    else if (hNew > picTrg->height())
     {
-        hNew = picTrg->height;
+        hNew = picTrg->height();
     }
     picTrg->setImageWidth(wNew);
     picTrg->setImageHeight(hNew);
     if (wNew != wOld)
     {
         int xOfs = (int)((picSrc->getOfsX() * scaleX) + 0.5);
-        int spaceSrc = (int)(((picSrc->width - picSrc->getImageWidth()) * scaleX) + 0.5);
-        int spaceTrg = picTrg->width - wNew;
+        int spaceSrc = (int)(((picSrc->width() - picSrc->getImageWidth()) * scaleX) + 0.5);
+        int spaceTrg = picTrg->width() - wNew;
         xOfs += (spaceTrg - spaceSrc) / 2;
         if (xOfs < 0)
         {
             xOfs = 0;
         }
-        else if (xOfs + wNew > picTrg->width)
+        else if (xOfs + wNew > picTrg->width())
         {
-            xOfs = picTrg->width - wNew;
+            xOfs = picTrg->width() - wNew;
         }
         picTrg->setOfsX(xOfs);
     }
     if (hNew != hOld)
     {
         int yOfs = (int)((picSrc->getOfsY() * scaleY) + 0.5);
-        int spaceSrc = (int)(((picSrc->height - picSrc->getImageHeight()) * scaleY) + 0.5);
-        int spaceTrg = picTrg->height - hNew;
+        int spaceSrc = (int)(((picSrc->height() - picSrc->getImageHeight()) * scaleY) + 0.5);
+        int spaceTrg = picTrg->height() - hNew;
         yOfs += (spaceTrg - spaceSrc) / 2;
-        if (yOfs + hNew > picTrg->height)
+        if (yOfs + hNew > picTrg->height())
         {
-            yOfs = picTrg->height - hNew;
+            yOfs = picTrg->height() - hNew;
         }
         picTrg->setOfsY(yOfs);
     }
@@ -1642,10 +1642,10 @@ void SubtitleProcessor::removeRecent(QString fileName)
 
 void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barFactor, int offsetX, int offsetY, MoveModeX mmx, MoveModeY mmy, int cropOffsetY)
 {
-    int barHeight = (int)((picture->height * barFactor) + 0.5);
+    int barHeight = (int)((picture->height() * barFactor) + 0.5);
     int y1 = picture->getOfsY();
-    int h = picture->height;
-    int w = picture->width;
+    int h = picture->height();
+    int w = picture->width();
     int hi = picture->getImageHeight();
     int wi = picture->getImageWidth();
     int y2 = y1 + hi;
@@ -1720,7 +1720,7 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
         }
         else
         {
-            int yMax = (picture->height - picture->getImageHeight()) - cropOffsetY;
+            int yMax = (picture->height() - picture->getImageHeight()) - cropOffsetY;
             if (picture->getOfsY() > yMax)
             {
                 picture->setOfsY(yMax);
@@ -1736,9 +1736,9 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
         {
             picture->setOfsX(0);
         }
-        else if ((picture->getImageWidth() + picture->getOfsX() + offsetX) > picture->width)
+        else if ((picture->getImageWidth() + picture->getOfsX() + offsetX) > picture->width())
         {
-            picture->setOfsX(picture->width - (picture->getImageWidth() + picture->getOfsX()));
+            picture->setOfsX(picture->width() - (picture->getImageWidth() + picture->getOfsX()));
         }
         else
         {
@@ -1777,13 +1777,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
 QString SubtitleProcessor::getSrcInfoStr(int index)
 {
     SubPicture* pic = substream->getSubPicture(index);
-    QString text = "screen size: " + QString::number(pic->width) + "x" + QString::number(pic->height) + "    ";
+    QString text = "screen size: " + QString::number(pic->width()) + "x" + QString::number(pic->height()) + "    ";
     text +=	"image size: " + QString::number(pic->getImageWidth()) + "x" + QString::number(pic->getImageHeight()) + "    ";
     text += "pos: (" + QString::number(pic->getOfsX()) + "," + QString::number(pic->getOfsY()) + ") - (" + QString::number((pic->getOfsX() + pic->getImageWidth()))
           + "," + QString::number((pic->getOfsY() + pic->getImageHeight())) + ")    ";
-    text += "start: " + TimeUtil::ptsToTimeStr(pic->startTime) + "    ";
-    text += "end: " + TimeUtil::ptsToTimeStr(pic->endTime) + "    ";
-    text += "forced: " + ((pic->isForced) ? QString("yes") : QString("no"));
+    text += "start: " + TimeUtil::ptsToTimeStr(pic->startTime()) + "    ";
+    text += "end: " + TimeUtil::ptsToTimeStr(pic->endTime()) + "    ";
+    text += "forced: " + ((pic->isForced()) ? QString("yes") : QString("no"));
     return text;
 }
 
@@ -1794,20 +1794,20 @@ QString SubtitleProcessor::getTrgInfoStr(int index)
     text +=	"image size: " + QString::number(getTrgImgWidth(index)) + "x" + QString::number(getTrgImgHeight(index)) + "    ";
     text += "pos: (" + QString::number(pic->getOfsX()) + "," + QString::number(pic->getOfsY()) + ") - (" + QString::number((pic->getOfsX() + getTrgImgWidth(index)))
           + "," + QString::number((pic->getOfsY() + getTrgImgHeight(index))) + ")    ";
-    text += "start: " + TimeUtil::ptsToTimeStr(pic->startTime) + "    ";
-    text += "end: " + TimeUtil::ptsToTimeStr(pic->endTime) + "    ";
-    text += "forced: " + ((pic->isForced) ? QString("yes") : QString("no"));
+    text += "start: " + TimeUtil::ptsToTimeStr(pic->startTime()) + "    ";
+    text += "end: " + TimeUtil::ptsToTimeStr(pic->endTime()) + "    ";
+    text += "forced: " + ((pic->isForced()) ? QString("yes") : QString("no"));
     return text;
 }
 
 int SubtitleProcessor::getTrgWidth(int index)
 {
-    return subPictures.at(index)->width;
+    return subPictures.at(index)->width();
 }
 
 int SubtitleProcessor::getTrgHeight(int index)
 {
-    return subPictures.at(index)->height;
+    return subPictures.at(index)->height();
 }
 
 int SubtitleProcessor::getTrgOfsX(int index)
@@ -1822,7 +1822,7 @@ int SubtitleProcessor::getTrgOfsY(int index)
 
 QImage SubtitleProcessor::getTrgImage()
 {
-    return trgBitmap.getImage(trgPal);
+    return trgBitmap.image(trgPal);
 }
 
 int SubtitleProcessor::getTrgImgWidth(int index)
@@ -1837,7 +1837,7 @@ int SubtitleProcessor::getTrgImgHeight(int index)
 
 bool SubtitleProcessor::getTrgExcluded(int index)
 {
-    return subPictures.at(index)->exclude;
+    return subPictures.at(index)->exclude();
 }
 
 double SubtitleProcessor::getFPS(QString string)
@@ -1947,7 +1947,7 @@ void SubtitleProcessor::readXml()
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion
-    int maxLum = substream->getPalette().getY()[substream->getPrimaryColorIndex()] & 0xff;
+    int maxLum = substream->getPalette().Y()[substream->getPrimaryColorIndex()] & 0xff;
     if (maxLum > 30)
     {
         luminanceThreshold.replace(0, (maxLum * 2) / 3);
@@ -2060,7 +2060,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
     currentSourceDVDPalette = Palette(defaultSourceDVDPalette);
 
     int primaryColorIndex = substream->getPrimaryColorIndex();
-    int yMax = substream->getPalette().getY()[primaryColorIndex] & 0xff;
+    int yMax = substream->getPalette().Y()[primaryColorIndex] & 0xff;
 
     if (yMax > 10)
     {
@@ -2068,8 +2068,8 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         Palette palette = substream->getPalette();
         for (int i = 0; i < 4; ++i)
         {
-            int y = palette.getY()[i] & 0xff;
-            int a = palette.getAlpha(i);
+            int y = palette.Y()[i] & 0xff;
+            int a = palette.alpha(i);
             if (y < yMin && a > alphaThreshold)
             {
                 yMin = y;
@@ -2091,7 +2091,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
 
     if (!fpsSrcSet)
     {
-        int height = substream->getSubPicture(0)->height;
+        int height = substream->getSubPicture(0)->height();
 
         switch(height)
         {
@@ -2159,7 +2159,7 @@ void SubtitleProcessor::readSup()
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion
-    int maxLum = substream->getPalette().getY()[substream->getPrimaryColorIndex()] & 0xff;
+    int maxLum = substream->getPalette().Y()[substream->getPrimaryColorIndex()] & 0xff;
     if (maxLum > 30)
     {
         luminanceThreshold.replace(0, (maxLum * 2) / 3);
@@ -2198,7 +2198,7 @@ int SubtitleProcessor::countForcedIncluded()
     int n = 0;
     for (auto subPicture : subPictures)
     {
-        if (subPicture->isForced && !subPicture->exclude)
+        if (subPicture->isForced() && !subPicture->exclude())
         {
             ++n;
         }
@@ -2211,7 +2211,7 @@ int SubtitleProcessor::countIncluded()
     int n = 0;
     for (auto subPicture : subPictures)
     {
-        if (!subPicture->exclude)
+        if (!subPicture->exclude())
         {
             ++n;
         }
@@ -2227,9 +2227,9 @@ void SubtitleProcessor::writePGCEditPalette(QString filename, Palette &palette)
         throw QString("PGCEdit Palette file can not be opened for writing.");
     }
     out->write("# Palette file for PGCEdit - colors given as R,G,B components (0..255)\n");
-    for (int i = 0; i < palette.getSize(); ++i)
+    for (int i = 0; i < palette.size(); ++i)
     {
-        QRgb rgb = palette.getRGB(i);
+        QRgb rgb = palette.rgb(i);
         out->write(QString("Color " + QString::number(i) + "=" + QString::number(qRed(rgb)) +
                            ", " + QString::number(qGreen(rgb)) + ", " + QString::number(qBlue(rgb)) + "\n").toAscii());
     }

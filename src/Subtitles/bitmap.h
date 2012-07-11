@@ -37,18 +37,19 @@ public:
     Bitmap(Bitmap *other);
     Bitmap(int width, int height);
     Bitmap(int width, int height, int color);
-    Bitmap(int width, int height, QImage image);
+    Bitmap(QImage subtitleImage);
 
     void clear(int color);
-    void fillRect(int x, int y, int width, int height, int color);
+    void fillRect(int x1, int y1, int width, int height, int color);
     void setImg(QImage &newImage);
 
-    int getHeight() { return height; }
-    int getHighestColorIndex(Palette &palette);
-    int getPrimaryColorIndex(Palette &palette, int alphaThreshold);
-    int getWidth() { return width; }
+    inline int height() { return subtitleImage.height(); }
+    inline int width() { return subtitleImage.width(); }
 
-    Bitmap crop(int x, int y, int width, int height);
+    int highestColorIndex(Palette &palette);
+    int primaryColorIndex(Palette &palette, int alphaThreshold);
+
+    Bitmap crop(int x1, int y1, int width, int height);
     Bitmap convertLm(Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold);
 
     Bitmap scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter);
@@ -61,15 +62,15 @@ public:
     PaletteBitmap scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filter, bool dither);
     PaletteBitmap scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither);
 
-    QImage &getImg();
-    QImage toARGB(Palette &palette);
-    QImage getImage(Palette &palette);
+    QImage &image() { return subtitleImage; }
+    QImage image(Palette &palette);
 
-    const QRect &getBounds(Palette &palette, int alphaThreshold);
+    QImage toARGB(Palette &palette);
+
+    QRect bounds(Palette &palette, int alphaThreshold);
 
 private:
-    int width, height;
-    QImage img;
+    QImage subtitleImage;
     int dummyNumber = 0;
 };
 

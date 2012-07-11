@@ -31,26 +31,44 @@ class SubPictureBD : public SubPicture
 {
 public:
     SubPictureBD();
-    SubPictureBD(SubPictureBD* other);
-
-    int objectID = 0;
-    int winWidth = 0;
-    int winHeight = 0;
-    int xWinOfs = 0;
-    int yWinOfs = 0;
-    int type = 0;
-
-    QVector<ImageObject*> imageObjectList;
-
-    QVector<QVector<PaletteInfo*> > palettes;
+    SubPictureBD(const SubPictureBD* other);
+    SubPictureBD(const SubPictureBD& other);
 
     int getImageWidth();
     int getImageHeight();
     int getOfsX();
     int getOfsY();
 
-    ImageObject* getImgObj(int index) { return imageObjectList.at(index); }
-    ImageObject* getImgObj() { return imageObjectList.at(objectID); }
+    int objectID() { return objectId; }
+    void setObjectID(int objectID) { objectId = objectID; }
+    int windowWidth() { return winWidth; }
+    void setWindowWidth(int windowWidth) { winWidth = windowWidth; }
+    int windowHeight() { return winHeight; }
+    void setWindowHeight(int windowHeight) { winHeight = windowHeight; }
+    int xWindowOffset() { return xWinOfs; }
+    void setXWindowOffset(int xWindowOffset) { xWinOfs = xWindowOffset; }
+    int yWindowOffset() { return yWinOfs; }
+    void setYWindowOffset(int yWindowOffset) { yWinOfs = yWindowOffset; }
+    int subPictureType() { return type; }
+    void setSubPictureType(int subPictureType) { type = subPictureType; }
+
+    bool isEmpty() { return empty; }
+
+    QVector<ImageObject*> imageObjectList;
+
+    QVector<QVector<PaletteInfo*> > palettes;
+
+    ImageObject *getImgObj(int index) { return imageObjectList.at(index); }
+    ImageObject *getImgObj() { return imageObjectList.at(objectId); }
+
+private:
+    int objectId = 0;
+    int winWidth = 0;
+    int winHeight = 0;
+    int xWinOfs = 0;
+    int yWinOfs = 0;
+    int type = 0;
+    bool empty;
 };
 
 #endif // SUBSPICTUREBD_H

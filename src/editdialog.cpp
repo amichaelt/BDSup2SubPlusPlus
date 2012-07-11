@@ -131,11 +131,11 @@ void EditDialog::setIndex(int value)
     ui->horizontalSlider->blockSignals(true);
     ui->verticalSlider->blockSignals(true);
 
-    ui->horizontalSlider->setMaximum(subPicture->width);
+    ui->horizontalSlider->setMaximum(subPicture->width());
     ui->horizontalSlider->setValue(subPicture->getOfsX());
 
-    ui->verticalSlider->setMaximum(subPicture->height);
-    ui->verticalSlider->setValue(subPicture->height - subPicture->getOfsY());
+    ui->verticalSlider->setMaximum(subPicture->height());
+    ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
 
     ui->horizontalSlider->blockSignals(false);
     ui->verticalSlider->blockSignals(false);
@@ -147,9 +147,9 @@ void EditDialog::setIndex(int value)
     ui->yOffsetLineEdit->blockSignals(true);
 
     ui->infoLabel->setText(QString("Frame %1 of %2").arg(QString::number(index + 1)).arg(subtitleProcessor->getNumberOfFrames()));
-    ui->startTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->startTime));
-    ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime));
-    ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6));
+    ui->startTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->startTime()));
+    ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime()));
+    ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
 
     ui->xOffsetLineEdit->setText(QString::number(subPicture->getOfsX()));
     ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
@@ -161,14 +161,14 @@ void EditDialog::setIndex(int value)
     ui->yOffsetLineEdit->blockSignals(false);
 
     ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
-    ui->subtitleImage->setDimension(subPicture->width, subPicture->height);
+    ui->subtitleImage->setDimension(subPicture->width(), subPicture->height());
     ui->subtitleImage->setCropOfsY(subtitleProcessor->getCropOfsY());
     ui->subtitleImage->setImage(image, subPicture->getImageWidth(), subPicture->getImageHeight());
     ui->subtitleImage->update();
-    ui->subtitleImage->setExcluded(subPicture->exclude);
+    ui->subtitleImage->setExcluded(subPicture->exclude());
 
-    ui->excludeCheckBox->setChecked(subPicture->exclude);
-    ui->forcedCaptionCheckBox->setChecked(subPicture->isForced);
+    ui->excludeCheckBox->setChecked(subPicture->exclude());
+    ui->forcedCaptionCheckBox->setChecked(subPicture->isForced());
 }
 
 void EditDialog::keyPressEvent(QKeyEvent *event)
@@ -206,15 +206,15 @@ void EditDialog::onSelectionPerformed(bool validSelection)
 
 void EditDialog::on_excludeCheckBox_toggled(bool checked)
 {
-    subPicture->exclude = checked;
-    ui->subtitleImage->setExcluded(subPicture->exclude);
+    subPicture->setExclude(checked);
+    ui->subtitleImage->setExcluded(subPicture->exclude());
     ui->subtitleImage->update();
     setEdited(true);
 }
 
 void EditDialog::on_forcedCaptionCheckBox_toggled(bool checked)
 {
-    subPicture->isForced = checked;
+    subPicture->setForced(checked);
     setEdited(true);
 }
 
@@ -223,16 +223,16 @@ void EditDialog::on_minButton_clicked()
     long t = subtitleProcessor->getMinTimePTS();
     if (t >= 0)
     {
-        t += subPicture->startTime;
-        if (subPictureNext != 0 && subPictureNext->startTime < t)
+        t += subPicture->startTime();
+        if (subPictureNext != 0 && subPictureNext->startTime() < t)
         {
-            t = subPictureNext->startTime;
+            t = subPictureNext->startTime();
         }
-        subPicture->endTime = subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg());
-        ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime));
+        subPicture->setEndTime(subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg()));
+        ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime()));
         setEdited(true);
     }
-    ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6));
+    ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
 }
 
 void EditDialog::on_maxButton_clicked()
@@ -240,21 +240,21 @@ void EditDialog::on_maxButton_clicked()
     long t;
     if (subPictureNext != 0)
     {
-        t = subPictureNext->startTime;
+        t = subPictureNext->startTime();
     }
     else
     {
-        t = subPicture->endTime + (10000 * 90); // 10 seconds
+        t = subPicture->endTime() + (10000 * 90); // 10 seconds
     }
-    subPicture->endTime = subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg());
-    ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime));
-    ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6));
+    subPicture->setEndTime(subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg()));
+    ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime()));
+    ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
     setEdited(true);
 }
 
 void EditDialog::on_centerButton_clicked()
 {
-    subPicture->setOfsX((subPicture->width - subPicture->getImageWidth()) / 2);
+    subPicture->setOfsX((subPicture->width() - subPicture->getImageWidth()) / 2);
 
     ui->horizontalSlider->blockSignals(true);
 
@@ -270,7 +270,7 @@ void EditDialog::on_centerButton_clicked()
 
 void EditDialog::on_topButton_clicked()
 {
-    int cineH = (subPicture->height * 5) / 42;
+    int cineH = (subPicture->height() * 5) / 42;
     int y = cineH - subPicture->getImageHeight();
     if (y < 10)
     {
@@ -283,7 +283,7 @@ void EditDialog::on_topButton_clicked()
     ui->verticalSlider->blockSignals(true);
 
     subPicture->setOfsY(y);
-    ui->verticalSlider->setValue(subPicture->height - subPicture->getOfsY());
+    ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
     ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
     ui->subtitleImage->update();
     ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
@@ -294,17 +294,17 @@ void EditDialog::on_topButton_clicked()
 
 void EditDialog::on_bottomButton_clicked()
 {
-    int cineH = (subPicture->height * 5) / 42;
-    int y = subPicture->height - cineH;
-    if ((y + subPicture->getImageHeight()) > (subPicture->height - subtitleProcessor->getCropOfsY()))
+    int cineH = (subPicture->height() * 5) / 42;
+    int y = subPicture->height() - cineH;
+    if ((y + subPicture->getImageHeight()) > (subPicture->height() - subtitleProcessor->getCropOfsY()))
     {
-        y = (subPicture->height - subPicture->getImageHeight()) - 10;
+        y = (subPicture->height() - subPicture->getImageHeight()) - 10;
     }
 
     ui->verticalSlider->blockSignals(true);
 
     subPicture->setOfsY(y);
-    ui->verticalSlider->setValue(subPicture->height - subPicture->getOfsY());
+    ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
     ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
     ui->subtitleImage->update();
     setEdited(true);
@@ -392,12 +392,12 @@ void EditDialog::setEdited(bool edited)
 void EditDialog::store()
 {
     SubPicture* subPic = subtitleProcessor->getSubPictureTrg(index);
-    subPic->endTime = subPicture->endTime;
-    subPic->startTime = subPicture->startTime;
+    subPic->setEndTime(subPicture->endTime());
+    subPic->setStartTime(subPicture->startTime());
     subPic->setOfsX(subPicture->getOfsX());
     subPic->setOfsY(subPicture->getOfsY());
-    subPic->isForced = subPicture->isForced;
-    subPic->exclude = subPicture->exclude;
+    subPic->setForced(subPicture->isForced());
+    subPic->setExclude(subPicture->exclude());
     subPic->erasePatch = subPicture->erasePatch;
 }
 
@@ -409,15 +409,15 @@ void EditDialog::on_startTimeLineEdit_textChanged(const QString &arg1)
     long timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
     timestamp = ok ? timestamp : -1;
     long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
-    if (t < 0 || t >= subPicture->endTime || (subPicturePrevious != 0 && subPicturePrevious->endTime > t))
+    if (t < 0 || t >= subPicture->endTime() || (subPicturePrevious != 0 && subPicturePrevious->endTime() > t))
     {
         ui->startTimeLineEdit->setPalette(*errorBackground);
     }
     else
     {
-        subPicture->startTime = t;
-        ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime)/ 90.0, 'g', 6));
-        if (ui->startTimeLineEdit->text() != TimeUtil::ptsToTimeStr(subPicture->startTime))
+        subPicture->setStartTime(t);
+        ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime())/ 90.0, 'g', 6));
+        if (ui->startTimeLineEdit->text() != TimeUtil::ptsToTimeStr(subPicture->startTime()))
         {
             ui->startTimeLineEdit->setPalette(*warnBackground);
         }
@@ -437,15 +437,15 @@ void EditDialog::on_endTimeLineEdit_textChanged(const QString &arg1)
     long timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
     timestamp = ok ? timestamp : -1;
     long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
-    if (t < 0 || t <= subPicture->startTime || (subPictureNext != 0 && subPictureNext->startTime < t))
+    if (t < 0 || t <= subPicture->startTime() || (subPictureNext != 0 && subPictureNext->startTime() < t))
     {
         ui->endTimeLineEdit->setPalette(*errorBackground);
     }
     else
     {
-        subPicture->endTime = t;
-        ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime)/ 90.0, 'g', 6));
-        if (ui->endTimeLineEdit->text() != TimeUtil::ptsToTimeStr(subPicture->endTime))
+        subPicture->setEndTime(t);
+        ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime())/ 90.0, 'g', 6));
+        if (ui->endTimeLineEdit->text() != TimeUtil::ptsToTimeStr(subPicture->endTime()))
         {
             ui->endTimeLineEdit->setPalette(*warnBackground);
         }
@@ -468,14 +468,14 @@ void EditDialog::on_durationLineEdit_textChanged(const QString &arg1)
     }
     else
     {
-        t += subPicture->startTime;
-        if (subPictureNext != 0 && subPictureNext->startTime < t)
+        t += subPicture->startTime();
+        if (subPictureNext != 0 && subPictureNext->startTime() < t)
         {
-            t = subPictureNext->startTime;
+            t = subPictureNext->startTime();
         }
-        subPicture->endTime = subtitleProcessor->syncTimePTS(subPicture->endTime, subtitleProcessor->getFPSTrg());
+        subPicture->setEndTime(subtitleProcessor->syncTimePTS(subPicture->endTime(), subtitleProcessor->getFPSTrg()));
         setEdited(true);
-        if (ui->durationLineEdit->text() != QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6))
+        if (ui->durationLineEdit->text() != QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6))
         {
             ui->durationLineEdit->setPalette(*warnBackground);
         }
@@ -491,7 +491,7 @@ void EditDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
     if (!isReady) return;
 
     int x = ui->xOffsetLineEdit->text().toInt();
-    if (x > subPicture->width - subPicture->getImageWidth())
+    if (x > subPicture->width() - subPicture->getImageWidth())
     {
         ui->xOffsetLineEdit->setPalette(*errorBackground);
     }
@@ -516,7 +516,7 @@ void EditDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
     if (!isReady) return;
 
     int y = ui->yOffsetLineEdit->text().toInt();
-    if (y < subtitleProcessor->getCropOfsY() || y > ((subPicture->height - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
+    if (y < subtitleProcessor->getCropOfsY() || y > ((subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
     {
         ui->yOffsetLineEdit->setPalette(*errorBackground);
     }
@@ -526,7 +526,7 @@ void EditDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
         {
             ui->verticalSlider->blockSignals(true);
             subPicture->setOfsY(y);
-            ui->verticalSlider->setValue(subPicture->height - subPicture->getOfsY());
+            ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
             ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
             ui->subtitleImage->update();
             setEdited(true);
@@ -540,15 +540,15 @@ void EditDialog::on_verticalSlider_valueChanged(int value)
 {
     if (!isReady) return;
 
-    int y = subPicture->height - value;
+    int y = subPicture->height() - value;
 
     if (y < subtitleProcessor->getCropOfsY())
     {
         y = subtitleProcessor->getCropOfsY();
     }
-    else if (y > ((subPicture->height - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
+    else if (y > ((subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
     {
-        y = (subPicture->height - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY();
+        y = (subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY();
     }
 
     if (y != subPicture->getOfsY())
@@ -572,9 +572,9 @@ void EditDialog::on_horizontalSlider_valueChanged(int value)
     {
         x = 0;
     }
-    else if (x > subPicture->width - subPicture->getImageWidth())
+    else if (x > subPicture->width() - subPicture->getImageWidth())
     {
-        x = subPicture->width - subPicture->getImageWidth();
+        x = subPicture->width() - subPicture->getImageWidth();
     }
 
     if (x != subPicture->getOfsX())
@@ -593,20 +593,20 @@ void EditDialog::on_startTimeLineEdit_editingFinished()
     long timestamp = TimeUtil::timeStrToPTS(ui->startTimeLineEdit->text(), &ok);
     timestamp = ok ? timestamp : -1;
     long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
-    if (t > subPicture->endTime)
+    if (t > subPicture->endTime())
     {
-        t = subPicture->endTime - frameTime;
+        t = subPicture->endTime() - frameTime;
     }
-    if (subPicturePrevious != 0 && subPicturePrevious->endTime > t)
+    if (subPicturePrevious != 0 && subPicturePrevious->endTime() > t)
     {
-        t = subPicturePrevious->endTime + frameTime;
+        t = subPicturePrevious->endTime() + frameTime;
     }
     if (t >= 0)
     {
-        subPicture->startTime = subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg());
+        subPicture->setStartTime(subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg()));
         ui->durationLineEdit->blockSignals(true);
 
-        ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6));
+        ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
 
         ui->durationLineEdit->blockSignals(false);
         setEdited(true);
@@ -614,7 +614,7 @@ void EditDialog::on_startTimeLineEdit_editingFinished()
 
     ui->startTimeLineEdit->blockSignals(true);
 
-    ui->startTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->startTime));
+    ui->startTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->startTime()));
     ui->startTimeLineEdit->setPalette(*okBackground);
 
     ui->startTimeLineEdit->blockSignals(false);
@@ -626,20 +626,20 @@ void EditDialog::on_endTimeLineEdit_editingFinished()
     long timestamp = TimeUtil::timeStrToPTS(ui->endTimeLineEdit->text(), &ok);
     timestamp = ok ? timestamp : -1;
     long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
-    if (t <= subPicture->startTime)
+    if (t <= subPicture->startTime())
     {
-        t = subPicture->startTime + frameTime;
+        t = subPicture->startTime() + frameTime;
     }
-    if (subPictureNext != 0 && subPictureNext->startTime < t)
+    if (subPictureNext != 0 && subPictureNext->startTime() < t)
     {
-        t = subPictureNext->startTime;
+        t = subPictureNext->startTime();
     }
     if (t >= 0)
     {
-        subPicture->endTime = subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg());
+        subPicture->setEndTime(subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg()));
         ui->durationLineEdit->blockSignals(true);
 
-        ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6));
+        ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
 
         ui->durationLineEdit->blockSignals(false);
         setEdited(true);
@@ -647,7 +647,7 @@ void EditDialog::on_endTimeLineEdit_editingFinished()
 
     ui->endTimeLineEdit->blockSignals(true);
 
-    ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->startTime));
+    ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->startTime()));
     ui->endTimeLineEdit->setPalette(*okBackground);
 
     ui->endTimeLineEdit->blockSignals(false);
@@ -662,16 +662,16 @@ void EditDialog::on_durationLineEdit_editingFinished()
     }
     if (t > 0)
     {
-        t += subPicture->startTime;
-        if (subPictureNext != 0 && subPictureNext->startTime < t)
+        t += subPicture->startTime();
+        if (subPictureNext != 0 && subPictureNext->startTime() < t)
         {
-            t = subPictureNext->startTime;
+            t = subPictureNext->startTime();
         }
-        subPicture->endTime = subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg());
-        ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime));
+        subPicture->setEndTime(subtitleProcessor->syncTimePTS(t, subtitleProcessor->getFPSTrg()));
+        ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime()));
         setEdited(true);
     }
-    ui->durationLineEdit->setText(QString::number((subPicture->endTime - subPicture->startTime) / 90.0, 'g', 6));
+    ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
     ui->durationLineEdit->setPalette(*okBackground);
 }
 
@@ -682,9 +682,9 @@ void EditDialog::on_xOffsetLineEdit_editingFinished()
     {
         x = 0;
     }
-    else if (x > subPicture->width - subPicture->getImageWidth())
+    else if (x > subPicture->width() - subPicture->getImageWidth())
     {
-        x = subPicture->width - subPicture->getImageWidth();
+        x = subPicture->width() - subPicture->getImageWidth();
     }
 
     if (x != subPicture->getOfsX())
@@ -708,16 +708,16 @@ void EditDialog::on_yOffsetLineEdit_editingFinished()
     {
         y = subtitleProcessor->getCropOfsY();
     }
-    else if (y > ((subPicture->height - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
+    else if (y > ((subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
     {
-        y = (subPicture->height - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY();
+        y = (subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY();
     }
 
     if (y != subPicture->getOfsY())
     {
         ui->verticalSlider->blockSignals(true);
         subPicture->setOfsY(y);
-        ui->verticalSlider->setValue(subPicture->height - subPicture->getOfsY());
+        ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
         ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
         ui->subtitleImage->update();
         setEdited(true);

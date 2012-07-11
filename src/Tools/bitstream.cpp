@@ -19,9 +19,9 @@
 
 #include "bitstream.h"
 
-BitStream::BitStream(QVector<uchar> buffer) :
+BitStream::BitStream(QVector<uchar> &buffer) :
     byteOfs(0),
-    b(buf[0] & 0xff),
+    b(buffer[0] & 0xff),
     bits(8),
     buf(buffer)
 {

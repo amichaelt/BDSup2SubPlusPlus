@@ -40,7 +40,7 @@ public:
 
     void decode(int index);
     void readIfo();
-    void writeIfo(QString filename, SubPicture *subPicture, Palette &palette);
+    void writeIfo(QString filename, SubPicture &subPicture, Palette &palette);
     void readAllSupFrames();
     void setSrcPalette(Palette &palette);
 
@@ -63,9 +63,9 @@ public:
     QImage getImage();
     QImage getImage(Bitmap &bitmap);
 
-    QVector<uchar> createSupFrame(SubPictureDVD* subPicture, Bitmap &bitmap);
-    QVector<int> getFrameAlpha(int index);
-    QVector<int> getFramePal(int index);
+    QVector<uchar> createSupFrame(SubPictureDVD &subPicture, Bitmap &bitmap);
+    QVector<int> &getFrameAlpha(int index);
+    QVector<int> &getFramePal(int index);
     QVector<int> getOriginalFrameAlpha(int index);
     QVector<int> getOriginalFramePal(int index);
 
@@ -79,7 +79,7 @@ private:
     QString supFileName;
     QString ifoFileName;
 
-    QVector<SubPictureDVD*> subPictures;
+    QVector<SubPictureDVD> subPictures;
 
     const QVector<uchar> IFOheader = { 0x44, 0x56, 0x44, 0x56, 0x49, 0x44, 0x45, 0x4F, 0x2D, 0x56, 0x54, 0x53 };
 
