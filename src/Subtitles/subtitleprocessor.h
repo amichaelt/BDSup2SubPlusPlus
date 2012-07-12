@@ -565,7 +565,7 @@ private:
     bool fixShortFrames = fixShortFramesDefault;
     bool scalingFilterSet = false;
     bool paletteModeSet = false;
-    bool keepFps = true;
+    bool keepFps = false;
     bool fpsTrgSet = false;
     bool writePGCEditPal = false;
     bool writePGCEditPalSet = false;
