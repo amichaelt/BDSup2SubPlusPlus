@@ -109,7 +109,7 @@ private:
     QString getWarningMessage();
     void warningDialog();
     void errorDialog(const QString &errorMessage);
-    void printWarnings();
+    void printWarnings(QTextStream &stream);
     void Redirect_console();
     void addCLIOptions();
     void showUsage(QTextStream& outStream);

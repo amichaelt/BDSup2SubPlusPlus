@@ -62,7 +62,7 @@ void SupBD::decode(int index)
 {
     if (index < subPictures.size())
     {
-        decode(*subPictures[index]);
+        decode(subPictures[index]);
     }
     else
     {
@@ -147,7 +147,7 @@ void SupBD::readAllSupFrames()
                     if (pic != 0)
                     {
                         so = QString("");
-                        int ps = parsePDS(segment, *pic, so);
+                        int ps = parsePDS(segment, pic, so);
                         if (ps >= 0)
                         {
                             subtitleProcessor->print(QString("%1, %2\n").arg(out).arg(so));
@@ -185,7 +185,7 @@ void SupBD::readAllSupFrames()
                         if (pic != 0)
                         {
                             so = QString("");
-                            if (parseODS(segment, *pic, so))
+                            if (parseODS(segment, pic, so))
                             {
                                 odsCtr++;
                             }
@@ -267,7 +267,7 @@ void SupBD::readAllSupFrames()
                                               .arg(TimeUtil::ptsToTimeStr(pic->startTime())));
 
                     so = QString("");
-                    parsePCS(segment, *pic, so);
+                    parsePCS(segment, pic, so);
                     // fix end time stamp of previous pic if still missing
                     if (picLast != 0 && picLast->endTime() == 0)
                     {
@@ -332,7 +332,7 @@ void SupBD::readAllSupFrames()
                         picTmp = new SubPictureBD(pic);
                         //picTmp->endTime = ptsPCS;
                         // create new pic
-                        parsePCS(segment, *pic, so);
+                        parsePCS(segment, pic, so);
                     }
                     if (!so.isEmpty())
                     {
@@ -350,7 +350,7 @@ void SupBD::readAllSupFrames()
                                                     .arg(QString::number(segment->size, 16), 4, QChar('0'));
                 if (pic != 0)
                 {
-                    parseWDS(segment, *pic);
+                    parseWDS(segment, pic);
 
                     subtitleProcessor->print(QString("%1, dim: %2*%3\n")
                                              .arg(out)
@@ -588,7 +588,7 @@ int SupBD::getFpsId(double fps)
     return 0x10;
 }
 
-QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette &pal)
+QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette &pal)
 {
     // the last palette entry must be transparent
     if (pal.size() > 255 && pal.alpha(255) > 0)
@@ -648,21 +648,21 @@ QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette
     size += 2 + (palSize * 5) /* PDS */;
     size += rleBuf.size();
 
-    int yOfs = subPicture.getOfsY() - subtitleProcessor->getCropOfsY();
+    int yOfs = subPicture->getOfsY() - subtitleProcessor->getCropOfsY();
     if (yOfs < 0)
     {
         yOfs = 0;
     }
     else
     {
-        int yMax = (subPicture.height() - subPicture.getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
+        int yMax = (subPicture->height() - subPicture->getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
         if (yOfs > yMax)
         {
             yOfs = yMax;
         }
     }
 
-    int h = subPicture.height() - (2 * subtitleProcessor->getCropOfsY());
+    int h = subPicture->height() - (2 * subtitleProcessor->getCropOfsY());
 
     QVector<uchar> buf(size);
     int index = 0;
@@ -671,7 +671,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette
 
     /* time (in 90kHz resolution) needed to initialize (clear) the screen buffer
        based on the composition pixel rate of 256e6 bit/s - always rounded up */
-    int frameInitTime = (((subPicture.width() * subPicture.height()) * 9) + 3199) / 3200; // better use default height here
+    int frameInitTime = (((subPicture->width() * subPicture->height()) * 9) + 3199) / 3200; // better use default height here
     /* time (in 90kHz resolution) needed to initialize (clear) the window area
        based on the composition pixel rate of 256e6 bit/s - always rounded up
        Note: no cropping etc. -> window size == image size */
@@ -681,20 +681,20 @@ QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette
     int imageDecodeTime = (((bm.width() * bm.height()) * 9) + 1599) / 1600;
     // write PCS start
     packetHeader.replace(10, 0x16);                                             // ID
-    int dts = (int)subPicture.startTime() - (frameInitTime + windowInitTime);
-    NumberUtil::setDWord(packetHeader, 2, (int)subPicture.startTime());				// PTS
+    int dts = (int)subPicture->startTime() - (frameInitTime + windowInitTime);
+    NumberUtil::setDWord(packetHeader, 2, (int)subPicture->startTime());				// PTS
     NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
     NumberUtil::setWord(packetHeader, 11, headerPCSStart.size());			// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
         buf.replace(index++, packetHeader[i]);
     }
-    NumberUtil::setWord(headerPCSStart, 0, subPicture.width());
+    NumberUtil::setWord(headerPCSStart, 0, subPicture->width());
     NumberUtil::setWord(headerPCSStart, 2, h);								// cropped height
     NumberUtil::setByte(headerPCSStart, 4, fpsId);
-    NumberUtil::setWord(headerPCSStart, 5, subPicture.compNum());
-    headerPCSStart.replace(14, (subPicture.isForced() ? (uchar)0x40 : 0));
-    NumberUtil::setWord(headerPCSStart, 15, subPicture.getOfsX());
+    NumberUtil::setWord(headerPCSStart, 5, subPicture->compNum());
+    headerPCSStart.replace(14, (subPicture->isForced() ? (uchar)0x40 : 0));
+    NumberUtil::setWord(headerPCSStart, 15, subPicture->getOfsX());
     NumberUtil::setWord(headerPCSStart, 17, yOfs);
     for (int i = 0; i < headerPCSStart.size(); ++i)
     {
@@ -703,14 +703,14 @@ QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette
 
     // write WDS
     packetHeader.replace(10, 0x17);											// ID
-    int timeStamp = (int)subPicture.startTime() - windowInitTime;
+    int timeStamp = (int)subPicture->startTime() - windowInitTime;
     NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS)
     NumberUtil::setWord(packetHeader, 11, headerWDS.size());				// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
         buf.replace(index++, packetHeader[i]);
     }
-    NumberUtil::setWord(headerWDS, 2, subPicture.getOfsX());
+    NumberUtil::setWord(headerWDS, 2, subPicture->getOfsX());
     NumberUtil::setWord(headerWDS, 4, yOfs);
     NumberUtil::setWord(headerWDS, 6, bm.width());
     NumberUtil::setWord(headerWDS, 8, bm.height());
@@ -805,18 +805,18 @@ QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette
 
     // write PCS end
     packetHeader.replace(10, 0x16);											// ID
-    NumberUtil::setDWord(packetHeader, 2, (int)subPicture.endTime());				// PTS
-    dts = (int)subPicture.startTime() - 1;
+    NumberUtil::setDWord(packetHeader, 2, (int)subPicture->endTime());				// PTS
+    dts = (int)subPicture->startTime() - 1;
     NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
     NumberUtil::setWord(packetHeader, 11, headerPCSEnd.size());				// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
         buf.replace(index++, packetHeader[i]);
     }
-    NumberUtil::setWord(headerPCSEnd, 0, subPicture.width());
+    NumberUtil::setWord(headerPCSEnd, 0, subPicture->width());
     NumberUtil::setWord(headerPCSEnd, 2, h);									// cropped height
     NumberUtil::setByte(headerPCSEnd, 4, fpsId);
-    NumberUtil::setWord(headerPCSEnd, 5, subPicture.compNum() + 1);
+    NumberUtil::setWord(headerPCSEnd, 5, subPicture->compNum() + 1);
     for (int i = 0; i < headerPCSEnd.size(); ++i)
     {
         buf.replace(index++, headerPCSEnd[i]);
@@ -824,14 +824,14 @@ QVector<uchar> SupBD::createSupFrame(SubPicture &subPicture, Bitmap &bm, Palette
 
     // write WDS
     packetHeader.replace(10, 0x17);											// ID
-    timeStamp = (int)subPicture.endTime() - windowInitTime;
+    timeStamp = (int)subPicture->endTime() - windowInitTime;
     NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS of PCS)
     NumberUtil::setWord(packetHeader, 11, headerWDS.size());				// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
         buf.replace(index++, packetHeader[i]);
     }
-    NumberUtil::setWord(headerWDS, 2, subPicture.getOfsX());
+    NumberUtil::setWord(headerWDS, 2, subPicture->getOfsX());
     NumberUtil::setWord(headerWDS, 4, yOfs);
     NumberUtil::setWord(headerWDS, 6, bm.width());
     NumberUtil::setWord(headerWDS, 8, bm.height());
@@ -897,13 +897,13 @@ bool SupBD::picMergable(SubPictureBD *a, SubPictureBD *b)
     return eq;
 }
 
-void SupBD::parsePCS(SupSegment* segment, SubPictureBD &subPicture, QString msg)
+void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
 {
     int index = segment->offset;
     if (segment->size >= 4)
     {
-        subPicture.setWidth(fileBuffer->getWord(index));            // video_width
-        subPicture.setHeight(fileBuffer->getWord(index + 2));        // video_height
+        subPicture->setWidth(fileBuffer->getWord(index));            // video_width
+        subPicture->setHeight(fileBuffer->getWord(index + 2));        // video_height
         int type = fileBuffer->getByte(index + 4);                  // hi nibble: frame_rate, lo nibble: reserved
         int num  = fileBuffer->getWord(index + 5);                  // composition_number
         // skipped:
@@ -918,26 +918,26 @@ void SupBD::parsePCS(SupSegment* segment, SubPictureBD &subPicture, QString msg)
             int objID = fileBuffer->getWord(index + 11);            // 16bit object_id_ref
             msg = QString("palID: %1, objID: %2").arg(QString::number(palID)).arg(QString::number(objID));
             ImageObject* imgObj;
-            if (objID >= subPicture.imageObjectList.size())
+            if (objID >= subPicture->imageObjectList.size())
             {
                 imgObj = new ImageObject;
-                subPicture.imageObjectList.push_back(imgObj);
+                subPicture->imageObjectList.push_back(imgObj);
             }
             else
             {
-                imgObj = subPicture.getImgObj(objID);
+                imgObj = subPicture->getImgObj(objID);
             }
             imgObj->setPaletteID(palID);
-            subPicture.setObjectID(objID);
+            subPicture->setObjectID(objID);
 
             // skipped:  8bit  window_id_ref
             if (segment->size >= 0x13)
             {
-                subPicture.setSubPictureType(type);
+                subPicture->setSubPictureType(type);
                 // object_cropped_flag: 0x80, forced_on_flag = 0x040, 6bit reserved
                 int forcedCropped = fileBuffer->getByte(index + 14);
-                subPicture.setCompNum(num);
-                subPicture.setForced((forcedCropped & 0x40) == 0x40);
+                subPicture->setCompNum(num);
+                subPicture->setForced((forcedCropped & 0x40) == 0x40);
                 // composition_object_horizontal_position
                 imgObj->setXOffset(fileBuffer->getWord(index + 15));
                 // composition_object_vertical_position
@@ -947,15 +947,15 @@ void SupBD::parsePCS(SupSegment* segment, SubPictureBD &subPicture, QString msg)
     }
 }
 
-int SupBD::parsePDS(SupSegment *segment, SubPictureBD &subPicture, QString msg)
+int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
 {
     int index = segment->offset;
     int paletteID = fileBuffer->getByte(index);	// 8bit palette ID (0..7)
     // 8bit palette version number (incremented for each palette change)
     int paletteUpdate = fileBuffer->getByte(index + 1);
-    if (subPicture.palettes.isEmpty())
+    if (subPicture->palettes.isEmpty())
     {
-        subPicture.palettes.resize(8);
+        subPicture->palettes.resize(8);
     }
     if (paletteID > 7)
     {
@@ -963,19 +963,22 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD &subPicture, QString msg)
         return -1;
     }
     //
-    QVector<PaletteInfo*> al = subPicture.palettes.at(paletteID);
+    QVector<PaletteInfo*> al = subPicture->palettes.at(paletteID);
     PaletteInfo* p = new PaletteInfo;
-    p->paletteSize = (segment->size - 2) / 5;
-    p->paletteOfs = index + 2;
+    p->setPaletteSize((segment->size - 2) / 5);
+    p->setPaletteOffset(index + 2);
     al.push_back(p);
-    subPicture.palettes.replace(paletteID, al);
-    msg = QString("ID: %1, update: %2, %3 entries").arg(QString::number(paletteID))
-                                                   .arg(QString::number(paletteUpdate))
-                                                   .arg(QString::number(p->paletteSize));
-    return p->paletteSize;
+    subPicture->palettes.replace(paletteID, al);
+
+    msg = QString("ID: %1, update: %2, %3 entries")
+            .arg(QString::number(paletteID))
+            .arg(QString::number(paletteUpdate))
+            .arg(QString::number(p->paletteSize()));
+
+    return p->paletteSize();
 }
 
-bool SupBD::parseODS(SupSegment *segment, SubPictureBD &subPicture, QString msg)
+bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
 {
     int index = segment->offset;
     ImageObjectFragment info;
@@ -987,14 +990,14 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD &subPicture, QString msg)
     bool last  = ((objSeq & 0x40) == 0x40);
 
     ImageObject* imgObj;
-    if (objID >= subPicture.imageObjectList.size())
+    if (objID >= subPicture->imageObjectList.size())
     {
         imgObj = new ImageObject;
-        subPicture.imageObjectList.push_back(imgObj);
+        subPicture->imageObjectList.push_back(imgObj);
     }
     else
     {
-        imgObj = subPicture.getImgObj(objID);
+        imgObj = subPicture->getImgObj(objID);
     }
 
     if (imgObj->getFragmentList().isEmpty() || first)       // 8bit  object_version_number
@@ -1004,7 +1007,7 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD &subPicture, QString msg)
         int width  = fileBuffer->getWord(index + 7);  // object_width
         int height = fileBuffer->getWord(index + 9);  // object_height
 
-        if (width <= subPicture.width() && height <= subPicture.height())
+        if (width <= subPicture->width() && height <= subPicture->height())
         {
             //imgObj->getFragmentList() = QVector<ImageObjectFragment*>();
             info = ImageObjectFragment();
@@ -1048,7 +1051,7 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD &subPicture, QString msg)
     }
 }
 
-void SupBD::parseWDS(SupSegment* segment, SubPictureBD &subPicture)
+void SupBD::parseWDS(SupSegment* segment, SubPictureBD *subPicture)
 {
     int index = segment->offset;
 
@@ -1057,10 +1060,10 @@ void SupBD::parseWDS(SupSegment* segment, SubPictureBD &subPicture)
         // skipped:
         // 8bit: number of windows (currently assumed 1, 0..2 is legal)
         // 8bit: window id (0..1)
-        subPicture.setXWindowOffset(fileBuffer->getWord(index + 2));       // window_horizontal_position
-        subPicture.setYWindowOffset(fileBuffer->getWord(index + 4));       // window_vertical_position
-        subPicture.setWindowWidth(fileBuffer->getWord(index + 6));      // window_width
-        subPicture.setWindowHeight(fileBuffer->getWord(index + 8));     // window_height
+        subPicture->setXWindowOffset(fileBuffer->getWord(index + 2));       // window_horizontal_position
+        subPicture->setYWindowOffset(fileBuffer->getWord(index + 4));       // window_vertical_position
+        subPicture->setWindowWidth(fileBuffer->getWord(index + 6));      // window_width
+        subPicture->setWindowHeight(fileBuffer->getWord(index + 8));     // window_height
     }
 }
 
@@ -1093,18 +1096,18 @@ SupBD::CompositionState SupBD::getCompositionState(SupBD::SupSegment *segment)
     }
 }
 
-void SupBD::decode(SubPictureBD &subPicture)
+void SupBD::decode(SubPictureBD *subPicture)
 {
     palette = decodePalette(subPicture);
     bitmap = decodeImage(subPicture, palette.transparentIndex());
     primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
 }
 
-Palette SupBD::decodePalette(SubPictureBD &subPicture)
+Palette SupBD::decodePalette(SubPictureBD *subPicture)
 {
     bool fadeOut = false;
     int palIndex = 0;
-    QVector<PaletteInfo*> pl = subPicture.palettes.at(subPicture.getImgObj()->paletteID());
+    QVector<PaletteInfo*> pl = subPicture->palettes.at(subPicture->getImgObj()->paletteID());
     if (pl.isEmpty())
     {
         throw QString("Palette ID out of bounds.");
@@ -1117,8 +1120,8 @@ Palette SupBD::decodePalette(SubPictureBD &subPicture)
     for (int j = 0; j < pl.size(); j++)
     {
         PaletteInfo* p = pl.at(j);
-        int index = p->paletteOfs;
-        for (int i = 0; i < p->paletteSize; ++i)
+        int index = p->paletteOffset();
+        for (int i = 0; i < p->paletteSize(); ++i)
         {
             // each palette entry consists of 5 bytes
             palIndex = fileBuffer->getByte(index);
@@ -1165,15 +1168,15 @@ Palette SupBD::decodePalette(SubPictureBD &subPicture)
     return palette;
 }
 
-Bitmap SupBD::decodeImage(SubPictureBD &subPicture, int transparentIndex)
+Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
 {
-    int w = subPicture.getImageWidth();
-    int h = subPicture.getImageHeight();
+    int w = subPicture->getImageWidth();
+    int h = subPicture->getImageHeight();
     // always decode image obj 0, start with first entry in fragmentlist
-    ImageObjectFragment &fragment = subPicture.getImgObj()->getFragmentList()[0];
+    ImageObjectFragment &fragment = subPicture->getImgObj()->getFragmentList()[0];
     long startOfs = fragment.imageBufferOffset();
 
-    if (w > subPicture.width() || h > subPicture.height())
+    if (w > subPicture->width() || h > subPicture->height())
     {
         throw QString("Subpicture too large: %1x%2 at offset %3")
                 .arg(QString::number(w))
@@ -1190,12 +1193,12 @@ Bitmap SupBD::decodeImage(SubPictureBD &subPicture, int transparentIndex)
     int xpos = 0;
 
     // just for multi-packet support, copy all of the image data in one common buffer
-    QVector<uchar> buf = QVector<uchar>(subPicture.getImgObj()->bufferSize());
+    QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj()->bufferSize());
     index = 0;
-    for (int p = 0; p < subPicture.getImgObj()->getFragmentList().size(); ++p)
+    for (int p = 0; p < subPicture->getImgObj()->getFragmentList().size(); ++p)
     {
         // copy data of all packet to one common buffer
-        fragment = subPicture.getImgObj()->getFragmentList().at(p);
+        fragment = subPicture->getImgObj()->getFragmentList().at(p);
         for (int i = 0; i < fragment.imagePacketSize(); ++i)
         {
             buf[index + i] = (uchar)fileBuffer->getByte(fragment.imageBufferOffset() + i);

@@ -25,8 +25,14 @@ class PaletteInfo
 public:
     PaletteInfo();
 
-    int paletteOfs = 0;
-    int paletteSize = 0;
+    int paletteOffset() { return offset; }
+    void setPaletteOffset(int paletteOffset) { offset = paletteOffset; }
+    int paletteSize() { return size; }
+    void setPaletteSize(int paletteSize) { size = paletteSize; }
+
+private:
+    int offset = 0;
+    int size = 0;
 };
 
 #endif // PALETTEINFO_H

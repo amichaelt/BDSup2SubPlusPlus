@@ -26,10 +26,10 @@ SubPictureDVD::SubPictureDVD()
 
 void SubPictureDVD::setOriginal()
 {
-    originalWidth = getImageWidth();
-    originalHeight = getImageHeight();
-    originalX = getOfsX();
-    originalY = getOfsY();
+    origWidth = getImageWidth();
+    origHeight = getImageHeight();
+    origX = getOfsX();
+    origY = getOfsY();
 
     originalAlpha = alpha;
     originalPal = pal;

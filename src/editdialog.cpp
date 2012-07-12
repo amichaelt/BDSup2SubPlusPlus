@@ -178,22 +178,27 @@ void EditDialog::keyPressEvent(QKeyEvent *event)
         if (ui->startTimeLineEdit->hasFocus())
         {
             on_startTimeLineEdit_editingFinished();
+            return;
         }
         if (ui->endTimeLineEdit->hasFocus())
         {
             on_endTimeLineEdit_editingFinished();
+            return;
         }
         if (ui->durationLineEdit->hasFocus())
         {
             on_durationLineEdit_editingFinished();
+            return;
         }
         if (ui->xOffsetLineEdit->hasFocus())
         {
             on_xOffsetLineEdit_editingFinished();
+            return;
         }
         if (ui->yOffsetLineEdit->hasFocus())
         {
             on_yOffsetLineEdit_editingFinished();
+            return;
         }
     }
     QDialog::keyPressEvent(event);

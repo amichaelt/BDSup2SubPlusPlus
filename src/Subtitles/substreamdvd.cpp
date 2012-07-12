@@ -152,8 +152,8 @@ QVector<uchar> SubstreamDVD::encodeLines(Bitmap &bitmap, bool even)
 
 Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
 {
-    int width = pic.originalWidth;
-    int height = pic.originalHeight;
+    int width = pic.originalWidth();
+    int height = pic.originalHeight();
     int warnings = 0;
 
     ImageObjectFragment* fragment = pic.rleFragments.at(0);
@@ -169,21 +169,21 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
 
     Bitmap bm(width, height, transIdx);
 
-    QVector<uchar> buf(pic.rleSize);
+    QVector<uchar> buf(pic.rleSize());
     int index = 0;
 
     int sizeEven;
     int sizeOdd;
 
-    if (pic.oddOfs > pic.evenOfs)
+    if (pic.oddOffset() > pic.evenOffset())
     {
-        sizeEven = pic.oddOfs - pic.evenOfs;
-        sizeOdd = pic.rleSize - pic.oddOfs;
+        sizeEven = pic.oddOffset() - pic.evenOffset();
+        sizeOdd = pic.rleSize() - pic.oddOffset();
     }
     else
     {
-        sizeOdd = pic.evenOfs - pic.oddOfs;
-        sizeEven = pic.rleSize - pic.evenOfs;
+        sizeOdd = pic.evenOffset() - pic.oddOffset();
+        sizeEven = pic.rleSize() - pic.evenOffset();
     }
 
     if (sizeEven <= 0 || sizeOdd <= 0)
@@ -202,8 +202,8 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
         index += fragment->imagePacketSize();
     }
 
-    decodeLine(buf, pic.evenOfs, sizeEven, bm.image(), 0, width,  width * ((height / 2) + (height & 1)));
-    decodeLine(buf, pic.oddOfs, sizeOdd, bm.image(), width + (bm.image().bytesPerLine() - width), width, (height / 2) * width);
+    decodeLine(buf, pic.evenOffset(), sizeEven, bm.image(), 0, width,  width * ((height / 2) + (height & 1)));
+    decodeLine(buf, pic.oddOffset(), sizeOdd, bm.image(), width + (bm.image().bytesPerLine() - width), width, (height / 2) * width);
 
     if (warnings > 0)
     {
@@ -237,8 +237,8 @@ void SubstreamDVD::decode(SubPictureDVD &pic, SubtitleProcessor* subtitleProcess
         bitmap = bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         pic.setImageWidth(width);
         pic.setImageHeight(height);
-        pic.setOfsX(pic.originalX + bounds.topLeft().x());
-        pic.setOfsY(pic.originalY + bounds.topLeft().y());
+        pic.setOfsX(pic.originalX() + bounds.topLeft().x());
+        pic.setOfsY(pic.originalY() + bounds.topLeft().y());
     }
 
     primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());

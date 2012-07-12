@@ -27,7 +27,7 @@ SubPictureHD::SubPictureHD(const SubPictureHD &other) :
     SubPicture(other),
     paletteOfs(other.paletteOfs),
     alphaOfs(other.alphaOfs),
-    imageBufferSize(other.imageBufferSize),
+    imageBufSize(other.imageBufSize),
     imageBufferOfsEven(other.imageBufferOfsEven),
     imageBufferOfsOdd(other.imageBufferOfsOdd)
 {
@@ -37,7 +37,7 @@ SubPictureHD::SubPictureHD(const SubPictureHD *other) :
     SubPicture(other),
     paletteOfs(other->paletteOfs),
     alphaOfs(other->alphaOfs),
-    imageBufferSize(other->imageBufferSize),
+    imageBufSize(other->imageBufSize),
     imageBufferOfsEven(other->imageBufferOfsEven),
     imageBufferOfsOdd(other->imageBufferOfsOdd)
 {

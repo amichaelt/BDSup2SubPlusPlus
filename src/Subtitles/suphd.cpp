@@ -80,7 +80,7 @@ long SupHD::getStartTime(int index)
 
 long SupHD::getStartOffset(int index)
 {
-    return subPictures[index].imageBufferOfsEven;
+    return subPictures[index].imageBufferOffsetEven();
 }
 
 SubPicture *SupHD::getSubPicture(int index)
@@ -112,7 +112,7 @@ void SupHD::readAllSupFrames()
                 throw QString("ID 'SP' missing at index ").arg(QString::number(index, 16), 8, QChar('0'));
             }
             int masterIndex = index + 10; //end of header
-            pic = new SubPictureHD;
+            pic = SubPictureHD();
             // hard code size since it's not part of the format???
             pic.setWidth(1920);
             pic.setHeight(1080);
@@ -123,7 +123,7 @@ void SupHD::readAllSupFrames()
             int packetSize = fileBuffer->getDWord(index += 10);
             // offset to command buffer
             int ofsCmd = fileBuffer->getDWord(index += 4) + masterIndex;
-            pic.imageBufferSize = ofsCmd - (index + 4);
+            pic.setImageBufferSize(ofsCmd - (index + 4));
             index  = ofsCmd;
             int dcsq = fileBuffer->getWord(index);
             pic.setStartTime(pic.startTime() + (dcsq * 1024));
@@ -165,7 +165,7 @@ void SupHD::readAllSupFrames()
                 {
                     subtitleProcessor->print(QString("Palette info  ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));
 
-                    pic.paletteOfs = index;
+                    pic.setPaletteOffset(index);
                     index += 0x300;
                 } break;
                 case 0x84: // alpha
@@ -178,7 +178,7 @@ void SupHD::readAllSupFrames()
                     }
                     if (alphaSum < minAlphaSum)
                     {
-                        pic.alphaOfs = index;
+                        pic.setAlphaOffset(index);
                         minAlphaSum = alphaSum;
                     }
                     else
@@ -207,13 +207,13 @@ void SupHD::readAllSupFrames()
                 } break;
                 case 0x86: // even/odd offsets
                 {
-                    pic.imageBufferOfsEven = fileBuffer->getDWord(index) + masterIndex;
-                    pic.imageBufferOfsOdd = fileBuffer->getDWord(index + 4) + masterIndex;
+                    pic.setImageBufferOffsetEven(fileBuffer->getDWord(index) + masterIndex);
+                    pic.setImageBufferOffsetOdd(fileBuffer->getDWord(index + 4) + masterIndex);
 
                     subtitleProcessor->print(QString("RLE buffers   ofs: %1  (even: %2, odd: %3)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))
-                                             .arg(QString::number(pic.imageBufferOfsEven, 16), 8, QChar('0'))
-                                             .arg(QString::number(pic.imageBufferOfsOdd, 16), 8, QChar('0')));
+                                             .arg(QString::number(pic.imageBufferOffsetEven(), 16), 8, QChar('0'))
+                                             .arg(QString::number(pic.imageBufferOffsetOdd(), 16), 8, QChar('0')));
 
                     index += 8;
                 } break;
@@ -369,8 +369,8 @@ void SupHD::decodeLine(QImage &trg, int trgOfs, int width, int maxPixels, BitStr
 
 Palette SupHD::decodePalette(SubPictureHD &subPicture)
 {
-    int ofs = subPicture.paletteOfs;
-    int alphaOfs = subPicture.alphaOfs;
+    int ofs = subPicture.paletteOffset();
+    int alphaOfs = subPicture.alphaOffset();
 
     Palette palette(256);
     for (int i = 0; i < palette.size(); ++i)
@@ -414,13 +414,13 @@ Bitmap SupHD::decodeImage(SubPictureHD &subPicture, int transparentIndex)
         throw QString("Subpicture too large: %1x%2 at offset %3")
                 .arg(QString::number(w))
                 .arg(QString::number(h))
-                .arg(QString::number(subPicture.imageBufferOfsEven, 16), 8, QChar('0'));
+                .arg(QString::number(subPicture.imageBufferOffsetEven(), 16), 8, QChar('0'));
     }
 
     Bitmap bm(w, h, transparentIndex);
 
-    int sizeEven = subPicture.imageBufferOfsOdd - subPicture.imageBufferOfsEven;
-    int sizeOdd = (subPicture.imageBufferSize + subPicture.imageBufferOfsEven) - subPicture.imageBufferOfsOdd;
+    int sizeEven = subPicture.imageBufferOffsetOdd() - subPicture.imageBufferOffsetEven();
+    int sizeOdd = (subPicture.imageBufferSize() + subPicture.imageBufferOffsetEven()) - subPicture.imageBufferOffsetOdd();
 
     if (sizeEven <= 0 || sizeOdd <= 0)
     {
@@ -432,11 +432,11 @@ Bitmap SupHD::decodeImage(SubPictureHD &subPicture, int transparentIndex)
 
     for (int i = 0; i < evenBuf.size(); i++)
     {
-        evenBuf.replace(i, (uchar)fileBuffer->getByte(subPicture.imageBufferOfsEven + i));
+        evenBuf.replace(i, (uchar)fileBuffer->getByte(subPicture.imageBufferOffsetEven() + i));
     }
     for (int i = 0; i < oddBuf.size(); ++i)
     {
-        oddBuf.replace(i, (uchar)fileBuffer->getByte(subPicture.imageBufferOfsOdd + i));
+        oddBuf.replace(i, (uchar)fileBuffer->getByte(subPicture.imageBufferOffsetOdd() + i));
     }
     // decode even lines
     BitStream even = BitStream(evenBuf);
@@ -448,7 +448,7 @@ Bitmap SupHD::decodeImage(SubPictureHD &subPicture, int transparentIndex)
     if (warnings > 0)
     {
         subtitleProcessor->printWarning(QString("problems during RLE decoding of picture at offset %1\n")
-                                        .arg(QString::number(subPicture.imageBufferOfsEven, 16), 8, QChar('0')));
+                                        .arg(QString::number(subPicture.imageBufferOffsetEven(), 16), 8, QChar('0')));
     }
 
     return bm;

@@ -93,7 +93,7 @@ long SubDVD::getStartTime(int index)
 
 long SubDVD::getStartOffset(int index)
 {
-    return subPictures[index].offset;
+    return subPictures[index].offset();
 }
 
 SubPicture *SubDVD::getSubPicture(int index)
@@ -123,7 +123,7 @@ QVector<int> SubDVD::getOriginalFramePal(int index)
 
 void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
 {
-    long ofs = pic.offset;
+    long ofs = pic.offset();
     long ctrlOfs = -1;
     long nextOfs;
     int  ctrlOfsRel = 0;
@@ -265,7 +265,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
         subtitleProcessor->printWarning("RLE buffer size inconsistent.\n");
     }
 
-    pic.rleSize = rleBufferFound;
+    pic.setRleSize(rleBufferFound);
     int alphaSum = 0;
     QVector<int> alphaUpdate(4);
     int alphaUpdateSum;
@@ -349,13 +349,13 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
         } break;
         case 6: // offset to RLE buffer
         {
-            pic.evenOfs = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4;
-            pic.oddOfs = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
+            pic.setEvenOffset(((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4);
+            pic.setOddOffset(((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4);
             index += 4;
 
             subtitleProcessor->print(QString("RLE ofs:   %1, %2\n")
-                                     .arg(QString::number(pic.evenOfs, 16), 4, QChar('0'))
-                                     .arg(QString::number(pic.oddOfs, 16), 4, QChar('0')));
+                                     .arg(QString::number(pic.evenOffset(), 16), 4, QChar('0'))
+                                     .arg(QString::number(pic.oddOffset(), 16), 4, QChar('0')));
         } break;
         case 7: // color/alpha update
         {
@@ -373,10 +373,13 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
                 alphaUpdateSum += alphaUpdate[i] & 0xff;
             }
             // only use more opaque colors
-            if (alphaUpdateSum > alphaSum) {
+            if (alphaUpdateSum > alphaSum)
+            {
                 alphaSum = alphaUpdateSum;
-                for (int i = 0; i<4; i++)
+                for (int i = 0; i < 4; ++i)
+                {
                     pic.alpha.replace(i, alphaUpdate[i]);
+                }
                 // take over frame palette
                 b =ctrlHeader[index + 8] & 0xff;
                 pic.pal.replace(3, (b >> 4));
@@ -387,7 +390,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
             }
             // search end sequence
             index = endSeqOfs;
-            delay = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) *1024;
+            delay = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) * 1024;
             endSeqOfs = (((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - ctrlOfsRel) - 2;
             if (endSeqOfs < 0 || endSeqOfs > ctrlSize)
             {
@@ -440,7 +443,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
     {
         if (subtitleProcessor->getFixZeroAlpha())
         {
-            for (int i=0; i < 4; i++)
+            for (int i = 0; i < 4; ++i)
             {
                 pic.alpha.replace(i, lastAlpha[i]);
             }
@@ -471,7 +474,7 @@ void SubDVD::readAllSubFrames()
         long nextOfs;
         if (i < subPictures.size() - 1)
         {
-            nextOfs = subPictures[i + 1].offset;
+            nextOfs = subPictures[i + 1].offset();
         }
         else
         {
@@ -1069,7 +1072,7 @@ void SubDVD::readIdx(int idxToRead)
                 }
 
                 SubPictureDVD pic;
-                pic.offset = hex;
+                pic.setOffset(hex);
                 pic.setWidth(screenWidth);
                 pic.setHeight(screenHeight);
                 pic.setStartTime(time + delayGlob);

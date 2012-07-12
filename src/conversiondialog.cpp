@@ -114,36 +114,42 @@ void ConversionDialog::keyPressEvent(QKeyEvent *event)
             isReady = true;
             on_delayLineEdit_editingFinished();
             isReady = false;
+            return;
         }
         if (ui->minTimeLineEdit->hasFocus())
         {
             isReady = true;
             on_minTimeLineEdit_editingFinished();
             isReady = false;
+            return;
         }
         if (ui->scaleXLineEdit->hasFocus())
         {
             isReady = true;
             on_scaleXLineEdit_editingFinished();
             isReady = false;
+            return;
         }
         if (ui->scaleYLineEdit->hasFocus())
         {
             isReady = true;
             on_scaleYLineEdit_editingFinished();
             isReady = false;
+            return;
         }
         if (ui->sourceFramerateComboBox->hasFocus())
         {
             isReady = true;
             on_sourceFramerateComboBox_editingFinished();
             isReady = false;
+            return;
         }
         if (ui->targetFramerateComboBox->hasFocus())
         {
             isReady = true;
             on_targetFramerateComboBox_editingFinished();
             isReady = false;
+            return;
         }
     }
     QDialog::keyPressEvent(event);
@@ -372,6 +378,14 @@ void ConversionDialog::on_minTimeLineEdit_textChanged(const QString &arg1)
     if (ui->minTimeLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
     {
         minTimePTS = (int)subtitleProcessor->syncTimePTS((long)(arg1.toDouble() * 90), fpsTrg);
+        if (temp != QString::number(delayPTS / 90.0, 'g', 6))
+        {
+            ui->minTimeLineEdit->setPalette(*warnBackground);
+        }
+        else
+        {
+            ui->minTimeLineEdit->setPalette(*okBackground);
+        }
     }
 }
 
@@ -566,8 +580,8 @@ void ConversionDialog::on_minTimeLineEdit_editingFinished()
     {
         minTimePTS = (int) subtitleProcessor->syncTimePTS(text.toDouble() * 90, fpsTrg);
     }
-    ui->delayLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 6));
-    ui->delayLineEdit->setPalette(*okBackground);
+    ui->minTimeLineEdit->setText(QString::number(minTimePTS / 90.0, 'g', 6));
+    ui->minTimeLineEdit->setPalette(*okBackground);
 }
 
 void ConversionDialog::on_sourceFramerateComboBox_currentIndexChanged(const QString &arg1)

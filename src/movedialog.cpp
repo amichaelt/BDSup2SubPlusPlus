@@ -138,18 +138,22 @@ void MoveDialog::keyPressEvent(QKeyEvent *event)
         if (ui->xOffsetLineEdit->hasFocus())
         {
             on_xOffsetLineEdit_editingFinished();
+            return;
         }
         if (ui->yOffsetLineEdit->hasFocus())
         {
             on_yOffsetLineEdit_editingFinished();
+            return;
         }
         if (ui->aspectRatioLineEdit->hasFocus())
         {
             on_aspectRatioLineEdit_editingFinished();
+            return;
         }
         if (ui->cropOffsetYLineEdit->hasFocus())
         {
             on_cropOffsetYLineEdit_editingFinished();
+            return;
         }
     }
     QDialog::keyPressEvent(event);

@@ -64,11 +64,11 @@ QImage SupXML::getImage(Bitmap &bitmap)
 
 void SupXML::decode(int index)
 {
-    if (!QFileInfo(subPictures[index]->fileName).exists())
+    if (!QFileInfo(subPictures[index]->fileName()).exists())
     {
-        throw QString("File: '%1' not found").arg(subPictures[index]->fileName);
+        throw QString("File: '%1' not found").arg(subPictures[index]->fileName());
     }
-    QImage image(subPictures[index]->fileName);
+    QImage image(subPictures[index]->fileName());
     int width = image.width();
     int height = image.height();
 
@@ -150,8 +150,8 @@ void SupXML::decode(int index)
         SubPictureXML pic(subPictures[index]);
         pic.setImageWidth(width);
         pic.setImageHeight(height);
-        pic.setOfsX(pic.originalX + bounds.topLeft().x());
-        pic.setOfsY(pic.originalY + bounds.topLeft().y());
+        pic.setOfsX(pic.originalX() + bounds.topLeft().x());
+        pic.setOfsY(pic.originalY() + bounds.topLeft().y());
     }
 }
 
@@ -297,7 +297,7 @@ bool SupXML::XmlHandler::endElement(const QString &namespaceURI, const QString &
     XmlState endState = findState(qName.toLower());
     if (state == XmlState::GRAPHIC && endState == XmlState::GRAPHIC)
     {
-        subPicture->fileName = parent->pathName + txt.trimmed();
+        subPicture->setFileName(parent->pathName + txt.trimmed());
     }
     return true;
 }

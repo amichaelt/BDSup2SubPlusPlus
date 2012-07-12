@@ -31,12 +31,24 @@ public:
     SubPictureXML(const SubPictureXML& other);
     SubPictureXML(const SubPictureXML* other);
 
-    int originalX;
-    int originalY;
+    void setOriginal()
+    {
+        origX = getOfsX();
+        origY = getOfsY();
+    }
 
-    QString fileName;
+    int originalX() { return origX; }
+    void setOriginalX(int originalX) { origX = originalX; }
+    int originalY() { return origY; }
+    void setOriginalY(int originalY) { origY = originalY; }
+    QString fileName() { return filename; }
+    void setFileName(QString fileName) { filename = fileName; }
 
-    void setOriginal() { originalX = getOfsX(); originalY = getOfsY(); }
+private:
+    int origX;
+    int origY;
+
+    QString filename;
 };
 
 #endif // SUBPICTUREXML_H

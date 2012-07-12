@@ -491,7 +491,7 @@
        <string>Store current settings as default</string>
       </property>
       <property name="text">
-       <string>St&amp;ore</string>
+       <string>Store</string>
       </property>
       <property name="autoDefault">
        <bool>false</bool>
@@ -510,7 +510,7 @@
        <string>Restore last default settings</string>
       </property>
       <property name="text">
-       <string>R&amp;estore</string>
+       <string>Restore</string>
       </property>
       <property name="autoDefault">
        <bool>false</bool>
@@ -529,7 +529,7 @@
        <string>Reset defaults</string>
       </property>
       <property name="text">
-       <string>Rese&amp;t</string>
+       <string>Reset</string>
       </property>
       <property name="autoDefault">
        <bool>false</bool>

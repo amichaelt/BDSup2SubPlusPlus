@@ -31,15 +31,6 @@ class SubPictureDVD : public SubPicture
 public:
     SubPictureDVD();
 
-    long offset = 0;
-    int rleSize = 0;
-    int evenOfs = 0;
-    int oddOfs = 0;
-    int originalWidth = 0;
-    int originalHeight = 0;
-    int originalX = 0;
-    int originalY = 0;
-
     QVector<int> originalAlpha = QVector<int>(4);
     QVector<int> originalPal = QVector<int>(4);
     QVector<int> alpha = QVector<int>(4);
@@ -49,6 +40,33 @@ public:
 
     void setOriginal();
     void copyInfo(SubPicture* subPicture);
+
+    int offset() { return pictureOffset; }
+    void setOffset(int offset) { pictureOffset = offset; }
+    int rleSize() { return size; }
+    void setRleSize(int rleSize) { size = rleSize; }
+    int evenOffset() { return evenOfs; }
+    void setEvenOffset(int evenOffset) { evenOfs = evenOffset; }
+    int oddOffset() { return oddOfs; }
+    void setOddOffset(int oddOffset) { oddOfs = oddOffset; }
+    int originalWidth() { return origWidth; }
+    void setOriginalWidth(int originalWidth) { origWidth = originalWidth; }
+    int originalHeight() { return origHeight; }
+    void setOriginalHeight(int originalHeight) { origHeight = originalHeight; }
+    int originalX() { return origX; }
+    void setOriginalX(int originalX) { origX = originalX; }
+    int originalY() { return origY; }
+    void setOriginalY(int originalY) { origY = originalY; }
+
+private:
+    long pictureOffset = 0;
+    int size = 0;
+    int evenOfs = 0;
+    int oddOfs = 0;
+    int origWidth = 0;
+    int origHeight = 0;
+    int origX = 0;
+    int origY = 0;
 };
 
 #endif // SUBPICTUREDVD_H

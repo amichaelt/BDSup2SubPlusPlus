@@ -29,9 +29,21 @@ public:
     SubPictureHD(const SubPictureHD& other);
     SubPictureHD(const SubPictureHD* other);
 
+    int paletteOffset() { return paletteOfs; }
+    void setPaletteOffset(int paletteOffset) { paletteOfs = paletteOffset; }
+    int alphaOffset() { return alphaOfs; }
+    void setAlphaOffset(int alphaOffset) { alphaOfs = alphaOffset; }
+    int imageBufferSize() { return imageBufSize; }
+    void setImageBufferSize(int imageBufferSize) { imageBufSize = imageBufferSize; }
+    int imageBufferOffsetEven() { return imageBufferOfsEven; }
+    void setImageBufferOffsetEven(int imageBufferOffsetEven) { imageBufferOfsEven = imageBufferOffsetEven; }
+    int imageBufferOffsetOdd() { return imageBufferOfsOdd; }
+    void setImageBufferOffsetOdd(int imageBufferOffsetOdd) { imageBufferOfsOdd = imageBufferOffsetOdd; }
+
+private:
     int paletteOfs = 0;
     int alphaOfs = 0;
-    int imageBufferSize = 0;
+    int imageBufSize = 0;
     int imageBufferOfsEven = 0;
     int imageBufferOfsOdd = 0;
 };

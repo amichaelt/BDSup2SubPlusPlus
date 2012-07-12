@@ -807,12 +807,12 @@ void BDSup2Sub::errorDialog(const QString &errorMessage)
     QMessageBox::warning(this, "Error!", errorMessage);
 }
 
-void BDSup2Sub::printWarnings()
+void BDSup2Sub::printWarnings(QTextStream &stream)
 {
     QString message = getWarningMessage();
     if (!message.isNull() || !message.isEmpty())
     {
-        fprintf(stdout, QString(message + "\n").toAscii());
+        stream << QString(message + "\n");
     }
 }
 
@@ -1699,7 +1699,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                     }
                 }
 
-                printWarnings();
+                printWarnings(outStream);
 
                 subtitleProcessor->scanSubtitles();
 
@@ -1734,7 +1734,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 exit(1);
             }
 
-            printWarnings();
+            printWarnings(outStream);
             subtitleProcessor->exit();
         }
         outStream << QString("\nConversion of %1 file(s) finished\n").arg(QString::number(srcFileNames.size())) << endl;

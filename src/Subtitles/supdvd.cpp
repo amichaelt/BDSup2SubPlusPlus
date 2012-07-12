@@ -81,7 +81,7 @@ long SupDVD::getStartTime(int index)
 
 long SupDVD::getStartOffset(int index)
 {
-    return subPictures[index].offset;
+    return subPictures[index].offset();
 }
 
 SubPicture *SupDVD::getSubPicture(int index)
@@ -479,7 +479,7 @@ long SupDVD::readSupFrame(long ofs)
     }
     // 8 uchars PTS:  system clock reference, but use only the first 4
     SubPictureDVD pic;
-    pic.offset = ofs;
+    pic.setOffset(ofs);
     pic.setWidth(screenWidth);
     pic.setHeight(screenHeight);
 
@@ -502,7 +502,7 @@ long SupDVD::readSupFrame(long ofs)
     rleFrag->setImageBufferOffset(ofs);
     rleFrag->setImagePacketSize(rleSize);
     pic.rleFragments.push_back(rleFrag);
-    pic.rleSize = rleSize;
+    pic.setRleSize(rleSize);
 
     pic.pal = QVector<int>(4);
     pic.alpha = QVector<int>(4);
@@ -600,13 +600,13 @@ long SupDVD::readSupFrame(long ofs)
         } break;
         case 6: // offset to RLE buffer
         {
-            pic.evenOfs = ((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4;
-            pic.oddOfs  = ((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4;
+            pic.setEvenOffset(((ctrlHeader[index + 1] & 0xff) | ((ctrlHeader[index] & 0xff) << 8)) - 4);
+            pic.setOddOffset(((ctrlHeader[index + 3] & 0xff) | ((ctrlHeader[index + 2] & 0xff) << 8)) - 4);
             index += 4;
 
             subtitleProcessor->print(QString("RLE ofs:   %1, %2\n")
-                                     .arg(QString::number(pic.evenOfs, 16), 4, QChar('0'))
-                                     .arg(QString::number(pic.oddOfs, 16), 4, QChar('0')));
+                                     .arg(QString::number(pic.evenOffset(), 16), 4, QChar('0'))
+                                     .arg(QString::number(pic.oddOffset(), 16), 4, QChar('0')));
         } break;
         case 7: // color/alpha update
         {

@@ -71,7 +71,6 @@ public:
 
 private:
     QImage subtitleImage;
-    int dummyNumber = 0;
 };
 
 #endif // BITMAP_H
