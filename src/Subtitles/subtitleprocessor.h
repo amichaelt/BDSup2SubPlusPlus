@@ -404,6 +404,7 @@ public:
     int getLanguageIdx() { return languageIdx; }
     int getLanguageIdxRead() { return languageIdxRead; }
     void setLanguageIdx(int languageIdx) { this->languageIdx = languageIdx; }
+    void setLanguageIdxSet(bool value) { languageIdxSet = value; }
     QString getResolutionNameXml(int idx) { return resolutionNamesXml[idx]; }
     bool getKeepFps() { return keepFps; }
     void setKeepFps(bool value) { keepFps = value; }
@@ -525,6 +526,7 @@ private:
     int maxProgress = 0, lastProgress = 0;
     int numberOfErrors, numberOfWarnings;
     int languageIdx = 0;
+    int languageIdxSet = false;
     int alphaCrop = 14;
     int alphaThreshold = 80;
     int cropOfsY = 0;

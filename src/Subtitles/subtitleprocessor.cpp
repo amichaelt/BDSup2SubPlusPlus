@@ -2120,16 +2120,19 @@ void SubtitleProcessor::readSup()
     numberOfErrors = 0;
     numberOfWarnings = 0;
 
-    for (auto languageTriple : languages)
+    if (!languageIdxSet)
     {
-        if (fileName.contains(languageTriple[0], Qt::CaseInsensitive))
+        for (auto languageTriple : languages)
         {
-            languageIdx = languages.indexOf(languageTriple);
+            if (fileName.contains(languageTriple[0], Qt::CaseInsensitive))
+            {
+                languageIdx = languages.indexOf(languageTriple);
 
-            printX(QString("Selected language '%1 (%2)' by filename\n")
-                   .arg(languageTriple[0])
-                   .arg(languageTriple[1]));
-            break;
+                printX(QString("Selected language '%1 (%2)' by filename\n")
+                       .arg(languageTriple[0])
+                       .arg(languageTriple[1]));
+                break;
+            }
         }
     }
 

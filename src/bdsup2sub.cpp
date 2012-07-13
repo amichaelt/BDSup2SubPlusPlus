@@ -1207,6 +1207,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             outStream << QString("OPTION: Set language to %1 (%2)")
                          .arg(subtitleProcessor->getLanguages()[langIdx][0])
                          .arg(subtitleProcessor->getLanguages()[langIdx][1]) << endl;
+            subtitleProcessor->setLanguageIdxSet(true);
         }
 
         if (options->count("palette-file"))
@@ -1623,6 +1624,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 
         for (int fileNumber = 0; fileNumber < srcFileNames.size(); ++fileNumber)
         {
+            subtitleProcessor->setActive(true);
             subtitleProcessor->setCliMode(true);
             src = srcFileNames[fileNumber];
             trg = trgFileNames[fileNumber];
