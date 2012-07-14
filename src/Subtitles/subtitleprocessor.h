@@ -265,6 +265,7 @@ public:
 
     QWidget* parent;
     QSettings* settings;
+    QTextStream outStream(stdout);
 
     void convertSup(int index, int displayNumber, int displayMax, bool skipScaling = false);
     void setActive(bool value) { isActive = value; }
