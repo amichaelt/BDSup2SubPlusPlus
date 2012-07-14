@@ -87,6 +87,9 @@
        </property>
        <item>
         <layout class="QVBoxLayout" name="subtitleLanguageLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <property name="sizeConstraint">
           <enum>QLayout::SetFixedSize</enum>
          </property>
@@ -530,7 +533,7 @@
          <x>0</x>
          <y>0</y>
          <width>812</width>
-         <height>147</height>
+         <height>149</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -602,7 +605,7 @@
          <x>0</x>
          <y>0</y>
          <width>812</width>
-         <height>148</height>
+         <height>150</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
