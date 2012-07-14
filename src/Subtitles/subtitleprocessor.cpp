@@ -42,6 +42,7 @@
 #include <QImage>
 #include <QTextStream>
 #include <cmath>
+#include <QTextStream>
 
 SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool loadSettings) :
     defaultDVDPalette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true),
@@ -57,6 +58,7 @@ SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool 
     moveModeX(MoveModeX::KEEP),
     scalingFilter(ScalingFilters::BILINEAR)
 {
+    outStream = new QTextStream(stdout);
     this->parent = parent;
     this->settings = settings;
 
@@ -1171,7 +1173,7 @@ void SubtitleProcessor::print(const QString &message)
     }
     else
     {
-        outStream << message;
+        *outStream << message;
     }
 }
 
@@ -1183,7 +1185,7 @@ void SubtitleProcessor::printX(const QString &message)
     }
     else
     {
-        outStream << message;
+        *outStream << message;
     }
 }
 
@@ -1196,7 +1198,7 @@ void SubtitleProcessor::printError(const QString &message)
     }
     else
     {
-        outStream << QString("ERROR: %1").arg(message);
+        *outStream << QString("ERROR: %1").arg(message);
     }
 }
 
@@ -1209,7 +1211,7 @@ void SubtitleProcessor::printWarning(const QString &message)
     }
     else
     {
-        outStream << QString("WARNING: %1").arg(message);
+        *outStream << QString("WARNING: %1").arg(message);
     }
 }
 

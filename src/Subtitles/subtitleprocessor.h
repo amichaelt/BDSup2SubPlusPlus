@@ -30,6 +30,7 @@
 #include <QVector>
 #include <QSettings>
 
+class QTextStream;
 class Substream;
 class SubDVD;
 class SupDVD;
@@ -265,7 +266,7 @@ public:
 
     QWidget* parent;
     QSettings* settings;
-    QTextStream outStream(stdout);
+    QTextStream* outStream;
 
     void convertSup(int index, int displayNumber, int displayMax, bool skipScaling = false);
     void setActive(bool value) { isActive = value; }
