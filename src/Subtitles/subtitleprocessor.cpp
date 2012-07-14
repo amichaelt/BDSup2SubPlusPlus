@@ -1171,7 +1171,7 @@ void SubtitleProcessor::print(const QString &message)
     }
     else
     {
-        fprintf(stdout, message.toAscii());
+        outStream << message;
     }
 }
 
@@ -1183,7 +1183,7 @@ void SubtitleProcessor::printX(const QString &message)
     }
     else
     {
-        fprintf(stdout, message.toAscii());
+        outStream << message;
     }
 }
 
@@ -1196,7 +1196,7 @@ void SubtitleProcessor::printError(const QString &message)
     }
     else
     {
-        fprintf(stdout, (QString("ERROR: " + message)).toAscii());
+        outStream << QString("ERROR: %1").arg(message);
     }
 }
 
@@ -1209,7 +1209,7 @@ void SubtitleProcessor::printWarning(const QString &message)
     }
     else
     {
-        fprintf(stdout, (QString("WARNING: " + message)).toAscii());
+        outStream << QString("WARNING: %1").arg(message);
     }
 }
 
