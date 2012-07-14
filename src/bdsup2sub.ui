@@ -87,6 +87,9 @@
        </property>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
+         </property>
          <item>
           <widget class="QLabel" name="subtitleLanguageLabel">
            <property name="minimumSize">
@@ -125,6 +128,9 @@
         <layout class="QVBoxLayout" name="subtitleNumberLayout">
          <property name="spacing">
           <number>0</number>
+         </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
          </property>
          <item>
           <widget class="QLabel" name="subtitleNumberLabel">
@@ -165,6 +171,9 @@
          <property name="spacing">
           <number>0</number>
          </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
+         </property>
          <item>
           <widget class="QLabel" name="alphaThresholdLabel">
            <property name="text">
@@ -204,6 +213,9 @@
          <property name="spacing">
           <number>0</number>
          </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
+         </property>
          <item>
           <widget class="QLabel" name="medLowThresholdLabel">
            <property name="text">
@@ -239,6 +251,9 @@
         <layout class="QVBoxLayout" name="hiMedThresholdLayout">
          <property name="spacing">
           <number>0</number>
+         </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
          </property>
          <item>
           <widget class="QLabel" name="hiMedThresholdLabel">
@@ -326,6 +341,9 @@
          <property name="spacing">
           <number>0</number>
          </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
+         </property>
          <item>
           <widget class="QLabel" name="paletteLabel">
            <property name="text">
@@ -373,6 +391,9 @@
         <layout class="QVBoxLayout" name="filterLayout">
          <property name="spacing">
           <number>0</number>
+         </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
          </property>
          <item>
           <widget class="QLabel" name="filterLabel">
