@@ -1740,7 +1740,7 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
         }
         else if ((picture->getImageWidth() + picture->getOfsX() + offsetX) > picture->width())
         {
-            picture->setOfsX(picture->width() - (picture->getImageWidth() + picture->getOfsX()));
+            picture->setOfsX(picture->getOfsX() + (picture->width() - (picture->getImageWidth() + picture->getOfsX())));
         }
         else
         {
