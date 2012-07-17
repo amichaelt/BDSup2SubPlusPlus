@@ -338,7 +338,7 @@ void BDSup2Sub::init()
 
     ui->consoleOutput->insertPlainText(progNameVer + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
     ui->consoleOutput->insertPlainText(authorDate + "\n");
-    ui->consoleOutput->insertPlainText("Official thread at Doom9: http://forum.doom9.org/showthread.php?t=145277\n\n");
+    ui->consoleOutput->insertPlainText("Official thread at Doom9: https://forum.doom9.org/showthread.php?t=165416\n\n");
 
     if (subtitleProcessor == 0)
     {
@@ -2049,25 +2049,27 @@ void BDSup2Sub::moveAllCaptions_triggered()
 {
     MoveDialog moveDialog(this, subtitleProcessor);
     moveDialog.setIndex(subIndex);
-    moveDialog.exec();
-    if (subtitleProcessor->getMoveCaptions())
+    if (moveDialog.exec() != QDialog::Rejected)
     {
-        subtitleProcessor->moveAll();
+        if (subtitleProcessor->getMoveCaptions())
+        {
+            subtitleProcessor->moveAll();
+        }
+        subIndex = moveDialog.getIndex();
+        ui->subtitleImage->setScreenRatio(moveDialog.getTrgRatio());
+        try
+        {
+            subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
+        }
+        catch (QString e)
+        {
+            errorDialog(e);
+            return;
+        }
+        refreshSrcFrame(subIndex);
+        refreshTrgFrame(subIndex);
+        ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
     }
-    subIndex = moveDialog.getIndex();
-    ui->subtitleImage->setScreenRatio(moveDialog.getTrgRatio());
-    try
-    {
-        subtitleProcessor->convertSup(subIndex, subIndex + 1, subtitleProcessor->getNumberOfFrames());
-    }
-    catch (QString e)
-    {
-        errorDialog(e);
-        return;
-    }
-    refreshSrcFrame(subIndex);
-    refreshTrgFrame(subIndex);
-    ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
 }
 
 void BDSup2Sub::resetCropOffset_triggered()
