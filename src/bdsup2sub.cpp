@@ -378,8 +378,8 @@ void BDSup2Sub::init()
 void BDSup2Sub::loadSettings()
 {
     //Rename INI file to name matching the new program name
-    QString oldIniFilePath = QString("%1/%2").arg(QDir::currentPath()).arg(oldIniName);
-    QString newIniFilePath = QString("%1/%2").arg(QDir::currentPath()).arg(iniName);
+    QString oldIniFilePath = QString("%1/%2").arg(QApplication::applicationDirPath()).arg(oldIniName);
+    QString newIniFilePath = QString("%1/%2").arg(QApplication::applicationDirPath()).arg(iniName);
     QFileInfo oldIniFileInfo = QFileInfo(oldIniFilePath);
     if (oldIniFileInfo.exists())
     {
@@ -565,7 +565,7 @@ void BDSup2Sub::openFile()
         connectSubtitleProcessor();
     }
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open"),
-                                                    loadPath.isEmpty() ? QDir::currentPath() : QFileInfo(loadPath).absolutePath(),
+                                                    loadPath.isEmpty() ? QApplication::applicationDirPath() : QFileInfo(loadPath).absolutePath(),
                                                     filter,
                                                     &selectedFilter
                                                     );
@@ -693,7 +693,7 @@ void BDSup2Sub::loadSubtitleFile()
     if (extension == "sup" && streamID == StreamID::SUP)
     {
         QString fileName = QFileDialog::getOpenFileName(this, tr("Open IFO file"),
-                                                        loadPath.isEmpty() ? QDir::currentPath() : QFileInfo(loadPath).absolutePath(),
+                                                        loadPath.isEmpty() ? QApplication::applicationDirPath() : QFileInfo(loadPath).absolutePath(),
                                                         ifoFilter,
                                                         &ifoFilter
                                                         );
