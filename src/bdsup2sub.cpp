@@ -1726,8 +1726,14 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                     lumaThr.replace(1, lumThr2);
                 }
                 subtitleProcessor->setLuminanceThreshold(lumaThr);
-                subtitleProcessor->setAlphaThreshold(alphaThreshold);
-                subtitleProcessor->setLanguageIdx(langIdx);
+                if (alphaThreshold > 0)
+                {
+                    subtitleProcessor->setAlphaThreshold(alphaThreshold);
+                }
+                if (langIdx > 0)
+                {
+                    subtitleProcessor->setLanguageIdx(langIdx);
+                }
                 subtitleProcessor->writeSub(trg);
             }
             catch(QString e)
