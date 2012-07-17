@@ -26,7 +26,7 @@
 #include <QColor>
 
 const QString progName = "BDSup2Sub++";
-const QString progNameVer = progName + " 1.0.0 RC3";
+const QString progNameVer = progName + " 1.0.0";
 const QString authorDate = "0xdeadbeef, mjuhasz, Adam T.";
 const QString oldIniName = "bdsup2sup.ini";
 const QString iniName = "bdsup2sup++.ini";
