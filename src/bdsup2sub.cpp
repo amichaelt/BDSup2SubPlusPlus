@@ -1677,28 +1677,48 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 
                 subtitleProcessor->setLoadPath(src);
 
-                if (xml || sid == StreamID::XML)
+                try
                 {
-                    subtitleProcessor->readXml();
-                }
-                else if (idx || sid == StreamID::DVDSUB || sid == StreamID::IDX)
-                {
-                    subtitleProcessor->readDVDSubStream(sid, true);
-                }
-                else if (ifo || sid == StreamID::IFO)
-                {
-                    subtitleProcessor->readDVDSubStream(sid, false);
-                }
-                else
-                {
-                    if (QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName())).exists())
+                    if (xml || sid == StreamID::XML)
+                    {
+                        subtitleProcessor->readXml();
+                    }
+                    else if (idx || sid == StreamID::DVDSUB || sid == StreamID::IDX)
+                    {
+                        subtitleProcessor->readDVDSubStream(sid, true);
+                    }
+                    else if (ifo || sid == StreamID::IFO)
                     {
                         subtitleProcessor->readDVDSubStream(sid, false);
                     }
+                    else if (streamID == StreamID::BDSUP)
+                    {
+                        readSup();
+                    }
                     else
                     {
-                        subtitleProcessor->readSup();
+                        if (QFileInfo(QString("%1/%2.ifo").arg(srcFileInfo.absolutePath()).arg(srcFileInfo.completeBaseName())).exists())
+                        {
+                            subtitleProcessor->readDVDSubStream(sid, false);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                subtitleProcessor->readDVDSubStream(sid, false);
+                            }
+                            catch(QString e)
+                            {
+                                outStream << "SUP file was not a valid DVD SUP file. Attempting to load as HD DVD SUP.\n";
+                                subtitleProcessor->readSup();
+                            }
+                        }
                     }
+                }
+                catch (QString e)
+                {
+                    errorStream << e;
+                    exit(1);
                 }
 
                 printWarnings(outStream);
