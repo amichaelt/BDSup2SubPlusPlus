@@ -1691,9 +1691,9 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                     {
                         subtitleProcessor->readDVDSubStream(sid, false);
                     }
-                    else if (streamID == StreamID::BDSUP)
+                    else if (sid == StreamID::BDSUP)
                     {
-                        readSup();
+                        subtitleProcessor->readSup();
                     }
                     else
                     {
