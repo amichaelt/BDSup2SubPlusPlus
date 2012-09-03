@@ -681,9 +681,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     int imageDecodeTime = (((bm.width() * bm.height()) * 9) + 1599) / 1600;
     // write PCS start
     packetHeader.replace(10, 0x16);                                             // ID
-    int dts = (int)subPicture->startTime() - (frameInitTime + windowInitTime);
     NumberUtil::setDWord(packetHeader, 2, (int)subPicture->startTime());				// PTS
-    NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
+    NumberUtil::setDWord(packetHeader, 6, 0);                                           // DTS (0)
     NumberUtil::setWord(packetHeader, 11, headerPCSStart.size());			// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
@@ -704,7 +703,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     // write WDS
     packetHeader.replace(10, 0x17);											// ID
     int timeStamp = (int)subPicture->startTime() - windowInitTime;
-    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS)
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS
+    NumberUtil::setDWord(packetHeader, 6, 0);                               //DTS (0)
     NumberUtil::setWord(packetHeader, 11, headerWDS.size());				// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
@@ -721,7 +721,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
 
     // write PDS
     packetHeader.replace(10, 0x14);											// ID
-    NumberUtil::setDWord(packetHeader, 2, dts);								// PTS (=DTS of PCS/WDS)
+    int dts = (int)subPicture->startTime() - (frameInitTime + windowInitTime);
+    NumberUtil::setDWord(packetHeader, 2, dts);								// PTS
     NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
     NumberUtil::setWord(packetHeader, 11, (2 + (palSize * 5)));					// size
     for (int i = 0; i < packetHeader.size(); ++i)
@@ -749,7 +750,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     packetHeader.replace(10, 0x15);											// ID
     timeStamp = dts + imageDecodeTime;
     NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS
-    NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
+    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
     NumberUtil::setWord(packetHeader, 11, headerODSFirst.size() + bufSize);	// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
@@ -796,7 +797,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
 
     // write END
     packetHeader.replace(10, 0x80);										// ID
-    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0) (keep PTS of ODS)
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);    					// PTS
+    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
     NumberUtil::setWord(packetHeader, 11, 0);								// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
@@ -806,8 +808,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     // write PCS end
     packetHeader.replace(10, 0x16);											// ID
     NumberUtil::setDWord(packetHeader, 2, (int)subPicture->endTime());				// PTS
-    dts = (int)subPicture->startTime() - 1;
-    NumberUtil::setDWord(packetHeader, 6, dts);								// DTS
+    NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
     NumberUtil::setWord(packetHeader, 11, headerPCSEnd.size());				// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
@@ -825,7 +826,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     // write WDS
     packetHeader.replace(10, 0x17);											// ID
     timeStamp = (int)subPicture->endTime() - windowInitTime;
-    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (keep DTS of PCS)
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS
+    NumberUtil::setDWord(packetHeader, 6, 0);                               // DTS (0)
     NumberUtil::setWord(packetHeader, 11, headerWDS.size());				// size
     for (int i = 0; i < packetHeader.size(); ++i)
     {
@@ -842,7 +844,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
 
     // write END
     packetHeader.replace(10, 0x80);										// ID
-    NumberUtil::setDWord(packetHeader, 2, dts);								// PTS (DTS of end PCS)
+    NumberUtil::setDWord(packetHeader, 2, timeStamp);						// PTS (PTS of end PCS)
     NumberUtil::setDWord(packetHeader, 6, 0);								// DTS (0)
     NumberUtil::setWord(packetHeader, 11, 0);								// size
     for (int i = 0; i < packetHeader.size(); ++i)
