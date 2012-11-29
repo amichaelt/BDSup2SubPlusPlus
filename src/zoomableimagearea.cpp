@@ -21,7 +21,12 @@
 #include <QSize>
 #include <QPainter>
 #include <QLinearGradient>
+
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QScrollArea>
+#else
 #include <QScrollArea>
+#endif
 
 ZoomableImageArea::ZoomableImageArea(QWidget *parent) :
     QLabel(parent)

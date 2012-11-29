@@ -33,13 +33,18 @@
 #include "Tools/timeutil.h"
 #include "Subtitles/palette.h"
 
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
 #include "windows.h"
 #include "io.h"
 #include "fcntl.h"
 #endif
 
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QMessageBox>
+#else
 #include <QMessageBox>
+#endif
+
 #include <QPixmap>
 #include <QFileInfoList>
 #include <QFileInfo>
@@ -332,7 +337,7 @@ void BDSup2Sub::init()
 
     this->setWindowTitle(progNameVer);
 
-    QFont font("Monospace", 9);
+    QFont font("Monospace");
     font.setStyleHint(QFont::TypeWriter);
     ui->consoleOutput->setFont(font);
 
@@ -388,7 +393,7 @@ void BDSup2Sub::loadSettings()
         settings = new QSettings(newIniFilePath, QSettings::IniFormat);
 
         //Fix mangled Windows path names written by Java in INI files imported from original BDSup2Sub
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
         QString fixPath;
         if (settings->allKeys().contains("loadPath"))
         {
@@ -1772,7 +1777,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 
 void BDSup2Sub::Redirect_console()
 {
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
     int hCrtout,hCrterr;
     FILE *hfout, *hferr;
 

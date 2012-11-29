@@ -217,10 +217,10 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
     out->write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     out->write("<BDN Version=\"0.93\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"BD-03-006-0093b BDN File Format.xsd\">\n");
     out->write("  <Description>\n");
-    out->write(QString("    <Name Title=\"" + name + "\" Content=\"\"/>\n").toAscii());
-    out->write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toAscii());
+    out->write(QString("    <Name Title=\"" + name + "\" Content=\"\"/>\n").toLatin1());
+    out->write(QString("    <Language Code=\"" + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][2] + "\"/>\n").toLatin1());
     QString res = subtitleProcessor->getResolutionNameXml((int)subtitleProcessor->getOutputResolution());
-    out->write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 6) + "\" DropFrame=\"False\"/>\n").toAscii());
+    out->write(QString("    <Format VideoFormat=\"" + res + "\" FrameRate=\"" + QString::number(fps, 'g', 6) + "\" DropFrame=\"False\"/>\n").toLatin1());
     t = pics[0]->startTime();
     if (fps != fpsXml)
     {
@@ -233,7 +233,7 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
         t = ((t * 2000) + 1001) / 2002;
     }
     QString te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
-    out->write(QString("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + QString::number(pics.size()) + "\"/>\n").toAscii());
+    out->write(QString("    <Events Type=\"Graphic\" FirstEventInTC=\"" + ts + "\" LastEventOutTC=\"" + te + "\" NumberofEvents=\"" + QString::number(pics.size()) + "\"/>\n").toLatin1());
     out->write("  </Description>\n");
     out->write("  <Events>\n");
     for (int idx = 0; idx < pics.size(); ++idx)
@@ -252,11 +252,11 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
         }
         te = TimeUtil::ptsToTimeStrXml(t, fpsXml);
         QString forced = p->isForced() ? "True": "False";
-        out->write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toAscii());
+        out->write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toLatin1());
 
         QString pname = QFileInfo(getPNGname(name, idx + 1)).fileName();
         out->write(QString("      <Graphic Width=\"" + QString::number(p->getImageWidth()) + "\" Height=\"" + QString::number(p->getImageHeight()) +
-                          "\" X=\"" + QString::number(p->getOfsX()) + "\" Y=\"" + QString::number(p->getOfsY()) + "\">" + pname + "</Graphic>\n").toAscii());
+                          "\" X=\"" + QString::number(p->getOfsX()) + "\" Y=\"" + QString::number(p->getOfsY()) + "\">" + pname + "</Graphic>\n").toLatin1());
         out->write("    </Event>\n");
     }
     out->write("  </Events>\n");

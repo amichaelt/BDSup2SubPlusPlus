@@ -22,11 +22,17 @@
 #include "Subtitles/subtitleprocessor.h"
 #include "types.h"
 
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QColorDialog>
+#include <QtWidgets/QFileDialog>
+#else
 #include <QColorDialog>
+#include <QFileDialog>
+#endif
+
 #include <QPixmap>
 #include <QPainter>
 #include <QStandardItemModel>
-#include <QFileDialog>
 #include <QSettings>
 
 ColorDialog::ColorDialog(QWidget *parent, SubtitleProcessor* subtitleProcessor) :
@@ -112,14 +118,14 @@ void ColorDialog::on_savePaletteButton_clicked()
         throw QString("Palette file '%1' can not be opened for writing.").arg(filePath);
     }
 
-    outPalette->write(QString("#COL - created by %1\n").arg(progNameVer).toAscii());
+    outPalette->write(QString("#COL - created by %1\n").arg(progNameVer).toLatin1());
     for (int i = selectedColors.size() - 1; i >= 0; --i)
     {
         outPalette->write(QString("Color_%1=%2,%3,%4\n")
                               .arg(QString::number(i))
                               .arg(QString::number(selectedColors[i].red()))
                               .arg(QString::number(selectedColors[i].green()))
-                              .arg(QString::number(selectedColors[i].blue())).toAscii());
+                              .arg(QString::number(selectedColors[i].blue())).toLatin1());
     }
 }
 

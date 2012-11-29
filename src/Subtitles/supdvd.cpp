@@ -266,8 +266,8 @@ void SupDVD::writeIfo(QString filename, SubPicture &subPicture, Palette &palette
     QString l = subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][1];
     NumberUtil::setWord(buf, index + 0x254, 1);                     // number of subtitle streams
     NumberUtil::setByte(buf, index + 0x256, 1);                     // subtitle attributes
-    NumberUtil::setByte(buf, index + 0x258, l.at(0).toAscii());
-    NumberUtil::setByte(buf, index + 0x259, l.at(1).toAscii());
+    NumberUtil::setByte(buf, index + 0x258, l.at(0).toLatin1());
+    NumberUtil::setByte(buf, index + 0x259, l.at(1).toLatin1());
 
     // PTT_SRPTI
     index = 0x0800;

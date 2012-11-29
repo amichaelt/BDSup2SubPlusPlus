@@ -2236,7 +2236,7 @@ void SubtitleProcessor::writePGCEditPalette(QString filename, Palette &palette)
     {
         QRgb rgb = palette.rgb(i);
         out->write(QString("Color " + QString::number(i) + "=" + QString::number(qRed(rgb)) +
-                           ", " + QString::number(qGreen(rgb)) + ", " + QString::number(qBlue(rgb)) + "\n").toAscii());
+                           ", " + QString::number(qGreen(rgb)) + ", " + QString::number(qBlue(rgb)) + "\n").toLatin1());
     }
 }
 

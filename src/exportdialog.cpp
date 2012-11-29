@@ -21,7 +21,13 @@
 #include "ui_exportdialog.h"
 #include "Subtitles/subtitleprocessor.h"
 #include <QFileInfo>
+
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QFileDialog>
+#else
 #include <QFileDialog>
+#endif
+
 #include "types.h"
 
 ExportDialog::ExportDialog(QWidget *parent, QString filePath, SubtitleProcessor* subtitleProcessor) :

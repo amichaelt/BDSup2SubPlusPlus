@@ -20,7 +20,12 @@
 #ifndef EXPORTDIALOG_H
 #define EXPORTDIALOG_H
 
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QDialog>
+#else
 #include <QDialog>
+#endif
 
 class SubtitleProcessor;
 

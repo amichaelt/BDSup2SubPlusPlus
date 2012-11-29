@@ -24,12 +24,17 @@
 #include "Tools/timeutil.h"
 #include "types.h"
 
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QMessageBox>
+#else
+#include <QMessageBox>
+#endif
+
 #include <QDoubleValidator>
 #include <QRegExpValidator>
 #include <QPalette>
 #include <QKeyEvent>
 #include <QSettings>
-#include <QMessageBox>
 
 ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleProcessor, QSettings* settings) :
     QDialog(parent),

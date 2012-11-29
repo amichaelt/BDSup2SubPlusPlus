@@ -17,9 +17,16 @@
  * limitations under the License.
  */
 
+#include <QtGlobal>
+
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QApplication>
+#else
 #include <QtGui/QApplication>
+#endif
+
 #include "bdsup2sub.h"
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
 #include <windows.h>
 #endif
 
@@ -32,7 +39,7 @@ int main(int argc, char *argv[])
 
     if (isGUI || !w.execCLI(argc, argv))
     {
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
         FreeConsole();
 #endif
         w.show();

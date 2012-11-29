@@ -20,7 +20,12 @@
 #ifndef PROGRESSDIALOG_H
 #define PROGRESSDIALOG_H
 
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QDialog>
+#else
 #include <QDialog>
+#endif
 #include <QString>
 
 namespace Ui {

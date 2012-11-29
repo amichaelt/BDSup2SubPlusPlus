@@ -22,7 +22,11 @@
 
 #include "Subtitles/palette.h"
 
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QMainWindow>
+#else
 #include <QMainWindow>
+#endif
 #include <QColor>
 #include <QIntValidator>
 

@@ -20,7 +20,12 @@
 #ifndef HELPDIALOG_H
 #define HELPDIALOG_H
 
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QDialog>
+#else
 #include <QDialog>
+#endif
 
 namespace Ui {
 class HelpDialog;

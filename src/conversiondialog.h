@@ -20,7 +20,12 @@
 #ifndef CONVERSIONDIALOG_H
 #define CONVERSIONDIALOG_H
 
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+#include <QtWidgets/QDialog>
+#else
 #include <QDialog>
+#endif
 
 class QPalette;
 class SubtitleProcessor;

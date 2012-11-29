@@ -1105,11 +1105,11 @@ void SubDVD::writeIdx(QString filename, SubPicture &subPicture, QVector<int> off
     }
 
     out->write("# VobSub index file, v7 (do not modify this line!)\n");
-    out->write(QString("# Created by " + progNameVer + "\n").toAscii());
+    out->write(QString("# Created by " + progNameVer + "\n").toLatin1());
     out->write("\n");
     out->write("# Frame size\n");
     out->write(QString("size: " + QString::number(subPicture.width()) + "x" +
-               QString::number((subPicture.height() - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toAscii());
+               QString::number((subPicture.height() - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toLatin1());
     out->write("\n");
     out->write("# Origin - upper-left corner\n");
     out->write("org: 0, 0\n");
@@ -1142,7 +1142,7 @@ void SubDVD::writeIdx(QString filename, SubPicture &subPicture, QVector<int> off
     {
         QRgb val = palette.rgb(i);
         QString value = QString("%1").arg(QString::number(val, 16), 6, QChar('0'));
-        out->write(value.toAscii());
+        out->write(value.toLatin1());
         if (i != palette.size() - 1)
         {
             out->write(", ");
@@ -1156,16 +1156,16 @@ void SubDVD::writeIdx(QString filename, SubPicture &subPicture, QVector<int> off
     out->write("# Language index in use\n");
     out->write("langidx: 0\n");
     out->write("\n");
-    out->write(QString("# " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toAscii());
-    out->write(QString("id: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][1] + ", index: 0\n").toAscii());
+    out->write(QString("# " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toLatin1());
+    out->write(QString("id: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][1] + ", index: 0\n").toLatin1());
     out->write("# Decomment next line to activate alternative name in DirectVobSub / Windows Media Player 6.x\n");
-    out->write(QString("# alt: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toAscii());
+    out->write(QString("# alt: " + subtitleProcessor->getLanguages()[subtitleProcessor->getLanguageIdx()][0] + "\n").toLatin1());
     out->write("# Vob/Cell ID: 1, 1 (PTS: 0)\n");
     for (int i = 0; i < timestamps.size(); ++i)
     {
-        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStrIdx(timestamps[i])).toAscii());
+        out->write(QString("timestamp: " + TimeUtil::ptsToTimeStrIdx(timestamps[i])).toLatin1());
         QString value = QString("%1").arg(QString::number(offsets[i], 16), 9, QChar('0'));
-        out->write(", filepos: " +  value.toAscii());
+        out->write(", filepos: " +  value.toLatin1());
         out->write("\n");
     }
 }
