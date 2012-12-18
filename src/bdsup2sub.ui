@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>909</width>
+    <width>738</width>
     <height>562</height>
    </rect>
   </property>
@@ -414,8 +414,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>907</width>
-         <height>147</height>
+         <width>736</width>
+         <height>150</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -486,8 +486,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>907</width>
-         <height>147</height>
+         <width>736</width>
+         <height>150</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -562,8 +562,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>909</width>
-     <height>22</height>
+     <width>738</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
