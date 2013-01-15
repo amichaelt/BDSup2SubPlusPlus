@@ -96,10 +96,14 @@ void BDSup2Sub::keyPressEvent(QKeyEvent *event)
             }
         }
     }
-    else
+    if(QApplication::keyboardModifiers() == Qt::ControlModifier)
     {
-        QMainWindow::keyPressEvent(event);
+        if (event->key() == Qt::Key_C)
+        {
+            ui->consoleOutput->copy();
+        }
     }
+    QMainWindow::keyPressEvent(event);
 }
 
 void BDSup2Sub::changeWindowTitle(QString newTitle)
@@ -354,7 +358,7 @@ void BDSup2Sub::init()
 
     fillComboBoxes();
 
-    ui->action_Verbatim_Output->setChecked(subtitleProcessor->getVerbatim());
+    ui->action_Verbose_Output->setChecked(subtitleProcessor->getVerbatim());
     ui->action_Fix_invisible_frames->setChecked(subtitleProcessor->getFixZeroAlpha());
     ui->action_Swap_Cr_Cb->setChecked(subtitleProcessor->getSwapCrCb());
 
@@ -367,7 +371,7 @@ void BDSup2Sub::init()
     connect(ui->action_Edit_Frame, SIGNAL(triggered()), this, SLOT(loadEditPane()));
     //connect(ui->action_Help, SIGNAL(triggered()), this, SLOT(loadHelpDialog()));
     connect(ui->action_Swap_Cr_Cb, SIGNAL(toggled(bool)), this, SLOT(swapCrCb_toggled(bool)));
-    connect(ui->action_Verbatim_Output, SIGNAL(toggled(bool)), this, SLOT(verbatimOutput_toggled(bool)));
+    connect(ui->action_Verbose_Output, SIGNAL(toggled(bool)), this, SLOT(verbatimOutput_toggled(bool)));
     connect(ui->action_Fix_invisible_frames, SIGNAL(toggled(bool)), this, SLOT(fixInvisibleFrames_toggled(bool)));
     connect(ui->actionEdit_default_DVD_Palette, SIGNAL(triggered()), this, SLOT(editDefaultDVDPalette_triggered()));
     connect(ui->actionEdit_imported_DVD_Palette, SIGNAL(triggered()), this, SLOT(editImportedDVDPalette_triggered()));
@@ -444,11 +448,11 @@ void BDSup2Sub::connectSubtitleProcessor()
     connect(subtitleProcessor, SIGNAL(progressDialogTitleChanged(QString)), progressDialog, SLOT(setWindowTitle(QString)));
     connect(subtitleProcessor, SIGNAL(progressDialogValueChanged(int)), progressDialog, SLOT(setCurrentValue(int)));
     connect(subtitleProcessor, SIGNAL(progressDialogVisibilityChanged(bool)), progressDialog, SLOT(setVisible(bool)));
+    connect(progressDialog, SIGNAL(operationCancelled()), this, SLOT(onOperationCancelled()));
     connect(subtitleProcessor, SIGNAL(loadingSubtitleFinished(QString)), this, SLOT(onLoadingSubtitleFileFinished(QString)));
     connect(subtitleProcessor, SIGNAL(writingSubtitleFinished(QString)), this, SLOT(onWritingSubtitleFileFinished(QString)));
     connect(subtitleProcessor, SIGNAL(moveAllFinished(QString)), this, SLOT(onMoveAllFinished(QString)));
     connect(subtitleProcessor, SIGNAL(printText(QString)), this, SLOT(print(QString)));
-    connect(progressDialog, SIGNAL(operationCancelled()), this, SLOT(onOperationCancelled()));
 }
 
 void BDSup2Sub::fillComboBoxes()
@@ -893,8 +897,9 @@ void BDSup2Sub::addCLIOptions()
     options->add("swap",              "\tSwap Cr/Cb components.");
     options->add("no-fix-invisible",  "\tDo not fix zero alpha frame palette.");
     options->add("fix-invisible",     "\tFix zero alpha frame palette.");
-    options->add("no-verbatim",       "\tSwitch off verbatim console output mode.");
-    options->add("verbatim",          "\tSwitch on verbatim console output mode.");
+    options->add("no-verbatim",       "\tSwitch off verbose console output mode.");
+    options->add("verbatim",          "\tSwitch on verbose console output mode.");
+    options->add("log-to-stderr",     "\tSwitch to change progress output to standard error.");
 
     options->addSection("Options only for SUB/IDX or SUP/IFO as target");
     options->add("alpha-thr",         "\tSet alpha threshold 0..255. Default 80.",
@@ -956,6 +961,12 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     }
     else
     {
+        if (options->count("log-to-stderr"))
+        {
+            QFile file;
+            file.open(stderr, QIODevice::WriteOnly);
+            outStream.setDevice(&file);
+        }
         outStream << progNameVer + "\n";
         // parse parameters
         QString src = positional.size() == 1 ? positional[0] : "";
@@ -1483,12 +1494,12 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
         if (options->count("verbatim"))
         {
             subtitleProcessor->setVerbatim(true);
-            outStream << QString("OPTION: Enabled verbatim output.") << endl;
+            outStream << QString("OPTION: Enabled verbose output.") << endl;
         }
         if (options->count("no-verbatim"))
         {
             subtitleProcessor->setVerbatim(false);
-            outStream << QString("OPTION: Disabled verbatim output.") << endl;
+            outStream << QString("OPTION: Disabled verbose output.") << endl;
         }
 
         if (options->count("filter"))

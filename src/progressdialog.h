@@ -48,7 +48,7 @@ public slots:
     void setCurrentValue(int value);
     
 private slots:
-    void on_pushButton_clicked();
+    void on_cancelButton_pressed();
 
 private:
     Ui::ProgressDialog *ui;

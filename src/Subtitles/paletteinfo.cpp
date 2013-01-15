@@ -22,3 +22,15 @@
 PaletteInfo::PaletteInfo()
 {
 }
+
+PaletteInfo::PaletteInfo(const PaletteInfo *other) :
+    offset(other->offset),
+    size(other->size)
+{
+}
+
+PaletteInfo::PaletteInfo(const PaletteInfo &other) :
+    offset(other.offset),
+    size(other.size)
+{
+}

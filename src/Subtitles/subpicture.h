@@ -40,10 +40,10 @@ public:
     void setWidth(int width) { screenWidth = width; }
     int height() { return screenHeight; }
     void setHeight(int height) { screenHeight = height; }
-    int startTime() { return start; }
-    void setStartTime(int startTime) { start = startTime; }
-    int endTime() { return end; }
-    void setEndTime(int endTime) { end = endTime; }
+    long startTime() { return start; }
+    void setStartTime(long startTime) { start = startTime; }
+    long endTime() { return end; }
+    void setEndTime(long endTime) { end = endTime; }
     int compNum() { return compositionNumber; }
     void setCompNum(int compNum) { compositionNumber = compNum; }
     bool isForced() { return forced; }

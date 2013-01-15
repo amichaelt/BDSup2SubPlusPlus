@@ -27,6 +27,10 @@
 class ImageObject
 {
 public:
+    ImageObject();
+    ImageObject(const ImageObject* other);
+    ImageObject(const ImageObject& other);
+
     int paletteID() { return paletteId; }
     void setPaletteID(int id) { paletteId = id; }
     int bufferSize() { return bufSize; }

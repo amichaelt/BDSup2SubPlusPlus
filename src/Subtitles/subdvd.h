@@ -80,14 +80,16 @@ public:
     QVector<int> getOriginalFramePal(int index);
 
 signals:
-    void maxProgressChanged(int maxProgress);
-    void currentProgressChanged(int currentProgress);
+    void maxProgressChanged(long maxProgress);
+    void currentProgressChanged(long currentProgress);
     void addLanguage(const QString &message);
 
 private:
     int delay = -1;
     int streamID = 0;
     int languageIdxRead;
+
+    bool isCancelled;
 
     QString idxFileName;
     QString subFileName;

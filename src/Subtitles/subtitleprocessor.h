@@ -491,8 +491,8 @@ signals:
     void addLanguage(const QString &message);
 
 public slots:
-    void setMaxProgress(int maxProgress);
-    void setCurrentProgress(int currentProgress);
+    void setMaxProgress(long maxProgress);
+    void setCurrentProgress(long currentProgress);
     void readSubtitleStream();
     void createSubtitleStream();
     void moveAll();
@@ -525,7 +525,8 @@ private:
     QVector<SubPicture*> subPictures;
 
     int languageIdxRead;
-    int maxProgress = 0, lastProgress = 0;
+    int maxProgress = 0;
+    double lastProgress = 0.0;
     int numberOfErrors, numberOfWarnings;
     int languageIdx = 0;
     int languageIdxSet = false;

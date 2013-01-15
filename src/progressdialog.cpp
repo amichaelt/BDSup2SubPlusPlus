@@ -43,7 +43,7 @@ void ProgressDialog::setCurrentValue(int value)
     ui->progressBar->setValue(value);
 }
 
-void ProgressDialog::on_pushButton_clicked()
+void ProgressDialog::on_cancelButton_pressed()
 {
     emit operationCancelled();
     this->close();

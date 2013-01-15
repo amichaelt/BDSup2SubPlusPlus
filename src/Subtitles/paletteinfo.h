@@ -24,6 +24,8 @@ class PaletteInfo
 {
 public:
     PaletteInfo();
+    PaletteInfo(const PaletteInfo* other);
+    PaletteInfo(const PaletteInfo& other);
 
     int paletteOffset() { return offset; }
     void setPaletteOffset(int paletteOffset) { offset = paletteOffset; }

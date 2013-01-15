@@ -127,10 +127,7 @@ void SupBD::readAllSupFrames()
         {
             if (subtitleProcessor->isCancelled())
             {
-                if (subPictures.size() == 0)
-                {
-                    throw QString("Cancelled by user!");
-                }
+                throw QString("Cancelled by user!");
             }
             emit currentProgressChanged(index);
             segment = readSegment(index);
@@ -140,7 +137,7 @@ void SupBD::readAllSupFrames()
             {
             case 0x14:
             {
-                out = QString("PDS ofs:%1, size:%2").arg(QString::number(index, 16), 8, QChar('0'))
+                out = QString("PDS ofs:0x%1, size:0x%2").arg(QString::number(index, 16), 8, QChar('0'))
                                                     .arg(QString::number(segment->size, 16), 4, QChar('0'));
                 if (compNum != compNumOld)
                 {
@@ -176,7 +173,7 @@ void SupBD::readAllSupFrames()
             } break;
             case 0x15:
             {
-                out = QString("ODS ofs:%1, size%2").arg(QString::number(index, 16), 8, QChar('0'))
+                out = QString("ODS ofs:0x%1, size:0x%2").arg(QString::number(index, 16), 8, QChar('0'))
                                                    .arg(QString::number(segment->size, 16), 4, QChar('0'));
                 if (compNum != compNumOld)
                 {
@@ -232,7 +229,7 @@ void SupBD::readAllSupFrames()
                 }
                 if (cs == CompositionState::INVALID)
                 {
-                    subtitleProcessor->printWarning(QString("Illegal composition state at offset %1\n")
+                    subtitleProcessor->printWarning(QString("Illegal composition state at offset 0x%1\n")
                                                     .arg(QString::number(index, 16), 8, QChar('0')));
                 }
                 else if (cs == CompositionState::EPOCH_START)
@@ -268,13 +265,14 @@ void SupBD::readAllSupFrames()
 
                     so = QString("");
                     parsePCS(segment, pic, so);
+
                     // fix end time stamp of previous pic if still missing
                     if (picLast != 0 && picLast->endTime() == 0)
                     {
                         picLast->setEndTime(pic->startTime());
                     }
 
-                    out = QString("PCS ofs:%1, START, size:%2, comp#: %3, forced: %4")
+                    out = QString("PCS ofs:0x%1, START, size:0x%2, comp#: %3, forced: %4")
                             .arg(QString::number(index, 16), 8, QChar('0'))
                             .arg(QString::number(segment->size, 16), 4, QChar('0'))
                             .arg(QString::number(compNum))
@@ -301,11 +299,11 @@ void SupBD::readAllSupFrames()
                 {
                     if (pic == 0)
                     {
-                        subtitleProcessor->printWarning(QString("missing start of epoch at offset %1\n")
+                        subtitleProcessor->printWarning(QString("missing start of epoch at offset 0x%1\n")
                                                         .arg(QString::number(index, 16), 8, QChar('0')));
                         break;
                     }
-                    out = QString("PCS ofs:%1, ").arg(QString::number(index, 16), 8, QChar('0'));
+                    out = QString("PCS ofs:0x%1, ").arg(QString::number(index, 16), 8, QChar('0'));
                     switch ((int)cs)
                     {
                     case (int)CompositionState::EPOCH_CONTINUE:
@@ -321,7 +319,7 @@ void SupBD::readAllSupFrames()
                         out += QString("NORM, ");
                     } break;
                     }
-                    out += QString(" size: %1, comp#: %2, forced: %3")
+                    out += QString(" size: 0x%1, comp#: %2, forced: %3")
                             .arg(QString::number(segment->size, 16), 4, QChar('0'))
                             .arg(QString::number(compNum))
                             .arg(pic->isForced() ? "true" : "false");
@@ -330,7 +328,6 @@ void SupBD::readAllSupFrames()
                         so = QString("");
                         // store state to be able to revert to it
                         picTmp = new SubPictureBD(pic);
-                        //picTmp->endTime = ptsPCS;
                         // create new pic
                         parsePCS(segment, pic, so);
                     }
@@ -346,7 +343,7 @@ void SupBD::readAllSupFrames()
             } break;
             case 0x17:
             {
-                out = QString("WDS ofs:%1, size:%2").arg(QString::number(index, 16), 8, QChar('0'))
+                out = QString("WDS ofs:0x%1, size:0x%2").arg(QString::number(index, 16), 8, QChar('0'))
                                                     .arg(QString::number(segment->size, 16), 4, QChar('0'));
                 if (pic != 0)
                 {
@@ -365,14 +362,14 @@ void SupBD::readAllSupFrames()
             } break;
             case 0x80:
             {
-                subtitleProcessor->print(QString("END ofs: %1\n").arg(QString::number(index, 16), 8, QChar('0')));
+                subtitleProcessor->print(QString("END ofs: 0x%1\n").arg(QString::number(index, 16), 8, QChar('0')));
 
                 // decide whether to store this last composition section as caption or merge it
                 if (cs == CompositionState::EPOCH_START)
                 {
-                    if (compCount>0 && odsCtr > odsCtrOld
-                                    && compNum != compNumOld
-                                    && picMergable(picLast, pic))
+                    if (compCount > 0 && odsCtr > odsCtrOld
+                                      && compNum != compNumOld
+                                      && picMergable(picLast, pic))
                     {
                         // the last start epoch did not contain any (new) content
                         // and should be merged to the previous frame
@@ -399,12 +396,12 @@ void SupBD::readAllSupFrames()
                         pic->setStartTime(ptsPCS);    // set for testing merge
                     }
 
-                    if (compCount>0 && odsCtr>odsCtrOld
+                    if (compCount > 0 && odsCtr > odsCtrOld
                                     && compNum != compNumOld
                                     && !picMergable(picTmp, pic))
                     {
                         // last PCS should be stored as separate caption
-                        if (odsCtr - odsCtrOld > 1 || pdsCtr - pdsCtrOld > 1)
+                        if ((odsCtr - odsCtrOld) > 1 || (pdsCtr - pdsCtrOld) > 1)
                         {
                             subtitleProcessor->printWarning(QString("multiple PDS/ODS definitions: result may be erratic\n"));
                         }
@@ -426,11 +423,13 @@ void SupBD::readAllSupFrames()
                             // merge with previous pic
                             pic->setStartTime(startTime); // restore
                             pic->setEndTime(ptsPCS);
+
                             // for the unlikely case that forced flag changed during one captions
                             if (picTmp != 0 && picTmp->isForced())
                             {
                                 pic->setForced(true);
                             }
+
                             if (pdsCtr > pdsCtrOld || paletteUpdate)
                             {
                                 subtitleProcessor->printWarning(QString("palette animation: result may be erratic\n"));
@@ -447,7 +446,7 @@ void SupBD::readAllSupFrames()
             } break;
             default:
             {
-                subtitleProcessor->printWarning(QString("<unknown> %1 ofs: %2\n")
+                subtitleProcessor->printWarning(QString("<unknown> 0x%1 ofs: 0x%2\n")
                                                 .arg(QString::number(segment->type, 16), 2, QChar('0'))
                                                 .arg(QString::number(index, 16), 8, QChar('0')));
             } break;
@@ -464,6 +463,7 @@ void SupBD::readAllSupFrames()
         }
         subtitleProcessor->printError(QString(e + "\n"));
         subtitleProcessor->print(QString("Probably not all caption imported due to error.\n"));
+        return;
     }
 
     // check if last frame is valid
@@ -866,7 +866,7 @@ SupBD::SupSegment *SupBD::readSegment(int offset)
     SupSegment* segment = new SupSegment;
     if (fileBuffer->getWord(offset) != 0x5047)
     {
-        throw QString("PG missing at index ").arg(QString::number(offset, 16), 8, QChar('0'));
+        throw QString("PG missing at index 0x").arg(QString::number(offset, 16), 8, QChar('0'));
     }
     segment->timestamp = fileBuffer->getDWord(offset += 2); // read PTS
     offset += 4; /* ignore DTS */
@@ -899,9 +899,10 @@ bool SupBD::picMergable(SubPictureBD *a, SubPictureBD *b)
     return eq;
 }
 
-void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
+void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
 {
     int index = segment->offset;
+
     if (segment->size >= 4)
     {
         subPicture->setWidth(fileBuffer->getWord(index));            // video_width
@@ -914,15 +915,17 @@ void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
         // 8bit  palette_update_flag (0x80), 7bit reserved
         int palID = fileBuffer->getByte(index + 9);                 // 8bit  palette_id_ref
         int coNum = fileBuffer->getByte(index + 10);                // 8bit  number_of_composition_objects (0..2)
+
         if (coNum > 0)
         {
             // composition_object:
             int objID = fileBuffer->getWord(index + 11);            // 16bit object_id_ref
             msg = QString("palID: %1, objID: %2").arg(QString::number(palID)).arg(QString::number(objID));
             ImageObject* imgObj;
+
             if (objID >= subPicture->imageObjectList.size())
             {
-                imgObj = new ImageObject;
+                imgObj = new ImageObject();
                 subPicture->imageObjectList.push_back(imgObj);
             }
             else
@@ -949,7 +952,7 @@ void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
     }
 }
 
-int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
+int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
 {
     int index = segment->offset;
     int paletteID = fileBuffer->getByte(index);	// 8bit palette ID (0..7)
@@ -957,11 +960,11 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
     int paletteUpdate = fileBuffer->getByte(index + 1);
     if (subPicture->palettes.isEmpty())
     {
-        subPicture->palettes.resize(8);
+        subPicture->palettes = QVector<QVector<PaletteInfo*> >(8);
     }
     if (paletteID > 7)
     {
-        msg = QString("Illegal palette id at offset %1").arg(QString::number(index, 16), 8, QChar('0'));
+        msg = QString("Illegal palette id at offset 0x%1").arg(QString::number(index, 16), 8, QChar('0'));
         return -1;
     }
     //
@@ -980,21 +983,24 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
     return p->paletteSize();
 }
 
-bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
+bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
 {
     int index = segment->offset;
+
     ImageObjectFragment info;
     int objID = fileBuffer->getWord(index);         // 16bit object_id
     int objVer = fileBuffer->getByte(index+1);		// 16bit object_id
     int objSeq = fileBuffer->getByte(index+3);		// 8bit  first_in_sequence (0x80),
                                                     // last_in_sequence (0x40), 6bits reserved
+
     bool first = ((objSeq & 0x80) == 0x80);
     bool last  = ((objSeq & 0x40) == 0x40);
 
-    ImageObject* imgObj;
+    ImageObject* imgObj = 0;
+
     if (objID >= subPicture->imageObjectList.size())
     {
-        imgObj = new ImageObject;
+        imgObj = new ImageObject();
         subPicture->imageObjectList.push_back(imgObj);
     }
     else
@@ -1011,19 +1017,22 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
 
         if (width <= subPicture->width() && height <= subPicture->height())
         {
-            //imgObj->getFragmentList() = QVector<ImageObjectFragment*>();
+            imgObj->getFragmentList().clear();
             info = ImageObjectFragment();
             info.setImageBufferOffset(index + 11);
             info.setImagePacketSize(segment->size - ((index + 11) - segment->offset));
+
             imgObj->getFragmentList().push_back(info);
             imgObj->setBufferSize(info.imagePacketSize());
             imgObj->setHeight(height);
             imgObj->setWidth(width);
+
             msg = QString("ID: %1, update: %2, seq: %3%4%5").arg(QString::number(objID))
                                                             .arg(QString::number(objVer))
                                                             .arg(first ? QString("first") : QString(""))
                                                             .arg((first && last) ? QString("/") : QString(""))
                                                             .arg(last ? QString("last") : QString(""));
+
             return true;
         }
         else
@@ -1041,14 +1050,17 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString msg)
         //  8bit  first_in_sequence (0x80), last_in_sequence (0x40), 6bits reserved
         info = ImageObjectFragment();
         info.setImageBufferOffset(index + 4);
-        info.setImagePacketSize(segment->size - (index + 4 - segment->offset));
+        info.setImagePacketSize(segment->size - ((index + 4) - segment->offset));
+
         imgObj->getFragmentList().push_back(info);
         imgObj->setBufferSize(imgObj->bufferSize() + info.imagePacketSize());
+
         msg = QString("ID: %1, update: %2, seq: %3%4%5").arg(QString::number(objID))
                                                         .arg(QString::number(objVer))
                                                         .arg(first ? QString("first") : QString(""))
                                                         .arg((first && last) ? QString("/") : QString(""))
                                                         .arg(last ? QString("last") : QString(""));
+
         return false;
     }
 }
@@ -1180,7 +1192,7 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
 
     if (w > subPicture->width() || h > subPicture->height())
     {
-        throw QString("Subpicture too large: %1x%2 at offset %3")
+        throw QString("Subpicture too large: %1x%2 at offset 0x%3")
                 .arg(QString::number(w))
                 .arg(QString::number(h))
                 .arg(QString::number(startOfs, 16), 8, QChar('0'));

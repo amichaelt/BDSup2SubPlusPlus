@@ -68,8 +68,8 @@ public:
     QVector<uchar> createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette &pal);
 
 signals:
-    void maxProgressChanged(int maxProgress);
-    void currentProgressChanged(int currentProgress);
+    void maxProgressChanged(long maxProgress);
+    void currentProgressChanged(long currentProgress);
 
 private:
     struct SupSegment
@@ -109,16 +109,16 @@ private:
     SubtitleProcessor* subtitleProcessor = 0;
 
     void decode(SubPictureBD *subPicture);
-    void parsePCS(SupSegment* segment, SubPictureBD *subPicture, QString msg);
+    void parsePCS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
     void parseWDS(SupSegment* segment, SubPictureBD *subPicture);
 
     int getFpsId(double fps);
-    int parsePDS(SupSegment* segment, SubPictureBD *subPicture, QString msg);
+    int parsePDS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
 
     double getFpsFromID(int id);
 
     bool picMergable(SubPictureBD *a, SubPictureBD *b);
-    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString msg);
+    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
 
     Bitmap decodeImage(SubPictureBD *subPicture, int transIdx);
 

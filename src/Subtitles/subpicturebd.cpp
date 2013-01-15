@@ -27,28 +27,42 @@ SubPictureBD::SubPictureBD()
 
 SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
-    imageObjectList(other->imageObjectList),
-    palettes(other->palettes),
     objectId(other->objectId),
     winWidth(other->winWidth),
     winHeight(other->winHeight),
     xWinOfs(other->xWinOfs),
     yWinOfs(other->yWinOfs),
-    type(other->type)
+    type(other->type),
+    palettes(other->palettes)
 {
+    for (int i = 0; i < other->imageObjectList.size(); ++i)
+    {
+        imageObjectList.push_back(new ImageObject(other->imageObjectList.at(i)));
+    }
+    //for (int i = 0; i < other->palettes.size(); ++i)
+    //{
+    //    palettes.push_back(new PaletteInfo(other->palettes.at(i)));
+    //}
 }
 
 SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     SubPicture(other),
-    imageObjectList(other.imageObjectList),
-    palettes(other.palettes),
     objectId(other.objectId),
     winWidth(other.winWidth),
     winHeight(other.winHeight),
     xWinOfs(other.xWinOfs),
     yWinOfs(other.yWinOfs),
-    type(other.type)
+    type(other.type),
+    palettes(other.palettes)
 {
+    for (int i = 0; i < other.imageObjectList.size(); ++i)
+    {
+        imageObjectList.push_back(new ImageObject(other.imageObjectList.at(i)));
+    }
+    //for (int i = 0; i < other.palettes.size(); ++i)
+    //{
+    //    palettes.push_back(new PaletteInfo(other.palettes.at(i)));
+    //}
 }
 
 int SubPictureBD::getImageWidth()

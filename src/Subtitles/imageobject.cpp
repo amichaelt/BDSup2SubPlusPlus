@@ -18,3 +18,29 @@
  */
 
 #include "imageobject.h"
+
+ImageObject::ImageObject()
+{
+}
+
+ImageObject::ImageObject(const ImageObject *other) :
+    paletteId(other->paletteId),
+    bufSize(other->bufSize),
+    w(other->w),
+    h(other->h),
+    xOfs(other->xOfs),
+    yOfs(other->yOfs),
+    fragmentList(other->fragmentList)
+{
+}
+
+ImageObject::ImageObject(const ImageObject &other) :
+    paletteId(other.paletteId),
+    bufSize(other.bufSize),
+    w(other.w),
+    h(other.h),
+    xOfs(other.xOfs),
+    yOfs(other.yOfs),
+    fragmentList(other.fragmentList)
+{
+}

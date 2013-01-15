@@ -66,7 +66,8 @@ SOURCES += main.cpp\
     helpdialog.cpp \
     colordialog.cpp \
     framepalettedialog.cpp \
-    movedialog.cpp
+    movedialog.cpp \
+    Subtitles/imageobject.cpp
 
 HEADERS  += bdsup2sub.h \
     zoomableimagearea.h \

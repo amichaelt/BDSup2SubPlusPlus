@@ -602,7 +602,7 @@
     <addaction name="action_Conversion_Settings"/>
     <addaction name="action_Swap_Cr_Cb"/>
     <addaction name="action_Fix_invisible_frames"/>
-    <addaction name="action_Verbatim_Output"/>
+    <addaction name="action_Verbose_Output"/>
    </widget>
    <widget class="QMenu" name="menu_About">
     <property name="title">
@@ -704,12 +704,12 @@
     <string>&amp;Fix invisible frames</string>
    </property>
   </action>
-  <action name="action_Verbatim_Output">
+  <action name="action_Verbose_Output">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Verbatim Output</string>
+    <string>&amp;Verbose Output</string>
    </property>
   </action>
   <action name="action_Help">

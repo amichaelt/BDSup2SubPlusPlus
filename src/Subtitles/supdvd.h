@@ -72,8 +72,8 @@ public:
     SubPicture *getSubPicture(int index);
 
 signals:
-    void maxProgressChanged(int maxProgress);
-    void currentProgressChanged(int currentProgress);
+    void maxProgressChanged(long maxProgress);
+    void currentProgressChanged(long currentProgress);
 
 private:
     QString supFileName;

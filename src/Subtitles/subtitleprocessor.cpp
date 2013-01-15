@@ -1909,7 +1909,7 @@ double SubtitleProcessor::getFPS(QString string)
     return d;
 }
 
-void SubtitleProcessor::setMaxProgress(int maxProgress)
+void SubtitleProcessor::setMaxProgress(long maxProgress)
 {
     if (!cliMode)
     {
@@ -1917,15 +1917,15 @@ void SubtitleProcessor::setMaxProgress(int maxProgress)
     }
 }
 
-void SubtitleProcessor::setCurrentProgress(int currentProgress)
+void SubtitleProcessor::setCurrentProgress(long currentProgress)
 {
     if (!cliMode)
     {
-        int value = (int)(((long)currentProgress * 100) / maxProgress);
+        double value = ((double) currentProgress / maxProgress) * 100.0;
         if (value > lastProgress)
         {
             lastProgress = value;
-            emit progressDialogValueChanged(value);
+            emit progressDialogValueChanged((int)value);
         }
     }
 }
@@ -1937,8 +1937,8 @@ void SubtitleProcessor::readXml()
     numberOfWarnings = 0;
 
     supXML = QSharedPointer<SupXML>(new SupXML(fileName, this));
-    connect(supXML.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
-    connect(supXML.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+    connect(supXML.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
+    connect(supXML.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
     supXML->readAllImages();
     substream = qSharedPointerCast<Substream>(supXML);
 
@@ -2007,8 +2007,8 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
             subFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sub";
         }
         subDVD = QSharedPointer<SubDVD>(new SubDVD(subFileName, idxFileName, this));
-        connect(subDVD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
-        connect(subDVD.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+        connect(subDVD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
+        connect(subDVD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
         connect(subDVD.data(), SIGNAL(addLanguage(QString)), this, SLOT(onLanguageRead(QString)));
         subDVD->readIdx(idxToRead);
         subDVD->readAllSubFrames();
@@ -2044,8 +2044,8 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
             supFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sup";
         }
         supDVD = QSharedPointer<SupDVD>(new SupDVD(supFileName, ifoFileName, this));
-        connect(supDVD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
-        connect(supDVD.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+        connect(supDVD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
+        connect(supDVD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
         if (ifoFileName != supFileName)
         {
             supDVD->readIfo();
@@ -2143,8 +2143,8 @@ void SubtitleProcessor::readSup()
     if (!id.isEmpty() && ((uchar)id[0] == 0x50 && (uchar)id[1] == 0x47))
     {
         supBD = QSharedPointer<SupBD>(new SupBD(fileName, this));
-        connect(supBD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
-        connect(supBD.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+        connect(supBD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
+        connect(supBD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
         supBD->readAllSupFrames();
         substream = qSharedPointerCast<Substream>(supBD);
         inMode = InputMode::BDSUP;
@@ -2152,8 +2152,8 @@ void SubtitleProcessor::readSup()
     else
     {
         supHD = QSharedPointer<SupHD>(new SupHD(fileName, this));
-        connect(supHD.data(), SIGNAL(maxProgressChanged(int)), this, SLOT(setMaxProgress(int)));
-        connect(supHD.data(), SIGNAL(currentProgressChanged(int)), this, SLOT(setCurrentProgress(int)));
+        connect(supHD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
+        connect(supHD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
         supHD->readAllSupFrames();
         substream = qSharedPointerCast<Substream>(supHD);
         inMode = InputMode::HDDVDSUP;
