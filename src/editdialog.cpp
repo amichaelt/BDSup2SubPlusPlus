@@ -731,3 +731,47 @@ void EditDialog::on_yOffsetLineEdit_editingFinished()
     ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
     ui->yOffsetLineEdit->setPalette(*okBackground);
 }
+
+void EditDialog::on_storePreviousButton_clicked()
+{
+    if (edited)
+    {
+        store();
+    }
+    if (index > 0)
+    {
+        setIndex(index - 1);
+        setEdited(false);
+    }
+}
+
+void EditDialog::on_storeNextButton_clicked()
+{
+    if (edited)
+    {
+        store();
+    }
+    if (index < subtitleProcessor->getNumberOfFrames() - 1)
+    {
+        setIndex(index + 1);
+        setEdited(false);
+    }
+}
+
+void EditDialog::on_previousButton_clicked()
+{
+    if (index > 0)
+    {
+        setIndex(index - 1);
+        setEdited(false);
+    }
+}
+
+void EditDialog::on_nextButton_clicked()
+{
+    if (index < subtitleProcessor->getNumberOfFrames() - 1)
+    {
+        setIndex(index + 1);
+        setEdited(false);
+    }
+}

@@ -86,6 +86,11 @@ private slots:
 
     void onSelectionPerformed(bool validSelection);
 
+    void on_storePreviousButton_clicked();
+    void on_storeNextButton_clicked();
+    void on_previousButton_clicked();
+    void on_nextButton_clicked();
+
 private:
     Ui::EditDialog *ui;
     QImage image;

@@ -923,7 +923,8 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 {
     Redirect_console();
 
-    QTextStream outStream(stdout);
+    QFile streamFile;
+    QTextStream outStream;
     QTextStream errorStream(stderr);
 
     addCLIOptions();
@@ -963,10 +964,13 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     {
         if (options->count("log-to-stderr"))
         {
-            QFile file;
-            file.open(stderr, QIODevice::WriteOnly);
-            outStream.setDevice(&file);
+            streamFile.open(stderr, QIODevice::WriteOnly);
         }
+        else
+        {
+            streamFile.open(stdout, QIODevice::WriteOnly);
+        }
+        outStream.setDevice(&streamFile);
         outStream << progNameVer + "\n";
         // parse parameters
         QString src = positional.size() == 1 ? positional[0] : "";
@@ -1518,6 +1522,10 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 errorStream << QString("ERROR: Invalid scaling filter: %1").arg(value) << endl;
                 exit(1);
             }
+        }
+        else
+        {
+            subtitleProcessor->setScalingFilter(ScalingFilters::BILINEAR);
         }
 
         if (options->count("merge-time"))
