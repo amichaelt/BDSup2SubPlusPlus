@@ -165,12 +165,12 @@ bool SupXML::isForced(int index)
     return subPictures[index].isForced();
 }
 
-long SupXML::getEndTime(int index)
+quint64 SupXML::getEndTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-long SupXML::getStartTime(int index)
+quint64 SupXML::getStartTime(int index)
 {
     return subPictures[index].startTime();
 }
@@ -207,7 +207,7 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
 {
     double fps = subtitleProcessor->getFPSTrg();
     double fpsXml = XmlFps(fps);
-    long t;
+    quint64 t;
     QScopedPointer<QFile> out(new QFile(filename));
     QString name = QFileInfo(filename).completeBaseName();
     if (!out->open(QIODevice::WriteOnly | QIODevice::Text))

@@ -81,17 +81,17 @@ bool SubDVD::isForced(int index)
     return subPictures[index].isForced();
 }
 
-long SubDVD::getEndTime(int index)
+quint64 SubDVD::getEndTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-long SubDVD::getStartTime(int index)
+quint64 SubDVD::getStartTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-long SubDVD::getStartOffset(int index)
+quint64 SubDVD::getStartOffset(int index)
 {
     return subPictures[index].offset();
 }
@@ -121,11 +121,11 @@ QVector<int> SubDVD::getOriginalFramePal(int index)
     return subPictures[index].originalPal;
 }
 
-void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
+void SubDVD::readSubFrame(SubPictureDVD &pic, quint64 endOfs)
 {
-    long ofs = pic.offset();
-    long ctrlOfs = -1;
-    long nextOfs;
+    quint64 ofs = pic.offset();
+    quint64 ctrlOfs = -1;
+    quint64 nextOfs;
     int  ctrlOfsRel = 0;
     int rleSize = 0;
     int rleBufferFound = 0;
@@ -139,7 +139,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
 
     do {
         // 4 bytes:  packet identifier 0x000001ba
-        long startOfs = ofs;
+        quint64 startOfs = ofs;
         if (fileBuffer->getDWord(ofs) != 0x000001ba)
         {
             throw QString("Missing packet identifier at ofs %1").arg(QString::number(ofs, 16), 8, QChar('0'));
@@ -170,7 +170,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
         int packetStreamID = fileBuffer->getByte(ofs++) - 0x20;
         if (packetStreamID != streamID)
         {
-            // packet doesn't belong to stream -> skip
+            // packet doesn't bequint64 to stream -> skip
             if ((nextOfs % 0x800) != 0)
             {
                 ofs = ((nextOfs / 0x800) + 1) * 0x800;
@@ -471,7 +471,7 @@ void SubDVD::readAllSubFrames()
 
         subtitleProcessor->printX(QString("# %1\n").arg(QString::number(i + 1)));
 
-        long nextOfs;
+        quint64 nextOfs;
         if (i < subPictures.size() - 1)
         {
             nextOfs = subPictures[i + 1].offset();
@@ -1054,7 +1054,7 @@ void SubDVD::readIdx(int idxToRead)
                 }
                 vs = vals[0];
                 bool ok;
-                long time = TimeUtil::timeStrToPTS(vs, &ok);
+                quint64 time = TimeUtil::timeStrToPTS(vs, &ok);
                 if (!ok)
                 {
                     throw QString("Illegal timestamp: %1").arg(vals[0]);
@@ -1065,7 +1065,7 @@ void SubDVD::readIdx(int idxToRead)
                 {
                     throw QString("Missing filepos: %1").arg(value);
                 }
-                long hex = vals[1].trimmed().toLong(&ok, 16);
+                quint64 hex = vals[1].trimmed().toLong(&ok, 16);
                 if (!ok)
                 {
                     throw QString("Illegal filepos: %1").arg(vals[1]);

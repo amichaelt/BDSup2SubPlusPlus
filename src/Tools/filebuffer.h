@@ -34,17 +34,17 @@ public:
     FileBuffer(QString inFileName);
     ~FileBuffer();
 
-    int getDWord(long ofs);
-    int getByte(long ofs);
-    int getWord(long ofs);
-    void getBytes(long ofs, QVector<uchar> &b, int length);
-     long getSize() { return length; }
-    int getDWordLE(long ofs);
+    int getDWord(quint64 ofs);
+    int getByte(quint64 ofs);
+    int getWord(quint64 ofs);
+    void getBytes(quint64 ofs, QVector<uchar> &b, int length);
+     quint64 getSize() { return length; }
+    int getDWordLE(quint64 ofs);
 
 private:
-    long offset = 0;
-    long offsetEnd = 0;
-    long length = 0;
+    quint64 offset = 0;
+    quint64 offsetEnd = 0;
+    quint64 length = 0;
 
     QByteArray buf;
 
@@ -52,7 +52,7 @@ private:
 
     QString fileName;
 
-    void readBuffer(long ofs);
+    void readBuffer(quint64 ofs);
 };
 
 #endif // FILEBUFFER_H

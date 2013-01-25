@@ -80,17 +80,17 @@ bool SupBD::isForced(int index)
     return subPictures[index].isForced();
 }
 
-long SupBD::getEndTime(int index)
+quint64 SupBD::getEndTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-long SupBD::getStartTime(int index)
+quint64 SupBD::getStartTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-long SupBD::getStartOffset(int index)
+quint64 SupBD::getStartOffset(int index)
 {
     return subPictures[index].getImgObj().getFragmentList()[0].imageBufferOffset();
 }
@@ -118,7 +118,7 @@ void SupBD::readAllSupFrames()
     int compNum = -1;
     int compNumOld = -1;
     int compCount = 0;
-    long ptsPCS = 0;
+    quint64 ptsPCS = 0;
     bool paletteUpdate = false;
     CompositionState cs = CompositionState::INVALID;
 
@@ -393,7 +393,7 @@ void SupBD::readAllSupFrames()
                 }
                 else
                 {
-                    long startTime = 0;
+                    quint64 startTime = 0;
                     if (pic.startTime() != -1)
                     {
                         startTime = pic.startTime();  // store
@@ -1217,7 +1217,7 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
     int h = subPicture->getImageHeight();
     // always decode image obj 0, start with first entry in fragmentlist
     ImageObjectFragment fragment = subPicture->getImgObj().getFragmentList()[0];
-    long startOfs = fragment.imageBufferOffset();
+    quint64 startOfs = fragment.imageBufferOffset();
 
     if (w > subPicture->width() || h > subPicture->height())
     {

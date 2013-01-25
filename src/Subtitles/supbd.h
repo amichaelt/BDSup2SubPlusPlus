@@ -48,9 +48,9 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
 
-    long getEndTime(int index);
-    long getStartTime(int index);
-    long getStartOffset(int index);
+    quint64 getEndTime(int index);
+    quint64 getStartTime(int index);
+    quint64 getStartOffset(int index);
 
     double getFps(int index);
 
@@ -68,15 +68,15 @@ public:
     QVector<uchar> createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette &pal);
 
 signals:
-    void maxProgressChanged(long maxProgress);
-    void currentProgressChanged(long currentProgress);
+    void maxProgressChanged(quint64 maxProgress);
+    void currentProgressChanged(quint64 currentProgress);
 
 private:
     struct SupSegment
     {
         int type = 0;
         int size = 0;
-        long timestamp = 0;
+        quint64 timestamp = 0;
         int offset = 0;
     };
 

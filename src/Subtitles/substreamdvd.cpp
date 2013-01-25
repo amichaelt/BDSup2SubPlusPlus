@@ -162,7 +162,7 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
     int warnings = 0;
 
     ImageObjectFragment fragment = pic.rleFragments[0];
-    long startOfs = fragment.imageBufferOffset();
+    quint64 startOfs = fragment.imageBufferOffset();
 
     if (width > pic.width() || height > pic.height())
     {

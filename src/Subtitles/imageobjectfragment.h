@@ -20,6 +20,8 @@
 #ifndef IMAGEOBJECTFRAGMENT_H
 #define IMAGEOBJECTFRAGMENT_H
 
+#include <QtGlobal>
+
 class ImageObjectFragment
 {
 public:
@@ -39,7 +41,7 @@ public:
 
 private:
     int packetSize = 0;
-    long bufferOfs = 0;
+    quint64 bufferOfs = 0;
 };
 
 #endif // IMAGEOBJECTFRAGMENT_H

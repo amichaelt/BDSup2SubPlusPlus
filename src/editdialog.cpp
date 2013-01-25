@@ -225,7 +225,7 @@ void EditDialog::on_forcedCaptionCheckBox_toggled(bool checked)
 
 void EditDialog::on_minButton_clicked()
 {
-    long t = subtitleProcessor->getMinTimePTS();
+    quint64 t = subtitleProcessor->getMinTimePTS();
     if (t >= 0)
     {
         t += subPicture->startTime();
@@ -242,7 +242,7 @@ void EditDialog::on_minButton_clicked()
 
 void EditDialog::on_maxButton_clicked()
 {
-    long t;
+    quint64 t;
     if (subPictureNext != 0)
     {
         t = subPictureNext->startTime();
@@ -411,9 +411,9 @@ void EditDialog::on_startTimeLineEdit_textChanged(const QString &arg1)
     if (!isReady) return;
 
     bool ok;
-    long timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
+    quint64 timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
     timestamp = ok ? timestamp : -1;
-    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
+    quint64 t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t < 0 || t >= subPicture->endTime() || (subPicturePrevious != 0 && subPicturePrevious->endTime() > t))
     {
         ui->startTimeLineEdit->setPalette(*errorBackground);
@@ -439,9 +439,9 @@ void EditDialog::on_endTimeLineEdit_textChanged(const QString &arg1)
     if (!isReady) return;
 
     bool ok;
-    long timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
+    quint64 timestamp = TimeUtil::timeStrToPTS(arg1, &ok);
     timestamp = ok ? timestamp : -1;
-    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
+    quint64 t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t < 0 || t <= subPicture->startTime() || (subPictureNext != 0 && subPictureNext->startTime() < t))
     {
         ui->endTimeLineEdit->setPalette(*errorBackground);
@@ -466,7 +466,7 @@ void EditDialog::on_durationLineEdit_textChanged(const QString &arg1)
 {
     if (!isReady) return;
 
-    long t = (long)(arg1.toDouble() * 90);
+    quint64 t = (long)(arg1.toDouble() * 90);
     if (t < frameTime)
     {
         ui->durationLineEdit->setPalette(*errorBackground);
@@ -595,9 +595,9 @@ void EditDialog::on_horizontalSlider_valueChanged(int value)
 void EditDialog::on_startTimeLineEdit_editingFinished()
 {
     bool ok;
-    long timestamp = TimeUtil::timeStrToPTS(ui->startTimeLineEdit->text(), &ok);
+    quint64 timestamp = TimeUtil::timeStrToPTS(ui->startTimeLineEdit->text(), &ok);
     timestamp = ok ? timestamp : -1;
-    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
+    quint64 t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t > subPicture->endTime())
     {
         t = subPicture->endTime() - frameTime;
@@ -628,9 +628,9 @@ void EditDialog::on_startTimeLineEdit_editingFinished()
 void EditDialog::on_endTimeLineEdit_editingFinished()
 {
     bool ok;
-    long timestamp = TimeUtil::timeStrToPTS(ui->endTimeLineEdit->text(), &ok);
+    quint64 timestamp = TimeUtil::timeStrToPTS(ui->endTimeLineEdit->text(), &ok);
     timestamp = ok ? timestamp : -1;
-    long t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
+    quint64 t = subtitleProcessor->syncTimePTS(timestamp, subtitleProcessor->getFPSTrg());
     if (t <= subPicture->startTime())
     {
         t = subPicture->startTime() + frameTime;
@@ -660,7 +660,7 @@ void EditDialog::on_endTimeLineEdit_editingFinished()
 
 void EditDialog::on_durationLineEdit_editingFinished()
 {
-    long t = (long)(ui->durationLineEdit->text().toDouble() * 90);
+    quint64 t = (long)(ui->durationLineEdit->text().toDouble() * 90);
     if (t >= 0 && t < frameTime)
     {
         t = frameTime;

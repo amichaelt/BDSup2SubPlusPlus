@@ -346,7 +346,7 @@ public:
     int getDelayPTS() { return delayPTS; }
     void setDelayPTS(int value) { delayPTS = value; }
     int getDelayPTSDefault() { return delayPTSdefault; }
-    long syncTimePTS(long timeStamp, double fps);
+    quint64 syncTimePTS(quint64 timeStamp, double fps);
     int restoreMinTimePTS() { return settings->value("minTimePTS", QVariant(minTimePTS)).toInt(); }
     int getMinTimePTS() { return minTimePTS; }
     void setMinTimePTS(int value) { minTimePTS = value; }
@@ -491,8 +491,8 @@ signals:
     void addLanguage(const QString &message);
 
 public slots:
-    void setMaxProgress(long maxProgress);
-    void setCurrentProgress(long currentProgress);
+    void setMaxProgress(quint64 maxProgress);
+    void setCurrentProgress(quint64 currentProgress);
     void readSubtitleStream();
     void createSubtitleStream();
     void moveAll();

@@ -20,6 +20,8 @@
 #ifndef SUBSTREAM_H
 #define SUBSTREAM_H
 
+#include <QtGlobal>
+
 class Bitmap;
 class FileBuffer;
 class Palette;
@@ -39,9 +41,9 @@ public:
     virtual int getNumFrames() = 0;
     virtual int getNumForcedFrames() = 0;
 
-    virtual long getEndTime(int index) = 0;
-    virtual long getStartTime(int index) = 0;
-    virtual long getStartOffset(int index) = 0;
+    virtual quint64 getEndTime(int index) = 0;
+    virtual quint64 getStartTime(int index) = 0;
+    virtual quint64 getStartOffset(int index) = 0;
 
     virtual bool isForced(int index) = 0;
 

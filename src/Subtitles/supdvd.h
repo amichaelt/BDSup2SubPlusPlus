@@ -49,9 +49,9 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return numForcedFrames; }
 
-    long getEndTime(int index);
-    long getStartTime(int index);
-    long getStartOffset(int index);
+    quint64 getEndTime(int index);
+    quint64 getStartTime(int index);
+    quint64 getStartOffset(int index);
 
     bool isForced(int index);
 
@@ -72,8 +72,8 @@ public:
     SubPicture *getSubPicture(int index);
 
 signals:
-    void maxProgressChanged(long maxProgress);
-    void currentProgressChanged(long currentProgress);
+    void maxProgressChanged(quint64 maxProgress);
+    void currentProgressChanged(quint64 currentProgress);
 
 private:
     QString supFileName;
@@ -97,7 +97,7 @@ private:
             0x02, 0xff,                                             // 26: CMD 2: stop displaying
         };
 
-    long readSupFrame(long ofs);
+    quint64 readSupFrame(quint64 ofs);
 };
 
 #endif // SUPDVD_H

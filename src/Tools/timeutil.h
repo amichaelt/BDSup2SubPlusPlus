@@ -32,16 +32,16 @@ class TimeUtil
 public:
     TimeUtil();
 
-    static long timeStrToPTS(QString s, bool *ok = 0);
-    static long timeStrXmlToPTS(QString s, double fps);
+    static quint64 timeStrToPTS(QString s, bool *ok = 0);
+    static quint64 timeStrXmlToPTS(QString s, double fps);
 
     static QRegExp getTimePattern() { return timePattern; }
 
-    static QString ptsToTimeStrXml(long pts, double fps);
-    static QString ptsToTimeStr(long pts);
-    static QString ptsToTimeStrIdx(long pts);
+    static QString ptsToTimeStrXml(quint64 pts, double fps);
+    static QString ptsToTimeStr(quint64 pts);
+    static QString ptsToTimeStrIdx(quint64 pts);
 
-    static QVector<int> msToTime(long ms);
+    static QVector<int> msToTime(quint64 ms);
 };
 
 #endif // TIMEUTIL_H
