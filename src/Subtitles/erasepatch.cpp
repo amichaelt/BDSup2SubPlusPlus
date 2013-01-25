@@ -23,6 +23,22 @@ ErasePatch::ErasePatch()
 {
 }
 
+ErasePatch::ErasePatch(const ErasePatch *other) :
+    x1(other->x1),
+    y1(other->y1),
+    w(other->w),
+    h(other->h)
+{
+}
+
+ErasePatch::ErasePatch(const ErasePatch &other) :
+    x1(other.x1),
+    y1(other.y1),
+    w(other.w),
+    h(other.h)
+{
+}
+
 ErasePatch::ErasePatch(int x, int y, int width, int height):
     x1(x),
     y1(y),

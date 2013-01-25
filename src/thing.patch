@@ -1,0 +1,2184 @@
+diff --git a/src/Subtitles/bitmap.cpp b/src/Subtitles/bitmap.cpp
+index 7acea78..cd92f14 100644
+--- a/src/Subtitles/bitmap.cpp
++++ b/src/Subtitles/bitmap.cpp
+@@ -28,18 +28,19 @@
+ #include <QFile>
+ #include <QRect>
+ #include <QVector>
++#include <array>
+ 
+ Bitmap::Bitmap()
+ {
+ }
+ 
+ Bitmap::Bitmap(Bitmap &other) :
+-    subtitleImage(other.subtitleImage)
++    subtitleImage(other.subtitleImage.copy())
+ {
+ }
+ 
+ Bitmap::Bitmap(Bitmap *other) :
+-    subtitleImage(other->subtitleImage)
++    subtitleImage(other->subtitleImage.copy())
+ {
+ }
+ 
+@@ -144,40 +145,46 @@ Bitmap Bitmap::crop(int x1, int y1, int width, int height)
+ 
+ int Bitmap::primaryColorIndex(Palette &palette, int alphaThreshold)
+ {
+-    QVector<int> histogram(palette.size(), 0);
++    int *histogram = (int*) calloc(palette.size(), sizeof(int));
++    int height = subtitleImage.height();
++    int width = subtitleImage.width();
++    uchar* pixels = subtitleImage.scanLine(0);
++    int scanWidth = subtitleImage.bytesPerLine();
+ 
+-    for (int i = 0; i < subtitleImage.height(); ++i)
++    for (int i = 0; i < height; ++i)
+     {
+-        uchar* pixels = subtitleImage.scanLine(i);
+-        for (int j = 0; j < subtitleImage.width(); ++j)
++        for (int j = 0; j < width; ++j)
+         {
+-            int oldValue = histogram.at(pixels[j] & 0xff);
+-            histogram.replace(pixels[j] & 0xff, ++oldValue);
++            int oldValue = histogram[pixels[j] & 0xff];
++            histogram[pixels[j] & 0xff] = ++oldValue;
+         }
++        pixels += scanWidth;
+     }
+ 
+-    for (int i = 0; i < histogram.size(); ++i)
++    const uchar *Y = palette.Y().constData();
++    for (int i = 0; i < palette.size(); ++i)
+     {
+         int alpha = palette.alpha(i);
+         if (alpha < alphaThreshold)
+         {
+             alpha = 0;
+         }
+-        histogram.replace(i, ((histogram.at(i) * alpha) + 128) / 256);
+-        histogram.replace(i, ((histogram.at(i) * ((palette.Y()[i] & 0xff))) + 128) / 256);
++        histogram[i] = ((histogram[i] * alpha) + 128) / 256;
++        histogram[i] = ((histogram[i] * ((Y[i] & 0xff))) + 128) / 256;
+     }
+ 
+     int max = 0;
+     int color = 0;
+ 
+-    for (int i = 0; i < histogram.size(); ++i)
++    for (int i = 0; i < palette.size(); ++i)
+     {
+-        if (histogram.at(i) > max)
++        if (histogram[i] > max)
+         {
+-            max = histogram.at(i);
++            max = histogram[i];
+             color = i;
+         }
+     }
++    free(histogram);
+     return color;
+ }
+ 
+@@ -185,17 +192,28 @@ Bitmap Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lum
+ {
+     QVector<uchar> cy = palette.Y();
+     QVector<QRgb> a = palette.colorTable();
+-    Bitmap bm(subtitleImage.width(), subtitleImage.height());
++
++    int height = subtitleImage.height();
++    int width = subtitleImage.width();
++
++    Bitmap bm(width, height);
++
++    uchar* sourcePixels = subtitleImage.scanLine(0);
++    int sourcePitch = subtitleImage.bytesPerLine();
++
+     QImage &destImage = bm.image();
+ 
++    uchar *destPixels = destImage.scanLine(0);
++    int destPitch = destImage.bytesPerLine();
++
+     // select nearest colors in existing palette
+     QHash<int, int> p;
+ 
+-    for (int i = 0; i < subtitleImage.height(); ++i)
++    for (int i = 0; i < height; ++i)
+     {
+         uchar* sourcePixels = subtitleImage.scanLine(i);
+         uchar* destPixels = destImage.scanLine(i);
+-        for (int j = 0; j < subtitleImage.width(); ++j)
++        for (int j = 0; j < width; ++j)
+         {
+             int colIdx;
+             int idx = sourcePixels[j] & 0xff;
+@@ -233,6 +251,8 @@ Bitmap Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lum
+             // write target pixel
+             destPixels[j] = (uchar) colIdx;
+         }
++        sourcePixels += sourcePitch;
++        destPixels += destPitch;
+     }
+     return bm;
+ }
+@@ -250,13 +270,18 @@ Bitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filte
+     QHash<QRgb, int> p;
+     int offset = 0;
+ 
+-    QImage image(bm.image().bits(), bm.image().width(), bm.image().height(), bm.image().format());
++    int width = bm.image().width();
++    int height = bm.image().height();
++
++    QImage image(bm.image().bits(), width, height, bm.image().format());
+     image.setColorTable(palette.colorTable());
+ 
+-    for (int y = 0; y < bm.image().height(); ++y)
++    uchar* pixels = image.scanLine(0);
++    int sourcePitch = image.bytesPerLine();
++
++    for (int y = 0; y < height; ++y)
+     {
+-        uchar* pixels = image.scanLine(y);
+-        for (int x = 0; x < bm.image().width(); ++x)
++        for (int x = 0; x < width; ++x)
+         {
+             offset = (y * sizeX) + x;
+             QRgb color = trg[offset];
+@@ -297,6 +322,7 @@ Bitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filte
+             // write target pixel
+             pixels[x] = (uchar)colIdx;
+         }
++        pixels += sourcePitch;
+     }
+     return bm;
+ }
+@@ -308,14 +334,18 @@ PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter
+ 
+     QImage trg(sizeX, sizeY, QImage::Format_ARGB32);
+     int offset = 0;
+-    for (int y = 0; y < trg.height(); ++y)
++
++    QRgb* pixels = (QRgb*)trg.scanLine(0);
++    int sourcePitch = trg.bytesPerLine() / 4;
++
++    for (int y = 0; y < sizeY; ++y)
+     {
+-        QRgb* pixels = (QRgb*)trg.scanLine(y);
+-        for (int x = 0; x < trg.width(); ++x)
++        for (int x = 0; x < sizeX; ++x)
+         {
+             offset = (y * sizeX) + x;
+             pixels[x] = trgPixels[offset];
+         }
++        pixels += sourcePitch;
+     }
+ 
+     // quantize image
+@@ -331,7 +361,7 @@ PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter
+     Palette trgPal(256);
+     for (int i = 0; i < size; ++i)
+     {
+-        trgPal.setARGB(i,ct[i]);
++        trgPal.setARGB(i, ct[i]);
+     }
+ 
+     PaletteBitmap bitmap(bm, trgPal);
+@@ -348,12 +378,15 @@ Bitmap Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaTh
+     // select nearest colors in existing palette
+     QHash<QRgb, int> p;
+     int offset = 0;
++
+     QImage image(bm.image().bits(), bm.image().width(), bm.image().height(), bm.image().format());
+     image.setColorTable(palette.colorTable());
+ 
++    uchar* pixels = image.scanLine(0);
++    int sourcePitch = image.bytesPerLine();
++
+     for (int y = 0; y < bm.image().height(); ++y)
+     {
+-        uchar* pixels = image.scanLine(y);
+         for (int x = 0; x < bm.image().width(); ++x)
+         {
+             offset = (y * sizeX) + x;
+@@ -394,16 +427,20 @@ Bitmap Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaTh
+             // write target pixel
+             pixels[x] = (uchar)colIdx;
+         }
++        pixels += sourcePitch;
+     }
+     return bm;
+ }
+ 
+ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+ {
+-    QVector<QRgb> rgb = palette.colorTable();
++    const QRgb *rgb = palette.colorTable().constData();
++
++    int width = subtitleImage.width();
++    int height = subtitleImage.height();
+ 
+-    double scaleX = (double)(subtitleImage.width() - 1) / (sizeX - 1);
+-    double scaleY = (double)(subtitleImage.height() - 1) / (sizeY - 1);
++    double scaleX = (double)(width - 1) / (sizeX - 1);
++    double scaleY = (double)(height - 1) / (sizeY - 1);
+ 
+     int lastR = 0;
+     int lastG = 0;
+@@ -412,6 +449,12 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+     int lastColIdx = palette.transparentIndex();
+ 
+     Bitmap trg(sizeX, sizeY);
++    int prevYSI = 0;
++    const uchar *inPixels = subtitleImage.constScanLine(prevYSI); // get initial scanline
++    int sourcePitch = subtitleImage.bytesPerLine();
++
++    uchar *outPixels = trg.image().scanLine(0);
++    int targetPitch = trg.image().bytesPerLine();
+ 
+     for (int yt = 0; yt < sizeY; ++yt)
+     {
+@@ -419,6 +462,7 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+         int ysi = (int)ys;
+         double wy = (ys - ysi);
+         double wy1 = 1.0 - wy;
++        inPixels += ((ysi - prevYSI) * sourcePitch);
+ 
+         for (int xt = 0; xt < sizeX; ++xt)
+         {
+@@ -430,17 +474,17 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+ 
+             // top left
+             double w = wx1 * wy1;
+-            int idx = subtitleImage.scanLine(ysi)[xsi] & 0xff;
++            int idx = inPixels[xsi] & 0xff;
+             double at = qAlpha(rgb[idx]) * w;
+             double rt = qRed(rgb[idx]) * w;
+             double gt = qGreen(rgb[idx]) * w;
+             double bt = qBlue(rgb[idx]) * w;
+ 
+             // top right
+-            if (xsi < subtitleImage.width() - 1)
++            if (xsi < width - 1)
+             {
+                 w = wx * wy1;
+-                idx = subtitleImage.scanLine(ysi)[xsi + 1] & 0xff;
++                idx = inPixels[xsi + 1] & 0xff;
+                 at += qAlpha(rgb[idx]) * w;
+                 rt += qRed(rgb[idx]) * w;
+                 gt += qGreen(rgb[idx]) * w;
+@@ -448,10 +492,10 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+             }  // else assume transparent black
+ 
+             // bottom left
+-            if (ysi < subtitleImage.height() - 1)
++            if (ysi < height - 1)
+             {
+                 w = wx1 * wy;
+-                idx = subtitleImage.scanLine(ysi + 1)[xsi] & 0xff;
++                idx = (inPixels + sourcePitch)[xsi] & 0xff;
+                 at += qAlpha(rgb[idx]) * w;
+                 rt += qRed(rgb[idx]) * w;
+                 gt += qGreen(rgb[idx]) * w;
+@@ -459,10 +503,10 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+             } // else assume transparent black
+ 
+             // bottom right
+-            if ((ysi < subtitleImage.height() - 1) && (xsi < subtitleImage.width() - 1))
++            if ((ysi < height - 1) && (xsi < width - 1))
+             {
+                 w = wx * wy;
+-                idx = subtitleImage.scanLine(ysi + 1)[xsi + 1] & 0xff;
++                idx = (inPixels + sourcePitch)[xsi + 1] & 0xff;
+                 at += qAlpha(rgb[idx]) * w;
+                 rt += qRed(rgb[idx]) * w;
+                 gt += qGreen(rgb[idx]) * w;
+@@ -509,20 +553,32 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
+                 lastColIdx = colIdx;
+             }
+             // write target pixel
+-            trg.image().scanLine(yt)[xt] = (uchar)colIdx;
++            outPixels[xt] = (uchar)colIdx;
+         }
++        prevYSI = ysi;
++        outPixels += targetPitch;
+     }
+     return trg;
+ }
+ 
+ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither)
+ {
+-    QVector<QRgb> rgb = palette.colorTable();
++    const QRgb *rgb = palette.colorTable().constData();
+ 
+-    double scaleX = (double)(subtitleImage.width() - 1) / (sizeX - 1);
+-    double scaleY = (double)(subtitleImage.height() - 1) / (sizeY - 1);
++    int width = subtitleImage.width();
++    int height = subtitleImage.height();
++
++    double scaleX = (double)(width - 1) / (sizeX - 1);
++    double scaleY = (double)(height - 1) / (sizeY - 1);
+ 
+     QImage trg(sizeX, sizeY, QImage::Format_ARGB32);
++    int prevYSI = 0;
++    const uchar *firstScanLine = subtitleImage.constScanLine(0);
++    const uchar *inPixels = subtitleImage.constScanLine(prevYSI);
++    int sourcePitch = subtitleImage.bytesPerLine();
++
++    QRgb* outPixels = (QRgb*) trg.scanLine(0);
++    int targetPitch = trg.bytesPerLine() / 4; // we want pitch in QRgb values per line
+ 
+     for (int yt = 0; yt < sizeY; ++yt)
+     {
+@@ -530,6 +586,7 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
+         int ysi = (int)ys;
+         double wy = (ys - ysi);
+         double wy1 = 1.0 - wy;
++        inPixels += ((ysi - prevYSI) * sourcePitch);
+ 
+         for (int xt = 0; xt < sizeX; ++xt)
+         {
+@@ -545,7 +602,7 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
+ 
+             // top left
+             double w = wx1 * wy1;
+-            idx = subtitleImage.scanLine(ysi)[xsi] & 0xff;
++            idx = inPixels[xsi] & 0xff;
+             double at = qAlpha(rgb[idx]) * w;
+             double rt = qRed(rgb[idx]) * w;
+             double gt = qGreen(rgb[idx]) * w;
+@@ -553,10 +610,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
+ 
+             // top right
+             x = xsi + 1;
+-            if (x < subtitleImage.width())
++            if (x < width)
+             {
+                 w = wx * wy1;
+-                idx = subtitleImage.scanLine(ysi)[x] & 0xff;
++                idx = inPixels[x] & 0xff;
+                 at += qAlpha(rgb[idx]) * w;
+                 rt += qRed(rgb[idx]) * w;
+                 gt += qGreen(rgb[idx]) * w;
+@@ -565,10 +622,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
+ 
+             // bottom left
+             y = ysi + 1;
+-            if (y < subtitleImage.height())
++            if (y < height)
+             {
+                 w = wx1 * wy;
+-                idx = subtitleImage.scanLine(y)[xsi] & 0xff;
++                idx = (firstScanLine + (y * sourcePitch))[xsi] & 0xff;
+                 at += qAlpha(rgb[idx]) * w;
+                 rt += qRed(rgb[idx]) * w;
+                 gt += qGreen(rgb[idx]) * w;
+@@ -578,10 +635,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
+             // bottom right
+             x = xsi + 1;
+             y = ysi + 1;
+-            if ((x < subtitleImage.width()) && (y < subtitleImage.height()))
++            if ((x < width) && (y < height))
+             {
+                 w = wx * wy;
+-                idx = subtitleImage.scanLine(y)[x] & 0xff;
++                idx = (firstScanLine + (y * sourcePitch))[x] & 0xff;
+                 at += qAlpha(rgb[idx]) * w;
+                 rt += qRed(rgb[idx]) * w;
+                 gt += qGreen(rgb[idx]) * w;
+@@ -593,9 +650,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
+             int gti = (int)(gt);
+             int bti = (int)(bt);
+ 
+-            QRgb* pixels = (QRgb*)trg.scanLine(yt);
+-            pixels[xt] = qRgba(rti, gti, bti, ati);;
++            outPixels[xt] = qRgba(rti, gti, bti, ati);;
+         }
++        prevYSI = ysi;
++        outPixels += targetPitch;
+     }
+     // quantize image
+     QuantizeFilter qf;
+@@ -627,17 +685,25 @@ QImage Bitmap::image(Palette &palette)
+ 
+ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold)
+ {
+-    QVector<uchar> cy = palette.Y();
+-    QVector<QRgb> a = palette.colorTable();
++    const uchar *cy = palette.Y().constData();
++    const QRgb *a = palette.colorTable().constData();
++    int width = subtitleImage.width();
++    int height = subtitleImage.height();
+ 
+-    double scaleX = (double)(subtitleImage.width() - 1) / (sizeX - 1);
+-    double scaleY = (double)(subtitleImage.height() - 1) / (sizeY - 1);
++    double scaleX = (double)(width - 1) / (sizeX - 1);
++    double scaleY = (double)(height - 1) / (sizeY - 1);
+ 
+     int lastCY = 0;
+     int lastA  = 0;
+     int lastColIdx = 0; // 0 is the transparent color
+ 
+     Bitmap trg(sizeX, sizeY);
++    int prevYSI = 0;
++    const uchar *inPixels = subtitleImage.constScanLine(prevYSI); // get initial scanline
++    int scanWidth = subtitleImage.bytesPerLine();
++
++    uchar *outPixels = trg.image().scanLine(0); // get initial scanLine
++    int targetPitch = trg.image().bytesPerLine();
+ 
+     for (int yt = 0; yt < sizeY; ++yt)
+     {
+@@ -645,6 +711,7 @@ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alpha
+         int ysi = (int)ys;
+         double wy = (ys - ysi);
+         double wy1 = 1.0 - wy;
++        inPixels += ((ysi - prevYSI) * scanWidth);
+ 
+         for (int xt = 0; xt < sizeX; ++xt)
+         {
+@@ -658,33 +725,33 @@ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alpha
+ 
+             // top left
+             double w = wx1 * wy1;
+-            int idx = subtitleImage.scanLine(ysi)[xsi] & 0xff;
++            int idx = inPixels[xsi] & 0xff;
+             double at = qAlpha(a[idx]) * w;
+             double cyt = (cy[idx] & 0xff) * w;
+ 
+             // top right
+-            if (xsi < subtitleImage.width() - 1)
++            if (xsi < width - 1)
+             {
+                 w = wx * wy1;
+-                idx = subtitleImage.scanLine(ysi)[xsi + 1] & 0xff;
++                idx = inPixels[xsi + 1] & 0xff;
+                 at += qAlpha(a[idx]) * w;
+                 cyt += (cy[idx] & 0xff) * w;
+             }  // else assume transparent black
+ 
+             // bottom left
+-            if (ysi < subtitleImage.height() - 1)
++            if (ysi < height - 1)
+             {
+                 w = wx1 * wy;
+-                idx = subtitleImage.scanLine(ysi + 1)[xsi] & 0xff;
++                idx = (inPixels + scanWidth)[xsi] & 0xff;
+                 at += qAlpha(a[idx]) * w;
+                 cyt += (cy[idx] & 0xff) * w;
+             } // else assume transparent black
+ 
+             // bottom right
+-            if ((ysi < subtitleImage.height() - 1) && (xsi < subtitleImage.width() - 1))
++            if ((ysi < height - 1) && (xsi < width - 1))
+             {
+                 w = wx * wy;
+-                idx = subtitleImage.scanLine(ysi + 1)[xsi + 1] & 0xff;
++                idx = (inPixels + scanWidth)[xsi + 1] & 0xff;
+                 at += qAlpha(a[idx]) * w;
+                 cyt += (cy[idx] & 0xff) * w;
+             } // else assume transparent black
+@@ -721,8 +788,10 @@ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alpha
+                 lastColIdx = colIdx;
+             }
+             // write target pixel
+-            trg.image().scanLine(yt)[xt] = (uchar)colIdx;
++            outPixels[xt] = (uchar)colIdx;
+         }
++        prevYSI = ysi;
++        outPixels += targetPitch;
+     }
+     return trg;
+ }
+@@ -731,13 +800,16 @@ void Bitmap::fillRect(int x1, int y1, int width, int height, int color)
+ {
+     uchar b = (uchar)color;
+ 
++    uchar* pixels = subtitleImage.scanLine(y1);
++    int sourcePitch = subtitleImage.bytesPerLine();
++
+     for (int i = y1; i < (y1 + height); ++i)
+     {
+-        uchar* pixels = subtitleImage.scanLine(i);
+         for (int j = x1; j < (x1 + width); ++j)
+         {
+             pixels[j] = b;
+         }
++        pixels += sourcePitch;
+     }
+ }
+ 
+@@ -750,10 +822,16 @@ int Bitmap::highestColorIndex(Palette &palette)
+ {
+     // create histogram for palette
+     int maxIdx = 0;
+-    for (int y = 0; y < subtitleImage.height(); ++y)
++
++    int width = subtitleImage.width();
++    int height = subtitleImage.height();
++
++    uchar* pixels = subtitleImage.scanLine(0);
++    int sourcePitch = subtitleImage.bytesPerLine();
++
++    for (int y = 0; y < height; ++y)
+     {
+-        uchar* pixels = subtitleImage.scanLine(y);
+-        for (int x = 0; x < subtitleImage.width(); ++x)
++        for (int x = 0; x < width; ++x)
+         {
+             int idx = pixels[x] & 0xff;
+             if (palette.alpha(idx) > 0)
+@@ -768,6 +846,7 @@ int Bitmap::highestColorIndex(Palette &palette)
+                 }
+             }
+         }
++        pixels += sourcePitch;
+     }
+     breakOut:
+     return maxIdx;
+@@ -775,15 +854,25 @@ int Bitmap::highestColorIndex(Palette &palette)
+ 
+ QImage Bitmap::toARGB(Palette &palette)
+ {
+-    QImage newImage(subtitleImage.width(), subtitleImage.height(), QImage::Format_ARGB32);
+-    for (int y = 0; y < newImage.height(); ++y)
++    int width = subtitleImage.width();
++    int height = subtitleImage.height();
++
++    QImage newImage(width, height, QImage::Format_ARGB32);
++
++    uchar* pixels = subtitleImage.scanLine(0);
++    int sourcePitch = subtitleImage.bytesPerLine();
++
++    QRgb* newPixels = (QRgb*)newImage.scanLine(0);
++    int destPitch = newImage.bytesPerLine() / 4;
++
++    for (int y = 0; y < height; ++y)
+     {
+-        uchar* pixels = subtitleImage.scanLine(y);
+-        QRgb* newPixels = (QRgb*)newImage.scanLine(y);
+-        for (int x = 0; x < newImage.width(); ++x)
++        for (int x = 0; x < width; ++x)
+         {
+             newPixels[x] = palette.rgba(pixels[x]);
+         }
++        pixels += sourcePitch;
++        newPixels += destPitch;
+     }
+     return newImage;
+ }
+diff --git a/src/Subtitles/erasepatch.cpp b/src/Subtitles/erasepatch.cpp
+index 9b08f96..88d346c 100644
+--- a/src/Subtitles/erasepatch.cpp
++++ b/src/Subtitles/erasepatch.cpp
+@@ -23,6 +23,22 @@ ErasePatch::ErasePatch()
+ {
+ }
+ 
++ErasePatch::ErasePatch(const ErasePatch *other) :
++    x1(other->x1),
++    y1(other->y1),
++    w(other->w),
++    h(other->h)
++{
++}
++
++ErasePatch::ErasePatch(const ErasePatch &other) :
++    x1(other.x1),
++    y1(other.y1),
++    w(other.w),
++    h(other.h)
++{
++}
++
+ ErasePatch::ErasePatch(int x, int y, int width, int height):
+     x1(x),
+     y1(y),
+diff --git a/src/Subtitles/erasepatch.h b/src/Subtitles/erasepatch.h
+index 8b7249a..4e6ab55 100644
+--- a/src/Subtitles/erasepatch.h
++++ b/src/Subtitles/erasepatch.h
+@@ -24,6 +24,8 @@ class ErasePatch
+ {
+ public:
+     ErasePatch();
++    ErasePatch(const ErasePatch* other);
++    ErasePatch(const ErasePatch& other);
+     ErasePatch(int x, int y, int width, int height);
+ 
+     int x() { return x1; }
+diff --git a/src/Subtitles/imageobject.h b/src/Subtitles/imageobject.h
+index 6827eb7..5a9b9f9 100644
+--- a/src/Subtitles/imageobject.h
++++ b/src/Subtitles/imageobject.h
+@@ -30,6 +30,7 @@ public:
+     ImageObject();
+     ImageObject(const ImageObject* other);
+     ImageObject(const ImageObject& other);
++    ~ImageObject() { fragmentList.clear(); }
+ 
+     int paletteID() { return paletteId; }
+     void setPaletteID(int id) { paletteId = id; }
+diff --git a/src/Subtitles/palette.cpp b/src/Subtitles/palette.cpp
+index 0245bca..dffabc4 100644
+--- a/src/Subtitles/palette.cpp
++++ b/src/Subtitles/palette.cpp
+@@ -80,6 +80,10 @@ Palette::Palette(QVector<uchar> inRed, QVector<uchar> inGreen, QVector<uchar> in
+ 
+ Palette::~Palette()
+ {
++    colors.clear();
++    y.clear();
++    cb.clear();
++    cr.clear();
+ }
+ 
+ void Palette::setAlpha(int index, int alpha)
+diff --git a/src/Subtitles/subdvd.cpp b/src/Subtitles/subdvd.cpp
+index 04835cd..c007cec 100644
+--- a/src/Subtitles/subdvd.cpp
++++ b/src/Subtitles/subdvd.cpp
+@@ -132,7 +132,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
+     int ctrlSize = -1;
+     int ctrlHeaderCopied = 0;
+     QVector<uchar> ctrlHeader;
+-    ImageObjectFragment* rleFrag;
++    ImageObjectFragment rleFrag;
+     int length;
+     int packHeaderSize;
+     bool firstPackFound = false;
+@@ -228,12 +228,12 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
+             ctrlHeader.replace(ctrlHeaderCopied, (uchar)fileBuffer->getByte(ctrlOfs + i + copied));
+             ++ctrlHeaderCopied;
+         }
+-        rleFrag = new ImageObjectFragment;
+-        rleFrag->setImageBufferOffset(ofs);
+-        rleFrag->setImagePacketSize(((length - headerSize) - diff) + packHeaderSize);
++        rleFrag = ImageObjectFragment();
++        rleFrag.setImageBufferOffset(ofs);
++        rleFrag.setImagePacketSize(((length - headerSize) - diff) + packHeaderSize);
+         pic.rleFragments.push_back(rleFrag);
+ 
+-        rleBufferFound += rleFrag->imagePacketSize();
++        rleBufferFound += rleFrag.imagePacketSize();
+ 
+         if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
+         {
+diff --git a/src/Subtitles/subpicture.cpp b/src/Subtitles/subpicture.cpp
+index 11c982b..5382bec 100644
+--- a/src/Subtitles/subpicture.cpp
++++ b/src/Subtitles/subpicture.cpp
+@@ -66,15 +66,18 @@ SubPicture* SubPicture::copy()
+     sp->end = end;
+     sp->forced = forced;
+     sp->compositionNumber = compositionNumber;
+-    sp->setImageWidth(getImageWidth());
+-    sp->setImageHeight(getImageHeight());
+-    sp->setOfsX(getOfsX());
+-    sp->setOfsY(getOfsY());
++    sp->setImageWidth(imageWidth);
++    sp->setImageHeight(imageHeight);
++    sp->setOfsX(xOfs);
++    sp->setOfsY(xOfs);
+     sp->excluded = excluded;
+     sp->decoded = decoded;
+     if (!erasePatch.empty())
+     {
+-        sp->erasePatch = erasePatch;
++        for (int i = 0; i < erasePatch.size(); ++i)
++        {
++            sp->erasePatch.push_back(new ErasePatch(erasePatch[i]));
++        }
+     }
+ 
+     return sp;
+diff --git a/src/Subtitles/subpicture.h b/src/Subtitles/subpicture.h
+index 08106e9..7f2f1c2 100644
+--- a/src/Subtitles/subpicture.h
++++ b/src/Subtitles/subpicture.h
+@@ -30,6 +30,7 @@ public:
+     SubPicture();
+     SubPicture(const SubPicture& other);
+     SubPicture(const SubPicture* other);
++    virtual ~SubPicture() { }
+ 
+     void setImageWidth(int w) { imageWidth = w; }
+     void setImageHeight(int h) { imageHeight = h; }
+diff --git a/src/Subtitles/subpicturebd.cpp b/src/Subtitles/subpicturebd.cpp
+index 4a90cd4..675b657 100644
+--- a/src/Subtitles/subpicturebd.cpp
++++ b/src/Subtitles/subpicturebd.cpp
+@@ -18,8 +18,6 @@
+  */
+ 
+ #include "subpicturebd.h"
+-#include "imageobject.h"
+-#include "paletteinfo.h"
+ 
+ SubPictureBD::SubPictureBD()
+ {
+@@ -32,17 +30,20 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
+     winHeight(other->winHeight),
+     xWinOfs(other->xWinOfs),
+     yWinOfs(other->yWinOfs),
+-    type(other->type),
+-    palettes(other->palettes)
++    type(other->type)
+ {
+     for (int i = 0; i < other->imageObjectList.size(); ++i)
+     {
+-        imageObjectList.push_back(new ImageObject(other->imageObjectList.at(i)));
++        imageObjectList.push_back(ImageObject(other->imageObjectList[i]));
++    }
++    palettes.resize(other->palettes.size());
++    for (int i = 0; i < other->palettes.size(); ++i)
++    {
++        for (int j = 0; j < other->palettes[i].size(); ++j)
++        {
++            palettes[i].push_back(PaletteInfo(other->palettes[i][j]));
++        }
+     }
+-    //for (int i = 0; i < other->palettes.size(); ++i)
+-    //{
+-    //    palettes.push_back(new PaletteInfo(other->palettes.at(i)));
+-    //}
+ }
+ 
+ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
+@@ -52,35 +53,38 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
+     winHeight(other.winHeight),
+     xWinOfs(other.xWinOfs),
+     yWinOfs(other.yWinOfs),
+-    type(other.type),
+-    palettes(other.palettes)
++    type(other.type)
+ {
+     for (int i = 0; i < other.imageObjectList.size(); ++i)
+     {
+-        imageObjectList.push_back(new ImageObject(other.imageObjectList.at(i)));
++        imageObjectList.push_back(ImageObject(other.imageObjectList[i]));
++    }
++    palettes.resize(other.palettes.size());
++    for (int i = 0; i < other.palettes.size(); ++i)
++    {
++        for (int j = 0; j < other.palettes[i].size(); ++j)
++        {
++            palettes[i].push_back(PaletteInfo(other.palettes[i][j]));
++        }
+     }
+-    //for (int i = 0; i < other.palettes.size(); ++i)
+-    //{
+-    //    palettes.push_back(new PaletteInfo(other.palettes.at(i)));
+-    //}
+ }
+ 
+ int SubPictureBD::getImageWidth()
+ {
+-    return imageObjectList[objectId]->width();
++    return imageObjectList[objectId].width();
+ }
+ 
+ int SubPictureBD::getImageHeight()
+ {
+-    return imageObjectList[objectId]->height();
++    return imageObjectList[objectId].height();
+ }
+ 
+ int SubPictureBD::getOfsX()
+ {
+-    return imageObjectList[objectId]->xOffset();
++    return imageObjectList[objectId].xOffset();
+ }
+ 
+ int SubPictureBD::getOfsY()
+ {
+-    return imageObjectList[objectId]->yOffset();
++    return imageObjectList[objectId].yOffset();
+ }
+diff --git a/src/Subtitles/subpicturebd.h b/src/Subtitles/subpicturebd.h
+index a2a39a8..4e22856 100644
+--- a/src/Subtitles/subpicturebd.h
++++ b/src/Subtitles/subpicturebd.h
+@@ -21,6 +21,8 @@
+ #define SUBPICTUREBD_H
+ 
+ #include "subpicture.h"
++#include "imageobject.h"
++#include "paletteinfo.h"
+ 
+ #include <QVector>
+ 
+@@ -33,6 +35,7 @@ public:
+     SubPictureBD();
+     SubPictureBD(const SubPictureBD* other);
+     SubPictureBD(const SubPictureBD& other);
++    ~SubPictureBD() { }
+ 
+     int getImageWidth();
+     int getImageHeight();
+@@ -52,12 +55,12 @@ public:
+     int subPictureType() { return type; }
+     void setSubPictureType(int subPictureType) { type = subPictureType; }
+ 
+-    QVector<ImageObject*> imageObjectList;
++    QVector<ImageObject> imageObjectList;
+ 
+-    QVector<QVector<PaletteInfo*> > palettes;
++    QVector<QVector<PaletteInfo> > palettes;
+ 
+-    ImageObject *getImgObj(int index) { return imageObjectList.at(index); }
+-    ImageObject *getImgObj() { return imageObjectList.at(objectId); }
++    ImageObject getImgObj(int index) { return imageObjectList[index]; }
++    ImageObject getImgObj() { return imageObjectList[objectId]; }
+ 
+ private:
+     int objectId = 0;
+diff --git a/src/Subtitles/subpicturedvd.cpp b/src/Subtitles/subpicturedvd.cpp
+index 1ba758e..d443180 100644
+--- a/src/Subtitles/subpicturedvd.cpp
++++ b/src/Subtitles/subpicturedvd.cpp
+@@ -18,10 +18,48 @@
+  */
+ 
+ #include "subpicturedvd.h"
+-#include "imageobjectfragment.h"
+ 
+ SubPictureDVD::SubPictureDVD()
+ {
++
++}
++
++SubPictureDVD::SubPictureDVD(const SubPictureDVD &other) :
++    SubPicture(other),
++    pictureOffset(other.pictureOffset),
++    size(other.size),
++    evenOfs(other.evenOfs),
++    oddOfs(other.oddOfs),
++    origWidth(other.origWidth),
++    origHeight(other.origHeight),
++    origX(other.origX),
++    origY(other.origY),
++    rleFragments(other.rleFragments),
++    originalAlpha(other.originalAlpha),
++    originalPal(other.originalPal),
++    alpha(other.alpha),
++    pal(other.pal)
++{
++
++}
++
++SubPictureDVD::SubPictureDVD(const SubPictureDVD *other) :
++    SubPicture(other),
++    pictureOffset(other->pictureOffset),
++    size(other->size),
++    evenOfs(other->evenOfs),
++    oddOfs(other->oddOfs),
++    origWidth(other->origWidth),
++    origHeight(other->origHeight),
++    origX(other->origX),
++    origY(other->origY),
++    rleFragments(other->rleFragments),
++    originalAlpha(other->originalAlpha),
++    originalPal(other->originalPal),
++    alpha(other->alpha),
++    pal(other->pal)
++{
++
+ }
+ 
+ void SubPictureDVD::setOriginal()
+@@ -35,16 +73,16 @@ void SubPictureDVD::setOriginal()
+     originalPal = pal;
+ }
+ 
+-void SubPictureDVD::copyInfo(SubPicture *subPicture)
++void SubPictureDVD::copyInfo(SubPicture &subPicture)
+ {
+-    setWidth(subPicture->width());
+-    setHeight(subPicture->height());
+-    setStartTime(subPicture->startTime());
+-    setEndTime(subPicture->endTime());
+-    setForced(subPicture->isForced());
+-    setCompNum(subPicture->compNum());
+-    setImageWidth(subPicture->getImageWidth());
+-    setImageHeight(subPicture->getImageHeight());
+-    setOfsX(subPicture->getOfsX());
+-    setOfsY(subPicture->getOfsY());
++    setWidth(subPicture.width());
++    setHeight(subPicture.height());
++    setStartTime(subPicture.startTime());
++    setEndTime(subPicture.endTime());
++    setForced(subPicture.isForced());
++    setCompNum(subPicture.compNum());
++    setImageWidth(subPicture.getImageWidth());
++    setImageHeight(subPicture.getImageHeight());
++    setOfsX(subPicture.getOfsX());
++    setOfsY(subPicture.getOfsY());
+ }
+diff --git a/src/Subtitles/subpicturedvd.h b/src/Subtitles/subpicturedvd.h
+index 1a1fa6f..7651889 100644
+--- a/src/Subtitles/subpicturedvd.h
++++ b/src/Subtitles/subpicturedvd.h
+@@ -21,25 +21,27 @@
+ #define SUBPICTUREDVD_H
+ 
+ #include "subpicture.h"
++#include "imageobjectfragment.h"
+ 
+ #include <QVector>
+ 
+-class ImageObjectFragment;
+-
+ class SubPictureDVD : public SubPicture
+ {
+ public:
+     SubPictureDVD();
++    SubPictureDVD(const SubPictureDVD &other);
++    SubPictureDVD(const SubPictureDVD *other);
++    ~SubPictureDVD() { }
+ 
+     QVector<int> originalAlpha = QVector<int>(4);
+     QVector<int> originalPal = QVector<int>(4);
+     QVector<int> alpha = QVector<int>(4);
+     QVector<int> pal = QVector<int>(4);
+ 
+-    QVector<ImageObjectFragment*> rleFragments;
++    QVector<ImageObjectFragment> rleFragments;
+ 
+     void setOriginal();
+-    void copyInfo(SubPicture* subPicture);
++    void copyInfo(SubPicture &subPicture);
+ 
+     int offset() { return pictureOffset; }
+     void setOffset(int offset) { pictureOffset = offset; }
+diff --git a/src/Subtitles/subpicturehd.h b/src/Subtitles/subpicturehd.h
+index 74a7150..512a0ea 100644
+--- a/src/Subtitles/subpicturehd.h
++++ b/src/Subtitles/subpicturehd.h
+@@ -28,6 +28,7 @@ public:
+     SubPictureHD();
+     SubPictureHD(const SubPictureHD& other);
+     SubPictureHD(const SubPictureHD* other);
++    ~SubPictureHD() { }
+ 
+     int paletteOffset() { return paletteOfs; }
+     void setPaletteOffset(int paletteOffset) { paletteOfs = paletteOffset; }
+diff --git a/src/Subtitles/subpicturexml.cpp b/src/Subtitles/subpicturexml.cpp
+index d2d847a..ddb7f51 100644
+--- a/src/Subtitles/subpicturexml.cpp
++++ b/src/Subtitles/subpicturexml.cpp
+@@ -24,6 +24,7 @@ SubPictureXML::SubPictureXML()
+ }
+ 
+ SubPictureXML::SubPictureXML(const SubPictureXML &other) :
++    SubPicture(other),
+     origX(other.origX),
+     origY(other.origY),
+     filename(other.filename)
+@@ -31,6 +32,7 @@ SubPictureXML::SubPictureXML(const SubPictureXML &other) :
+ }
+ 
+ SubPictureXML::SubPictureXML(const SubPictureXML *other) :
++    SubPicture(other),
+     origX(other->origX),
+     origY(other->origY),
+     filename(other->filename)
+diff --git a/src/Subtitles/subpicturexml.h b/src/Subtitles/subpicturexml.h
+index 519f666..934b0b7 100644
+--- a/src/Subtitles/subpicturexml.h
++++ b/src/Subtitles/subpicturexml.h
+@@ -30,6 +30,7 @@ public:
+     SubPictureXML();
+     SubPictureXML(const SubPictureXML& other);
+     SubPictureXML(const SubPictureXML* other);
++    ~SubPictureXML() { }
+ 
+     void setOriginal()
+     {
+diff --git a/src/Subtitles/substreamdvd.cpp b/src/Subtitles/substreamdvd.cpp
+index 7f84c00..4bd0907 100644
+--- a/src/Subtitles/substreamdvd.cpp
++++ b/src/Subtitles/substreamdvd.cpp
+@@ -79,14 +79,18 @@ QVector<uchar> SubstreamDVD::encodeLines(Bitmap &bitmap, bool even)
+         y = 1;
+     }
+ 
+-    for (; y < bitmap.height(); y += 2)
++    int height = bitmap.image().height();
++    int width = bitmap.image().width();
++    uchar* pixels = bitmap.image().scanLine(y);
++    int pitch = bitmap.image().bytesPerLine();
++
++    for (; y < height; y += 2)
+     {
+-        uchar* pixels = bitmap.image().scanLine(y);
+         ofs = 0;
+-        for (int x = 0; x < bitmap.width(); x += len, ofs += len)
++        for (int x = 0; x < width; x += len, ofs += len)
+         {
+             color = pixels[ofs];
+-            for (len = 1; x + len < bitmap.width(); ++len)
++            for (len = 1; x + len < width; ++len)
+             {
+                 if (pixels[ofs + len] != color)
+                 {
+@@ -131,6 +135,7 @@ QVector<uchar> SubstreamDVD::encodeLines(Bitmap &bitmap, bool even)
+         {
+             nibbles.push_back((uchar)(0));
+         }
++        pixels += (pitch * 2);
+     }
+     // end buffer with line feed
+     nibbles.push_back((uchar)(0));
+@@ -156,8 +161,8 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
+     int height = pic.originalHeight();
+     int warnings = 0;
+ 
+-    ImageObjectFragment* fragment = pic.rleFragments.at(0);
+-    long startOfs = fragment->imageBufferOffset();
++    ImageObjectFragment fragment = pic.rleFragments[0];
++    long startOfs = fragment.imageBufferOffset();
+ 
+     if (width > pic.width() || height > pic.height())
+     {
+@@ -194,12 +199,12 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
+     for (int p = 0; p < pic.rleFragments.size(); ++p)
+     {
+         // copy data of all packet to one common buffer
+-        fragment = pic.rleFragments.at(p);
+-        for (int i = 0; i < fragment->imagePacketSize(); ++i)
++        fragment = pic.rleFragments[p];
++        for (int i = 0; i < fragment.imagePacketSize(); ++i)
+         {
+-            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment->imageBufferOffset() + i));
++            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment.imageBufferOffset() + i));
+         }
+-        index += fragment->imagePacketSize();
++        index += fragment.imagePacketSize();
+     }
+ 
+     decodeLine(buf, pic.evenOffset(), sizeEven, bm.image(), 0, width,  width * ((height / 2) + (height & 1)));
+diff --git a/src/Subtitles/subtitleprocessor.cpp b/src/Subtitles/subtitleprocessor.cpp
+index 2a86266..4eafe22 100644
+--- a/src/Subtitles/subtitleprocessor.cpp
++++ b/src/Subtitles/subtitleprocessor.cpp
+@@ -21,6 +21,7 @@
+ #include "types.h"
+ #include "subdvd.h"
+ #include "supdvd.h"
++#include "supdvb.h"
+ #include "supbd.h"
+ #include "suphd.h"
+ #include "supxml.h"
+@@ -70,6 +71,11 @@ SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool
+ 
+ SubtitleProcessor::~SubtitleProcessor()
+ {
++    delete outStream;
++    for (int i = 0; i < subPictures.size(); ++i)
++    {
++        delete subPictures[i];
++    }
+ }
+ 
+ void SubtitleProcessor::SetValuesFromSettings()
+@@ -149,6 +155,10 @@ StreamID SubtitleProcessor::getStreamID(QByteArray id)
+     {
+         return StreamID::DVDSUB;
+     }
++    else if (id[0] == (char)0x20 && id[1] == (char)0x00)
++    {
++        return StreamID::DVBSUB;
++    }
+     else if (id[0] == (char)0x23 && id[1] == (char)0x20 && id[2] == (char)0x56 && id[3] == (char)0x6f)
+     {
+         return StreamID::IDX;
+@@ -353,6 +363,10 @@ void SubtitleProcessor::close()
+     {
+         supDVD.clear();
+     }
++    if (!supDVB.isNull())
++    {
++        supDVB.clear();
++    }
+     if (!supXML.isNull())
+     {
+         supXML.clear();
+@@ -375,7 +389,7 @@ void SubtitleProcessor::exit()
+ void SubtitleProcessor::scanSubtitles()
+ {
+     subPictures = QVector<SubPicture*>(substream->getNumFrames());
+-    SubPicture* picSrc;
++    SubPicture* picSrc = 0;
+ 
+     double factTS = 1.0;
+ 
+@@ -866,6 +880,10 @@ void SubtitleProcessor::readSubtitleStream()
+         {
+             readDVDSubStream(streamID, false);
+         }
++        else if (streamID == StreamID::DVBSUB)
++        {
++            readSup();
++        }
+         else if (streamID == StreamID::BDSUP)
+         {
+             readSup();
+@@ -1005,7 +1023,7 @@ void SubtitleProcessor::writeSub(QString filename)
+             if (outMode == OutputMode::VOBSUB)
+             {
+                 convertSup(i, (frameNum / 2) + 1, maxNum);
+-                subVobTrg->copyInfo(subPictures[i]);
++                subVobTrg->copyInfo(*subPictures[i]);
+                 if (subDVD.isNull())
+                 {
+                     subDVD = QSharedPointer<SubDVD>(new SubDVD("", "", this));
+@@ -1019,7 +1037,7 @@ void SubtitleProcessor::writeSub(QString filename)
+             else if (outMode == OutputMode::SUPIFO)
+             {
+                 convertSup(i, (frameNum / 2) + 1, maxNum);
+-                subVobTrg->copyInfo(subPictures[i]);
++                subVobTrg->copyInfo(*subPictures[i]);
+                 if (supDVD.isNull())
+                 {
+                     supDVD = QSharedPointer<SupDVD>(new SupDVD("", "", this));
+@@ -2140,7 +2158,16 @@ void SubtitleProcessor::readSup()
+ 
+     QByteArray id = getFileID(fileName, 2);
+ 
+-    if (!id.isEmpty() && ((uchar)id[0] == 0x50 && (uchar)id[1] == 0x47))
++    if (!id.isEmpty() && ((uchar)id[0] == 0x20 && (uchar)id[1] == 0x0))
++    {
++        supDVB = QSharedPointer<SupDVB>(new SupDVB(fileName, this));
++        connect(supDVB.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
++        connect(supDVB.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
++        supDVB->readAllSupFrames();
++        substream = qSharedPointerCast<Substream>(supDVB);
++        inMode = InputMode::DVBSUB;
++    }
++    else if (!id.isEmpty() && ((uchar)id[0] == 0x50 && (uchar)id[1] == 0x47))
+     {
+         supBD = QSharedPointer<SupBD>(new SupBD(fileName, this));
+         connect(supBD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
+diff --git a/src/Subtitles/subtitleprocessor.h b/src/Subtitles/subtitleprocessor.h
+index 2e258de..e070fe2 100644
+--- a/src/Subtitles/subtitleprocessor.h
++++ b/src/Subtitles/subtitleprocessor.h
+@@ -34,6 +34,7 @@ class QTextStream;
+ class Substream;
+ class SubDVD;
+ class SupDVD;
++class SupDVB;
+ class SupXML;
+ class SupHD;
+ class SupBD;
+@@ -401,7 +402,6 @@ public:
+     void setSwapCrCb(bool value) { swapCrCb = value; }
+     ScalingFilters getScalingFilter() { return scalingFilter; }
+     void setScalingFilter(ScalingFilters value);
+-    Filter *scaleFilter;
+     QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
+     int getLanguageIdx() { return languageIdx; }
+     int getLanguageIdxRead() { return languageIdxRead; }
+@@ -474,6 +474,7 @@ public:
+     QVector<int> getOriginalFrameAlpha(int index);
+     QVector<int> &getFramePal(int index);
+     QVector<int> getOriginalFramePal(int index);
++    Filter *scaleFilter;
+ 
+     void storeFreeScale(double xScale, double yScale);
+     void storeSettings();
+@@ -514,6 +515,7 @@ private:
+     QSharedPointer<Substream> substream;
+     QSharedPointer<SubDVD> subDVD;
+     QSharedPointer<SupDVD> supDVD;
++    QSharedPointer<SupDVB> supDVB;
+     QSharedPointer<SupXML> supXML;
+     QSharedPointer<SupHD> supHD;
+     QSharedPointer<SupBD> supBD;
+diff --git a/src/Subtitles/supbd.cpp b/src/Subtitles/supbd.cpp
+index 10e0697..190fbac 100644
+--- a/src/Subtitles/supbd.cpp
++++ b/src/Subtitles/supbd.cpp
+@@ -62,7 +62,7 @@ void SupBD::decode(int index)
+ {
+     if (index < subPictures.size())
+     {
+-        decode(subPictures[index]);
++        decode(&subPictures[index]);
+     }
+     else
+     {
+@@ -77,27 +77,27 @@ int SupBD::getNumFrames()
+ 
+ bool SupBD::isForced(int index)
+ {
+-    return subPictures[index]->isForced();
++    return subPictures[index].isForced();
+ }
+ 
+ long SupBD::getEndTime(int index)
+ {
+-    return subPictures[index]->endTime();
++    return subPictures[index].endTime();
+ }
+ 
+ long SupBD::getStartTime(int index)
+ {
+-    return subPictures[index]->startTime();
++    return subPictures[index].startTime();
+ }
+ 
+ long SupBD::getStartOffset(int index)
+ {
+-    return subPictures[index]->getImgObj()->getFragmentList()[0].imageBufferOffset();
++    return subPictures[index].getImgObj().getFragmentList()[0].imageBufferOffset();
+ }
+ 
+ SubPicture *SupBD::getSubPicture(int index)
+ {
+-    return subPictures[index];
++    return &subPictures[index];
+ }
+ 
+ void SupBD::readAllSupFrames()
+@@ -106,10 +106,11 @@ void SupBD::readAllSupFrames()
+ 
+     int index = 0;
+     int bufsize = (int)fileBuffer->getSize();
+-    SupBD::SupSegment* segment;
+-    SubPictureBD *pic = 0;
+-    SubPictureBD *picLast = 0;
+-    SubPictureBD *picTmp = 0;
++    int subCount = 0;
++    SupSegment segment;
++    SubPictureBD pic;
++    SubPictureBD picLast;
++    SubPictureBD picTmp;
+     int odsCtr = 0;
+     int pdsCtr = 0;
+     int odsCtrOld = 0;
+@@ -130,21 +131,22 @@ void SupBD::readAllSupFrames()
+                 throw QString("Cancelled by user!");
+             }
+             emit currentProgressChanged(index);
++
+             segment = readSegment(index);
+             QString out;
+             QString so; // hack to return string
+-            switch (segment->type)
++            switch (segment.type)
+             {
+             case 0x14:
+             {
+                 out = QString("PDS ofs:0x%1, size:0x%2").arg(QString::number(index, 16), 8, QChar('0'))
+-                                                    .arg(QString::number(segment->size, 16), 4, QChar('0'));
++                                                    .arg(QString::number(segment.size, 16), 4, QChar('0'));
+                 if (compNum != compNumOld)
+                 {
+-                    if (pic != 0)
++                    if (pic.startTime() != -1)
+                     {
+                         so = QString("");
+-                        int ps = parsePDS(segment, pic, so);
++                        int ps = parsePDS(&segment, &pic, so);
+                         if (ps >= 0)
+                         {
+                             subtitleProcessor->print(QString("%1, %2\n").arg(out).arg(so));
+@@ -174,15 +176,15 @@ void SupBD::readAllSupFrames()
+             case 0x15:
+             {
+                 out = QString("ODS ofs:0x%1, size:0x%2").arg(QString::number(index, 16), 8, QChar('0'))
+-                                                   .arg(QString::number(segment->size, 16), 4, QChar('0'));
++                                                   .arg(QString::number(segment.size, 16), 4, QChar('0'));
+                 if (compNum != compNumOld)
+                 {
+                     if (!paletteUpdate)
+                     {
+-                        if (pic != 0)
++                        if (pic.startTime() != -1)
+                         {
+                             so = QString("");
+-                            if (parseODS(segment, pic, so))
++                            if (parseODS(&segment, &pic, so))
+                             {
+                                 odsCtr++;
+                             }
+@@ -193,8 +195,8 @@ void SupBD::readAllSupFrames()
+ 
+                             subtitleProcessor->print(QString("%1, img size: %2*%3\n")
+                                                      .arg(out)
+-                                                     .arg(QString::number(pic->getImageWidth()))
+-                                                     .arg(QString::number(pic->getImageHeight())));
++                                                     .arg(QString::number(pic.getImageWidth()))
++                                                     .arg(QString::number(pic.getImageHeight())));
+                         }
+                         else
+                         {
+@@ -215,11 +217,11 @@ void SupBD::readAllSupFrames()
+             } break;
+             case 0x16:
+             {
+-                compNum = fileBuffer->getWord(segment->offset + 5);
+-                cs = getCompositionState(segment);
+-                paletteUpdate = fileBuffer->getByte(segment->offset + 8) == 0x80;
+-                ptsPCS = segment->timestamp;
+-                if (segment->size >= 0x13)
++                compNum = fileBuffer->getWord(segment.offset + 5);
++                cs = getCompositionState(&segment);
++                paletteUpdate = fileBuffer->getByte(segment.offset + 8) == 0x80;
++                ptsPCS = segment.timestamp;
++                if (segment.size >= 0x13)
+                 {
+                     compCount = 1; // could be also 2, but we'll ignore this for the moment
+                 }
+@@ -247,36 +249,36 @@ void SupBD::readAllSupFrames()
+                         }
+                         else
+                         {
+-                            picLast = 0;
++                            picLast = SubPictureBD();
+                         }
+                     }
+                     else
+                     {
+-                        picLast = pic;
++                        picLast = SubPictureBD(pic);
+                     }
+ 
+-                    pic = new SubPictureBD();
+-                    subPictures.push_back(pic); // add to list
+-                    pic->setStartTime(segment->timestamp);
++                    pic = SubPictureBD();
++                    ++subCount;
++                    pic.setStartTime(segment.timestamp);
+ 
+                     subtitleProcessor->printX(QString("#> %1 (%2)\n")
+-                                              .arg(QString::number(subPictures.size()))
+-                                              .arg(TimeUtil::ptsToTimeStr(pic->startTime())));
++                                              .arg(QString::number(subCount))
++                                              .arg(TimeUtil::ptsToTimeStr(pic.startTime())));
+ 
+                     so = QString("");
+-                    parsePCS(segment, pic, so);
++                    parsePCS(&segment, &pic, so);
+ 
+                     // fix end time stamp of previous pic if still missing
+-                    if (picLast != 0 && picLast->endTime() == 0)
++                    if (picLast.startTime() != -1 && picLast.endTime() == 0)
+                     {
+-                        picLast->setEndTime(pic->startTime());
++                        picLast.setEndTime(pic.startTime());
+                     }
+ 
+                     out = QString("PCS ofs:0x%1, START, size:0x%2, comp#: %3, forced: %4")
+                             .arg(QString::number(index, 16), 8, QChar('0'))
+-                            .arg(QString::number(segment->size, 16), 4, QChar('0'))
++                            .arg(QString::number(segment.size, 16), 4, QChar('0'))
+                             .arg(QString::number(compNum))
+-                            .arg(pic->isForced() ? "true" : "false");
++                            .arg(pic.isForced() ? "true" : "false");
+                     if (!so.isEmpty())
+                     {
+                         out += ", " + so + "\n";
+@@ -285,19 +287,19 @@ void SupBD::readAllSupFrames()
+                     {
+                         out += "\n";
+                     }
+-                    out += QString("PTS start: %1").arg(TimeUtil::ptsToTimeStr(pic->startTime()));
+-                    out += QString(", screen size: %1*%2\n").arg(QString::number(pic->width())).arg(QString::number(pic->height()));
++                    out += QString("PTS start: %1").arg(TimeUtil::ptsToTimeStr(pic.startTime()));
++                    out += QString(", screen size: %1*%2\n").arg(QString::number(pic.width())).arg(QString::number(pic.height()));
+                     odsCtr = 0;
+                     pdsCtr = 0;
+                     odsCtrOld = 0;
+                     pdsCtrOld = 0;
+-                    picTmp = 0;
++                    picTmp = SubPictureBD();
+ 
+                     subtitleProcessor->print(out);
+                 }
+                 else
+                 {
+-                    if (pic == 0)
++                    if (pic.startTime() == -1)
+                     {
+                         subtitleProcessor->printWarning(QString("missing start of epoch at offset 0x%1\n")
+                                                         .arg(QString::number(index, 16), 8, QChar('0')));
+@@ -320,23 +322,24 @@ void SupBD::readAllSupFrames()
+                     } break;
+                     }
+                     out += QString(" size: 0x%1, comp#: %2, forced: %3")
+-                            .arg(QString::number(segment->size, 16), 4, QChar('0'))
++                            .arg(QString::number(segment.size, 16), 4, QChar('0'))
+                             .arg(QString::number(compNum))
+-                            .arg(pic->isForced() ? "true" : "false");
++                            .arg(pic.isForced() ? "true" : "false");
+                     if (compNum != compNumOld)
+                     {
+                         so = QString("");
+                         // store state to be able to revert to it
+-                        picTmp = new SubPictureBD(pic);
++
++                        picTmp = SubPictureBD(pic);
+                         // create new pic
+-                        parsePCS(segment, pic, so);
++                        parsePCS(&segment, &pic, so);
+                     }
+                     if (!so.isEmpty())
+                     {
+                         out+=", "+so;
+                     }
+                     out += QString(", pal update: %1\n").arg(paletteUpdate ? "true" : "false");
+-                    out += QString("PTS: %1\n").arg(TimeUtil::ptsToTimeStr(segment->timestamp));
++                    out += QString("PTS: %1\n").arg(TimeUtil::ptsToTimeStr(segment.timestamp));
+ 
+                     subtitleProcessor->print(out);
+                 }
+@@ -344,15 +347,15 @@ void SupBD::readAllSupFrames()
+             case 0x17:
+             {
+                 out = QString("WDS ofs:0x%1, size:0x%2").arg(QString::number(index, 16), 8, QChar('0'))
+-                                                    .arg(QString::number(segment->size, 16), 4, QChar('0'));
+-                if (pic != 0)
++                                                    .arg(QString::number(segment.size, 16), 4, QChar('0'));
++                if (pic.startTime() != -1)
+                 {
+-                    parseWDS(segment, pic);
++                    parseWDS(&segment, &pic);
+ 
+                     subtitleProcessor->print(QString("%1, dim: %2*%3\n")
+                                              .arg(out)
+-                                             .arg(QString::number(pic->windowWidth()))
+-                                             .arg(QString::number(pic->windowHeight())));
++                                             .arg(QString::number(pic.windowWidth()))
++                                             .arg(QString::number(pic.windowHeight())));
+                 }
+                 else
+                 {
+@@ -369,7 +372,8 @@ void SupBD::readAllSupFrames()
+                 {
+                     if (compCount > 0 && odsCtr > odsCtrOld
+                                       && compNum != compNumOld
+-                                      && picMergable(picLast, pic))
++                                      && picMergable(picLast.startTime() == -1 ? 0 : &picLast,
++                                                     pic.startTime() == -1 ? 0 : &pic))
+                     {
+                         // the last start epoch did not contain any (new) content
+                         // and should be merged to the previous frame
+@@ -381,7 +385,7 @@ void SupBD::readAllSupFrames()
+                         }
+                         else
+                         {
+-                            picLast = 0;
++                            picLast = SubPictureBD();
+                         }
+ 
+                         subtitleProcessor->printX(QString("#< caption merged\n"));
+@@ -390,15 +394,16 @@ void SupBD::readAllSupFrames()
+                 else
+                 {
+                     long startTime = 0;
+-                    if (pic != 0)
++                    if (pic.startTime() != -1)
+                     {
+-                        startTime = pic->startTime();  // store
+-                        pic->setStartTime(ptsPCS);    // set for testing merge
++                        startTime = pic.startTime();  // store
++                        pic.setStartTime(ptsPCS);    // set for testing merge
+                     }
+ 
+                     if (compCount > 0 && odsCtr > odsCtrOld
+                                     && compNum != compNumOld
+-                                    && !picMergable(picTmp, pic))
++                                    && !picMergable(picTmp.startTime() == -1 ? 0 : &picTmp,
++                                                    pic.startTime() == -1 ? 0 : &pic))
+                     {
+                         // last PCS should be stored as separate caption
+                         if ((odsCtr - odsCtrOld) > 1 || (pdsCtr - pdsCtrOld) > 1)
+@@ -408,32 +413,32 @@ void SupBD::readAllSupFrames()
+                         // replace pic with picTmp (deepCopy created before new PCS)
+                         subPictures.replace(subPictures.size() - 1, picTmp); // replace in list
+                         picLast = picTmp;
+-                        subPictures.push_back(pic); // add to list
+ 
+                         subtitleProcessor->printX(QString("#< %1 (%2)\n")
+-                                                  .arg(QString::number(subPictures.size()))
+-                                                  .arg(TimeUtil::ptsToTimeStr(pic->startTime())));
++                                                  .arg(QString::number(++subCount))
++                                                  .arg(TimeUtil::ptsToTimeStr(pic.startTime())));
+ 
+                         odsCtrOld = odsCtr;
+                     }
+                     else
+                     {
+-                        if (pic != 0)
++                        if (pic.startTime() != -1)
+                         {
+                             // merge with previous pic
+-                            pic->setStartTime(startTime); // restore
+-                            pic->setEndTime(ptsPCS);
++                            pic.setStartTime(startTime); // restore
++                            pic.setEndTime(ptsPCS);
+ 
+                             // for the unlikely case that forced flag changed during one captions
+-                            if (picTmp != 0 && picTmp->isForced())
++                            if (picTmp.startTime() != -1 && picTmp.isForced())
+                             {
+-                                pic->setForced(true);
++                                pic.setForced(true);
+                             }
+ 
+                             if (pdsCtr > pdsCtrOld || paletteUpdate)
+                             {
+                                 subtitleProcessor->printWarning(QString("palette animation: result may be erratic\n"));
+                             }
++                            subPictures.push_back(pic); // add to list
+                         }
+                         else
+                         {
+@@ -447,12 +452,12 @@ void SupBD::readAllSupFrames()
+             default:
+             {
+                 subtitleProcessor->printWarning(QString("<unknown> 0x%1 ofs: 0x%2\n")
+-                                                .arg(QString::number(segment->type, 16), 2, QChar('0'))
++                                                .arg(QString::number(segment.type, 16), 2, QChar('0'))
+                                                 .arg(QString::number(index, 16), 8, QChar('0')));
+             } break;
+             }
+             index += 13; // header size
+-            index += segment->size;
++            index += segment.size;
+         }
+     }
+     catch (QString e)
+@@ -479,7 +484,7 @@ void SupBD::readAllSupFrames()
+     numForcedFrames = 0;
+     for (auto subPicture : subPictures)
+     {
+-        if (subPicture->isForced())
++        if (subPicture.isForced())
+         {
+             numForcedFrames++;
+         }
+@@ -858,21 +863,21 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
+ 
+ double SupBD::getFps(int index)
+ {
+-    return getFpsFromID(subPictures[index]->subPictureType());
++    return getFpsFromID(subPictures[index].subPictureType());
+ }
+ 
+-SupBD::SupSegment *SupBD::readSegment(int offset)
++SupBD::SupSegment SupBD::readSegment(int offset)
+ {
+-    SupSegment* segment = new SupSegment;
++    SupSegment segment;
+     if (fileBuffer->getWord(offset) != 0x5047)
+     {
+         throw QString("PG missing at index 0x").arg(QString::number(offset, 16), 8, QChar('0'));
+     }
+-    segment->timestamp = fileBuffer->getDWord(offset += 2); // read PTS
++    segment.timestamp = fileBuffer->getDWord(offset += 2); // read PTS
+     offset += 4; /* ignore DTS */
+-    segment->type = fileBuffer->getByte(offset += 4);
+-    segment->size = fileBuffer->getWord(++offset);
+-    segment->offset = offset + 2;
++    segment.type = fileBuffer->getByte(offset += 4);
++    segment.size = fileBuffer->getWord(++offset);
++    segment.offset = offset + 2;
+     return segment;
+ }
+ 
+@@ -883,16 +888,13 @@ bool SupBD::picMergable(SubPictureBD *a, SubPictureBD *b)
+     {
+         if (a->endTime() == 0 || (b->startTime() - a->endTime()) < subtitleProcessor->getMergePTSdiff())
+         {
+-            ImageObject* ao = a->getImgObj();
+-            ImageObject* bo = b->getImgObj();
+-            if (ao != 0 && bo != 0)
++            ImageObject ao = a->getImgObj();
++            ImageObject bo = b->getImgObj();
++            if ((ao.bufferSize() == bo.bufferSize())
++                    && (ao.width() == bo.width())
++                    && (ao.height() == bo.height()))
+             {
+-                if ((ao->bufferSize() == bo->bufferSize())
+-                        && (ao->width() == bo->width())
+-                        && (ao->height() == bo->height()))
+-                {
+-                    eq = true;
+-                }
++                eq = true;
+             }
+         }
+     }
+@@ -921,18 +923,17 @@ void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
+             // composition_object:
+             int objID = fileBuffer->getWord(index + 11);            // 16bit object_id_ref
+             msg = QString("palID: %1, objID: %2").arg(QString::number(palID)).arg(QString::number(objID));
+-            ImageObject* imgObj;
++            ImageObject imgObj;
+ 
+             if (objID >= subPicture->imageObjectList.size())
+             {
+-                imgObj = new ImageObject();
+-                subPicture->imageObjectList.push_back(imgObj);
++                imgObj = ImageObject();
+             }
+             else
+             {
+                 imgObj = subPicture->getImgObj(objID);
+             }
+-            imgObj->setPaletteID(palID);
++            imgObj.setPaletteID(palID);
+             subPicture->setObjectID(objID);
+ 
+             // skipped:  8bit  window_id_ref
+@@ -944,9 +945,18 @@ void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
+                 subPicture->setCompNum(num);
+                 subPicture->setForced((forcedCropped & 0x40) == 0x40);
+                 // composition_object_horizontal_position
+-                imgObj->setXOffset(fileBuffer->getWord(index + 15));
++                imgObj.setXOffset(fileBuffer->getWord(index + 15));
+                 // composition_object_vertical_position
+-                imgObj->setYOffset(fileBuffer->getWord(index + 17));
++                imgObj.setYOffset(fileBuffer->getWord(index + 17));
++            }
++
++            if (objID >= subPicture->imageObjectList.size())
++            {
++                subPicture->imageObjectList.push_back(imgObj);
++            }
++            else
++            {
++                subPicture->imageObjectList.replace(objID, imgObj);
+             }
+         }
+     }
+@@ -960,7 +970,7 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
+     int paletteUpdate = fileBuffer->getByte(index + 1);
+     if (subPicture->palettes.isEmpty())
+     {
+-        subPicture->palettes = QVector<QVector<PaletteInfo*> >(8);
++        subPicture->palettes = QVector<QVector<PaletteInfo> >(8);
+     }
+     if (paletteID > 7)
+     {
+@@ -968,19 +978,19 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
+         return -1;
+     }
+     //
+-    QVector<PaletteInfo*> al = subPicture->palettes.at(paletteID);
+-    PaletteInfo* p = new PaletteInfo;
+-    p->setPaletteSize((segment->size - 2) / 5);
+-    p->setPaletteOffset(index + 2);
++    QVector<PaletteInfo> al = subPicture->palettes[paletteID];
++    PaletteInfo p;
++    p.setPaletteSize((segment->size - 2) / 5);
++    p.setPaletteOffset(index + 2);
+     al.push_back(p);
+     subPicture->palettes.replace(paletteID, al);
+ 
+     msg = QString("ID: %1, update: %2, %3 entries")
+             .arg(QString::number(paletteID))
+             .arg(QString::number(paletteUpdate))
+-            .arg(QString::number(p->paletteSize()));
++            .arg(QString::number(p.paletteSize()));
+ 
+-    return p->paletteSize();
++    return p.paletteSize();
+ }
+ 
+ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
+@@ -996,19 +1006,18 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
+     bool first = ((objSeq & 0x80) == 0x80);
+     bool last  = ((objSeq & 0x40) == 0x40);
+ 
+-    ImageObject* imgObj = 0;
++    ImageObject imgObj;
+ 
+     if (objID >= subPicture->imageObjectList.size())
+     {
+-        imgObj = new ImageObject();
+-        subPicture->imageObjectList.push_back(imgObj);
++        imgObj = ImageObject();
+     }
+     else
+     {
+         imgObj = subPicture->getImgObj(objID);
+     }
+ 
+-    if (imgObj->getFragmentList().isEmpty() || first)       // 8bit  object_version_number
++    if (imgObj.getFragmentList().isEmpty() || first)       // 8bit  object_version_number
+     {
+         // skipped:
+         //  24bit object_data_length - full RLE buffer length (including 4 bytes size info)
+@@ -1017,15 +1026,24 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
+ 
+         if (width <= subPicture->width() && height <= subPicture->height())
+         {
+-            imgObj->getFragmentList().clear();
++            imgObj.getFragmentList().clear();
+             info = ImageObjectFragment();
+             info.setImageBufferOffset(index + 11);
+             info.setImagePacketSize(segment->size - ((index + 11) - segment->offset));
+ 
+-            imgObj->getFragmentList().push_back(info);
+-            imgObj->setBufferSize(info.imagePacketSize());
+-            imgObj->setHeight(height);
+-            imgObj->setWidth(width);
++            imgObj.getFragmentList().push_back(info);
++            imgObj.setBufferSize(info.imagePacketSize());
++            imgObj.setHeight(height);
++            imgObj.setWidth(width);
++
++            if (objID >= subPicture->imageObjectList.size())
++            {
++                subPicture->imageObjectList.push_back(imgObj);
++            }
++            else
++            {
++                subPicture->imageObjectList.replace(objID, imgObj);
++            }
+ 
+             msg = QString("ID: %1, update: %2, seq: %3%4%5").arg(QString::number(objID))
+                                                             .arg(QString::number(objVer))
+@@ -1052,8 +1070,8 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
+         info.setImageBufferOffset(index + 4);
+         info.setImagePacketSize(segment->size - ((index + 4) - segment->offset));
+ 
+-        imgObj->getFragmentList().push_back(info);
+-        imgObj->setBufferSize(imgObj->bufferSize() + info.imagePacketSize());
++        imgObj.getFragmentList().push_back(info);
++        imgObj.setBufferSize(imgObj.bufferSize() + info.imagePacketSize());
+ 
+         msg = QString("ID: %1, update: %2, seq: %3%4%5").arg(QString::number(objID))
+                                                         .arg(QString::number(objVer))
+@@ -1061,6 +1079,15 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
+                                                         .arg((first && last) ? QString("/") : QString(""))
+                                                         .arg(last ? QString("last") : QString(""));
+ 
++        if (objID >= subPicture->imageObjectList.size())
++        {
++            subPicture->imageObjectList.push_back(imgObj);
++        }
++        else
++        {
++            subPicture->imageObjectList.replace(objID, imgObj);
++        }
++
+         return false;
+     }
+ }
+@@ -1121,7 +1148,8 @@ Palette SupBD::decodePalette(SubPictureBD *subPicture)
+ {
+     bool fadeOut = false;
+     int palIndex = 0;
+-    QVector<PaletteInfo*> pl = subPicture->palettes.at(subPicture->getImgObj()->paletteID());
++    int paletteId = subPicture->getImgObj().paletteID();
++    QVector<PaletteInfo> pl = subPicture->palettes[paletteId];
+     if (pl.isEmpty())
+     {
+         throw QString("Palette ID out of bounds.");
+@@ -1133,9 +1161,9 @@ Palette SupBD::decodePalette(SubPictureBD *subPicture)
+ 
+     for (int j = 0; j < pl.size(); j++)
+     {
+-        PaletteInfo* p = pl.at(j);
+-        int index = p->paletteOffset();
+-        for (int i = 0; i < p->paletteSize(); ++i)
++        PaletteInfo p = pl[j];
++        int index = p.paletteOffset();
++        for (int i = 0; i < p.paletteSize(); ++i)
+         {
+             // each palette entry consists of 5 bytes
+             palIndex = fileBuffer->getByte(index);
+@@ -1179,6 +1207,7 @@ Palette SupBD::decodePalette(SubPictureBD *subPicture)
+     {
+         subtitleProcessor->printWarning(QString("fade out detected -> patched palette\n"));
+     }
++    subPicture->palettes.replace(paletteId, pl);
+     return palette;
+ }
+ 
+@@ -1187,7 +1216,7 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+     int w = subPicture->getImageWidth();
+     int h = subPicture->getImageHeight();
+     // always decode image obj 0, start with first entry in fragmentlist
+-    ImageObjectFragment &fragment = subPicture->getImgObj()->getFragmentList()[0];
++    ImageObjectFragment fragment = subPicture->getImgObj().getFragmentList()[0];
+     long startOfs = fragment.imageBufferOffset();
+ 
+     if (w > subPicture->width() || h > subPicture->height())
+@@ -1207,12 +1236,12 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+     int xpos = 0;
+ 
+     // just for multi-packet support, copy all of the image data in one common buffer
+-    QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj()->bufferSize());
++    QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj().bufferSize());
+     index = 0;
+-    for (int p = 0; p < subPicture->getImgObj()->getFragmentList().size(); ++p)
++    for (int p = 0; p < subPicture->getImgObj().getFragmentList().size(); ++p)
+     {
+         // copy data of all packet to one common buffer
+-        fragment = subPicture->getImgObj()->getFragmentList().at(p);
++        fragment = subPicture->getImgObj().getFragmentList()[p];
+         for (int i = 0; i < fragment.imagePacketSize(); ++i)
+         {
+             buf[index + i] = (uchar)fileBuffer->getByte(fragment.imageBufferOffset() + i);
+@@ -1222,6 +1251,9 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+ 
+     index = 0;
+ 
++    uchar* pixels = bm.image().bits();
++    int pitch = bm.image().bytesPerLine();
++
+     do
+     {
+         b = buf[index++] & 0xff;
+@@ -1231,10 +1263,10 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+             if (b == 0)
+             {
+                 // next line
+-                ofs = (ofs / (w + (bm.image().bytesPerLine() - w))) * (w + (bm.image().bytesPerLine() - w));
+-                if (xpos < (w + (bm.image().bytesPerLine() - w)))
++                ofs = (ofs / pitch) * pitch;
++                if (xpos < pitch)
+                 {
+-                    ofs += (w + (bm.image().bytesPerLine() - w));
++                    ofs += pitch;
+                 }
+                 xpos = 0;
+             }
+@@ -1245,7 +1277,6 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+                     // 00 4x xx -> xxx zeroes
+                     size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
+ 
+-                    uchar* pixels = bm.image().bits();
+                     for (int i = 0; i < size; ++i)
+                     {
+                         pixels[ofs++] = 0; /*(uchar)b;*/
+@@ -1258,7 +1289,6 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+                     size = (b - 0x80);
+                     b = buf[index++] & 0xff;
+ 
+-                    uchar* pixels = bm.image().bits();
+                     for (int i = 0; i < size; ++i)
+                     {
+                         pixels[ofs++] = (uchar)b;
+@@ -1271,7 +1301,6 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+                     size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
+                     b = buf[index++] & 0xff;
+ 
+-                    uchar* pixels = bm.image().bits();
+                     for (int i = 0; i < size; ++i)
+                     {
+                         pixels[ofs++] = (uchar)b;
+@@ -1280,7 +1309,6 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+                 }
+                 else
+                 {
+-                    uchar* pixels = bm.image().bits();
+                     // 00 xx -> xx times 0
+                     for (int i = 0; i < b; ++i)
+                     {
+@@ -1292,7 +1320,6 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
+         }
+         else
+         {
+-            uchar* pixels = bm.image().bits();
+             pixels[ofs++] = (uchar)b;
+             xpos++;
+         }
+diff --git a/src/Subtitles/supbd.h b/src/Subtitles/supbd.h
+index 3548e96..eac1fdc 100644
+--- a/src/Subtitles/supbd.h
++++ b/src/Subtitles/supbd.h
+@@ -104,7 +104,7 @@ private:
+ 
+     QString supFileName;
+ 
+-    QVector<SubPictureBD*> subPictures;
++    QVector<SubPictureBD> subPictures;
+ 
+     SubtitleProcessor* subtitleProcessor = 0;
+ 
+@@ -128,7 +128,7 @@ private:
+ 
+     QVector<uchar> encodeImage(Bitmap &bm);
+ 
+-    SupSegment* readSegment(int offset);
++    SupSegment readSegment(int offset);
+ 
+     QVector<uchar> packetHeader =
+     {
+diff --git a/src/Subtitles/supdvd.cpp b/src/Subtitles/supdvd.cpp
+index 692a856..2ae9318 100644
+--- a/src/Subtitles/supdvd.cpp
++++ b/src/Subtitles/supdvd.cpp
+@@ -468,7 +468,7 @@ long SupDVD::readSupFrame(long ofs)
+     int  ctrlOfsRel = 0;
+     int  rleSize = 0;
+     int  ctrlSize = -1;
+-    ImageObjectFragment* rleFrag;
++    ImageObjectFragment rleFrag;
+     int  length;
+ 
+     // 2 uchars:  packet identifier 0x5350
+@@ -497,10 +497,10 @@ long SupDVD::readSupFrame(long ofs)
+     }
+     ctrlOfs = ctrlOfsRel + ofs;			// absolute offset of control header
+     ofs += 2;
+-    pic.rleFragments = QVector<ImageObjectFragment*>();
+-    rleFrag = new ImageObjectFragment();
+-    rleFrag->setImageBufferOffset(ofs);
+-    rleFrag->setImagePacketSize(rleSize);
++    pic.rleFragments = QVector<ImageObjectFragment>();
++    rleFrag = ImageObjectFragment();
++    rleFrag.setImageBufferOffset(ofs);
++    rleFrag.setImagePacketSize(rleSize);
+     pic.rleFragments.push_back(rleFrag);
+     pic.setRleSize(rleSize);
+ 
+diff --git a/src/Subtitles/supxml.cpp b/src/Subtitles/supxml.cpp
+index b21d6bb..3f3a839 100644
+--- a/src/Subtitles/supxml.cpp
++++ b/src/Subtitles/supxml.cpp
+@@ -64,11 +64,11 @@ QImage SupXML::getImage(Bitmap &bitmap)
+ 
+ void SupXML::decode(int index)
+ {
+-    if (!QFileInfo(subPictures[index]->fileName()).exists())
++    if (!QFileInfo(subPictures[index].fileName()).exists())
+     {
+-        throw QString("File: '%1' not found").arg(subPictures[index]->fileName());
++        throw QString("File: '%1' not found").arg(subPictures[index].fileName());
+     }
+-    QImage image(subPictures[index]->fileName());
++    QImage image(subPictures[index].fileName());
+     int width = image.width();
+     int height = image.height();
+ 
+@@ -162,22 +162,22 @@ int SupXML::getNumFrames()
+ 
+ bool SupXML::isForced(int index)
+ {
+-    return subPictures[index]->isForced();
++    return subPictures[index].isForced();
+ }
+ 
+ long SupXML::getEndTime(int index)
+ {
+-    return subPictures[index]->endTime();
++    return subPictures[index].endTime();
+ }
+ 
+ long SupXML::getStartTime(int index)
+ {
+-    return subPictures[index]->startTime();
++    return subPictures[index].startTime();
+ }
+ 
+ SubPicture *SupXML::getSubPicture(int index)
+ {
+-    return subPictures[index];
++    return &subPictures[index];
+ }
+ 
+ void SupXML::readAllImages()
+@@ -392,9 +392,9 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
+     } break;
+     case (int)SupXML::XmlHandler::XmlState::EVENT:
+     {
+-        subPicture = new SubPictureXML();
+-        parent->subPictures.push_back(subPicture);
++        parent->subPictures.push_back(SubPictureXML());
+         int num  = parent->subPictures.size();
++        subPicture = &parent->subPictures[num - 1];
+ 
+         parent->subtitleProcessor->printX(QString("#%1\n").arg(QString::number(num)));
+ 
+diff --git a/src/Subtitles/supxml.h b/src/Subtitles/supxml.h
+index 0417c80..8fff721 100644
+--- a/src/Subtitles/supxml.h
++++ b/src/Subtitles/supxml.h
+@@ -128,7 +128,7 @@ private:
+     QString language = "deu";
+     QString xmlFileName;
+ 
+-    QVector<SubPictureXML*> subPictures;
++    QVector<SubPictureXML> subPictures;
+ 
+     Resolution resolution;
+ 
+diff --git a/src/Tools/filebuffer.cpp b/src/Tools/filebuffer.cpp
+index ae44511..b983cb2 100644
+--- a/src/Tools/filebuffer.cpp
++++ b/src/Tools/filebuffer.cpp
+@@ -99,19 +99,21 @@ void FileBuffer::readBuffer(long ofs)
+     if (file->isOpen())
+     {
+         offset = ofs;
+-        file->seek(offset);
+-        long l = length - offset;
+-        if (l < 0)
++        long maxRead = length - offset;
++        if (maxRead < 0)
+         {
+             throw QString("Offset %1 out of bounds for file: '%2'")
+                     .arg(QString::number(ofs)).arg(fileName);
+         }
+-        buf = file->read(l);
++
++        file->seek(offset);
++        buf.resize(maxRead);
++        file->read(buf.data(), maxRead);
+         if (buf.isEmpty() && file->error() != QFile::NoError)
+         {
+             throw QString("IO error at offset +%1 of file: '%2'")
+                     .arg(QString::number(ofs)).arg(fileName);
+         }
+-        offsetEnd = (offset + buf.size()) - 1;
++        offsetEnd = (offset + maxRead) - 1;
+     }
+ }
+diff --git a/src/Tools/quantizefilter.cpp b/src/Tools/quantizefilter.cpp
+index b20661d..36c66d0 100644
+--- a/src/Tools/quantizefilter.cpp
++++ b/src/Tools/quantizefilter.cpp
+@@ -52,10 +52,18 @@ QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int wid
+             {
+                 direction = 1;
+             }
+-            QRgb* inPixels = (QRgb*)inImage.scanLine(y);
+-            uchar* outPixels = outImage->scanLine(y);
++            if (y >= 131)
++            {
++                int breakPoint = 0;
++            }
++            QRgb *inPixels = (QRgb*)inImage.scanLine(y);
++            uchar *outPixels = outImage->scanLine(y);
+             for (int x = 0; x < width; ++x)
+             {
++                if (y == 131 && x == 799)
++                {
++                    int breakPoint = 0;
++                }
+                 QRgb rgb1 = inPixels[index];
+                 int idx = quantizer.getIndexForColor(rgb1);
+                 QRgb rgb2 = table[idx];
+diff --git a/src/bdsup2sub++.pro b/src/bdsup2sub++.pro
+index c8ca9b3..845c453 100644
+--- a/src/bdsup2sub++.pro
++++ b/src/bdsup2sub++.pro
+@@ -67,7 +67,9 @@ SOURCES += main.cpp\
+     colordialog.cpp \
+     framepalettedialog.cpp \
+     movedialog.cpp \
+-    Subtitles/imageobject.cpp
++    Subtitles/imageobject.cpp \
++    Subtitles/supdvb.cpp \
++    Tools/hr_time.cpp
+ 
+ HEADERS  += bdsup2sub.h \
+     zoomableimagearea.h \
+@@ -115,7 +117,9 @@ HEADERS  += bdsup2sub.h \
+     helpdialog.h \
+     colordialog.h \
+     framepalettedialog.h \
+-    movedialog.h
++    movedialog.h \
++    Subtitles/supdvb.h \
++    Tools/hr_time.h
+ 
+ FORMS    += bdsup2sub.ui \
+     progressdialog.ui \
+diff --git a/src/bdsup2sub.cpp b/src/bdsup2sub.cpp
+index e4a516b..e44c4c2 100644
+--- a/src/bdsup2sub.cpp
++++ b/src/bdsup2sub.cpp
+@@ -60,6 +60,10 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
+ 
+ BDSup2Sub::~BDSup2Sub()
+ {
++    delete subtitleProcessor;
++    delete okBackground;
++    delete errorBackground;
++    delete settings;
+     delete ui;
+ }
+ 
+@@ -278,10 +282,6 @@ void BDSup2Sub::convertSup()
+     {
+         enableVobSubComponents(true);
+     }
+-    else
+-    {
+-        enableVobSubComponents(false);
+-    }
+ 
+     subtitleProcessor->loadedHook();
+     subtitleProcessor->addRecent(loadPath);
+@@ -518,7 +518,7 @@ void BDSup2Sub::enableVobSubComponents(bool enable)
+     }
+     else
+     {
+-        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::KEEP_EXISTING);
++        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::NEW);
+     }
+ 
+     if (!enable || subtitleProcessor->getInputMode() == InputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
+@@ -2301,7 +2301,7 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
+     }
+     refreshTrgFrame(subIndex);
+ 
+-    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
++    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getOutputMode() == OutputMode::SUPIFO)
+     {
+         enableVobSubComponents(true);
+     }
+diff --git a/src/conversiondialog.cpp b/src/conversiondialog.cpp
+index d8246f1..973dbf4 100644
+--- a/src/conversiondialog.cpp
++++ b/src/conversiondialog.cpp
+@@ -102,6 +102,15 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
+ 
+ ConversionDialog::~ConversionDialog()
+ {
++    delete fpsSrcValidator;
++    delete fpsTrgValidator;
++    delete scaleXValidator;
++    delete scaleYValidator;
++    delete delayPTSValidator;
++    delete minTimePTSValidator;
++    delete okBackground;
++    delete errorBackground;
++    delete warnBackground;
+     delete ui;
+ }
+ 
+diff --git a/src/types.h b/src/types.h
+index e63b9e1..7e194f9 100644
+--- a/src/types.h
++++ b/src/types.h
+@@ -165,6 +165,8 @@ enum class InputMode
+ {
+     /** DVD SUB/IDX (VobSub) stream */
+     VOBSUB,
++    /** DVB Sub stream */
++    DVBSUB,
+     /** Blu-Ray SUP stream */
+     BDSUP,
+     /** Sony BDN XML (+PNGs) */
+@@ -254,6 +256,8 @@ enum class StreamID
+     SUP,
+     /** DVD VobSub SUB stream*/
+     DVDSUB,
++    /** DVB SUB stream*/
++    DVBSUB,
+     /** Sony BDN XML */
+     XML,
+     /** DVD IFO */

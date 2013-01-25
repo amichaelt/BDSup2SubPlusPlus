@@ -132,7 +132,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
     int ctrlSize = -1;
     int ctrlHeaderCopied = 0;
     QVector<uchar> ctrlHeader;
-    ImageObjectFragment* rleFrag;
+    ImageObjectFragment rleFrag;
     int length;
     int packHeaderSize;
     bool firstPackFound = false;
@@ -228,12 +228,12 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, long endOfs)
             ctrlHeader.replace(ctrlHeaderCopied, (uchar)fileBuffer->getByte(ctrlOfs + i + copied));
             ++ctrlHeaderCopied;
         }
-        rleFrag = new ImageObjectFragment;
-        rleFrag->setImageBufferOffset(ofs);
-        rleFrag->setImagePacketSize(((length - headerSize) - diff) + packHeaderSize);
+        rleFrag = ImageObjectFragment();
+        rleFrag.setImageBufferOffset(ofs);
+        rleFrag.setImagePacketSize(((length - headerSize) - diff) + packHeaderSize);
         pic.rleFragments.push_back(rleFrag);
 
-        rleBufferFound += rleFrag->imagePacketSize();
+        rleBufferFound += rleFrag.imagePacketSize();
 
         if (ctrlHeaderCopied != ctrlSize && ((nextOfs % 0x800) != 0))
         {

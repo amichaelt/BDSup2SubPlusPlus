@@ -24,6 +24,8 @@ class ErasePatch
 {
 public:
     ErasePatch();
+    ErasePatch(const ErasePatch* other);
+    ErasePatch(const ErasePatch& other);
     ErasePatch(int x, int y, int width, int height);
 
     int x() { return x1; }

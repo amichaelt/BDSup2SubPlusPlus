@@ -28,18 +28,19 @@
 #include <QFile>
 #include <QRect>
 #include <QVector>
+#include <array>
 
 Bitmap::Bitmap()
 {
 }
 
 Bitmap::Bitmap(Bitmap &other) :
-    subtitleImage(other.subtitleImage)
+    subtitleImage(other.subtitleImage.copy())
 {
 }
 
 Bitmap::Bitmap(Bitmap *other) :
-    subtitleImage(other->subtitleImage)
+    subtitleImage(other->subtitleImage.copy())
 {
 }
 
@@ -144,40 +145,46 @@ Bitmap Bitmap::crop(int x1, int y1, int width, int height)
 
 int Bitmap::primaryColorIndex(Palette &palette, int alphaThreshold)
 {
-    QVector<int> histogram(palette.size(), 0);
+    int *histogram = (int*) calloc(palette.size(), sizeof(int));
+    int height = subtitleImage.height();
+    int width = subtitleImage.width();
+    uchar* pixels = subtitleImage.scanLine(0);
+    int scanWidth = subtitleImage.bytesPerLine();
 
-    for (int i = 0; i < subtitleImage.height(); ++i)
+    for (int i = 0; i < height; ++i)
     {
-        uchar* pixels = subtitleImage.scanLine(i);
-        for (int j = 0; j < subtitleImage.width(); ++j)
+        for (int j = 0; j < width; ++j)
         {
-            int oldValue = histogram.at(pixels[j] & 0xff);
-            histogram.replace(pixels[j] & 0xff, ++oldValue);
+            int oldValue = histogram[pixels[j] & 0xff];
+            histogram[pixels[j] & 0xff] = ++oldValue;
         }
+        pixels += scanWidth;
     }
 
-    for (int i = 0; i < histogram.size(); ++i)
+    const uchar *Y = palette.Y().constData();
+    for (int i = 0; i < palette.size(); ++i)
     {
         int alpha = palette.alpha(i);
         if (alpha < alphaThreshold)
         {
             alpha = 0;
         }
-        histogram.replace(i, ((histogram.at(i) * alpha) + 128) / 256);
-        histogram.replace(i, ((histogram.at(i) * ((palette.Y()[i] & 0xff))) + 128) / 256);
+        histogram[i] = ((histogram[i] * alpha) + 128) / 256;
+        histogram[i] = ((histogram[i] * ((Y[i] & 0xff))) + 128) / 256;
     }
 
     int max = 0;
     int color = 0;
 
-    for (int i = 0; i < histogram.size(); ++i)
+    for (int i = 0; i < palette.size(); ++i)
     {
-        if (histogram.at(i) > max)
+        if (histogram[i] > max)
         {
-            max = histogram.at(i);
+            max = histogram[i];
             color = i;
         }
     }
+    free(histogram);
     return color;
 }
 
@@ -185,17 +192,28 @@ Bitmap Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lum
 {
     QVector<uchar> cy = palette.Y();
     QVector<QRgb> a = palette.colorTable();
-    Bitmap bm(subtitleImage.width(), subtitleImage.height());
+
+    int height = subtitleImage.height();
+    int width = subtitleImage.width();
+
+    Bitmap bm(width, height);
+
+    uchar* sourcePixels = subtitleImage.scanLine(0);
+    int sourcePitch = subtitleImage.bytesPerLine();
+
     QImage &destImage = bm.image();
+
+    uchar *destPixels = destImage.scanLine(0);
+    int destPitch = destImage.bytesPerLine();
 
     // select nearest colors in existing palette
     QHash<int, int> p;
 
-    for (int i = 0; i < subtitleImage.height(); ++i)
+    for (int i = 0; i < height; ++i)
     {
         uchar* sourcePixels = subtitleImage.scanLine(i);
         uchar* destPixels = destImage.scanLine(i);
-        for (int j = 0; j < subtitleImage.width(); ++j)
+        for (int j = 0; j < width; ++j)
         {
             int colIdx;
             int idx = sourcePixels[j] & 0xff;
@@ -233,6 +251,8 @@ Bitmap Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lum
             // write target pixel
             destPixels[j] = (uchar) colIdx;
         }
+        sourcePixels += sourcePitch;
+        destPixels += destPitch;
     }
     return bm;
 }
@@ -250,13 +270,18 @@ Bitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filte
     QHash<QRgb, int> p;
     int offset = 0;
 
-    QImage image(bm.image().bits(), bm.image().width(), bm.image().height(), bm.image().format());
+    int width = bm.image().width();
+    int height = bm.image().height();
+
+    QImage image(bm.image().bits(), width, height, bm.image().format());
     image.setColorTable(palette.colorTable());
 
-    for (int y = 0; y < bm.image().height(); ++y)
+    uchar* pixels = image.scanLine(0);
+    int sourcePitch = image.bytesPerLine();
+
+    for (int y = 0; y < height; ++y)
     {
-        uchar* pixels = image.scanLine(y);
-        for (int x = 0; x < bm.image().width(); ++x)
+        for (int x = 0; x < width; ++x)
         {
             offset = (y * sizeX) + x;
             QRgb color = trg[offset];
@@ -297,6 +322,7 @@ Bitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filte
             // write target pixel
             pixels[x] = (uchar)colIdx;
         }
+        pixels += sourcePitch;
     }
     return bm;
 }
@@ -308,14 +334,18 @@ PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter
 
     QImage trg(sizeX, sizeY, QImage::Format_ARGB32);
     int offset = 0;
-    for (int y = 0; y < trg.height(); ++y)
+
+    QRgb* pixels = (QRgb*)trg.scanLine(0);
+    int sourcePitch = trg.bytesPerLine() / 4;
+
+    for (int y = 0; y < sizeY; ++y)
     {
-        QRgb* pixels = (QRgb*)trg.scanLine(y);
-        for (int x = 0; x < trg.width(); ++x)
+        for (int x = 0; x < sizeX; ++x)
         {
             offset = (y * sizeX) + x;
             pixels[x] = trgPixels[offset];
         }
+        pixels += sourcePitch;
     }
 
     // quantize image
@@ -331,7 +361,7 @@ PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter
     Palette trgPal(256);
     for (int i = 0; i < size; ++i)
     {
-        trgPal.setARGB(i,ct[i]);
+        trgPal.setARGB(i, ct[i]);
     }
 
     PaletteBitmap bitmap(bm, trgPal);
@@ -348,12 +378,15 @@ Bitmap Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaTh
     // select nearest colors in existing palette
     QHash<QRgb, int> p;
     int offset = 0;
+
     QImage image(bm.image().bits(), bm.image().width(), bm.image().height(), bm.image().format());
     image.setColorTable(palette.colorTable());
 
+    uchar* pixels = image.scanLine(0);
+    int sourcePitch = image.bytesPerLine();
+
     for (int y = 0; y < bm.image().height(); ++y)
     {
-        uchar* pixels = image.scanLine(y);
         for (int x = 0; x < bm.image().width(); ++x)
         {
             offset = (y * sizeX) + x;
@@ -394,16 +427,20 @@ Bitmap Bitmap::scaleFilterLm(int sizeX, int sizeY, Palette &palette, int alphaTh
             // write target pixel
             pixels[x] = (uchar)colIdx;
         }
+        pixels += sourcePitch;
     }
     return bm;
 }
 
 Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
 {
-    QVector<QRgb> rgb = palette.colorTable();
+    const QRgb *rgb = palette.colorTable().constData();
 
-    double scaleX = (double)(subtitleImage.width() - 1) / (sizeX - 1);
-    double scaleY = (double)(subtitleImage.height() - 1) / (sizeY - 1);
+    int width = subtitleImage.width();
+    int height = subtitleImage.height();
+
+    double scaleX = (double)(width - 1) / (sizeX - 1);
+    double scaleY = (double)(height - 1) / (sizeY - 1);
 
     int lastR = 0;
     int lastG = 0;
@@ -412,6 +449,12 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
     int lastColIdx = palette.transparentIndex();
 
     Bitmap trg(sizeX, sizeY);
+    int prevYSI = 0;
+    const uchar *inPixels = subtitleImage.constScanLine(prevYSI); // get initial scanline
+    int sourcePitch = subtitleImage.bytesPerLine();
+
+    uchar *outPixels = trg.image().scanLine(0);
+    int targetPitch = trg.image().bytesPerLine();
 
     for (int yt = 0; yt < sizeY; ++yt)
     {
@@ -419,6 +462,7 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
         int ysi = (int)ys;
         double wy = (ys - ysi);
         double wy1 = 1.0 - wy;
+        inPixels += ((ysi - prevYSI) * sourcePitch);
 
         for (int xt = 0; xt < sizeX; ++xt)
         {
@@ -430,17 +474,17 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
 
             // top left
             double w = wx1 * wy1;
-            int idx = subtitleImage.scanLine(ysi)[xsi] & 0xff;
+            int idx = inPixels[xsi] & 0xff;
             double at = qAlpha(rgb[idx]) * w;
             double rt = qRed(rgb[idx]) * w;
             double gt = qGreen(rgb[idx]) * w;
             double bt = qBlue(rgb[idx]) * w;
 
             // top right
-            if (xsi < subtitleImage.width() - 1)
+            if (xsi < width - 1)
             {
                 w = wx * wy1;
-                idx = subtitleImage.scanLine(ysi)[xsi + 1] & 0xff;
+                idx = inPixels[xsi + 1] & 0xff;
                 at += qAlpha(rgb[idx]) * w;
                 rt += qRed(rgb[idx]) * w;
                 gt += qGreen(rgb[idx]) * w;
@@ -448,10 +492,10 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
             }  // else assume transparent black
 
             // bottom left
-            if (ysi < subtitleImage.height() - 1)
+            if (ysi < height - 1)
             {
                 w = wx1 * wy;
-                idx = subtitleImage.scanLine(ysi + 1)[xsi] & 0xff;
+                idx = (inPixels + sourcePitch)[xsi] & 0xff;
                 at += qAlpha(rgb[idx]) * w;
                 rt += qRed(rgb[idx]) * w;
                 gt += qGreen(rgb[idx]) * w;
@@ -459,10 +503,10 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
             } // else assume transparent black
 
             // bottom right
-            if ((ysi < subtitleImage.height() - 1) && (xsi < subtitleImage.width() - 1))
+            if ((ysi < height - 1) && (xsi < width - 1))
             {
                 w = wx * wy;
-                idx = subtitleImage.scanLine(ysi + 1)[xsi + 1] & 0xff;
+                idx = (inPixels + sourcePitch)[xsi + 1] & 0xff;
                 at += qAlpha(rgb[idx]) * w;
                 rt += qRed(rgb[idx]) * w;
                 gt += qGreen(rgb[idx]) * w;
@@ -509,20 +553,32 @@ Bitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette)
                 lastColIdx = colIdx;
             }
             // write target pixel
-            trg.image().scanLine(yt)[xt] = (uchar)colIdx;
+            outPixels[xt] = (uchar)colIdx;
         }
+        prevYSI = ysi;
+        outPixels += targetPitch;
     }
     return trg;
 }
 
 PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool dither)
 {
-    QVector<QRgb> rgb = palette.colorTable();
+    const QRgb *rgb = palette.colorTable().constData();
 
-    double scaleX = (double)(subtitleImage.width() - 1) / (sizeX - 1);
-    double scaleY = (double)(subtitleImage.height() - 1) / (sizeY - 1);
+    int width = subtitleImage.width();
+    int height = subtitleImage.height();
+
+    double scaleX = (double)(width - 1) / (sizeX - 1);
+    double scaleY = (double)(height - 1) / (sizeY - 1);
 
     QImage trg(sizeX, sizeY, QImage::Format_ARGB32);
+    int prevYSI = 0;
+    const uchar *firstScanLine = subtitleImage.constScanLine(0);
+    const uchar *inPixels = subtitleImage.constScanLine(prevYSI);
+    int sourcePitch = subtitleImage.bytesPerLine();
+
+    QRgb* outPixels = (QRgb*) trg.scanLine(0);
+    int targetPitch = trg.bytesPerLine() / 4; // we want pitch in QRgb values per line
 
     for (int yt = 0; yt < sizeY; ++yt)
     {
@@ -530,6 +586,7 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
         int ysi = (int)ys;
         double wy = (ys - ysi);
         double wy1 = 1.0 - wy;
+        inPixels += ((ysi - prevYSI) * sourcePitch);
 
         for (int xt = 0; xt < sizeX; ++xt)
         {
@@ -545,7 +602,7 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
 
             // top left
             double w = wx1 * wy1;
-            idx = subtitleImage.scanLine(ysi)[xsi] & 0xff;
+            idx = inPixels[xsi] & 0xff;
             double at = qAlpha(rgb[idx]) * w;
             double rt = qRed(rgb[idx]) * w;
             double gt = qGreen(rgb[idx]) * w;
@@ -553,10 +610,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
 
             // top right
             x = xsi + 1;
-            if (x < subtitleImage.width())
+            if (x < width)
             {
                 w = wx * wy1;
-                idx = subtitleImage.scanLine(ysi)[x] & 0xff;
+                idx = inPixels[x] & 0xff;
                 at += qAlpha(rgb[idx]) * w;
                 rt += qRed(rgb[idx]) * w;
                 gt += qGreen(rgb[idx]) * w;
@@ -565,10 +622,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
 
             // bottom left
             y = ysi + 1;
-            if (y < subtitleImage.height())
+            if (y < height)
             {
                 w = wx1 * wy;
-                idx = subtitleImage.scanLine(y)[xsi] & 0xff;
+                idx = (firstScanLine + (y * sourcePitch))[xsi] & 0xff;
                 at += qAlpha(rgb[idx]) * w;
                 rt += qRed(rgb[idx]) * w;
                 gt += qGreen(rgb[idx]) * w;
@@ -578,10 +635,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
             // bottom right
             x = xsi + 1;
             y = ysi + 1;
-            if ((x < subtitleImage.width()) && (y < subtitleImage.height()))
+            if ((x < width) && (y < height))
             {
                 w = wx * wy;
-                idx = subtitleImage.scanLine(y)[x] & 0xff;
+                idx = (firstScanLine + (y * sourcePitch))[x] & 0xff;
                 at += qAlpha(rgb[idx]) * w;
                 rt += qRed(rgb[idx]) * w;
                 gt += qGreen(rgb[idx]) * w;
@@ -593,9 +650,10 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
             int gti = (int)(gt);
             int bti = (int)(bt);
 
-            QRgb* pixels = (QRgb*)trg.scanLine(yt);
-            pixels[xt] = qRgba(rti, gti, bti, ati);;
+            outPixels[xt] = qRgba(rti, gti, bti, ati);;
         }
+        prevYSI = ysi;
+        outPixels += targetPitch;
     }
     // quantize image
     QuantizeFilter qf;
@@ -627,17 +685,25 @@ QImage Bitmap::image(Palette &palette)
 
 Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alphaThreshold, QVector<int> &lumaThreshold)
 {
-    QVector<uchar> cy = palette.Y();
-    QVector<QRgb> a = palette.colorTable();
+    const uchar *cy = palette.Y().constData();
+    const QRgb *a = palette.colorTable().constData();
+    int width = subtitleImage.width();
+    int height = subtitleImage.height();
 
-    double scaleX = (double)(subtitleImage.width() - 1) / (sizeX - 1);
-    double scaleY = (double)(subtitleImage.height() - 1) / (sizeY - 1);
+    double scaleX = (double)(width - 1) / (sizeX - 1);
+    double scaleY = (double)(height - 1) / (sizeY - 1);
 
     int lastCY = 0;
     int lastA  = 0;
     int lastColIdx = 0; // 0 is the transparent color
 
     Bitmap trg(sizeX, sizeY);
+    int prevYSI = 0;
+    const uchar *inPixels = subtitleImage.constScanLine(prevYSI); // get initial scanline
+    int scanWidth = subtitleImage.bytesPerLine();
+
+    uchar *outPixels = trg.image().scanLine(0); // get initial scanLine
+    int targetPitch = trg.image().bytesPerLine();
 
     for (int yt = 0; yt < sizeY; ++yt)
     {
@@ -645,6 +711,7 @@ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alpha
         int ysi = (int)ys;
         double wy = (ys - ysi);
         double wy1 = 1.0 - wy;
+        inPixels += ((ysi - prevYSI) * scanWidth);
 
         for (int xt = 0; xt < sizeX; ++xt)
         {
@@ -658,33 +725,33 @@ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alpha
 
             // top left
             double w = wx1 * wy1;
-            int idx = subtitleImage.scanLine(ysi)[xsi] & 0xff;
+            int idx = inPixels[xsi] & 0xff;
             double at = qAlpha(a[idx]) * w;
             double cyt = (cy[idx] & 0xff) * w;
 
             // top right
-            if (xsi < subtitleImage.width() - 1)
+            if (xsi < width - 1)
             {
                 w = wx * wy1;
-                idx = subtitleImage.scanLine(ysi)[xsi + 1] & 0xff;
+                idx = inPixels[xsi + 1] & 0xff;
                 at += qAlpha(a[idx]) * w;
                 cyt += (cy[idx] & 0xff) * w;
             }  // else assume transparent black
 
             // bottom left
-            if (ysi < subtitleImage.height() - 1)
+            if (ysi < height - 1)
             {
                 w = wx1 * wy;
-                idx = subtitleImage.scanLine(ysi + 1)[xsi] & 0xff;
+                idx = (inPixels + scanWidth)[xsi] & 0xff;
                 at += qAlpha(a[idx]) * w;
                 cyt += (cy[idx] & 0xff) * w;
             } // else assume transparent black
 
             // bottom right
-            if ((ysi < subtitleImage.height() - 1) && (xsi < subtitleImage.width() - 1))
+            if ((ysi < height - 1) && (xsi < width - 1))
             {
                 w = wx * wy;
-                idx = subtitleImage.scanLine(ysi + 1)[xsi + 1] & 0xff;
+                idx = (inPixels + scanWidth)[xsi + 1] & 0xff;
                 at += qAlpha(a[idx]) * w;
                 cyt += (cy[idx] & 0xff) * w;
             } // else assume transparent black
@@ -721,8 +788,10 @@ Bitmap Bitmap::scaleBilinearLm(int sizeX, int sizeY, Palette &palette, int alpha
                 lastColIdx = colIdx;
             }
             // write target pixel
-            trg.image().scanLine(yt)[xt] = (uchar)colIdx;
+            outPixels[xt] = (uchar)colIdx;
         }
+        prevYSI = ysi;
+        outPixels += targetPitch;
     }
     return trg;
 }
@@ -731,13 +800,16 @@ void Bitmap::fillRect(int x1, int y1, int width, int height, int color)
 {
     uchar b = (uchar)color;
 
+    uchar* pixels = subtitleImage.scanLine(y1);
+    int sourcePitch = subtitleImage.bytesPerLine();
+
     for (int i = y1; i < (y1 + height); ++i)
     {
-        uchar* pixels = subtitleImage.scanLine(i);
         for (int j = x1; j < (x1 + width); ++j)
         {
             pixels[j] = b;
         }
+        pixels += sourcePitch;
     }
 }
 
@@ -750,10 +822,16 @@ int Bitmap::highestColorIndex(Palette &palette)
 {
     // create histogram for palette
     int maxIdx = 0;
-    for (int y = 0; y < subtitleImage.height(); ++y)
+
+    int width = subtitleImage.width();
+    int height = subtitleImage.height();
+
+    uchar* pixels = subtitleImage.scanLine(0);
+    int sourcePitch = subtitleImage.bytesPerLine();
+
+    for (int y = 0; y < height; ++y)
     {
-        uchar* pixels = subtitleImage.scanLine(y);
-        for (int x = 0; x < subtitleImage.width(); ++x)
+        for (int x = 0; x < width; ++x)
         {
             int idx = pixels[x] & 0xff;
             if (palette.alpha(idx) > 0)
@@ -768,6 +846,7 @@ int Bitmap::highestColorIndex(Palette &palette)
                 }
             }
         }
+        pixels += sourcePitch;
     }
     breakOut:
     return maxIdx;
@@ -775,15 +854,25 @@ int Bitmap::highestColorIndex(Palette &palette)
 
 QImage Bitmap::toARGB(Palette &palette)
 {
-    QImage newImage(subtitleImage.width(), subtitleImage.height(), QImage::Format_ARGB32);
-    for (int y = 0; y < newImage.height(); ++y)
+    int width = subtitleImage.width();
+    int height = subtitleImage.height();
+
+    QImage newImage(width, height, QImage::Format_ARGB32);
+
+    uchar* pixels = subtitleImage.scanLine(0);
+    int sourcePitch = subtitleImage.bytesPerLine();
+
+    QRgb* newPixels = (QRgb*)newImage.scanLine(0);
+    int destPitch = newImage.bytesPerLine() / 4;
+
+    for (int y = 0; y < height; ++y)
     {
-        uchar* pixels = subtitleImage.scanLine(y);
-        QRgb* newPixels = (QRgb*)newImage.scanLine(y);
-        for (int x = 0; x < newImage.width(); ++x)
+        for (int x = 0; x < width; ++x)
         {
             newPixels[x] = palette.rgba(pixels[x]);
         }
+        pixels += sourcePitch;
+        newPixels += destPitch;
     }
     return newImage;
 }

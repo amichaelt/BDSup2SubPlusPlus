@@ -79,14 +79,18 @@ QVector<uchar> SubstreamDVD::encodeLines(Bitmap &bitmap, bool even)
         y = 1;
     }
 
-    for (; y < bitmap.height(); y += 2)
+    int height = bitmap.image().height();
+    int width = bitmap.image().width();
+    uchar* pixels = bitmap.image().scanLine(y);
+    int pitch = bitmap.image().bytesPerLine();
+
+    for (; y < height; y += 2)
     {
-        uchar* pixels = bitmap.image().scanLine(y);
         ofs = 0;
-        for (int x = 0; x < bitmap.width(); x += len, ofs += len)
+        for (int x = 0; x < width; x += len, ofs += len)
         {
             color = pixels[ofs];
-            for (len = 1; x + len < bitmap.width(); ++len)
+            for (len = 1; x + len < width; ++len)
             {
                 if (pixels[ofs + len] != color)
                 {
@@ -131,6 +135,7 @@ QVector<uchar> SubstreamDVD::encodeLines(Bitmap &bitmap, bool even)
         {
             nibbles.push_back((uchar)(0));
         }
+        pixels += (pitch * 2);
     }
     // end buffer with line feed
     nibbles.push_back((uchar)(0));
@@ -156,8 +161,8 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
     int height = pic.originalHeight();
     int warnings = 0;
 
-    ImageObjectFragment* fragment = pic.rleFragments.at(0);
-    long startOfs = fragment->imageBufferOffset();
+    ImageObjectFragment fragment = pic.rleFragments[0];
+    long startOfs = fragment.imageBufferOffset();
 
     if (width > pic.width() || height > pic.height())
     {
@@ -194,12 +199,12 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
     for (int p = 0; p < pic.rleFragments.size(); ++p)
     {
         // copy data of all packet to one common buffer
-        fragment = pic.rleFragments.at(p);
-        for (int i = 0; i < fragment->imagePacketSize(); ++i)
+        fragment = pic.rleFragments[p];
+        for (int i = 0; i < fragment.imagePacketSize(); ++i)
         {
-            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment->imageBufferOffset() + i));
+            buf.replace(index + i, (uchar)fileBuffer->getByte(fragment.imageBufferOffset() + i));
         }
-        index += fragment->imagePacketSize();
+        index += fragment.imagePacketSize();
     }
 
     decodeLine(buf, pic.evenOffset(), sizeEven, bm.image(), 0, width,  width * ((height / 2) + (height & 1)));

@@ -21,25 +21,27 @@
 #define SUBPICTUREDVD_H
 
 #include "subpicture.h"
+#include "imageobjectfragment.h"
 
 #include <QVector>
-
-class ImageObjectFragment;
 
 class SubPictureDVD : public SubPicture
 {
 public:
     SubPictureDVD();
+    SubPictureDVD(const SubPictureDVD &other);
+    SubPictureDVD(const SubPictureDVD *other);
+    ~SubPictureDVD() { }
 
     QVector<int> originalAlpha = QVector<int>(4);
     QVector<int> originalPal = QVector<int>(4);
     QVector<int> alpha = QVector<int>(4);
     QVector<int> pal = QVector<int>(4);
 
-    QVector<ImageObjectFragment*> rleFragments;
+    QVector<ImageObjectFragment> rleFragments;
 
     void setOriginal();
-    void copyInfo(SubPicture* subPicture);
+    void copyInfo(SubPicture &subPicture);
 
     int offset() { return pictureOffset; }
     void setOffset(int offset) { pictureOffset = offset; }

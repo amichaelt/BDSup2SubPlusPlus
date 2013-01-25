@@ -468,7 +468,7 @@ long SupDVD::readSupFrame(long ofs)
     int  ctrlOfsRel = 0;
     int  rleSize = 0;
     int  ctrlSize = -1;
-    ImageObjectFragment* rleFrag;
+    ImageObjectFragment rleFrag;
     int  length;
 
     // 2 uchars:  packet identifier 0x5350
@@ -497,10 +497,10 @@ long SupDVD::readSupFrame(long ofs)
     }
     ctrlOfs = ctrlOfsRel + ofs;			// absolute offset of control header
     ofs += 2;
-    pic.rleFragments = QVector<ImageObjectFragment*>();
-    rleFrag = new ImageObjectFragment();
-    rleFrag->setImageBufferOffset(ofs);
-    rleFrag->setImagePacketSize(rleSize);
+    pic.rleFragments = QVector<ImageObjectFragment>();
+    rleFrag = ImageObjectFragment();
+    rleFrag.setImageBufferOffset(ofs);
+    rleFrag.setImagePacketSize(rleSize);
     pic.rleFragments.push_back(rleFrag);
     pic.setRleSize(rleSize);
 

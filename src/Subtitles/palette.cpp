@@ -80,6 +80,10 @@ Palette::Palette(QVector<uchar> inRed, QVector<uchar> inGreen, QVector<uchar> in
 
 Palette::~Palette()
 {
+    colors.clear();
+    y.clear();
+    cb.clear();
+    cr.clear();
 }
 
 void Palette::setAlpha(int index, int alpha)

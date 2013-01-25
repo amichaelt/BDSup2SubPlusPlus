@@ -104,7 +104,7 @@ private:
 
     QString supFileName;
 
-    QVector<SubPictureBD*> subPictures;
+    QVector<SubPictureBD> subPictures;
 
     SubtitleProcessor* subtitleProcessor = 0;
 
@@ -128,7 +128,7 @@ private:
 
     QVector<uchar> encodeImage(Bitmap &bm);
 
-    SupSegment* readSegment(int offset);
+    SupSegment readSegment(int offset);
 
     QVector<uchar> packetHeader =
     {

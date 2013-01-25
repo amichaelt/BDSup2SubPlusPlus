@@ -18,10 +18,48 @@
  */
 
 #include "subpicturedvd.h"
-#include "imageobjectfragment.h"
 
 SubPictureDVD::SubPictureDVD()
 {
+
+}
+
+SubPictureDVD::SubPictureDVD(const SubPictureDVD &other) :
+    SubPicture(other),
+    pictureOffset(other.pictureOffset),
+    size(other.size),
+    evenOfs(other.evenOfs),
+    oddOfs(other.oddOfs),
+    origWidth(other.origWidth),
+    origHeight(other.origHeight),
+    origX(other.origX),
+    origY(other.origY),
+    rleFragments(other.rleFragments),
+    originalAlpha(other.originalAlpha),
+    originalPal(other.originalPal),
+    alpha(other.alpha),
+    pal(other.pal)
+{
+
+}
+
+SubPictureDVD::SubPictureDVD(const SubPictureDVD *other) :
+    SubPicture(other),
+    pictureOffset(other->pictureOffset),
+    size(other->size),
+    evenOfs(other->evenOfs),
+    oddOfs(other->oddOfs),
+    origWidth(other->origWidth),
+    origHeight(other->origHeight),
+    origX(other->origX),
+    origY(other->origY),
+    rleFragments(other->rleFragments),
+    originalAlpha(other->originalAlpha),
+    originalPal(other->originalPal),
+    alpha(other->alpha),
+    pal(other->pal)
+{
+
 }
 
 void SubPictureDVD::setOriginal()
@@ -35,16 +73,16 @@ void SubPictureDVD::setOriginal()
     originalPal = pal;
 }
 
-void SubPictureDVD::copyInfo(SubPicture *subPicture)
+void SubPictureDVD::copyInfo(SubPicture &subPicture)
 {
-    setWidth(subPicture->width());
-    setHeight(subPicture->height());
-    setStartTime(subPicture->startTime());
-    setEndTime(subPicture->endTime());
-    setForced(subPicture->isForced());
-    setCompNum(subPicture->compNum());
-    setImageWidth(subPicture->getImageWidth());
-    setImageHeight(subPicture->getImageHeight());
-    setOfsX(subPicture->getOfsX());
-    setOfsY(subPicture->getOfsY());
+    setWidth(subPicture.width());
+    setHeight(subPicture.height());
+    setStartTime(subPicture.startTime());
+    setEndTime(subPicture.endTime());
+    setForced(subPicture.isForced());
+    setCompNum(subPicture.compNum());
+    setImageWidth(subPicture.getImageWidth());
+    setImageHeight(subPicture.getImageHeight());
+    setOfsX(subPicture.getOfsX());
+    setOfsY(subPicture.getOfsY());
 }

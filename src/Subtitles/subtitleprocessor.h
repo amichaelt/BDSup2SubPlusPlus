@@ -401,7 +401,6 @@ public:
     void setSwapCrCb(bool value) { swapCrCb = value; }
     ScalingFilters getScalingFilter() { return scalingFilter; }
     void setScalingFilter(ScalingFilters value);
-    Filter *scaleFilter;
     QString getResolutionName(Resolution res) { return resolutionNames[(int)res]; }
     int getLanguageIdx() { return languageIdx; }
     int getLanguageIdxRead() { return languageIdxRead; }
@@ -474,6 +473,7 @@ public:
     QVector<int> getOriginalFrameAlpha(int index);
     QVector<int> &getFramePal(int index);
     QVector<int> getOriginalFramePal(int index);
+    Filter *scaleFilter;
 
     void storeFreeScale(double xScale, double yScale);
     void storeSettings();

@@ -70,6 +70,11 @@ SubtitleProcessor::SubtitleProcessor(QWidget* parent, QSettings* settings, bool 
 
 SubtitleProcessor::~SubtitleProcessor()
 {
+    delete outStream;
+    for (int i = 0; i < subPictures.size(); ++i)
+    {
+        delete subPictures[i];
+    }
 }
 
 void SubtitleProcessor::SetValuesFromSettings()
@@ -375,7 +380,7 @@ void SubtitleProcessor::exit()
 void SubtitleProcessor::scanSubtitles()
 {
     subPictures = QVector<SubPicture*>(substream->getNumFrames());
-    SubPicture* picSrc;
+    SubPicture* picSrc = 0;
 
     double factTS = 1.0;
 
@@ -1005,7 +1010,7 @@ void SubtitleProcessor::writeSub(QString filename)
             if (outMode == OutputMode::VOBSUB)
             {
                 convertSup(i, (frameNum / 2) + 1, maxNum);
-                subVobTrg->copyInfo(subPictures[i]);
+                subVobTrg->copyInfo(*subPictures[i]);
                 if (subDVD.isNull())
                 {
                     subDVD = QSharedPointer<SubDVD>(new SubDVD("", "", this));
@@ -1019,7 +1024,7 @@ void SubtitleProcessor::writeSub(QString filename)
             else if (outMode == OutputMode::SUPIFO)
             {
                 convertSup(i, (frameNum / 2) + 1, maxNum);
-                subVobTrg->copyInfo(subPictures[i]);
+                subVobTrg->copyInfo(*subPictures[i]);
                 if (supDVD.isNull())
                 {
                     supDVD = QSharedPointer<SupDVD>(new SupDVD("", "", this));

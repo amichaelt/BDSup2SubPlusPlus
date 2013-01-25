@@ -30,6 +30,7 @@ public:
     ImageObject();
     ImageObject(const ImageObject* other);
     ImageObject(const ImageObject& other);
+    ~ImageObject() { fragmentList.clear(); }
 
     int paletteID() { return paletteId; }
     void setPaletteID(int id) { paletteId = id; }

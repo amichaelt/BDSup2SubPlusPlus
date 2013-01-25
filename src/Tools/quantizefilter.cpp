@@ -31,29 +31,35 @@ void QuantizeFilter::setNumColors(int numColors)
 QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int width, int height,
                                       int numColors, bool dither, bool serpentine)
 {
-    QuantizeFilter::OctTreeQuantizer quantizer;
     quantizer.setup(numColors);
     quantizer.addPixels(inImage);
     QVector<QRgb> table = quantizer.buildColorTable();
 
+    QRgb *inPixels = 0;
+    int sourcePitch = inImage.bytesPerLine() / 4;
+
+    uchar *outPixels = 0;
+    int destPitch = outImage->bytesPerLine();
+
     if (dither)
     {
+        inPixels = (QRgb*)inImage.scanLine(0);
+        outPixels = outImage->scanLine(0);
+
         for (int y = 0; y < height; ++y)
         {
-            bool reverse = serpentine && (y & 1) == 1;
+            bool reverse = serpentine && ((y & 1) == 1);
             int direction;
             int index = 0;
             if (reverse)
             {
-                index = width;
+                index = width - 1;
                 direction = -1;
             }
             else
             {
                 direction = 1;
             }
-            QRgb* inPixels = (QRgb*)inImage.scanLine(y);
-            uchar* outPixels = outImage->scanLine(y);
             for (int x = 0; x < width; ++x)
             {
                 QRgb rgb1 = inPixels[index];
@@ -117,17 +123,23 @@ QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int wid
                 }
                 index += direction;
             }
+            inPixels += sourcePitch;
+            outPixels += destPitch;
         }
     }
 
     // create palette
     QVector<QRgb> p;
 
-    for (int y = 0; y < inImage.height(); ++y)
+    inPixels = (QRgb*)inImage.scanLine(0);
+    outPixels = outImage->scanLine(0);
+
+    int sourceHeight = inImage.height();
+    int sourceWidth = inImage.width();
+
+    for (int y = 0; y < sourceHeight; ++y)
     {
-        QRgb* inPixels = (QRgb*)inImage.scanLine(y);
-        uchar* outPixels = outImage->scanLine(y);
-        for (int x = 0; x < inImage.width(); ++x)
+        for (int x = 0; x < sourceWidth; ++x)
         {
             int color;
             if (dither)
@@ -150,6 +162,8 @@ QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int wid
             }
             outPixels[x] = (uchar)(idx);
         }
+        inPixels += sourcePitch;
+        outPixels += destPitch;
     }
 
     return p;
@@ -176,10 +190,15 @@ void QuantizeFilter::OctTreeQuantizer::setup(int numColors)
 
 void QuantizeFilter::OctTreeQuantizer::addPixels(QImage &image)
 {
-    for (int y = 0; y < image.height(); ++y)
+    int width = image.width();
+    int height = image.height();
+
+    QRgb* pixels = (QRgb*)image.scanLine(0);
+    int sourcePitch = image.bytesPerLine() / 4;
+
+    for (int y = 0; y < height; ++y)
     {
-        QRgb* pixels = (QRgb*)image.scanLine(y);
-        for (int x = 0; x < image.width(); ++x)
+        for (int x = 0; x < width; ++x)
         {
             insertColor(pixels[x]);
             if (colors > reduceColors)
@@ -187,6 +206,7 @@ void QuantizeFilter::OctTreeQuantizer::addPixels(QImage &image)
                 reduceTree(reduceColors);
             }
         }
+        pixels += sourcePitch;
     }
 }
 

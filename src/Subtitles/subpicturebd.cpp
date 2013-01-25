@@ -18,8 +18,6 @@
  */
 
 #include "subpicturebd.h"
-#include "imageobject.h"
-#include "paletteinfo.h"
 
 SubPictureBD::SubPictureBD()
 {
@@ -32,17 +30,20 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     winHeight(other->winHeight),
     xWinOfs(other->xWinOfs),
     yWinOfs(other->yWinOfs),
-    type(other->type),
-    palettes(other->palettes)
+    type(other->type)
 {
     for (int i = 0; i < other->imageObjectList.size(); ++i)
     {
-        imageObjectList.push_back(new ImageObject(other->imageObjectList.at(i)));
+        imageObjectList.push_back(ImageObject(other->imageObjectList[i]));
     }
-    //for (int i = 0; i < other->palettes.size(); ++i)
-    //{
-    //    palettes.push_back(new PaletteInfo(other->palettes.at(i)));
-    //}
+    palettes.resize(other->palettes.size());
+    for (int i = 0; i < other->palettes.size(); ++i)
+    {
+        for (int j = 0; j < other->palettes[i].size(); ++j)
+        {
+            palettes[i].push_back(PaletteInfo(other->palettes[i][j]));
+        }
+    }
 }
 
 SubPictureBD::SubPictureBD(const SubPictureBD &other) :
@@ -52,35 +53,38 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     winHeight(other.winHeight),
     xWinOfs(other.xWinOfs),
     yWinOfs(other.yWinOfs),
-    type(other.type),
-    palettes(other.palettes)
+    type(other.type)
 {
     for (int i = 0; i < other.imageObjectList.size(); ++i)
     {
-        imageObjectList.push_back(new ImageObject(other.imageObjectList.at(i)));
+        imageObjectList.push_back(ImageObject(other.imageObjectList[i]));
     }
-    //for (int i = 0; i < other.palettes.size(); ++i)
-    //{
-    //    palettes.push_back(new PaletteInfo(other.palettes.at(i)));
-    //}
+    palettes.resize(other.palettes.size());
+    for (int i = 0; i < other.palettes.size(); ++i)
+    {
+        for (int j = 0; j < other.palettes[i].size(); ++j)
+        {
+            palettes[i].push_back(PaletteInfo(other.palettes[i][j]));
+        }
+    }
 }
 
 int SubPictureBD::getImageWidth()
 {
-    return imageObjectList[objectId]->width();
+    return imageObjectList[objectId].width();
 }
 
 int SubPictureBD::getImageHeight()
 {
-    return imageObjectList[objectId]->height();
+    return imageObjectList[objectId].height();
 }
 
 int SubPictureBD::getOfsX()
 {
-    return imageObjectList[objectId]->xOffset();
+    return imageObjectList[objectId].xOffset();
 }
 
 int SubPictureBD::getOfsY()
 {
-    return imageObjectList[objectId]->yOffset();
+    return imageObjectList[objectId].yOffset();
 }

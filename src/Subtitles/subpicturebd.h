@@ -21,6 +21,8 @@
 #define SUBPICTUREBD_H
 
 #include "subpicture.h"
+#include "imageobject.h"
+#include "paletteinfo.h"
 
 #include <QVector>
 
@@ -33,6 +35,7 @@ public:
     SubPictureBD();
     SubPictureBD(const SubPictureBD* other);
     SubPictureBD(const SubPictureBD& other);
+    ~SubPictureBD() { }
 
     int getImageWidth();
     int getImageHeight();
@@ -52,12 +55,12 @@ public:
     int subPictureType() { return type; }
     void setSubPictureType(int subPictureType) { type = subPictureType; }
 
-    QVector<ImageObject*> imageObjectList;
+    QVector<ImageObject> imageObjectList;
 
-    QVector<QVector<PaletteInfo*> > palettes;
+    QVector<QVector<PaletteInfo> > palettes;
 
-    ImageObject *getImgObj(int index) { return imageObjectList.at(index); }
-    ImageObject *getImgObj() { return imageObjectList.at(objectId); }
+    ImageObject getImgObj(int index) { return imageObjectList[index]; }
+    ImageObject getImgObj() { return imageObjectList[objectId]; }
 
 private:
     int objectId = 0;

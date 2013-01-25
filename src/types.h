@@ -165,6 +165,8 @@ enum class InputMode
 {
     /** DVD SUB/IDX (VobSub) stream */
     VOBSUB,
+    /** DVB Sub stream */
+    DVBSUB,
     /** Blu-Ray SUP stream */
     BDSUP,
     /** Sony BDN XML (+PNGs) */
@@ -254,6 +256,8 @@ enum class StreamID
     SUP,
     /** DVD VobSub SUB stream*/
     DVDSUB,
+    /** DVB SUB stream*/
+    DVBSUB,
     /** Sony BDN XML */
     XML,
     /** DVD IFO */

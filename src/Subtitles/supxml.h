@@ -128,7 +128,7 @@ private:
     QString language = "deu";
     QString xmlFileName;
 
-    QVector<SubPictureXML*> subPictures;
+    QVector<SubPictureXML> subPictures;
 
     Resolution resolution;
 

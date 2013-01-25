@@ -60,6 +60,10 @@ BDSup2Sub::BDSup2Sub(QWidget *parent) :
 
 BDSup2Sub::~BDSup2Sub()
 {
+    delete subtitleProcessor;
+    delete okBackground;
+    delete errorBackground;
+    delete settings;
     delete ui;
 }
 
@@ -277,10 +281,6 @@ void BDSup2Sub::convertSup()
     if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
     {
         enableVobSubComponents(true);
-    }
-    else
-    {
-        enableVobSubComponents(false);
     }
 
     subtitleProcessor->loadedHook();
@@ -518,7 +518,7 @@ void BDSup2Sub::enableVobSubComponents(bool enable)
     }
     else
     {
-        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::KEEP_EXISTING);
+        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::NEW);
     }
 
     if (!enable || subtitleProcessor->getInputMode() == InputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
@@ -2301,7 +2301,7 @@ void BDSup2Sub::on_outputFormatComboBox_currentIndexChanged(int index)
     }
     refreshTrgFrame(subIndex);
 
-    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
+    if (subtitleProcessor->getOutputMode() == OutputMode::VOBSUB || subtitleProcessor->getOutputMode() == OutputMode::SUPIFO)
     {
         enableVobSubComponents(true);
     }

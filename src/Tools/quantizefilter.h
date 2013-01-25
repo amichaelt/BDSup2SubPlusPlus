@@ -53,6 +53,17 @@ class QuantizeFilter
         };
 
     public:
+        ~OctTreeQuantizer()
+        {
+            for (int i = 0; i < colorList.size(); ++i)
+            {
+                for (int j = 0; j < colorList[i].size(); ++j)
+                {
+                    delete colorList[i][j];
+                    colorList[i][j] = 0;
+                }
+            }
+        }
         void addPixels(QImage &image);
         void buildColorTable(QVector<QRgb> inPixels, QVector<QRgb> &table);
         void setup(int numColors);
@@ -76,7 +87,7 @@ class QuantizeFilter
         void insertColor(QRgb rgb);
         void reduceTree(int numColors);
         int buildColorTable(OctTreeNode* node, QVector<QRgb>& table, int index);
-    };
+    }quantizer;
 
 public:
      void setNumColors(int numColors);
@@ -93,11 +104,11 @@ public:
                            int numColors, bool dither, bool serpentine);
 
 private:
-    static constexpr int sum = 3 + 5 + 7 + 1;
-    int numColors = 255;
+     static constexpr int sum = 3 + 5 + 7 + 1;
+     int numColors = 255;
 
-    bool dither = false;
-    bool serpentine = false;
+     bool dither = false;
+     bool serpentine = true;
 };
 
 #endif // QUANTIZEFILTER_H

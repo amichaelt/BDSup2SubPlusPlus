@@ -99,19 +99,21 @@ void FileBuffer::readBuffer(long ofs)
     if (file->isOpen())
     {
         offset = ofs;
-        file->seek(offset);
-        long l = length - offset;
-        if (l < 0)
+        long maxRead = length - offset;
+        if (maxRead < 0)
         {
             throw QString("Offset %1 out of bounds for file: '%2'")
                     .arg(QString::number(ofs)).arg(fileName);
         }
-        buf = file->read(l);
+
+        file->seek(offset);
+        buf.resize(maxRead);
+        file->read(buf.data(), maxRead);
         if (buf.isEmpty() && file->error() != QFile::NoError)
         {
             throw QString("IO error at offset +%1 of file: '%2'")
                     .arg(QString::number(ofs)).arg(fileName);
         }
-        offsetEnd = (offset + buf.size()) - 1;
+        offsetEnd = (offset + maxRead) - 1;
     }
 }

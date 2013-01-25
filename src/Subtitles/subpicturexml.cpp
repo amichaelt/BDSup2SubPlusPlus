@@ -24,6 +24,7 @@ SubPictureXML::SubPictureXML()
 }
 
 SubPictureXML::SubPictureXML(const SubPictureXML &other) :
+    SubPicture(other),
     origX(other.origX),
     origY(other.origY),
     filename(other.filename)
@@ -31,6 +32,7 @@ SubPictureXML::SubPictureXML(const SubPictureXML &other) :
 }
 
 SubPictureXML::SubPictureXML(const SubPictureXML *other) :
+    SubPicture(other),
     origX(other->origX),
     origY(other->origY),
     filename(other->filename)

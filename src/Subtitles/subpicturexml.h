@@ -30,6 +30,7 @@ public:
     SubPictureXML();
     SubPictureXML(const SubPictureXML& other);
     SubPictureXML(const SubPictureXML* other);
+    ~SubPictureXML() { }
 
     void setOriginal()
     {

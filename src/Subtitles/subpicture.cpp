@@ -66,15 +66,18 @@ SubPicture* SubPicture::copy()
     sp->end = end;
     sp->forced = forced;
     sp->compositionNumber = compositionNumber;
-    sp->setImageWidth(getImageWidth());
-    sp->setImageHeight(getImageHeight());
-    sp->setOfsX(getOfsX());
-    sp->setOfsY(getOfsY());
+    sp->setImageWidth(imageWidth);
+    sp->setImageHeight(imageHeight);
+    sp->setOfsX(xOfs);
+    sp->setOfsY(xOfs);
     sp->excluded = excluded;
     sp->decoded = decoded;
     if (!erasePatch.empty())
     {
-        sp->erasePatch = erasePatch;
+        for (int i = 0; i < erasePatch.size(); ++i)
+        {
+            sp->erasePatch.push_back(new ErasePatch(erasePatch[i]));
+        }
     }
 
     return sp;

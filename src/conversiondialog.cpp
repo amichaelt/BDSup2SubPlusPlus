@@ -102,6 +102,15 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
 
 ConversionDialog::~ConversionDialog()
 {
+    delete fpsSrcValidator;
+    delete fpsTrgValidator;
+    delete scaleXValidator;
+    delete scaleYValidator;
+    delete delayPTSValidator;
+    delete minTimePTSValidator;
+    delete okBackground;
+    delete errorBackground;
+    delete warnBackground;
     delete ui;
 }
 

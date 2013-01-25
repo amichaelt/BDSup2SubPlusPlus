@@ -30,6 +30,7 @@ public:
     SubPicture();
     SubPicture(const SubPicture& other);
     SubPicture(const SubPicture* other);
+    virtual ~SubPicture() { }
 
     void setImageWidth(int w) { imageWidth = w; }
     void setImageHeight(int h) { imageHeight = h; }
