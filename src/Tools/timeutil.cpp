@@ -26,17 +26,17 @@ TimeUtil::TimeUtil()
 {
 }
 
-quint64 TimeUtil::timeStrXmlToPTS(QString s, double fps)
+qint64 TimeUtil::timeStrXmlToPTS(QString s, double fps)
 {
     if (timePattern.exactMatch(s) && timePattern.indexIn(s) != -1)
     {
         QStringList m = timePattern.capturedTexts();
-        quint64 hour = m[1].toInt();
-        quint64 min = m[2].toInt();
-        quint64 sec = m[3].toInt();
-        quint64 frames = m[4].toInt();
+        qint64 hour = m[1].toInt();
+        qint64 min = m[2].toInt();
+        qint64 sec = m[3].toInt();
+        qint64 frames = m[4].toInt();
 
-        quint64 temp = hour * 60;
+        qint64 temp = hour * 60;
         temp += min;
         temp *= 60;
         temp += sec;
@@ -49,7 +49,7 @@ quint64 TimeUtil::timeStrXmlToPTS(QString s, double fps)
     }
 }
 
-quint64 TimeUtil::timeStrToPTS(QString s, bool *ok)
+qint64 TimeUtil::timeStrToPTS(QString s, bool *ok)
 {
     *ok = false;
     bool timestampIsNegative = s[0] == '-';
@@ -57,18 +57,18 @@ quint64 TimeUtil::timeStrToPTS(QString s, bool *ok)
     if (timePattern.exactMatch(temp) && timePattern.indexIn(temp) != -1)
     {
         QStringList m = timePattern.capturedTexts();
-        quint64 hour = m[1].toInt();
-        quint64 min = m[2].toInt();
-        quint64 sec = m[3].toInt();
-        quint64 ms  = m[4].toInt();
+        qint64 hour = m[1].toInt();
+        qint64 min = m[2].toInt();
+        qint64 sec = m[3].toInt();
+        qint64 ms  = m[4].toInt();
 
-        quint64 temp = hour * 60;
+        qint64 temp = hour * 60;
         temp += min;
         temp *= 60;
         temp += sec;
         temp *= 1000;
         *ok = true;
-        quint64 ret = (temp + ms) * 90;
+        qint64 ret = (temp + ms) * 90;
         return timestampIsNegative ? -ret : ret;
     }
     else
@@ -77,7 +77,7 @@ quint64 TimeUtil::timeStrToPTS(QString s, bool *ok)
     }
 }
 
-QString TimeUtil::ptsToTimeStrXml(quint64 pts, double fps)
+QString TimeUtil::ptsToTimeStrXml(qint64 pts, double fps)
 {
     QVector<int> time = msToTime((pts + 45) / 90);
     return QString("%1:%2:%3:%4").arg(QString::number(time[0]), 2, QChar('0'))
@@ -86,7 +86,7 @@ QString TimeUtil::ptsToTimeStrXml(quint64 pts, double fps)
                                  .arg(QString::number((int)(((fps * time[3]) / 1000.0) + 0.5)), 2, QChar('0'));
 }
 
-QString TimeUtil::ptsToTimeStr(quint64 pts)
+QString TimeUtil::ptsToTimeStr(qint64 pts)
 {
     bool ptsIsNegative = pts < 0;
     pts = ptsIsNegative ? -pts : pts;
@@ -98,7 +98,7 @@ QString TimeUtil::ptsToTimeStr(quint64 pts)
                                    .arg(QString::number(time[3]), 3, QChar('0'));
 }
 
-QString TimeUtil::ptsToTimeStrIdx(quint64 pts)
+QString TimeUtil::ptsToTimeStrIdx(qint64 pts)
 {
     bool ptsIsNegative = pts < 0;
     pts = ptsIsNegative ? -pts : pts;
@@ -110,7 +110,7 @@ QString TimeUtil::ptsToTimeStrIdx(quint64 pts)
                                    .arg(QString::number(time[3]), 3, QChar('0'));
 }
 
-QVector<int> TimeUtil::msToTime(quint64 ms)
+QVector<int> TimeUtil::msToTime(qint64 ms)
 {
     QVector<int> time(4);
     // time[0] = hours

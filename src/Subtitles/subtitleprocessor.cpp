@@ -318,9 +318,9 @@ SubPicture *SubtitleProcessor::getSubPictureTrg(int index)
     return subPictures.at(index);
 }
 
-quint64 SubtitleProcessor::syncTimePTS(quint64 timeStamp, double fps)
+qint64 SubtitleProcessor::syncTimePTS(qint64 timeStamp, double fps)
 {
-    quint64 retval;
+    qint64 retval;
     // correct time stamps to fit to frames
     if (fps == FPS_NTSC || fps == FPS_PAL || fps == FPS_24HZ)
     {
@@ -417,8 +417,8 @@ void SubtitleProcessor::scanSubtitles()
     {
         picSrc = substream->getSubPicture(i);
         subPictures.replace(i, picSrc->copy());
-        quint64 ts = picSrc->startTime();
-        quint64 te = picSrc->endTime();
+        qint64 ts = picSrc->startTime();
+        qint64 te = picSrc->endTime();
         // copy time stamps and apply speedup/speeddown
         if (!convertFPS)
         {
@@ -603,8 +603,8 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         } break;
         }
 
-        quint64 ts = picOld->startTime();
-        quint64 te = picOld->endTime();
+        qint64 ts = picOld->startTime();
+        qint64 te = picOld->endTime();
         // copy time stamps and apply speedup/speeddown
         if (factTS == 1.0)
         {
@@ -737,14 +737,14 @@ QVector<int> SubtitleProcessor::getResolution(Resolution resolution)
 
 void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPicture *subPictureNext, SubPicture *subPicturePrevious)
 {
-    quint64 startTime = subPicture->startTime();    // start time
-    quint64 endTime = subPicture->endTime();        // end time
-    quint64 delay = 5000 * 90;                    // default delay for missing end time (5 seconds)
+    qint64 startTime = subPicture->startTime();    // start time
+    qint64 endTime = subPicture->endTime();        // end time
+    qint64 delay = 5000 * 90;                    // default delay for missing end time (5 seconds)
 
     index += 1; // only used for display
 
     // get end time of last frame
-    quint64 lastFrameEndTime;
+    qint64 lastFrameEndTime;
     if (subPicturePrevious != 0)
     {
         lastFrameEndTime = subPicturePrevious->endTime();
@@ -762,7 +762,7 @@ void SubtitleProcessor::validateTimes(int index, SubPicture *subPicture, SubPict
     }
 
     // get start time of next frame
-    quint64 nextFrameStartTime;
+    qint64 nextFrameStartTime;
     if (subPictureNext != 0)
     {
         nextFrameStartTime = subPictureNext->startTime();
@@ -1914,7 +1914,7 @@ double SubtitleProcessor::getFPS(QString string)
     return d;
 }
 
-void SubtitleProcessor::setMaxProgress(quint64 maxProgress)
+void SubtitleProcessor::setMaxProgress(qint64 maxProgress)
 {
     if (!cliMode)
     {
@@ -1922,7 +1922,7 @@ void SubtitleProcessor::setMaxProgress(quint64 maxProgress)
     }
 }
 
-void SubtitleProcessor::setCurrentProgress(quint64 currentProgress)
+void SubtitleProcessor::setCurrentProgress(qint64 currentProgress)
 {
     if (!cliMode)
     {

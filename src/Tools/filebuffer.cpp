@@ -41,7 +41,7 @@ FileBuffer::~FileBuffer()
     }
 }
 
-int FileBuffer::getDWord(quint64 ofs)
+int FileBuffer::getDWord(qint64 ofs)
 {
     if ((ofs < offset) || ((ofs + 3) > offsetEnd))
     {
@@ -52,7 +52,7 @@ int FileBuffer::getDWord(quint64 ofs)
           ((buf[idx + 1] & 0xff) <<16) | ((buf[idx] & 0xff) << 24);
 }
 
-int FileBuffer::getByte(quint64 ofs)
+int FileBuffer::getByte(qint64 ofs)
 {
     if ((ofs < offset) || (ofs > offsetEnd))
     {
@@ -61,7 +61,7 @@ int FileBuffer::getByte(quint64 ofs)
     return (buf[(int)(ofs - offset)] & 0xff);
 }
 
-int FileBuffer::getWord(quint64 ofs)
+int FileBuffer::getWord(qint64 ofs)
 {
     if ((ofs < offset) || ((ofs + 1) > offsetEnd))
     {
@@ -71,7 +71,7 @@ int FileBuffer::getWord(quint64 ofs)
     return (buf[idx + 1] & 0xff) | ((buf[idx] & 0xff) << 8);
 }
 
-void FileBuffer::getBytes(quint64 ofs, QVector<uchar>& b, int length)
+void FileBuffer::getBytes(qint64 ofs, QVector<uchar>& b, int length)
 {
     if (ofs < offset || ((ofs + length) - 1) > offsetEnd)
     {
@@ -83,7 +83,7 @@ void FileBuffer::getBytes(quint64 ofs, QVector<uchar>& b, int length)
     }
 }
 
-int FileBuffer::getDWordLE(quint64 ofs)
+int FileBuffer::getDWordLE(qint64 ofs)
 {
     if (ofs < offset || (ofs + 3) > offsetEnd)
     {
@@ -94,12 +94,12 @@ int FileBuffer::getDWordLE(quint64 ofs)
             | ((buf.at(idx + 2) & 0xff) << 16) | ((buf.at(idx + 3) & 0xff) << 24);
 }
 
-void FileBuffer::readBuffer(quint64 ofs)
+void FileBuffer::readBuffer(qint64 ofs)
 {
     if (file->isOpen())
     {
         offset = ofs;
-        quint64 maxRead = length - offset;
+        qint64 maxRead = length - offset;
         if (maxRead < 0)
         {
             throw QString("Offset %1 out of bounds for file: '%2'")

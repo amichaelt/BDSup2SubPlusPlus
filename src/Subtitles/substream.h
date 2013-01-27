@@ -41,9 +41,9 @@ public:
     virtual int getNumFrames() = 0;
     virtual int getNumForcedFrames() = 0;
 
-    virtual quint64 getEndTime(int index) = 0;
-    virtual quint64 getStartTime(int index) = 0;
-    virtual quint64 getStartOffset(int index) = 0;
+    virtual qint64 getEndTime(int index) = 0;
+    virtual qint64 getStartTime(int index) = 0;
+    virtual qint64 getStartOffset(int index) = 0;
 
     virtual bool isForced(int index) = 0;
 

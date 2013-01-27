@@ -28,7 +28,6 @@
 #include <QFile>
 #include <QRect>
 #include <QVector>
-#include <array>
 
 Bitmap::Bitmap()
 {

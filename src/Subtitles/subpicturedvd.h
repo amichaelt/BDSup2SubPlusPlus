@@ -61,7 +61,7 @@ public:
     void setOriginalY(int originalY) { origY = originalY; }
 
 private:
-    quint64 pictureOffset = 0;
+    qint64 pictureOffset = 0;
     int size = 0;
     int evenOfs = 0;
     int oddOfs = 0;

@@ -49,9 +49,9 @@ public:
     int getNumFrames();
     int getNumForcedFrames() { return 0; }
 
-    quint64 getEndTime(int index);
-    quint64 getStartTime(int index);
-    quint64 getStartOffset(int index);
+    qint64 getEndTime(int index);
+    qint64 getStartTime(int index);
+    qint64 getStartOffset(int index);
     bool isForced(int index) { return false; }
 
     Bitmap &getBitmap() { return bitmap; }
@@ -64,8 +64,8 @@ public:
     SubPicture *getSubPicture(int index);
 
 signals:
-    void maxProgressChanged(quint64 maxProgress);
-    void currentProgressChanged(quint64 currentProgress);
+    void maxProgressChanged(qint64 maxProgress);
+    void currentProgressChanged(qint64 currentProgress);
 
 private:
     int primaryColorIndex = 0;

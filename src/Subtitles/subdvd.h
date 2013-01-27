@@ -45,7 +45,7 @@ public:
     void setSrcPalette(Palette &palette);
     void readIdx(int idxToRead = -1);
     void writeIdx(QString filename, SubPicture &subPicture, QVector<int> offsets, QVector<int> timestamps, Palette &palette);
-    void readSubFrame(SubPictureDVD &pic, quint64 endOfs);
+    void readSubFrame(SubPictureDVD &pic, qint64 endOfs);
     void readAllSubFrames();
     void setTimeOffset(QString value) { timeOffset = value; }
 
@@ -55,9 +55,9 @@ public:
     int getLanguageIdx() { return languageIdx; }
     int getLanguageIdxRead() { return languageIdxRead; }
 
-    quint64 getEndTime(int index);
-    quint64 getStartTime(int index);
-    quint64 getStartOffset(int index);
+    qint64 getEndTime(int index);
+    qint64 getStartTime(int index);
+    qint64 getStartOffset(int index);
 
     bool isForced(int index);
 
@@ -80,8 +80,8 @@ public:
     QVector<int> getOriginalFramePal(int index);
 
 signals:
-    void maxProgressChanged(quint64 maxProgress);
-    void currentProgressChanged(quint64 currentProgress);
+    void maxProgressChanged(qint64 maxProgress);
+    void currentProgressChanged(qint64 currentProgress);
     void addLanguage(const QString &message);
 
 private:

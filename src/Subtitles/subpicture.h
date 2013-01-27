@@ -41,10 +41,10 @@ public:
     void setWidth(int width) { screenWidth = width; }
     int height() { return screenHeight; }
     void setHeight(int height) { screenHeight = height; }
-    quint64 startTime() { return start; }
-    void setStartTime(quint64 startTime) { start = startTime; }
-    quint64 endTime() { return end; }
-    void setEndTime(quint64 endTime) { end = endTime; }
+    qint64 startTime() { return start; }
+    void setStartTime(qint64 startTime) { start = startTime; }
+    qint64 endTime() { return end; }
+    void setEndTime(qint64 endTime) { end = endTime; }
     int compNum() { return compositionNumber; }
     void setCompNum(int compNum) { compositionNumber = compNum; }
     bool isForced() { return forced; }
@@ -66,8 +66,8 @@ public:
 private:
     int screenWidth = 0;
     int screenHeight = 0;
-    quint64 start = -1;
-    quint64 end = 0;
+    qint64 start = -1;
+    qint64 end = 0;
     int compositionNumber = 0;
     int imageWidth = 0;
     int imageHeight = 0;

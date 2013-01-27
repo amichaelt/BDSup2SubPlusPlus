@@ -41,7 +41,7 @@ public:
 
 private:
     int packetSize = 0;
-    quint64 bufferOfs = 0;
+    qint64 bufferOfs = 0;
 };
 
 #endif // IMAGEOBJECTFRAGMENT_H

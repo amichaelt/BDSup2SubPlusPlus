@@ -1,0 +1,885 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0081629E556240AD0E783CBA /* filebuffer.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 6D374751F52721BECFFFFB30 /* filebuffer.cpp */; settings = {ATTRIBUTES = (); }; };
+		0392C3FF489018639B2F77E2 /* movedialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = F8665E20CBEFD29D5991AFE1 /* movedialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		03B3C0FF18529C5CFD05F7D3 /* zoomableimagearea.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 7D8064861AC6CD46F968D916 /* zoomableimagearea.cpp */; settings = {ATTRIBUTES = (); }; };
+		0A19E82CF79C204A2069F162 /* timeutil.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 7317F0FF85FE0EE629362FD5 /* timeutil.cpp */; settings = {ATTRIBUTES = (); }; };
+		1528FE61838B65DD7007F924 /* conversiondialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = BB99C72F13429E2424F3A072 /* conversiondialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		16830D53798324E3353A7143 /* subpicturebd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = A98A01106FB9993A589EB4EA /* subpicturebd.cpp */; settings = {ATTRIBUTES = (); }; };
+		17464BC6FD6FA1B80DDC55E5 /* Security.framework in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = E5F0053C062927C45241E2C9 /* Security.framework */; };
+		176035D703A6EF8101E9B457 /* moc_helpdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = C001DAAC1D1746E8AA376879 /* moc_helpdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		19B00757F84DDC2BE0B40F09 /* numberutil.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 7873647D009A478A55DC921D /* numberutil.cpp */; settings = {ATTRIBUTES = (); }; };
+		1AA851152F9343413CDE0F31 /* supxml.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = E0F813DFF5E10C69518EF39A /* supxml.cpp */; settings = {ATTRIBUTES = (); }; };
+		1AC8D6BEA614244940ADD03A /* QtXml in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = CF996CC26B79B6376B5FE937 /* QtXml */; };
+		2133330B8FB667BE6CA34728 /* subpicturedvd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 31BB3DE09EB88CC8B206BE40 /* subpicturedvd.cpp */; settings = {ATTRIBUTES = (); }; };
+		293E70B8C313D19DD43BAE18 /* bsplinefilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = D0061B2F8856C1DE6DFFAF4F /* bsplinefilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		2B093CA6F071B023A473CED0 /* main.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 118FCBAABA162BA17933C789 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		2B1D3BF55910659A4871E6C4 /* exportdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 63B43C56D5D61E1535FA4D7E /* exportdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		2BA491AACDA453DBB964B307 /* bdsup2sub.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 291FB4F4A8F503DFC1044CB1 /* bdsup2sub.cpp */; settings = {ATTRIBUTES = (); }; };
+		2D02ADF6F7988FC3D5DF6F87 /* mng in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 0AD07E81AB64B0C6996CB065 /* mng */; };
+		2E166E94C6BA907B06A4B778 /* tiff in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 66E62F7E1B66A1CA3EDEFCC6 /* tiff */; };
+		2FB450CE21FAC17AAEEB370D /* moc_editdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 98B170603DDDD5E01C8A24D9 /* moc_editdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		312379B170EC4EBADF3DE4AC /* qrc_bdsup2sub.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = A319C3620BA3125C1765A21E /* qrc_bdsup2sub.cpp */; settings = {ATTRIBUTES = (); }; };
+		32105A4B9BDE2EF71CBB1112 /* moc_subdvd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = E96F15AF7C59269139AC6258 /* moc_subdvd.cpp */; settings = {ATTRIBUTES = (); }; };
+		36DFDAF0C20D13B3B86D5B75 /* subpicturexml.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 90036876B35F1EF85C29F21E /* subpicturexml.cpp */; settings = {ATTRIBUTES = (); }; };
+		372D40533E6CBF58909094D5 /* moc_framepalettedialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 31ECE4016C5A1D8BB98C7E7F /* moc_framepalettedialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		4315982B939D8CE83315CEF2 /* imageobject.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 3916E29380113D54BA074584 /* imageobject.cpp */; settings = {ATTRIBUTES = (); }; };
+		43CB6998E36D6B4382FD20CE /* framepalettedialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 7FD3A09CAB0BD68E86F46696 /* framepalettedialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		4881901C6063483E40B07D78 /* moc_movedialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 7B4DCDA72A214F035D5A1B9F /* moc_movedialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		488E4413349492004FB627F0 /* png in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = D264919EE3383397D77AA0B2 /* png */; };
+		48C447FF70775562C2546BC8 /* subtitleprocessor.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = FE631AA461DD7F57D02B2F47 /* subtitleprocessor.cpp */; settings = {ATTRIBUTES = (); }; };
+		49FFE4C44E49FCD088D06171 /* z in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 82416FEA46C03B2F87AF69C4 /* z */; };
+		4B89E71E311EBCBAA420B9DF /* mitchellfilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = DAAA729CE0D00DE600D625F0 /* mitchellfilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		505F2D691B1880F07E0DAA49 /* hermitefilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = AA340103EFF5BC1D352BBF49 /* hermitefilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		51D4DBF7CB8537BE86EBD055 /* AppKit.framework in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 821416211D63F190AAAD016A /* AppKit.framework */; };
+		54C40E2FF8273C2DAABA555C /* bitstream.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 6D794478152A4B409C411C74 /* bitstream.cpp */; settings = {ATTRIBUTES = (); }; };
+		5AAC0D9BBAE5CD615557CD7D /* Foundation.framework in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = BC52FAE3CF80A871217A111D /* Foundation.framework */; };
+		5F76979D39DD8B13CA5D7991 /* substreamdvd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = A036E24AD3D306566C7BF810 /* substreamdvd.cpp */; settings = {ATTRIBUTES = (); }; };
+		60871A451DCB46BCB1010A95 /* colordialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 6395CDBB15BFFD1A9E811095 /* colordialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		626B5B5053B8797086426E3C /* editdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 8E89DCCFA6C34D4AE9E0CD30 /* editdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		680BC0C85FCC0E428A58589B /* palette.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = EE232AA9874D8A4AB9892069 /* palette.cpp */; settings = {ATTRIBUTES = (); }; };
+		6A083305EE1CAF7833ECEF85 /* moc_colordialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 3760C713570BC63E540D7FF4 /* moc_colordialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		6A337C6D2939AA5B528A7ABD /* filterop.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 58D180539C196AF219194C1E /* filterop.cpp */; settings = {ATTRIBUTES = (); }; };
+		6AEFD8D774643446C41D4261 /* filters.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = FA580F82B9901500D391B69F /* filters.cpp */; settings = {ATTRIBUTES = (); }; };
+		719DE08EE271F347E9D69E18 /* subdvd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 346AA0D731AB6D695B7ABAFF /* subdvd.cpp */; settings = {ATTRIBUTES = (); }; };
+		7C0694FBF25B05CCFA433E8D /* bitmap.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 3C435062CA4254B67855632E /* bitmap.cpp */; settings = {ATTRIBUTES = (); }; };
+		7DDCE8DE2D73A86F89F453CF /* paletteinfo.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 5D89D1E89264E3BA2A8E39C7 /* paletteinfo.cpp */; settings = {ATTRIBUTES = (); }; };
+		7F339857B5438BC7E5DEC27B /* helpdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 16EFC28DBAEBAE158B65251F /* helpdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		87C259D3CF230DCB91F595C3 /* erasepatch.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 2F1BC5D672BCDBF570473C88 /* erasepatch.cpp */; settings = {ATTRIBUTES = (); }; };
+		90F8E49808D66B5830FD1C34 /* editpane.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 79C1329207B2CB8B58B0DA0A /* editpane.cpp */; settings = {ATTRIBUTES = (); }; };
+		95A35A0EF15E7BED8720AA03 /* suphd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = F7DA8956815BDC75ADD146BA /* suphd.cpp */; settings = {ATTRIBUTES = (); }; };
+		9D0C585175BEDCCC79D93098 /* moc_editpane.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 309C4B3A7016E052FEB1FAF0 /* moc_editpane.cpp */; settings = {ATTRIBUTES = (); }; };
+		9DEB10C534891CFA598A91CE /* supbd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 6C5247E69D1F5711F287EC46 /* supbd.cpp */; settings = {ATTRIBUTES = (); }; };
+		A2F478BF1A6D26BC60211788 /* moc_suphd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = C92753075B2F63101AED673E /* moc_suphd.cpp */; settings = {ATTRIBUTES = (); }; };
+		A358B87DBEE6B4DEDEECB0F3 /* QtCore in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 7C3471117913EA970AF2D55F /* QtCore */; };
+		A3F654B483977F7B9B6F8579 /* moc_conversiondialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = FA90342CB8993C77F3DDA2BD /* moc_conversiondialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		A514FFC4A85F40D1FB853767 /* moc_supbd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = C0EF559D2948DF22DD909A04 /* moc_supbd.cpp */; settings = {ATTRIBUTES = (); }; };
+		A64A28475DA329A02353BE33 /* moc_zoomableimagearea.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = EF105262C2A6D62B6C78E68C /* moc_zoomableimagearea.cpp */; settings = {ATTRIBUTES = (); }; };
+		A69705A61C1CC2F2FCE373AB /* jpeg in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 7A9A35B6D2C4A9B6F15F9BF7 /* jpeg */; };
+		AB39F7D35047FC9F66DE5B9C /* moc_supdvd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 8F413583A760115E850F3D1F /* moc_supdvd.cpp */; settings = {ATTRIBUTES = (); }; };
+		AF65419A1B27BB5360A01FD0 /* QtGui in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = EC8C168907842420A1607E4A /* QtGui */; };
+		AFC8D705CF8FF7878AA3265A /* CoreFoundation.framework in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 2B9F5257240B5626E8434A44 /* CoreFoundation.framework */; };
+		B1B676558A79DE486595F556 /* moc_supxml.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 094748FAF25D7C147A282BAB /* moc_supxml.cpp */; settings = {ATTRIBUTES = (); }; };
+		B4BA749CF3998088DBE8329E /* bdsup2sub.rc in Bundle Resources */ = {isa = PBXBuildFile; fileRef = A9EFE9E465C38A68A4F426FB /* bdsup2sub.rc */; settings = {ATTRIBUTES = (); }; };
+		C8FD4A1AAA37CF2CA2824CCF /* Carbon.framework in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = DA138F75C9F545CDAE7FB264 /* Carbon.framework */; };
+		C93AC135D7C0D922A565CC08 /* moc_subtitleprocessor.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 1D7D9F8D038F4C681AD43792 /* moc_subtitleprocessor.cpp */; settings = {ATTRIBUTES = (); }; };
+		CDD547F03F36B6E5ACBFB05E /* supdvd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 5F64E5E9DF5B42A8DFE91DF6 /* supdvd.cpp */; settings = {ATTRIBUTES = (); }; };
+		CEBDA5799E39F025C9CC4D99 /* bellfilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 63AFC2DAC67684E73C8D761F /* bellfilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		D2615F82838E1BFD654D2817 /* subpicture.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 08C0BC4B4FAE6772ECCDC0F5 /* subpicture.cpp */; settings = {ATTRIBUTES = (); }; };
+		D8C044DDB42E5C69812A509F /* palettebitmap.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 73D0953082E3849538DC1AA0 /* palettebitmap.cpp */; settings = {ATTRIBUTES = (); }; };
+		D9B3274453398386494E2C8B /* lanczos3filter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 0ACDC0569F85CDAA0F7C532E /* lanczos3filter.cpp */; settings = {ATTRIBUTES = (); }; };
+		DE72984ECB8D1ACE0F4CF673 /* moc_progressdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 5A1CCBC490344C69493AFB8D /* moc_progressdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		DEA4F33481D178EE270DE2BB /* moc_bdsup2sub.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 0937D3246216B5C15C681B73 /* moc_bdsup2sub.cpp */; settings = {ATTRIBUTES = (); }; };
+		DF8CA97ED0A32AD052EDA143 /* imageobjectfragment.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 611E648E35076FB24F1B412A /* imageobjectfragment.cpp */; settings = {ATTRIBUTES = (); }; };
+		E3FE3A5399A57C2A8495863D /* moc_exportdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 7268D0B6A856D1A4B0ABB7EE /* moc_exportdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		E7C62315969BB84D52923DFB /* quantizefilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 0705B18AF1FAB929E16F9E99 /* quantizefilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		EEBA261EA7224F6D64DABE03 /* trianglefilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 2B4108FD4363E4C869C5821A /* trianglefilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		F29A98A181095988DFF41C8F /* bicubicfilter.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 2084E67EB4A0B6CF0820ADBF /* bicubicfilter.cpp */; settings = {ATTRIBUTES = (); }; };
+		F5119D4648ECD5C14F595CE0 /* subpicturehd.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 87915609D6A248307D9E0893 /* subpicturehd.cpp */; settings = {ATTRIBUTES = (); }; };
+		F5F706BCA7AE431C51C7FD1B /* progressdialog.cpp in Build Sources */ = {isa = PBXBuildFile; fileRef = 1030CE4265438856EF8E3F0E /* progressdialog.cpp */; settings = {ATTRIBUTES = (); }; };
+		F9E76E570E10AF14870553A7 /* ApplicationServices.framework in Frameworks & Libraries */ = {isa = PBXBuildFile; fileRef = 27AE7A480FD6C52FCA80FECD /* ApplicationServices.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		01DD67EFDFEFEA084974D071 /* editdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = editdialog.ui; sourceTree = SOURCE_ROOT; };
+		020210E9BB93B30975F606D9 /* exportdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = exportdialog.h; sourceTree = SOURCE_ROOT; };
+		0705B18AF1FAB929E16F9E99 /* quantizefilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = quantizefilter.cpp; path = Tools/quantizefilter.cpp; sourceTree = SOURCE_ROOT; };
+		08C0BC4B4FAE6772ECCDC0F5 /* subpicture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subpicture.cpp; path = Subtitles/subpicture.cpp; sourceTree = SOURCE_ROOT; };
+		08D4FAB51FD77623B1460A48 /* bitstream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = bitstream.h; path = Tools/bitstream.h; sourceTree = SOURCE_ROOT; };
+		0937D3246216B5C15C681B73 /* moc_bdsup2sub.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_bdsup2sub.cpp; sourceTree = SOURCE_ROOT; };
+		094748FAF25D7C147A282BAB /* moc_supxml.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_supxml.cpp; sourceTree = SOURCE_ROOT; };
+		0ACDC0569F85CDAA0F7C532E /* lanczos3filter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = lanczos3filter.cpp; path = Filters/lanczos3filter.cpp; sourceTree = SOURCE_ROOT; };
+		0AD07E81AB64B0C6996CB065 /* mng */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = mng; path = /opt/local/lib/libmng.1.dylib; sourceTree = "<absolute>"; };
+		1030CE4265438856EF8E3F0E /* progressdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = progressdialog.cpp; sourceTree = SOURCE_ROOT; };
+		118FCBAABA162BA17933C789 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
+		148A83D1040BFADE50DBE4B7 /* supxml.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = supxml.h; path = Subtitles/supxml.h; sourceTree = SOURCE_ROOT; };
+		16C9325B055BED2564AF1D31 /* mitchellfilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mitchellfilter.h; path = Filters/mitchellfilter.h; sourceTree = SOURCE_ROOT; };
+		16EFC28DBAEBAE158B65251F /* helpdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = helpdialog.cpp; sourceTree = SOURCE_ROOT; };
+		175A53EEBCBC97F7A6A5A5A3 /* numberutil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = numberutil.h; path = Tools/numberutil.h; sourceTree = SOURCE_ROOT; };
+		1945B71A8BD4C0D600B0D448 /* imageobject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imageobject.h; path = Subtitles/imageobject.h; sourceTree = SOURCE_ROOT; };
+		1B738C47360011DD89687EC2 /* trianglefilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = trianglefilter.h; path = Filters/trianglefilter.h; sourceTree = SOURCE_ROOT; };
+		1D7D9F8D038F4C681AD43792 /* moc_subtitleprocessor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_subtitleprocessor.cpp; sourceTree = SOURCE_ROOT; };
+		1DE4DE1AFC86414870B1AF08 /* subpicture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subpicture.h; path = Subtitles/subpicture.h; sourceTree = SOURCE_ROOT; };
+		1E47E2F2B28069D793637CE2 /* filter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = filter.h; path = Filters/filter.h; sourceTree = SOURCE_ROOT; };
+		2084E67EB4A0B6CF0820ADBF /* bicubicfilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = bicubicfilter.cpp; path = Filters/bicubicfilter.cpp; sourceTree = SOURCE_ROOT; };
+		23B37E547DF83972F6D9F9B7 /* ui_movedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_movedialog.h; sourceTree = SOURCE_ROOT; };
+		2431095C1EA24B1D7721BF05 /* bsplinefilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = bsplinefilter.h; path = Filters/bsplinefilter.h; sourceTree = SOURCE_ROOT; };
+		27AE7A480FD6C52FCA80FECD /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
+		291C1CFAC6E14C66B2ADAF6F /* progressdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = progressdialog.h; sourceTree = SOURCE_ROOT; };
+		291FB4F4A8F503DFC1044CB1 /* bdsup2sub.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bdsup2sub.cpp; sourceTree = SOURCE_ROOT; };
+		2B4108FD4363E4C869C5821A /* trianglefilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = trianglefilter.cpp; path = Filters/trianglefilter.cpp; sourceTree = SOURCE_ROOT; };
+		2B9F5257240B5626E8434A44 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		2D6F4707248E477F333E35B5 /* subdvd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subdvd.h; path = Subtitles/subdvd.h; sourceTree = SOURCE_ROOT; };
+		2F1BC5D672BCDBF570473C88 /* erasepatch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = erasepatch.cpp; path = Subtitles/erasepatch.cpp; sourceTree = SOURCE_ROOT; };
+		309C4B3A7016E052FEB1FAF0 /* moc_editpane.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_editpane.cpp; sourceTree = SOURCE_ROOT; };
+		31BB3DE09EB88CC8B206BE40 /* subpicturedvd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subpicturedvd.cpp; path = Subtitles/subpicturedvd.cpp; sourceTree = SOURCE_ROOT; };
+		31ECE4016C5A1D8BB98C7E7F /* moc_framepalettedialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_framepalettedialog.cpp; sourceTree = SOURCE_ROOT; };
+		346AA0D731AB6D695B7ABAFF /* subdvd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subdvd.cpp; path = Subtitles/subdvd.cpp; sourceTree = SOURCE_ROOT; };
+		3760C713570BC63E540D7FF4 /* moc_colordialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_colordialog.cpp; sourceTree = SOURCE_ROOT; };
+		3916E29380113D54BA074584 /* imageobject.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imageobject.cpp; path = Subtitles/imageobject.cpp; sourceTree = SOURCE_ROOT; };
+		3C435062CA4254B67855632E /* bitmap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = bitmap.cpp; path = Subtitles/bitmap.cpp; sourceTree = SOURCE_ROOT; };
+		4175ECF5B0117DDB1235AD62 /* filters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = filters.h; path = Filters/filters.h; sourceTree = SOURCE_ROOT; };
+		41C1B9DF527EBDBFF719227C /* colordialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = colordialog.h; sourceTree = SOURCE_ROOT; };
+		4359BBF694B5C7E4F1CD1CE4 /* ui_colordialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_colordialog.h; sourceTree = SOURCE_ROOT; };
+		48B64216233456C3E6226A72 /* helpdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = helpdialog.h; sourceTree = SOURCE_ROOT; };
+		4CB380341CBA806675578DAF /* filterop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = filterop.h; path = Filters/filterop.h; sourceTree = SOURCE_ROOT; };
+		5420A7C9D9AB811D023446FC /* ui_exportdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_exportdialog.h; sourceTree = SOURCE_ROOT; };
+		547CDC8FFAC680DC369D0F03 /* framepalettedialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = framepalettedialog.ui; sourceTree = SOURCE_ROOT; };
+		54BF2A026AAC6A9B4FFA2B0D /* filebuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = filebuffer.h; path = Tools/filebuffer.h; sourceTree = SOURCE_ROOT; };
+		57484639D7AFDE128A30921B /* movedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = movedialog.h; sourceTree = SOURCE_ROOT; };
+		58D180539C196AF219194C1E /* filterop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = filterop.cpp; path = Filters/filterop.cpp; sourceTree = SOURCE_ROOT; };
+		5A1CCBC490344C69493AFB8D /* moc_progressdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_progressdialog.cpp; sourceTree = SOURCE_ROOT; };
+		5D89D1E89264E3BA2A8E39C7 /* paletteinfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = paletteinfo.cpp; path = Subtitles/paletteinfo.cpp; sourceTree = SOURCE_ROOT; };
+		5F64E5E9DF5B42A8DFE91DF6 /* supdvd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = supdvd.cpp; path = Subtitles/supdvd.cpp; sourceTree = SOURCE_ROOT; };
+		5FE641EBE92166E29379381D /* colordialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = colordialog.ui; sourceTree = SOURCE_ROOT; };
+		611E648E35076FB24F1B412A /* imageobjectfragment.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = imageobjectfragment.cpp; path = Subtitles/imageobjectfragment.cpp; sourceTree = SOURCE_ROOT; };
+		616C58FBBBF298AE44552CA2 /* ui_conversiondialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_conversiondialog.h; sourceTree = SOURCE_ROOT; };
+		6372BEE80D5FF759D5A19156 /* erasepatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = erasepatch.h; path = Subtitles/erasepatch.h; sourceTree = SOURCE_ROOT; };
+		6395CDBB15BFFD1A9E811095 /* colordialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = colordialog.cpp; sourceTree = SOURCE_ROOT; };
+		63AFC2DAC67684E73C8D761F /* bellfilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = bellfilter.cpp; path = Filters/bellfilter.cpp; sourceTree = SOURCE_ROOT; };
+		63B43C56D5D61E1535FA4D7E /* exportdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = exportdialog.cpp; sourceTree = SOURCE_ROOT; };
+		66933B3616B4A46E002251A3 /* bdsup2sub++.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "bdsup2sub++.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		66E62F7E1B66A1CA3EDEFCC6 /* tiff */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = tiff; path = /opt/local/lib/libtiff.3.dylib; sourceTree = "<absolute>"; };
+		6C5247E69D1F5711F287EC46 /* supbd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = supbd.cpp; path = Subtitles/supbd.cpp; sourceTree = SOURCE_ROOT; };
+		6D374751F52721BECFFFFB30 /* filebuffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = filebuffer.cpp; path = Tools/filebuffer.cpp; sourceTree = SOURCE_ROOT; };
+		6D794478152A4B409C411C74 /* bitstream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = bitstream.cpp; path = Tools/bitstream.cpp; sourceTree = SOURCE_ROOT; };
+		7268D0B6A856D1A4B0ABB7EE /* moc_exportdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_exportdialog.cpp; sourceTree = SOURCE_ROOT; };
+		7317F0FF85FE0EE629362FD5 /* timeutil.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = timeutil.cpp; path = Tools/timeutil.cpp; sourceTree = SOURCE_ROOT; };
+		73D0953082E3849538DC1AA0 /* palettebitmap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = palettebitmap.cpp; path = Subtitles/palettebitmap.cpp; sourceTree = SOURCE_ROOT; };
+		7873647D009A478A55DC921D /* numberutil.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = numberutil.cpp; path = Tools/numberutil.cpp; sourceTree = SOURCE_ROOT; };
+		79C1329207B2CB8B58B0DA0A /* editpane.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = editpane.cpp; sourceTree = SOURCE_ROOT; };
+		7A9A35B6D2C4A9B6F15F9BF7 /* jpeg */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = jpeg; path = /opt/local/lib/libjpeg.8.dylib; sourceTree = "<absolute>"; };
+		7B4DCDA72A214F035D5A1B9F /* moc_movedialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_movedialog.cpp; sourceTree = SOURCE_ROOT; };
+		7BFC5FEDF941FE338418FA15 /* imageobjectfragment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imageobjectfragment.h; path = Subtitles/imageobjectfragment.h; sourceTree = SOURCE_ROOT; };
+		7C3471117913EA970AF2D55F /* QtCore */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = QtCore; path = /opt/local/lib/libQtCore.a; sourceTree = "<absolute>"; };
+		7D8064861AC6CD46F968D916 /* zoomableimagearea.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = zoomableimagearea.cpp; sourceTree = SOURCE_ROOT; };
+		7E0D28C0D7E7DACAD55E50FD /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = SOURCE_ROOT; };
+		7FD3A09CAB0BD68E86F46696 /* framepalettedialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = framepalettedialog.cpp; sourceTree = SOURCE_ROOT; };
+		81F72EB5E0B76F2C0AD79C9C /* progressdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = progressdialog.ui; sourceTree = SOURCE_ROOT; };
+		821416211D63F190AAAD016A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		82416FEA46C03B2F87AF69C4 /* z */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = z; path = /opt/local/lib/libz.1.2.7.dylib; sourceTree = "<absolute>"; };
+		8391648270CF2802F63EE683 /* conversiondialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = conversiondialog.h; sourceTree = SOURCE_ROOT; };
+		87915609D6A248307D9E0893 /* subpicturehd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subpicturehd.cpp; path = Subtitles/subpicturehd.cpp; sourceTree = SOURCE_ROOT; };
+		8B419C88753A41381F602D8F /* ui_framepalettedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_framepalettedialog.h; sourceTree = SOURCE_ROOT; };
+		8E89DCCFA6C34D4AE9E0CD30 /* editdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = editdialog.cpp; sourceTree = SOURCE_ROOT; };
+		8F413583A760115E850F3D1F /* moc_supdvd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_supdvd.cpp; sourceTree = SOURCE_ROOT; };
+		90036876B35F1EF85C29F21E /* subpicturexml.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subpicturexml.cpp; path = Subtitles/subpicturexml.cpp; sourceTree = SOURCE_ROOT; };
+		9073BF80A0701257FE9E1733 /* substream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = substream.h; path = Subtitles/substream.h; sourceTree = SOURCE_ROOT; };
+		90D1C7FBC52D756CABE066C5 /* subtitleprocessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subtitleprocessor.h; path = Subtitles/subtitleprocessor.h; sourceTree = SOURCE_ROOT; };
+		9214D426C39339210CFB6CE1 /* conversiondialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = conversiondialog.ui; sourceTree = SOURCE_ROOT; };
+		96AC167C920EE1F4E81F9C94 /* exportdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = exportdialog.ui; sourceTree = SOURCE_ROOT; };
+		98B170603DDDD5E01C8A24D9 /* moc_editdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_editdialog.cpp; sourceTree = SOURCE_ROOT; };
+		9B3B13ED28A4A3D1D62CA03D /* subpicturebd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subpicturebd.h; path = Subtitles/subpicturebd.h; sourceTree = SOURCE_ROOT; };
+		9DE503097F037BA5FF78214E /* palette.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = palette.h; path = Subtitles/palette.h; sourceTree = SOURCE_ROOT; };
+		A036E24AD3D306566C7BF810 /* substreamdvd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = substreamdvd.cpp; path = Subtitles/substreamdvd.cpp; sourceTree = SOURCE_ROOT; };
+		A319C3620BA3125C1765A21E /* qrc_bdsup2sub.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = qrc_bdsup2sub.cpp; sourceTree = SOURCE_ROOT; };
+		A98A01106FB9993A589EB4EA /* subpicturebd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subpicturebd.cpp; path = Subtitles/subpicturebd.cpp; sourceTree = SOURCE_ROOT; };
+		A9EFE9E465C38A68A4F426FB /* bdsup2sub.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = bdsup2sub.rc; sourceTree = SOURCE_ROOT; };
+		AA340103EFF5BC1D352BBF49 /* hermitefilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = hermitefilter.cpp; path = Filters/hermitefilter.cpp; sourceTree = SOURCE_ROOT; };
+		AC6452F6792DB5A2252D76D2 /* ui_helpdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_helpdialog.h; sourceTree = SOURCE_ROOT; };
+		AD9976628655B8D4A8656E8E /* editpane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = editpane.h; sourceTree = SOURCE_ROOT; };
+		AE7A5BA7B7AE8BDE8BEFCC94 /* movedialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = movedialog.ui; sourceTree = SOURCE_ROOT; };
+		B1029208B76ED13E04D0B8E7 /* lanczos3filter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = lanczos3filter.h; path = Filters/lanczos3filter.h; sourceTree = SOURCE_ROOT; };
+		B33B4CE16C45F939B1FFA888 /* subpicturehd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subpicturehd.h; path = Subtitles/subpicturehd.h; sourceTree = SOURCE_ROOT; };
+		BB99C72F13429E2424F3A072 /* conversiondialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = conversiondialog.cpp; sourceTree = SOURCE_ROOT; };
+		BC52FAE3CF80A871217A111D /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		BCBA7D34DF199B4E71A398A8 /* bdsup2sub.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = bdsup2sub.ui; sourceTree = SOURCE_ROOT; };
+		BD7BB48A37AE80CED8CDBBE3 /* bdsup2sub++.pro */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bdsup2sub++.pro"; sourceTree = SOURCE_ROOT; };
+		BDAF242576E890DE23AD5BA0 /* helpdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = helpdialog.ui; sourceTree = SOURCE_ROOT; };
+		BDFFF1899164B24CA4B2D020 /* supbd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = supbd.h; path = Subtitles/supbd.h; sourceTree = SOURCE_ROOT; };
+		C001DAAC1D1746E8AA376879 /* moc_helpdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_helpdialog.cpp; sourceTree = SOURCE_ROOT; };
+		C0EF559D2948DF22DD909A04 /* moc_supbd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_supbd.cpp; sourceTree = SOURCE_ROOT; };
+		C1814845D03CCEDD67D13432 /* zoomableimagearea.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zoomableimagearea.h; sourceTree = SOURCE_ROOT; };
+		C32D579E6B6246DB191A867D /* quantizefilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = quantizefilter.h; path = Tools/quantizefilter.h; sourceTree = SOURCE_ROOT; };
+		C59468D972349E410FEA3799 /* subpicturexml.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subpicturexml.h; path = Subtitles/subpicturexml.h; sourceTree = SOURCE_ROOT; };
+		C5C5A4946253464F72E897FA /* palettebitmap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = palettebitmap.h; path = Subtitles/palettebitmap.h; sourceTree = SOURCE_ROOT; };
+		C92753075B2F63101AED673E /* moc_suphd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_suphd.cpp; sourceTree = SOURCE_ROOT; };
+		CBACC73DDEB347E1DAA16F95 /* substreamdvd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = substreamdvd.h; path = Subtitles/substreamdvd.h; sourceTree = SOURCE_ROOT; };
+		CC36D294FDDDE35A0CE9ED3A /* editdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = editdialog.h; sourceTree = SOURCE_ROOT; };
+		CE3E52E1A39BC02B834C66FA /* bdsup2sub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bdsup2sub.h; sourceTree = SOURCE_ROOT; };
+		CF996CC26B79B6376B5FE937 /* QtXml */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = QtXml; path = /opt/local/lib/libQtXml.a; sourceTree = "<absolute>"; };
+		D0061B2F8856C1DE6DFFAF4F /* bsplinefilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = bsplinefilter.cpp; path = Filters/bsplinefilter.cpp; sourceTree = SOURCE_ROOT; };
+		D264919EE3383397D77AA0B2 /* png */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = png; path = /opt/local/lib/libpng15.15.dylib; sourceTree = "<absolute>"; };
+		D2F12C74CB42BF97E7181859 /* bellfilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = bellfilter.h; path = Filters/bellfilter.h; sourceTree = SOURCE_ROOT; };
+		D7D490CBA297B4AE6109966B /* ui_editdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_editdialog.h; sourceTree = SOURCE_ROOT; };
+		D9C05685AD920C42D044B444 /* ui_progressdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_progressdialog.h; sourceTree = SOURCE_ROOT; };
+		DA138F75C9F545CDAE7FB264 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		DAAA729CE0D00DE600D625F0 /* mitchellfilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mitchellfilter.cpp; path = Filters/mitchellfilter.cpp; sourceTree = SOURCE_ROOT; };
+		DB7C53C2F7B9EE136F4854E0 /* bicubicfilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = bicubicfilter.h; path = Filters/bicubicfilter.h; sourceTree = SOURCE_ROOT; };
+		DC098C2EB41E2C5600E95D9F /* framepalettedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = framepalettedialog.h; sourceTree = SOURCE_ROOT; };
+		E0F813DFF5E10C69518EF39A /* supxml.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = supxml.cpp; path = Subtitles/supxml.cpp; sourceTree = SOURCE_ROOT; };
+		E2FC14F83CDE6249C61FA569 /* subpicturedvd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = subpicturedvd.h; path = Subtitles/subpicturedvd.h; sourceTree = SOURCE_ROOT; };
+		E418571BB3E1CEDE8481EBD6 /* paletteinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = paletteinfo.h; path = Subtitles/paletteinfo.h; sourceTree = SOURCE_ROOT; };
+		E5F0053C062927C45241E2C9 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
+		E96F15AF7C59269139AC6258 /* moc_subdvd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_subdvd.cpp; sourceTree = SOURCE_ROOT; };
+		EC8C168907842420A1607E4A /* QtGui */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = QtGui; path = /opt/local/lib/libQtGui.a; sourceTree = "<absolute>"; };
+		ED972F3273C994CA8F59B51F /* hermitefilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = hermitefilter.h; path = Filters/hermitefilter.h; sourceTree = SOURCE_ROOT; };
+		EE232AA9874D8A4AB9892069 /* palette.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = palette.cpp; path = Subtitles/palette.cpp; sourceTree = SOURCE_ROOT; };
+		EE4595F98C1F869A26682330 /* supdvd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = supdvd.h; path = Subtitles/supdvd.h; sourceTree = SOURCE_ROOT; };
+		EECD80F586E1F9F73D447D24 /* bdsup2sub.qrc */ = {isa = PBXFileReference; lastKnownFileType = text; path = bdsup2sub.qrc; sourceTree = SOURCE_ROOT; };
+		EEE53D563B47B00AFDA25C2C /* ui_bdsup2sub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_bdsup2sub.h; sourceTree = SOURCE_ROOT; };
+		EF105262C2A6D62B6C78E68C /* moc_zoomableimagearea.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_zoomableimagearea.cpp; sourceTree = SOURCE_ROOT; };
+		F192974804D980305F0B2F43 /* bitmap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = bitmap.h; path = Subtitles/bitmap.h; sourceTree = SOURCE_ROOT; };
+		F453625C00E462BE3998F01F /* suphd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = suphd.h; path = Subtitles/suphd.h; sourceTree = SOURCE_ROOT; };
+		F7DA8956815BDC75ADD146BA /* suphd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = suphd.cpp; path = Subtitles/suphd.cpp; sourceTree = SOURCE_ROOT; };
+		F8665E20CBEFD29D5991AFE1 /* movedialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = movedialog.cpp; sourceTree = SOURCE_ROOT; };
+		FA580F82B9901500D391B69F /* filters.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = filters.cpp; path = Filters/filters.cpp; sourceTree = SOURCE_ROOT; };
+		FA90342CB8993C77F3DDA2BD /* moc_conversiondialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moc_conversiondialog.cpp; sourceTree = SOURCE_ROOT; };
+		FBA5DFFA65B2B7F5652D0CCF /* timeutil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = timeutil.h; path = Tools/timeutil.h; sourceTree = SOURCE_ROOT; };
+		FE631AA461DD7F57D02B2F47 /* subtitleprocessor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = subtitleprocessor.cpp; path = Subtitles/subtitleprocessor.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2A1043669E6E5A7426EA502A /* Frameworks & Libraries */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1AC8D6BEA614244940ADD03A /* QtXml in Frameworks & Libraries */,
+				F9E76E570E10AF14870553A7 /* ApplicationServices.framework in Frameworks & Libraries */,
+				AFC8D705CF8FF7878AA3265A /* CoreFoundation.framework in Frameworks & Libraries */,
+				17464BC6FD6FA1B80DDC55E5 /* Security.framework in Frameworks & Libraries */,
+				5AAC0D9BBAE5CD615557CD7D /* Foundation.framework in Frameworks & Libraries */,
+				AF65419A1B27BB5360A01FD0 /* QtGui in Frameworks & Libraries */,
+				A69705A61C1CC2F2FCE373AB /* jpeg in Frameworks & Libraries */,
+				2D02ADF6F7988FC3D5DF6F87 /* mng in Frameworks & Libraries */,
+				2E166E94C6BA907B06A4B778 /* tiff in Frameworks & Libraries */,
+				C8FD4A1AAA37CF2CA2824CCF /* Carbon.framework in Frameworks & Libraries */,
+				51D4DBF7CB8537BE86EBD055 /* AppKit.framework in Frameworks & Libraries */,
+				488E4413349492004FB627F0 /* png in Frameworks & Libraries */,
+				A358B87DBEE6B4DEDEECB0F3 /* QtCore in Frameworks & Libraries */,
+				49FFE4C44E49FCD088D06171 /* z in Frameworks & Libraries */,
+			);
+			name = "Frameworks & Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		05596AB53D8D521C69802C27 /* bdsup2sub++ */ = {
+			isa = PBXGroup;
+			children = (
+				FB61758D0F0FDA4BA867C3D5 /* Sources */,
+				46E892BBB6BB6952967E0561 /* Temporary Sources */,
+				883D7615C4D2DE3FA1218F12 /* Headers */,
+				7CABE3C80E79AD2B307756D2 /* Sources [qmake] */,
+				52C235EBF1C9B07808119459 /* Sources [RCC] */,
+				EEC299C65D5017EB9DD513B0 /* Sources [UIC] */,
+				ED1E82605DD74B483AF3C982 /* External Frameworks and Libraries */,
+				66933B3716B4A46E002251A3 /* Products */,
+			);
+			name = "bdsup2sub++";
+			sourceTree = "<Group>";
+		};
+		059F97CFBBC6911651D287D4 /* Subtitles */ = {
+			isa = PBXGroup;
+			children = (
+				9073BF80A0701257FE9E1733 /* substream.h */,
+				CBACC73DDEB347E1DAA16F95 /* substreamdvd.h */,
+				2D6F4707248E477F333E35B5 /* subdvd.h */,
+				9DE503097F037BA5FF78214E /* palette.h */,
+				F192974804D980305F0B2F43 /* bitmap.h */,
+				90D1C7FBC52D756CABE066C5 /* subtitleprocessor.h */,
+				1DE4DE1AFC86414870B1AF08 /* subpicture.h */,
+				6372BEE80D5FF759D5A19156 /* erasepatch.h */,
+				E2FC14F83CDE6249C61FA569 /* subpicturedvd.h */,
+				7BFC5FEDF941FE338418FA15 /* imageobjectfragment.h */,
+				EE4595F98C1F869A26682330 /* supdvd.h */,
+				C5C5A4946253464F72E897FA /* palettebitmap.h */,
+				F453625C00E462BE3998F01F /* suphd.h */,
+				BDFFF1899164B24CA4B2D020 /* supbd.h */,
+				9B3B13ED28A4A3D1D62CA03D /* subpicturebd.h */,
+				1945B71A8BD4C0D600B0D448 /* imageobject.h */,
+				E418571BB3E1CEDE8481EBD6 /* paletteinfo.h */,
+				B33B4CE16C45F939B1FFA888 /* subpicturehd.h */,
+				148A83D1040BFADE50DBE4B7 /* supxml.h */,
+				C59468D972349E410FEA3799 /* subpicturexml.h */,
+			);
+			name = Subtitles;
+			sourceTree = "<Group>";
+		};
+		2ABC6C8F576AB5965B215C7C /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				6D374751F52721BECFFFFB30 /* filebuffer.cpp */,
+				7317F0FF85FE0EE629362FD5 /* timeutil.cpp */,
+				6D794478152A4B409C411C74 /* bitstream.cpp */,
+				0705B18AF1FAB929E16F9E99 /* quantizefilter.cpp */,
+				7873647D009A478A55DC921D /* numberutil.cpp */,
+			);
+			name = Tools;
+			sourceTree = "<Group>";
+		};
+		46E892BBB6BB6952967E0561 /* Temporary Sources */ = {
+			isa = PBXGroup;
+			children = (
+				0937D3246216B5C15C681B73 /* moc_bdsup2sub.cpp */,
+				EF105262C2A6D62B6C78E68C /* moc_zoomableimagearea.cpp */,
+				309C4B3A7016E052FEB1FAF0 /* moc_editpane.cpp */,
+				E96F15AF7C59269139AC6258 /* moc_subdvd.cpp */,
+				1D7D9F8D038F4C681AD43792 /* moc_subtitleprocessor.cpp */,
+				5A1CCBC490344C69493AFB8D /* moc_progressdialog.cpp */,
+				8F413583A760115E850F3D1F /* moc_supdvd.cpp */,
+				FA90342CB8993C77F3DDA2BD /* moc_conversiondialog.cpp */,
+				C92753075B2F63101AED673E /* moc_suphd.cpp */,
+				C0EF559D2948DF22DD909A04 /* moc_supbd.cpp */,
+				094748FAF25D7C147A282BAB /* moc_supxml.cpp */,
+				7268D0B6A856D1A4B0ABB7EE /* moc_exportdialog.cpp */,
+				98B170603DDDD5E01C8A24D9 /* moc_editdialog.cpp */,
+				C001DAAC1D1746E8AA376879 /* moc_helpdialog.cpp */,
+				3760C713570BC63E540D7FF4 /* moc_colordialog.cpp */,
+				31ECE4016C5A1D8BB98C7E7F /* moc_framepalettedialog.cpp */,
+				7B4DCDA72A214F035D5A1B9F /* moc_movedialog.cpp */,
+				A319C3620BA3125C1765A21E /* qrc_bdsup2sub.cpp */,
+				EEE53D563B47B00AFDA25C2C /* ui_bdsup2sub.h */,
+				D9C05685AD920C42D044B444 /* ui_progressdialog.h */,
+				616C58FBBBF298AE44552CA2 /* ui_conversiondialog.h */,
+				5420A7C9D9AB811D023446FC /* ui_exportdialog.h */,
+				D7D490CBA297B4AE6109966B /* ui_editdialog.h */,
+				AC6452F6792DB5A2252D76D2 /* ui_helpdialog.h */,
+				4359BBF694B5C7E4F1CD1CE4 /* ui_colordialog.h */,
+				8B419C88753A41381F602D8F /* ui_framepalettedialog.h */,
+				23B37E547DF83972F6D9F9B7 /* ui_movedialog.h */,
+			);
+			name = "Temporary Sources";
+			sourceTree = "<Group>";
+		};
+		52C235EBF1C9B07808119459 /* Sources [RCC] */ = {
+			isa = PBXGroup;
+			children = (
+				EECD80F586E1F9F73D447D24 /* bdsup2sub.qrc */,
+			);
+			name = "Sources [RCC]";
+			sourceTree = "<Group>";
+		};
+		614F3407EC469F70DC1F43ED /* Filters */ = {
+			isa = PBXGroup;
+			children = (
+				1B738C47360011DD89687EC2 /* trianglefilter.h */,
+				16C9325B055BED2564AF1D31 /* mitchellfilter.h */,
+				B1029208B76ED13E04D0B8E7 /* lanczos3filter.h */,
+				ED972F3273C994CA8F59B51F /* hermitefilter.h */,
+				1E47E2F2B28069D793637CE2 /* filter.h */,
+				2431095C1EA24B1D7721BF05 /* bsplinefilter.h */,
+				DB7C53C2F7B9EE136F4854E0 /* bicubicfilter.h */,
+				D2F12C74CB42BF97E7181859 /* bellfilter.h */,
+				4CB380341CBA806675578DAF /* filterop.h */,
+				4175ECF5B0117DDB1235AD62 /* filters.h */,
+			);
+			name = Filters;
+			sourceTree = "<Group>";
+		};
+		66933B3716B4A46E002251A3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				66933B3616B4A46E002251A3 /* bdsup2sub++.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6A03EA4D75C9816B24565386 /* Subtitles */ = {
+			isa = PBXGroup;
+			children = (
+				346AA0D731AB6D695B7ABAFF /* subdvd.cpp */,
+				EE232AA9874D8A4AB9892069 /* palette.cpp */,
+				3C435062CA4254B67855632E /* bitmap.cpp */,
+				FE631AA461DD7F57D02B2F47 /* subtitleprocessor.cpp */,
+				08C0BC4B4FAE6772ECCDC0F5 /* subpicture.cpp */,
+				2F1BC5D672BCDBF570473C88 /* erasepatch.cpp */,
+				31BB3DE09EB88CC8B206BE40 /* subpicturedvd.cpp */,
+				611E648E35076FB24F1B412A /* imageobjectfragment.cpp */,
+				5F64E5E9DF5B42A8DFE91DF6 /* supdvd.cpp */,
+				73D0953082E3849538DC1AA0 /* palettebitmap.cpp */,
+				F7DA8956815BDC75ADD146BA /* suphd.cpp */,
+				6C5247E69D1F5711F287EC46 /* supbd.cpp */,
+				A98A01106FB9993A589EB4EA /* subpicturebd.cpp */,
+				5D89D1E89264E3BA2A8E39C7 /* paletteinfo.cpp */,
+				A036E24AD3D306566C7BF810 /* substreamdvd.cpp */,
+				87915609D6A248307D9E0893 /* subpicturehd.cpp */,
+				E0F813DFF5E10C69518EF39A /* supxml.cpp */,
+				90036876B35F1EF85C29F21E /* subpicturexml.cpp */,
+				3916E29380113D54BA074584 /* imageobject.cpp */,
+			);
+			name = Subtitles;
+			sourceTree = "<Group>";
+		};
+		7CABE3C80E79AD2B307756D2 /* Sources [qmake] */ = {
+			isa = PBXGroup;
+			children = (
+				BD7BB48A37AE80CED8CDBBE3 /* bdsup2sub++.pro */,
+			);
+			name = "Sources [qmake]";
+			sourceTree = "<Group>";
+		};
+		7E5C1B4436EDBC17D31CF2C7 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				54BF2A026AAC6A9B4FFA2B0D /* filebuffer.h */,
+				FBA5DFFA65B2B7F5652D0CCF /* timeutil.h */,
+				08D4FAB51FD77623B1460A48 /* bitstream.h */,
+				C32D579E6B6246DB191A867D /* quantizefilter.h */,
+				175A53EEBCBC97F7A6A5A5A3 /* numberutil.h */,
+			);
+			name = Tools;
+			sourceTree = "<Group>";
+		};
+		883D7615C4D2DE3FA1218F12 /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				CE3E52E1A39BC02B834C66FA /* bdsup2sub.h */,
+				C1814845D03CCEDD67D13432 /* zoomableimagearea.h */,
+				AD9976628655B8D4A8656E8E /* editpane.h */,
+				7E0D28C0D7E7DACAD55E50FD /* types.h */,
+				614F3407EC469F70DC1F43ED /* Filters */,
+				059F97CFBBC6911651D287D4 /* Subtitles */,
+				291C1CFAC6E14C66B2ADAF6F /* progressdialog.h */,
+				7E5C1B4436EDBC17D31CF2C7 /* Tools */,
+				8391648270CF2802F63EE683 /* conversiondialog.h */,
+				020210E9BB93B30975F606D9 /* exportdialog.h */,
+				CC36D294FDDDE35A0CE9ED3A /* editdialog.h */,
+				48B64216233456C3E6226A72 /* helpdialog.h */,
+				41C1B9DF527EBDBFF719227C /* colordialog.h */,
+				DC098C2EB41E2C5600E95D9F /* framepalettedialog.h */,
+				57484639D7AFDE128A30921B /* movedialog.h */,
+			);
+			name = Headers;
+			sourceTree = "<Group>";
+		};
+		98C3D480169ECAF65DA0176A /* Filters */ = {
+			isa = PBXGroup;
+			children = (
+				2B4108FD4363E4C869C5821A /* trianglefilter.cpp */,
+				DAAA729CE0D00DE600D625F0 /* mitchellfilter.cpp */,
+				0ACDC0569F85CDAA0F7C532E /* lanczos3filter.cpp */,
+				AA340103EFF5BC1D352BBF49 /* hermitefilter.cpp */,
+				D0061B2F8856C1DE6DFFAF4F /* bsplinefilter.cpp */,
+				2084E67EB4A0B6CF0820ADBF /* bicubicfilter.cpp */,
+				63AFC2DAC67684E73C8D761F /* bellfilter.cpp */,
+				58D180539C196AF219194C1E /* filterop.cpp */,
+				FA580F82B9901500D391B69F /* filters.cpp */,
+			);
+			name = Filters;
+			sourceTree = "<Group>";
+		};
+		ED1E82605DD74B483AF3C982 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				CF996CC26B79B6376B5FE937 /* QtXml */,
+				27AE7A480FD6C52FCA80FECD /* ApplicationServices.framework */,
+				2B9F5257240B5626E8434A44 /* CoreFoundation.framework */,
+				E5F0053C062927C45241E2C9 /* Security.framework */,
+				BC52FAE3CF80A871217A111D /* Foundation.framework */,
+				EC8C168907842420A1607E4A /* QtGui */,
+				7A9A35B6D2C4A9B6F15F9BF7 /* jpeg */,
+				0AD07E81AB64B0C6996CB065 /* mng */,
+				66E62F7E1B66A1CA3EDEFCC6 /* tiff */,
+				DA138F75C9F545CDAE7FB264 /* Carbon.framework */,
+				821416211D63F190AAAD016A /* AppKit.framework */,
+				D264919EE3383397D77AA0B2 /* png */,
+				7C3471117913EA970AF2D55F /* QtCore */,
+				82416FEA46C03B2F87AF69C4 /* z */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<Group>";
+		};
+		EEC299C65D5017EB9DD513B0 /* Sources [UIC] */ = {
+			isa = PBXGroup;
+			children = (
+				BCBA7D34DF199B4E71A398A8 /* bdsup2sub.ui */,
+				81F72EB5E0B76F2C0AD79C9C /* progressdialog.ui */,
+				9214D426C39339210CFB6CE1 /* conversiondialog.ui */,
+				96AC167C920EE1F4E81F9C94 /* exportdialog.ui */,
+				01DD67EFDFEFEA084974D071 /* editdialog.ui */,
+				BDAF242576E890DE23AD5BA0 /* helpdialog.ui */,
+				5FE641EBE92166E29379381D /* colordialog.ui */,
+				547CDC8FFAC680DC369D0F03 /* framepalettedialog.ui */,
+				AE7A5BA7B7AE8BDE8BEFCC94 /* movedialog.ui */,
+			);
+			name = "Sources [UIC]";
+			sourceTree = "<Group>";
+		};
+		FB61758D0F0FDA4BA867C3D5 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				118FCBAABA162BA17933C789 /* main.cpp */,
+				291FB4F4A8F503DFC1044CB1 /* bdsup2sub.cpp */,
+				7D8064861AC6CD46F968D916 /* zoomableimagearea.cpp */,
+				79C1329207B2CB8B58B0DA0A /* editpane.cpp */,
+				98C3D480169ECAF65DA0176A /* Filters */,
+				6A03EA4D75C9816B24565386 /* Subtitles */,
+				1030CE4265438856EF8E3F0E /* progressdialog.cpp */,
+				2ABC6C8F576AB5965B215C7C /* Tools */,
+				BB99C72F13429E2424F3A072 /* conversiondialog.cpp */,
+				63B43C56D5D61E1535FA4D7E /* exportdialog.cpp */,
+				8E89DCCFA6C34D4AE9E0CD30 /* editdialog.cpp */,
+				16EFC28DBAEBAE158B65251F /* helpdialog.cpp */,
+				6395CDBB15BFFD1A9E811095 /* colordialog.cpp */,
+				7FD3A09CAB0BD68E86F46696 /* framepalettedialog.cpp */,
+				F8665E20CBEFD29D5991AFE1 /* movedialog.cpp */,
+				A9EFE9E465C38A68A4F426FB /* bdsup2sub.rc */,
+			);
+			name = Sources;
+			sourceTree = "<Group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		18DF8E07BE0A83C7B6FB93BF /* bdsup2sub++ */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 17B3380A4D6A7D415E7F2E1E /* Build configuration list for PBXNativeTarget "bdsup2sub++" */;
+			buildPhases = (
+				D7BA7D76DAB5DD13389D6332 /* Qt Qmake */,
+				A0A52A2ADF7A1E2A99738674 /* Qt Preprocessors */,
+				C29B8785722055ED95EF7B57 /* Build Sources */,
+				2A1043669E6E5A7426EA502A /* Frameworks & Libraries */,
+				3787F99312C85FF0073FD7BA /* Bundle Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "bdsup2sub++";
+			productName = "bdsup2sub++";
+			productReference = 66933B3616B4A46E002251A3 /* bdsup2sub++.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		91B15E841AA80083484172DE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0450;
+			};
+			buildConfigurationList = CC82A9286117DFED018F418F /* Build configuration list for PBXProject "bdsup2sub++" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 05596AB53D8D521C69802C27 /* bdsup2sub++ */;
+			productRefGroup = 66933B3716B4A46E002251A3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				18DF8E07BE0A83C7B6FB93BF /* bdsup2sub++ */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3787F99312C85FF0073FD7BA /* Bundle Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4BA749CF3998088DBE8329E /* bdsup2sub.rc in Bundle Resources */,
+			);
+			name = "Bundle Resources";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A0A52A2ADF7A1E2A99738674 /* Qt Preprocessors */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "Qt Preprocessors";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/adam/Coding/BDSup2SubPlusPlus/src -f 'bdsup2sub++.xcodeproj/qt_preprocess.mak'";
+		};
+		D7BA7D76DAB5DD13389D6332 /* Qt Qmake */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "Qt Qmake";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/adam/Coding/BDSup2SubPlusPlus/src -f 'bdsup2sub++.xcodeproj/qt_makeqmake.mak'";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C29B8785722055ED95EF7B57 /* Build Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B093CA6F071B023A473CED0 /* main.cpp in Build Sources */,
+				2BA491AACDA453DBB964B307 /* bdsup2sub.cpp in Build Sources */,
+				03B3C0FF18529C5CFD05F7D3 /* zoomableimagearea.cpp in Build Sources */,
+				90F8E49808D66B5830FD1C34 /* editpane.cpp in Build Sources */,
+				EEBA261EA7224F6D64DABE03 /* trianglefilter.cpp in Build Sources */,
+				4B89E71E311EBCBAA420B9DF /* mitchellfilter.cpp in Build Sources */,
+				D9B3274453398386494E2C8B /* lanczos3filter.cpp in Build Sources */,
+				505F2D691B1880F07E0DAA49 /* hermitefilter.cpp in Build Sources */,
+				293E70B8C313D19DD43BAE18 /* bsplinefilter.cpp in Build Sources */,
+				F29A98A181095988DFF41C8F /* bicubicfilter.cpp in Build Sources */,
+				CEBDA5799E39F025C9CC4D99 /* bellfilter.cpp in Build Sources */,
+				6A337C6D2939AA5B528A7ABD /* filterop.cpp in Build Sources */,
+				719DE08EE271F347E9D69E18 /* subdvd.cpp in Build Sources */,
+				680BC0C85FCC0E428A58589B /* palette.cpp in Build Sources */,
+				7C0694FBF25B05CCFA433E8D /* bitmap.cpp in Build Sources */,
+				48C447FF70775562C2546BC8 /* subtitleprocessor.cpp in Build Sources */,
+				D2615F82838E1BFD654D2817 /* subpicture.cpp in Build Sources */,
+				87C259D3CF230DCB91F595C3 /* erasepatch.cpp in Build Sources */,
+				2133330B8FB667BE6CA34728 /* subpicturedvd.cpp in Build Sources */,
+				DF8CA97ED0A32AD052EDA143 /* imageobjectfragment.cpp in Build Sources */,
+				F5F706BCA7AE431C51C7FD1B /* progressdialog.cpp in Build Sources */,
+				CDD547F03F36B6E5ACBFB05E /* supdvd.cpp in Build Sources */,
+				0081629E556240AD0E783CBA /* filebuffer.cpp in Build Sources */,
+				1528FE61838B65DD7007F924 /* conversiondialog.cpp in Build Sources */,
+				6AEFD8D774643446C41D4261 /* filters.cpp in Build Sources */,
+				D8C044DDB42E5C69812A509F /* palettebitmap.cpp in Build Sources */,
+				0A19E82CF79C204A2069F162 /* timeutil.cpp in Build Sources */,
+				95A35A0EF15E7BED8720AA03 /* suphd.cpp in Build Sources */,
+				9DEB10C534891CFA598A91CE /* supbd.cpp in Build Sources */,
+				16830D53798324E3353A7143 /* subpicturebd.cpp in Build Sources */,
+				7DDCE8DE2D73A86F89F453CF /* paletteinfo.cpp in Build Sources */,
+				5F76979D39DD8B13CA5D7991 /* substreamdvd.cpp in Build Sources */,
+				F5119D4648ECD5C14F595CE0 /* subpicturehd.cpp in Build Sources */,
+				54C40E2FF8273C2DAABA555C /* bitstream.cpp in Build Sources */,
+				1AA851152F9343413CDE0F31 /* supxml.cpp in Build Sources */,
+				36DFDAF0C20D13B3B86D5B75 /* subpicturexml.cpp in Build Sources */,
+				E7C62315969BB84D52923DFB /* quantizefilter.cpp in Build Sources */,
+				2B1D3BF55910659A4871E6C4 /* exportdialog.cpp in Build Sources */,
+				19B00757F84DDC2BE0B40F09 /* numberutil.cpp in Build Sources */,
+				626B5B5053B8797086426E3C /* editdialog.cpp in Build Sources */,
+				7F339857B5438BC7E5DEC27B /* helpdialog.cpp in Build Sources */,
+				60871A451DCB46BCB1010A95 /* colordialog.cpp in Build Sources */,
+				43CB6998E36D6B4382FD20CE /* framepalettedialog.cpp in Build Sources */,
+				0392C3FF489018639B2F77E2 /* movedialog.cpp in Build Sources */,
+				4315982B939D8CE83315CEF2 /* imageobject.cpp in Build Sources */,
+				DEA4F33481D178EE270DE2BB /* moc_bdsup2sub.cpp in Build Sources */,
+				A64A28475DA329A02353BE33 /* moc_zoomableimagearea.cpp in Build Sources */,
+				9D0C585175BEDCCC79D93098 /* moc_editpane.cpp in Build Sources */,
+				32105A4B9BDE2EF71CBB1112 /* moc_subdvd.cpp in Build Sources */,
+				C93AC135D7C0D922A565CC08 /* moc_subtitleprocessor.cpp in Build Sources */,
+				DE72984ECB8D1ACE0F4CF673 /* moc_progressdialog.cpp in Build Sources */,
+				AB39F7D35047FC9F66DE5B9C /* moc_supdvd.cpp in Build Sources */,
+				A3F654B483977F7B9B6F8579 /* moc_conversiondialog.cpp in Build Sources */,
+				A2F478BF1A6D26BC60211788 /* moc_suphd.cpp in Build Sources */,
+				A514FFC4A85F40D1FB853767 /* moc_supbd.cpp in Build Sources */,
+				B1B676558A79DE486595F556 /* moc_supxml.cpp in Build Sources */,
+				E3FE3A5399A57C2A8495863D /* moc_exportdialog.cpp in Build Sources */,
+				2FB450CE21FAC17AAEEB370D /* moc_editdialog.cpp in Build Sources */,
+				176035D703A6EF8101E9B457 /* moc_helpdialog.cpp in Build Sources */,
+				6A083305EE1CAF7833ECEF85 /* moc_colordialog.cpp in Build Sources */,
+				372D40533E6CBF58909094D5 /* moc_framepalettedialog.cpp in Build Sources */,
+				4881901C6063483E40B07D78 /* moc_movedialog.cpp in Build Sources */,
+				312379B170EC4EBADF3DE4AC /* qrc_bdsup2sub.cpp in Build Sources */,
+			);
+			name = "Build Sources";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4B72B24813252891014BCF61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = x86_64;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					/Library/Frameworks,
+					/Library/Frameworks,
+					/Library/Frameworks,
+				);
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = Q_COMPILER_INITIALIZER_LISTS;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					.,
+					/usr/local/Qxt/include,
+					/usr/local/Qxt/include/QxtCore,
+					/Library/Frameworks/QxtCore.framework/HEADERS,
+					/opt/local/include/QxtCore,
+					/opt/local/include/QtXml,
+					/opt/local/include/QtGui,
+					/opt/local/include/QtCore,
+					/opt/local/include,
+					.,
+					/usr/local/include,
+					/System/Library/Frameworks/CarbonCore.framework/Headers,
+					"/opt/local/share/qt4/mkspecs/macx-xcode",
+				);
+				INFOPLIST_FILE = Info.plist;
+				LIBRARY_SEARCH_PATHS = (
+					/Library/Frameworks,
+					/opt/local/lib,
+					/System/Library/Frameworks/,
+				);
+				OTHER_CFLAGS = (
+					"-pipe",
+					"-O2",
+					"-Wall",
+					"-W",
+					"-DQXT_CORE_LIB",
+					"-DQT_NO_DEBUG",
+					"-DQT_XML_LIB",
+					"-DQT_GUI_LIB",
+					"-DQT_CORE_LIB",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"-pipe",
+					"-mmacosx-version-min=10.7",
+					"-std=c++11",
+					"-stdlib=libstdc++",
+					"-O2",
+					"-std=c++11",
+					"-stdlib=libstdc++",
+					"-Wall",
+					"-W",
+					"-DQXT_CORE_LIB",
+					"-DQT_NO_DEBUG",
+					"-DQT_XML_LIB",
+					"-DQT_GUI_LIB",
+					"-DQT_CORE_LIB",
+				);
+				OTHER_LDFLAGS = (
+					"-headerpad_max_install_names",
+					"-F/Library/Frameworks",
+					"-F/Library/Frameworks",
+					"-L/Library/Frameworks",
+					"-L/opt/local/lib",
+					"-lQxtCore",
+					"-lm",
+				);
+				PRODUCT_NAME = "bdsup2sub++";
+			};
+			name = Debug;
+		};
+		8C7174830A1E4DCBA0332EC1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				PRODUCT_NAME = "bdsup2sub++";
+			};
+			name = Release;
+		};
+		BEC09A62E69C3553534FF35E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				PRODUCT_NAME = "bdsup2sub++";
+			};
+			name = Debug;
+		};
+		D70590BEB531B51029F711BB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = x86_64;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					/Library/Frameworks,
+					/Library/Frameworks,
+					/Library/Frameworks,
+				);
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = Q_COMPILER_INITIALIZER_LISTS;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					.,
+					/usr/local/Qxt/include,
+					/usr/local/Qxt/include/QxtCore,
+					/Library/Frameworks/QxtCore.framework/HEADERS,
+					/opt/local/include/QxtCore,
+					/opt/local/include/QtXml,
+					/opt/local/include/QtGui,
+					/opt/local/include/QtCore,
+					/opt/local/include,
+					.,
+					/usr/local/include,
+					/System/Library/Frameworks/CarbonCore.framework/Headers,
+					"/opt/local/share/qt4/mkspecs/macx-xcode",
+				);
+				INFOPLIST_FILE = Info.plist;
+				LIBRARY_SEARCH_PATHS = (
+					/Library/Frameworks,
+					/opt/local/lib,
+					/System/Library/Frameworks/,
+				);
+				OTHER_CFLAGS = (
+					"-pipe",
+					"-O2",
+					"-Wall",
+					"-W",
+					"-DQXT_CORE_LIB",
+					"-DQT_NO_DEBUG",
+					"-DQT_XML_LIB",
+					"-DQT_GUI_LIB",
+					"-DQT_CORE_LIB",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"-pipe",
+					"-mmacosx-version-min=10.7",
+					"-std=c++11",
+					"-stdlib=libstdc++",
+					"-O2",
+					"-std=c++11",
+					"-stdlib=libstdc++",
+					"-Wall",
+					"-W",
+					"-DQXT_CORE_LIB",
+					"-DQT_NO_DEBUG",
+					"-DQT_XML_LIB",
+					"-DQT_GUI_LIB",
+					"-DQT_CORE_LIB",
+				);
+				OTHER_LDFLAGS = (
+					"-headerpad_max_install_names",
+					"-F/Library/Frameworks",
+					"-F/Library/Frameworks",
+					"-L/Library/Frameworks",
+					"-L/opt/local/lib",
+					"-lQxtCore",
+					"-lm",
+				);
+				PRODUCT_NAME = "bdsup2sub++";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		17B3380A4D6A7D415E7F2E1E /* Build configuration list for PBXNativeTarget "bdsup2sub++" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BEC09A62E69C3553534FF35E /* Debug */,
+				8C7174830A1E4DCBA0332EC1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC82A9286117DFED018F418F /* Build configuration list for PBXProject "bdsup2sub++" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4B72B24813252891014BCF61 /* Debug */,
+				D70590BEB531B51029F711BB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 91B15E841AA80083484172DE /* Project object */;
+}

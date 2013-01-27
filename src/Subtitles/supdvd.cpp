@@ -69,17 +69,17 @@ bool SupDVD::isForced(int index)
     return subPictures[index].isForced();
 }
 
-quint64 SupDVD::getEndTime(int index)
+qint64 SupDVD::getEndTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-quint64 SupDVD::getStartTime(int index)
+qint64 SupDVD::getStartTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-quint64 SupDVD::getStartOffset(int index)
+qint64 SupDVD::getStartOffset(int index)
 {
     return subPictures[index].offset();
 }
@@ -186,7 +186,7 @@ void SupDVD::readIfo()
                                                            .arg(QString::number(screenHeight)));
 
     // get start offset of Titles&Chapters table
-    quint64 VTS_PGCITI_ofs = fileBuffer->getDWord(0xCC) * 2048;
+    qint64 VTS_PGCITI_ofs = fileBuffer->getDWord(0xCC) * 2048;
 
     // get language index of subtitle streams (ignore all but first language)
     if (fileBuffer->getWord(0x254) > 0 && fileBuffer->getByte(0x256) == 1)
@@ -225,7 +225,7 @@ void SupDVD::readIfo()
     subtitleProcessor->print(QString("Reading palette from offset: %1\n").arg(QString::number(VTS_PGCITI_ofs, 16), 8, QChar('0')));
 
     // assume palette in VTS_PGC_1
-    quint64 index = VTS_PGCITI_ofs;
+    qint64 index = VTS_PGCITI_ofs;
     for (int i = 0; i < 16; ++i)
     {
         int y  = fileBuffer->getByte(index + 0xA4 + 4 * i + 1) & 0xff;
@@ -307,8 +307,8 @@ void SupDVD::readAllSupFrames()
 {
     fileBuffer.reset(new FileBuffer(supFileName));
 
-    quint64 ofs = 0;
-    quint64 size = fileBuffer->getSize();
+    qint64 ofs = 0;
+    qint64 size = fileBuffer->getSize();
 
     if (size <= 0)
     {
@@ -462,9 +462,9 @@ QVector<uchar> SupDVD::createSupFrame(SubPictureDVD &subPicture, Bitmap &bitmap)
     return buf;
 }
 
-quint64 SupDVD::readSupFrame(quint64 ofs)
+qint64 SupDVD::readSupFrame(qint64 ofs)
 {
-    quint64 ctrlOfs = -1;
+    qint64 ctrlOfs = -1;
     int  ctrlOfsRel = 0;
     int  rleSize = 0;
     int  ctrlSize = -1;
@@ -472,7 +472,7 @@ quint64 SupDVD::readSupFrame(quint64 ofs)
     int  length;
 
     // 2 uchars:  packet identifier 0x5350
-    quint64 startOfs = ofs;
+    qint64 startOfs = ofs;
     if (fileBuffer->getWord(ofs) != 0x5350)
     {
         throw QString("Missing packet identifier at ofs: %1").arg(QString::number(ofs, 16), 8, QChar('0'));

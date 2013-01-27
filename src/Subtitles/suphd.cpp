@@ -68,17 +68,17 @@ int SupHD::getNumFrames()
     return subPictures.size();
 }
 
-quint64 SupHD::getEndTime(int index)
+qint64 SupHD::getEndTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-quint64 SupHD::getStartTime(int index)
+qint64 SupHD::getStartTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-quint64 SupHD::getStartOffset(int index)
+qint64 SupHD::getStartOffset(int index)
 {
     return subPictures[index].imageBufferOffsetEven();
 }
