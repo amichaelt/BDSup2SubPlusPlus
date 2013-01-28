@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-!contains(QT_CONFIG,c++11) : error(bdsup2sub++ requires Qt to be configured with C++11 support)
+#!contains(QT_CONFIG,c++11) : error(bdsup2sub++ requires Qt to be configured with C++11 support)
 
 #check Qt version
 QT_VERSION = $$[QT_VERSION]
