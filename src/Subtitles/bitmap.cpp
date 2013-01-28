@@ -210,8 +210,6 @@ Bitmap Bitmap::convertLm(Palette &palette, int alphaThreshold, QVector<int>& lum
 
     for (int i = 0; i < height; ++i)
     {
-        uchar* sourcePixels = subtitleImage.scanLine(i);
-        uchar* destPixels = destImage.scanLine(i);
         for (int j = 0; j < width; ++j)
         {
             int colIdx;
