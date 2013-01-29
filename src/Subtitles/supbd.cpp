@@ -258,6 +258,8 @@ void SupBD::readAllSupFrames()
                     }
 
                     pic = SubPictureBD();
+                    subPictures.push_back(pic);
+                    pic = subPictures[subPictures.size() - 1];
                     ++subCount;
                     pic.setStartTime(segment.timestamp);
 
@@ -414,6 +416,9 @@ void SupBD::readAllSupFrames()
                         subPictures.replace(subPictures.size() - 1, picTmp); // replace in list
                         picLast = picTmp;
 
+                        subPictures.push_back(pic);
+                        pic = subPictures[subPictures.size() - 1];
+
                         subtitleProcessor->printX(QString("#< %1 (%2)\n")
                                                   .arg(QString::number(++subCount))
                                                   .arg(TimeUtil::ptsToTimeStr(pic.startTime())));
@@ -438,7 +443,7 @@ void SupBD::readAllSupFrames()
                             {
                                 subtitleProcessor->printWarning(QString("palette animation: result may be erratic\n"));
                             }
-                            subPictures.push_back(pic); // add to list
+                            subPictures.replace(subPictures.size() - 1, pic); // add to list
                         }
                         else
                         {
