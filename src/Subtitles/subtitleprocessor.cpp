@@ -339,7 +339,7 @@ qint64 SubtitleProcessor::syncTimePTS(qint64 timeStamp, double fps)
     else
     {
         double tpf = (90000 / fpsTrg); // target time per frame in 90kHz
-        retval = (long)(((long)(timeStamp / tpf) * tpf) + 0.5);
+        retval = (qint64)(((qint64)(timeStamp / tpf) * tpf) + 0.5);
     }
     return retval;
 }
@@ -427,8 +427,8 @@ void SubtitleProcessor::scanSubtitles()
         }
         else
         {
-            subPictures.at(i)->setStartTime((long)((ts * factTS) + 0.5) + delayPTS);
-            subPictures.at(i)->setEndTime((long)((te * factTS) + 0.5) + delayPTS);
+            subPictures.at(i)->setStartTime((qint64)((ts * factTS) + 0.5) + delayPTS);
+            subPictures.at(i)->setEndTime((qint64)((te * factTS) + 0.5) + delayPTS);
         }
         // synchronize to target frame rate
         subPictures.at(i)->setStartTime(syncTimePTS(subPictures.at(i)->startTime(), fpsTrg));
@@ -613,8 +613,8 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         }
         else
         {
-            subPictures[i]->setStartTime((long)(((ts * factTS) + 0.5) - delayOld) + delayPTS);
-            subPictures[i]->setEndTime((long)(((te * factTS) + 0.5) - delayOld) + delayPTS);
+            subPictures[i]->setStartTime((qint64)(((ts * factTS) + 0.5) - delayOld) + delayPTS);
+            subPictures[i]->setEndTime((qint64)(((te * factTS) + 0.5) - delayOld) + delayPTS);
         }
         // synchronize to target frame rate
         subPictures[i]->setStartTime(syncTimePTS(subPictures[i]->startTime(), fpsTrg));
@@ -1942,8 +1942,8 @@ void SubtitleProcessor::readXml()
     numberOfWarnings = 0;
 
     supXML = QSharedPointer<SupXML>(new SupXML(fileName, this));
-    connect(supXML.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
-    connect(supXML.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
+    connect(supXML.data(), SIGNAL(maxProgressChanged(qint64)), this, SLOT(setMaxProgress(qint64)));
+    connect(supXML.data(), SIGNAL(currentProgressChanged(qint64)), this, SLOT(setCurrentProgress(qint64)));
     supXML->readAllImages();
     substream = qSharedPointerCast<Substream>(supXML);
 
@@ -2012,8 +2012,8 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
             subFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sub";
         }
         subDVD = QSharedPointer<SubDVD>(new SubDVD(subFileName, idxFileName, this));
-        connect(subDVD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
-        connect(subDVD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
+        connect(subDVD.data(), SIGNAL(maxProgressChanged(qint64)), this, SLOT(setMaxProgress(qint64)));
+        connect(subDVD.data(), SIGNAL(currentProgressChanged(qint64)), this, SLOT(setCurrentProgress(qint64)));
         connect(subDVD.data(), SIGNAL(addLanguage(QString)), this, SLOT(onLanguageRead(QString)));
         subDVD->readIdx(idxToRead);
         subDVD->readAllSubFrames();
@@ -2049,8 +2049,8 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
             supFileName = fileInfo.absolutePath() + QDir::separator() + fileInfo.completeBaseName() + ".sup";
         }
         supDVD = QSharedPointer<SupDVD>(new SupDVD(supFileName, ifoFileName, this));
-        connect(supDVD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
-        connect(supDVD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
+        connect(supDVD.data(), SIGNAL(maxProgressChanged(qint64)), this, SLOT(setMaxProgress(qint64)));
+        connect(supDVD.data(), SIGNAL(currentProgressChanged(qint64)), this, SLOT(setCurrentProgress(qint64)));
         if (ifoFileName != supFileName)
         {
             supDVD->readIfo();
@@ -2148,8 +2148,8 @@ void SubtitleProcessor::readSup()
     if (!id.isEmpty() && ((uchar)id[0] == 0x50 && (uchar)id[1] == 0x47))
     {
         supBD = QSharedPointer<SupBD>(new SupBD(fileName, this));
-        connect(supBD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
-        connect(supBD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
+        connect(supBD.data(), SIGNAL(maxProgressChanged(qint64)), this, SLOT(setMaxProgress(qint64)));
+        connect(supBD.data(), SIGNAL(currentProgressChanged(qint64)), this, SLOT(setCurrentProgress(qint64)));
         supBD->readAllSupFrames();
         substream = qSharedPointerCast<Substream>(supBD);
         inMode = InputMode::BDSUP;
@@ -2157,8 +2157,8 @@ void SubtitleProcessor::readSup()
     else
     {
         supHD = QSharedPointer<SupHD>(new SupHD(fileName, this));
-        connect(supHD.data(), SIGNAL(maxProgressChanged(long)), this, SLOT(setMaxProgress(long)));
-        connect(supHD.data(), SIGNAL(currentProgressChanged(long)), this, SLOT(setCurrentProgress(long)));
+        connect(supHD.data(), SIGNAL(maxProgressChanged(qint64)), this, SLOT(setMaxProgress(qint64)));
+        connect(supHD.data(), SIGNAL(currentProgressChanged(qint64)), this, SLOT(setCurrentProgress(qint64)));
         supHD->readAllSupFrames();
         substream = qSharedPointerCast<Substream>(supHD);
         inMode = InputMode::HDDVDSUP;

@@ -1146,7 +1146,7 @@ void SupBD::findImageArea(SubPictureBD *subPicture)
 {
     QImage image = bitmap.image(palette);
     int top = 0, bottom = 0, left = 0, right = 0;
-    QVector<QRgb> colors = image.colorTable();
+    const QRgb* colors = image.colorTable().constData();
 
     const uchar *pixels = image.constScanLine(0);
     int pitch = image.bytesPerLine();
@@ -1155,7 +1155,7 @@ void SupBD::findImageArea(SubPictureBD *subPicture)
     {
         for (int j = 0; j < image.width(); ++j)
         {
-            if (pixels[j] != 0 && pixels[j] != 1)
+            if (colors[pixels[j]] != 0)
             {
                 top = i - 10; // Adjust in case of black borders
                 if (top < 0)
@@ -1175,7 +1175,7 @@ find_bottom:
     {
         for (int j = 0; j < image.width(); ++j)
         {
-            if (pixels[j] != 0 && pixels[j] != 1)
+            if (colors[pixels[j]] != 0)
             {
                 bottom = i + 10; // Adjust in case of black borders
                 if (bottom >= image.height())
@@ -1196,7 +1196,7 @@ find_left:
     {
         for (int j = 0; j < image.width(); ++j)
         {
-            if (pixels[j] != 0 && pixels[j] != 1)
+            if (colors[pixels[j]] != 0)
             {
                 if (j < tempLeft)
                 {
@@ -1219,7 +1219,7 @@ find_left:
     {
         for (int j = image.width() - 1; j >= 0; --j)
         {
-            if (pixels[j] != 0 && pixels[j] != 1)
+            if (colors[pixels[j]] != 0)
             {
                 if (j > tempRight)
                 {

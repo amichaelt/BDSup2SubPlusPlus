@@ -466,7 +466,7 @@ void EditDialog::on_durationLineEdit_textChanged(const QString &arg1)
 {
     if (!isReady) return;
 
-    qint64 t = (long)(arg1.toDouble() * 90);
+    qint64 t = (qint64)(arg1.toDouble() * 90);
     if (t < frameTime)
     {
         ui->durationLineEdit->setPalette(*errorBackground);
@@ -660,7 +660,7 @@ void EditDialog::on_endTimeLineEdit_editingFinished()
 
 void EditDialog::on_durationLineEdit_editingFinished()
 {
-    qint64 t = (long)(ui->durationLineEdit->text().toDouble() * 90);
+    qint64 t = (qint64)(ui->durationLineEdit->text().toDouble() * 90);
     if (t >= 0 && t < frameTime)
     {
         t = frameTime;

@@ -368,7 +368,7 @@ void ConversionDialog::on_delayLineEdit_textChanged(const QString &arg1)
     int pos = 0;
     if (ui->delayLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
     {
-        delayPTS = (int)subtitleProcessor->syncTimePTS((long)(arg1.toDouble() * 90), fpsTrg);
+        delayPTS = (int)subtitleProcessor->syncTimePTS((qint64)(arg1.toDouble() * 90), fpsTrg);
         if (temp != QString::number(delayPTS / 90.0, 'g', 6))
         {
             ui->delayLineEdit->setPalette(*warnBackground);
@@ -391,7 +391,7 @@ void ConversionDialog::on_minTimeLineEdit_textChanged(const QString &arg1)
     int pos = 0;
     if (ui->minTimeLineEdit->validator()->validate(temp, pos) == QValidator::Acceptable)
     {
-        minTimePTS = (int)subtitleProcessor->syncTimePTS((long)(arg1.toDouble() * 90), fpsTrg);
+        minTimePTS = (int)subtitleProcessor->syncTimePTS((qint64)(arg1.toDouble() * 90), fpsTrg);
         if (temp != QString::number(delayPTS / 90.0, 'g', 6))
         {
             ui->minTimeLineEdit->setPalette(*warnBackground);
@@ -440,7 +440,7 @@ void ConversionDialog::on_storeButton_clicked()
     d = ui->delayLineEdit->text().toDouble(&ok);
     if (ok)
     {
-        delayPTS = (int)subtitleProcessor->syncTimePTS((long)(d * 90.0), fpsTrg);
+        delayPTS = (int)subtitleProcessor->syncTimePTS((qint64)(d * 90.0), fpsTrg);
         settings->setValue("delayPTS", QVariant(delayPTS));
     }
 
@@ -449,7 +449,7 @@ void ConversionDialog::on_storeButton_clicked()
     d = ui->minTimeLineEdit->text().toDouble(&ok);
     if (ok)
     {
-        minTimePTS = (int)subtitleProcessor->syncTimePTS((long)d * 90.0, fpsTrg);
+        minTimePTS = (int)subtitleProcessor->syncTimePTS((qint64)d * 90.0, fpsTrg);
         settings->setValue("minTimePTS", minTimePTS);
     }
 

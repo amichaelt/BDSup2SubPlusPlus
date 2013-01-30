@@ -1336,7 +1336,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 errorStream << QString("ERROR: Illegal delay value: %1").arg(value) << endl;
                 exit(1);
             }
-            int delayPTS = (int)subtitleProcessor->syncTimePTS((long)delay, subtitleProcessor->getFPSTrg());
+            int delayPTS = (int)subtitleProcessor->syncTimePTS((qint64)delay, subtitleProcessor->getFPSTrg());
             subtitleProcessor->setDelayPTS(delayPTS);
             outStream << QString("OPTION: Set delay to %1")
                          .arg(QString::number(delayPTS / 90.0, 'g', 6)) << endl;
@@ -1356,7 +1356,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                                .arg(value) << endl;
                 exit(1);
             }
-            int tMin = (int)subtitleProcessor->syncTimePTS((long)time, subtitleProcessor->getFPSTrg());
+            int tMin = (int)subtitleProcessor->syncTimePTS((qint64)time, subtitleProcessor->getFPSTrg());
             subtitleProcessor->setMinTimePTS(tMin);
             subtitleProcessor->setFixShortFrames(true);
             outStream << QString("OPTION: Set minimum display time to %1")
@@ -1802,12 +1802,12 @@ void BDSup2Sub::Redirect_console()
 
     AllocConsole();
 
-    hCrtout=_open_osfhandle( (long) GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT );
+    hCrtout=_open_osfhandle( (qint64) GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT );
     hfout=_fdopen(hCrtout, "w");
     *stdout= *hfout;
     setvbuf(stdout,NULL, _IONBF,0);
 
-    hCrterr=_open_osfhandle( (long) GetStdHandle(STD_ERROR_HANDLE), _O_TEXT );
+    hCrterr=_open_osfhandle( (qint64) GetStdHandle(STD_ERROR_HANDLE), _O_TEXT );
     hferr=_fdopen(hCrterr, "w");
     *stderr= *hferr;
     setvbuf(stderr,NULL, _IONBF,0);

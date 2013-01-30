@@ -68,23 +68,3 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
         }
     }
 }
-
-//int SubPictureBD::getImageWidth()
-//{
-//    return imageObjectList[objectId].width();
-//}
-
-//int SubPictureBD::getImageHeight()
-//{
-//    return imageObjectList[objectId].height();
-//}
-
-//int SubPictureBD::getOfsX()
-//{
-//    return imageObjectList[objectId].xOffset();
-//}
-
-//int SubPictureBD::getOfsY()
-//{
-//    return imageObjectList[objectId].yOffset();
-//}
