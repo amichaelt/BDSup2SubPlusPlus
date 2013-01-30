@@ -130,6 +130,8 @@ private:
 
     SupSegment readSegment(int offset);
 
+    void findImageArea(SubPictureBD *subPicture);
+
     QVector<uchar> packetHeader =
     {
         0x50, 0x47,                         // 0:  "PG"

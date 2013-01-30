@@ -1950,7 +1950,7 @@ void SubtitleProcessor::readXml()
     inMode = InputMode::XML;
 
     // decode first frame
-    substream->decode(0);
+    //substream->decode(0);
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion
@@ -2061,7 +2061,7 @@ void SubtitleProcessor::readDVDSubStream(StreamID streamID, bool isVobSub)
         substreamDVD = supDVD.data();
     }
 
-    substream->decode(0);
+    //substream->decode(0);
     subVobTrg = new SubPictureDVD;
     defaultSourceDVDPalette = Palette(substreamDVD->getSrcPalette());
     currentSourceDVDPalette = Palette(defaultSourceDVDPalette);
@@ -2165,7 +2165,7 @@ void SubtitleProcessor::readSup()
     }
 
     // decode first frame
-    substream->decode(0);
+    //substream->decode(0);
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion

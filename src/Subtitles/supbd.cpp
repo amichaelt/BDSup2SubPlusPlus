@@ -1142,10 +1142,127 @@ SupBD::CompositionState SupBD::getCompositionState(SupBD::SupSegment *segment)
     }
 }
 
+void SupBD::findImageArea(SubPictureBD *subPicture)
+{
+    QImage image = bitmap.image(palette);
+    int top = 0, bottom = 0, left = 0, right = 0;
+    QVector<QRgb> colors = image.colorTable();
+
+    const uchar *pixels = image.constScanLine(0);
+    int pitch = image.bytesPerLine();
+
+    for (int i = 0; i < image.height(); ++i)
+    {
+        for (int j = 0; j < image.width(); ++j)
+        {
+            if (pixels[j] != 0 && pixels[j] != 1)
+            {
+                top = i - 10; // Adjust in case of black borders
+                if (top < 0)
+                {
+                    top = 0;
+                }
+                goto find_bottom;
+            }
+        }
+        pixels += pitch;
+    }
+
+find_bottom:
+    pixels = image.constScanLine(image.height() - 1);
+
+    for (int i = image.height() - 1; i >= 0; --i)
+    {
+        for (int j = 0; j < image.width(); ++j)
+        {
+            if (pixels[j] != 0 && pixels[j] != 1)
+            {
+                bottom = i + 10; // Adjust in case of black borders
+                if (bottom >= image.height())
+                {
+                    bottom = image.height() - 1;
+                }
+                goto find_left;
+            }
+        }
+        pixels -= pitch;
+    }
+
+find_left:
+    pixels = image.constScanLine(top);
+    int tempLeft = image.width();
+
+    for (int i = top; i <= bottom; ++i)
+    {
+        for (int j = 0; j < image.width(); ++j)
+        {
+            if (pixels[j] != 0 && pixels[j] != 1)
+            {
+                if (j < tempLeft)
+                {
+                    tempLeft = j - 10;
+                }
+                if (tempLeft < 0)
+                {
+                    tempLeft = 0;
+                }
+            }
+        }
+        pixels += pitch;
+    }
+    left = tempLeft;
+
+    pixels = image.constScanLine(top);
+    int tempRight = 0;
+
+    for (int i = top; i <= bottom; ++i)
+    {
+        for (int j = image.width() - 1; j >= 0; --j)
+        {
+            if (pixels[j] != 0 && pixels[j] != 1)
+            {
+                if (j > tempRight)
+                {
+                    tempRight = j + 10;
+                }
+                if (tempRight >= image.width())
+                {
+                    tempRight = image.width() - 1;
+                }
+            }
+        }
+        pixels += pitch;
+    }
+    right = tempRight;
+
+    int height = (bottom - top) + 1;
+    int width = (right - left) + 1;
+
+    subPicture->setXWindowOffset(left);
+    subPicture->setYWindowOffset(top);
+    subPicture->setOfsX(left);
+    subPicture->setOfsY(top);
+
+    subPicture->setWindowHeight(height);
+    subPicture->setWindowWidth(width);
+
+    subPicture->setImageHeight(height);
+    subPicture->setImageWidth(width);
+
+    QImage newImage = image.copy(left, top, width, height);
+    bitmap.setImg(newImage);
+}
+
 void SupBD::decode(SubPictureBD *subPicture)
 {
     palette = decodePalette(subPicture);
     bitmap = decodeImage(subPicture, palette.transparentIndex());
+
+    // special case for subtitles that don't properly signal the image area
+    if (subPicture->getImgObj().width() == 1920 && subPicture->getImgObj().height() == 1080)
+    {
+        findImageArea(subPicture);
+    }
     primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
 }
 
@@ -1218,8 +1335,8 @@ Palette SupBD::decodePalette(SubPictureBD *subPicture)
 
 Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
 {
-    int w = subPicture->getImageWidth();
-    int h = subPicture->getImageHeight();
+    int w = subPicture->getImgObj().width();
+    int h = subPicture->getImgObj().height();
     // always decode image obj 0, start with first entry in fragmentlist
     ImageObjectFragment fragment = subPicture->getImgObj().getFragmentList()[0];
     qint64 startOfs = fragment.imageBufferOffset();
@@ -1329,6 +1446,10 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
             xpos++;
         }
     } while (index < buf.size());
+    subPicture->setOfsX(subPicture->getImgObj().xOffset());
+    subPicture->setOfsY(subPicture->getImgObj().yOffset());
+    subPicture->setImageWidth(subPicture->getImgObj().width());
+    subPicture->setImageHeight(subPicture->getImgObj().height());
 
     return bm;
 }

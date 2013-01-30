@@ -37,11 +37,6 @@ public:
     SubPictureBD(const SubPictureBD& other);
     ~SubPictureBD() { }
 
-    int getImageWidth();
-    int getImageHeight();
-    int getOfsX();
-    int getOfsY();
-
     int objectID() { return objectId; }
     void setObjectID(int objectID) { objectId = objectID; }
     int windowWidth() { return winWidth; }
@@ -59,8 +54,8 @@ public:
 
     QVector<QVector<PaletteInfo> > palettes;
 
-    ImageObject getImgObj(int index) { return imageObjectList[index]; }
-    ImageObject getImgObj() { return imageObjectList[objectId]; }
+    ImageObject &getImgObj(int index) { return imageObjectList[index]; }
+    ImageObject &getImgObj() { return imageObjectList[objectId]; }
 
 private:
     int objectId = 0;
