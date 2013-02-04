@@ -2165,7 +2165,7 @@ void SubtitleProcessor::readSup()
     }
 
     // decode first frame
-    //substream->decode(0);
+    substream->decode(0);
     subVobTrg = new SubPictureDVD;
 
     // automatically set luminance thresholds for VobSub conversion

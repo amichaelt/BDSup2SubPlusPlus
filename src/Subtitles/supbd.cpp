@@ -194,13 +194,13 @@ void SupBD::readAllSupFrames()
             {
                 if (pic.startTime() != -1)
                 {
-                    subPictures.push_back(pic);
                     if (pic.imageObjectList.size() != 0)
                     {
                         subtitleProcessor->printX(QString("#> %1 (%2)\n")
                                                   .arg(QString::number(++subCount))
                                                   .arg(TimeUtil::ptsToTimeStr(pic.startTime())));
                     }
+                    subPictures.push_back(pic);
                     pic = SubPictureBD();
                 }
 
@@ -300,6 +300,8 @@ void SupBD::readAllSupFrames()
 
     for (int i = subPictures.size() - 1; i >= 0; --i)
     {
+        // Need to remove any subpictures who have no image objects
+        // or remove any duped subtitles that share a composition number
         if (subPictures[i].imageObjectList.size() == 0 || (i > 0 && (subPictures[i].compNum() == subPictures[i - 1].compNum())))
         {
             subPictures.remove(i);
@@ -755,10 +757,6 @@ void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
         }
         else
         {
-            if (cs != CompositionState::EPOCH_START)
-            {
-
-            }
             int offset = index;
             for (int i = 0; i < coNum; ++i)
             {
@@ -996,20 +994,19 @@ void SupBD::findImageArea(SubPictureBD *subPicture)
 {
     QImage image = bitmap.image(palette);
     int top = 0, bottom = 0, left = 0, right = 0;
-    QVector<QRgb> colors = image.colorTable();
+    const QRgb* colors = image.colorTable().constData();
 
     const uchar *pixels = image.constScanLine(0);
     int pitch = image.bytesPerLine();
-    QRgb color;
+    QRgb color = palette.rgba(primaryColorIndex);
 
     for (int i = 0; i < image.height(); ++i)
     {
         for (int j = 0; j < image.width(); ++j)
         {
-            color = colors[pixels[j]];
-            if (qRed(color) != 0 && qGreen(color) != 0 && qBlue(color) != 0)
+            if (colors[pixels[j]] == color)
             {
-                top = i - 10; // Adjust in case of black borders
+                top = i - 20; // Pad value for borders
                 if (top < 0)
                 {
                     top = 0;
@@ -1027,10 +1024,9 @@ find_bottom:
     {
         for (int j = 0; j < image.width(); ++j)
         {
-            color = colors[pixels[j]];
-            if (qRed(color) != 0 && qGreen(color) != 0 && qBlue(color) != 0)
+            if (colors[pixels[j]] == color)
             {
-                bottom = i + 10; // Adjust in case of black borders
+                bottom = i + 20; // Pad value for borders
                 if (bottom >= image.height())
                 {
                     bottom = image.height() - 1;
@@ -1049,12 +1045,11 @@ find_left:
     {
         for (int j = 0; j < image.width(); ++j)
         {
-            color = colors[pixels[j]];
-            if (qRed(color) != 0 && qGreen(color) != 0 && qBlue(color) != 0)
+            if (colors[pixels[j]] == color)
             {
                 if (j < tempLeft)
                 {
-                    tempLeft = j - 10;
+                    tempLeft = j - 20; // Pad value for borders
                 }
                 if (tempLeft < 0)
                 {
@@ -1073,12 +1068,11 @@ find_left:
     {
         for (int j = image.width() - 1; j >= 0; --j)
         {
-            color = colors[pixels[j]];
-            if (qRed(color) != 0 && qGreen(color) != 0 && qBlue(color) != 0)
+            if (colors[pixels[j]] == color)
             {
                 if (j > tempRight)
                 {
-                    tempRight = j + 10;
+                    tempRight = j + 20; // Pad value for borders
                 }
                 if (tempRight >= image.width())
                 {
@@ -1112,13 +1106,13 @@ void SupBD::decode(SubPictureBD *subPicture)
 {
     palette = decodePalette(subPicture);
     bitmap = decodeImage(subPicture, palette.transparentIndex());
+    primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
 
     // special case for subtitles that don't properly signal the image area
     if (subPicture->getImgObj().width() == 1920 && subPicture->getImgObj().height() == 1080)
     {
         findImageArea(subPicture);
     }
-    primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
 }
 
 Palette SupBD::decodePalette(SubPictureBD *subPicture)

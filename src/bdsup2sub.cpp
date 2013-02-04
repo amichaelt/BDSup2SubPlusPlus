@@ -512,14 +512,7 @@ void BDSup2Sub::enableVobSubComponents(bool enable)
     {
         ui->paletteComboBox->addItem("dithered");
     }
-    if (!enable && subtitleProcessor->getPaletteMode() != PaletteMode::CREATE_DITHERED)
-    {
-        ui->paletteComboBox->setCurrentIndex((int)subtitleProcessor->getPaletteMode());
-    }
-    else
-    {
-        ui->paletteComboBox->setCurrentIndex((int)PaletteMode::NEW);
-    }
+    ui->paletteComboBox->setCurrentIndex((int)subtitleProcessor->getPaletteMode());
 
     if (!enable || subtitleProcessor->getInputMode() == InputMode::VOBSUB || subtitleProcessor->getInputMode() == InputMode::SUPIFO)
     {
