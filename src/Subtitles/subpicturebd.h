@@ -39,6 +39,10 @@ public:
 
     int objectID() { return objectId; }
     void setObjectID(int objectID) { objectId = objectID; }
+    int paletteID() { return paletteId; }
+    void setPaletteID(int paletteID) { paletteId = paletteID; }
+    bool paletteUpdated() { return paletteUpdate; }
+    void setPaletteUpdated(bool paletteUpdated) { paletteUpdate = paletteUpdated; }
     int windowWidth() { return winWidth; }
     void setWindowWidth(int windowWidth) { winWidth = windowWidth; }
     int windowHeight() { return winHeight; }
@@ -58,12 +62,15 @@ public:
     ImageObject &getImgObj() { return imageObjectList[objectId]; }
 
 private:
+    int paletteId;
     int objectId = 0;
     int winWidth = 0;
     int winHeight = 0;
     int xWinOfs = 0;
     int yWinOfs = 0;
     int type = 0;
+
+    bool paletteUpdate;
 };
 
 #endif // SUBSPICTUREBD_H
