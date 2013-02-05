@@ -33,12 +33,12 @@ Bitmap::Bitmap()
 {
 }
 
-Bitmap::Bitmap(Bitmap &other) :
+Bitmap::Bitmap(const Bitmap &other) :
     subtitleImage(other.subtitleImage.copy())
 {
 }
 
-Bitmap::Bitmap(Bitmap *other) :
+Bitmap::Bitmap(const Bitmap *other) :
     subtitleImage(other->subtitleImage.copy())
 {
 }

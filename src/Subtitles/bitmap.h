@@ -33,8 +33,8 @@ class Bitmap
 {
 public:
     Bitmap();
-    Bitmap(Bitmap &other);
-    Bitmap(Bitmap *other);
+    Bitmap(const Bitmap &other);
+    Bitmap(const Bitmap *other);
     Bitmap(int width, int height);
     Bitmap(int width, int height, int color);
     Bitmap(QImage subtitleImage);

@@ -33,6 +33,7 @@
 #include "paletteinfo.h"
 
 #include <QImage>
+#include <QPainter>
 
 SupBD::SupBD(QString fileName, SubtitleProcessor* subtitleProcessor) :
     supFileName(fileName)
@@ -1200,123 +1201,186 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
         }
     }
 
-    int w = subPicture->getImgObj().width();
-    int h = subPicture->getImgObj().height();
-    // always decode image obj 0, start with first entry in fragmentlist
-    ImageObjectFragment fragment = subPicture->getImgObj().getFragmentList()[0];
-    qint64 startOfs = fragment.imageBufferOffset();
+    QVector<Bitmap> bitmaps;
 
-    if (w > subPicture->width() || h > subPicture->height())
+    for (int i = 0; i < objectIdxes.size(); ++i)
     {
-        throw QString("Subpicture too large: %1x%2 at offset 0x%3")
-                .arg(QString::number(w))
-                .arg(QString::number(h))
-                .arg(QString::number(startOfs, 16), 8, QChar('0'));
-    }
+        int imgObjIdx = objectIdxes[i];
+        ImageObject imageObjet = subPicture->getImgObj(imgObjIdx);
+        int w = imageObjet.width();
+        int h = imageObjet.height();
+        // always decode image obj 0, start with first entry in fragmentlist
+        ImageObjectFragment fragment = imageObjet.getFragmentList()[0];
+        qint64 startOfs = fragment.imageBufferOffset();
 
-    Bitmap bm(w, h, transparentIndex);
-
-    int b;
-    int index = 0;
-    int ofs = 0;
-    int size = 0;
-    int xpos = 0;
-
-    // just for multi-packet support, copy all of the image data in one common buffer
-    QVector<uchar> buf = QVector<uchar>(subPicture->getImgObj().bufferSize());
-    index = 0;
-    for (int p = 0; p < subPicture->getImgObj().getFragmentList().size(); ++p)
-    {
-        // copy data of all packet to one common buffer
-        fragment = subPicture->getImgObj().getFragmentList()[p];
-        for (int i = 0; i < fragment.imagePacketSize(); ++i)
+        if (w > subPicture->width() || h > subPicture->height())
         {
-            buf[index + i] = (uchar)fileBuffer->getByte(fragment.imageBufferOffset() + i);
+            throw QString("Subpicture too large: %1x%2 at offset 0x%3")
+                    .arg(QString::number(w))
+                    .arg(QString::number(h))
+                    .arg(QString::number(startOfs, 16), 8, QChar('0'));
         }
-        index += fragment.imagePacketSize();
-    }
 
-    index = 0;
+        Bitmap bm(w, h, transparentIndex);
 
-    uchar* pixels = bm.image().bits();
-    int pitch = bm.image().bytesPerLine();
+        int b;
+        int index = 0;
+        int ofs = 0;
+        int size = 0;
+        int xpos = 0;
 
-    do
-    {
-        b = buf[index++] & 0xff;
-        if (b == 0)
+        // just for multi-packet support, copy all of the image data in one common buffer
+        QVector<uchar> buf = QVector<uchar>(imageObjet.bufferSize());
+        index = 0;
+        for (int p = 0; p < imageObjet.getFragmentList().size(); ++p)
+        {
+            // copy data of all packet to one common buffer
+            fragment = imageObjet.getFragmentList()[p];
+            for (int i = 0; i < fragment.imagePacketSize(); ++i)
+            {
+                buf[index + i] = (uchar)fileBuffer->getByte(fragment.imageBufferOffset() + i);
+            }
+            index += fragment.imagePacketSize();
+        }
+
+        index = 0;
+
+        uchar* pixels = bm.image().bits();
+        int pitch = bm.image().bytesPerLine();
+
+        do
         {
             b = buf[index++] & 0xff;
             if (b == 0)
             {
-                // next line
-                ofs = (ofs / pitch) * pitch;
-                if (xpos < pitch)
+                b = buf[index++] & 0xff;
+                if (b == 0)
                 {
-                    ofs += pitch;
-                }
-                xpos = 0;
-            }
-            else
-            {
-                if ((b & 0xC0) == 0x40)
-                {
-                    // 00 4x xx -> xxx zeroes
-                    size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
-
-                    for (int i = 0; i < size; ++i)
+                    // next line
+                    ofs = (ofs / pitch) * pitch;
+                    if (xpos < pitch)
                     {
-                        pixels[ofs++] = 0; /*(uchar)b;*/
+                        ofs += pitch;
                     }
-                    xpos += size;
-                }
-                else if ((b & 0xC0) == 0x80)
-                {
-                    // 00 8x yy -> x times value y
-                    size = (b - 0x80);
-                    b = buf[index++] & 0xff;
-
-                    for (int i = 0; i < size; ++i)
-                    {
-                        pixels[ofs++] = (uchar)b;
-                    }
-                    xpos += size;
-                }
-                else if  ((b & 0xC0) != 0)
-                {
-                    // 00 cx yy zz -> xyy times value z
-                    size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
-                    b = buf[index++] & 0xff;
-
-                    for (int i = 0; i < size; ++i)
-                    {
-                        pixels[ofs++] = (uchar)b;
-                    }
-                    xpos += size;
+                    xpos = 0;
                 }
                 else
                 {
-                    // 00 xx -> xx times 0
-                    for (int i = 0; i < b; ++i)
+                    if ((b & 0xC0) == 0x40)
                     {
-                        pixels[ofs++] = 0;
+                        // 00 4x xx -> xxx zeroes
+                        size = ((b - 0x40) << 8) + (buf[index++] & 0xff);
+
+                        for (int i = 0; i < size; ++i)
+                        {
+                            pixels[ofs++] = 0; /*(uchar)b;*/
+                        }
+                        xpos += size;
                     }
-                    xpos += b;
+                    else if ((b & 0xC0) == 0x80)
+                    {
+                        // 00 8x yy -> x times value y
+                        size = (b - 0x80);
+                        b = buf[index++] & 0xff;
+
+                        for (int i = 0; i < size; ++i)
+                        {
+                            pixels[ofs++] = (uchar)b;
+                        }
+                        xpos += size;
+                    }
+                    else if  ((b & 0xC0) != 0)
+                    {
+                        // 00 cx yy zz -> xyy times value z
+                        size = ((b - 0xC0) << 8)+(buf[index++] & 0xff);
+                        b = buf[index++] & 0xff;
+
+                        for (int i = 0; i < size; ++i)
+                        {
+                            pixels[ofs++] = (uchar)b;
+                        }
+                        xpos += size;
+                    }
+                    else
+                    {
+                        // 00 xx -> xx times 0
+                        for (int i = 0; i < b; ++i)
+                        {
+                            pixels[ofs++] = 0;
+                        }
+                        xpos += b;
+                    }
                 }
             }
+            else
+            {
+                pixels[ofs++] = (uchar)b;
+                xpos++;
+            }
+        } while (index < buf.size());
+        bitmaps.push_back(bm);
+    }
+
+    if (bitmaps.size() == 1)
+    {
+        ImageObject imageObject = subPicture->getImgObj();
+
+        subPicture->setOfsX(imageObject.xOffset());
+        subPicture->setOfsY(imageObject.yOffset());
+        subPicture->setImageWidth(imageObject.width());
+        subPicture->setImageHeight(imageObject.height());
+
+        return bitmaps[0];
+    }
+    else
+    {
+        ImageObject imgObj1 = subPicture->getImgObj(objectIdxes[0]);
+        ImageObject imgObj2 = subPicture->getImgObj(objectIdxes[1]);
+
+        int imgObj1XOfs = imgObj1.xOffset();
+        int imgObj2XOfs = imgObj2.xOffset();
+        int imgObj1YOfs = imgObj1.yOffset();
+        int imgObj2YOfs = imgObj2.yOffset();
+
+        int resultXOffset = imgObj1XOfs < imgObj2XOfs ? imgObj1XOfs : imgObj2XOfs;
+        int resultYOffset = imgObj1YOfs < imgObj2YOfs ? imgObj1YOfs : imgObj2YOfs;
+
+        int resultHeight = 0;
+
+        if (imgObj1YOfs > imgObj2YOfs)
+        {
+            resultHeight = ((imgObj1YOfs + imgObj1.height()) - resultYOffset);
         }
         else
         {
-            pixels[ofs++] = (uchar)b;
-            xpos++;
+            resultHeight = ((imgObj2YOfs + imgObj2.height()) - resultYOffset);
         }
-    } while (index < buf.size());
-    subPicture->setOfsX(subPicture->getImgObj().xOffset());
-    subPicture->setOfsY(subPicture->getImgObj().yOffset());
-    subPicture->setImageWidth(subPicture->getImgObj().width());
-    subPicture->setImageHeight(subPicture->getImgObj().height());
 
-    return bm;
+        int imgObj1Width = imgObj1.width();
+        int imgObj2Width = imgObj2.width();
+
+        int resultWidth = imgObj1Width > imgObj2Width ? imgObj1Width : imgObj2Width;
+
+        QImage resultImage(1920, 1080, QImage::Format_ARGB32_Premultiplied);
+        QPainter painter(&resultImage);
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
+        painter.fillRect(resultImage.rect(), Qt::transparent);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(imgObj1XOfs, imgObj1YOfs, bitmaps[0].image(palette));
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(imgObj2XOfs, imgObj2YOfs, bitmaps[1].image(palette));
+        painter.end();
+
+        resultImage = resultImage.convertToFormat(QImage::Format_Indexed8, palette.colorTable());
+        resultImage = resultImage.copy(resultXOffset, resultYOffset, resultWidth, resultHeight);
+
+        subPicture->setOfsX(resultXOffset);
+        subPicture->setOfsY(resultYOffset);
+        subPicture->setImageWidth(resultWidth);
+        subPicture->setImageHeight(resultHeight);
+
+        return Bitmap(resultImage);
+    }
 }
 
 double SupBD::getFpsFromID(int id)
