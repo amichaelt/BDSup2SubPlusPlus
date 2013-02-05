@@ -85,7 +85,14 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
     changeScale = subtitleProcessor->getApplyFreeScale();
     fixShortFrames = subtitleProcessor->getFixShortFrames();
     fpsSrc = subtitleProcessor->getFPSSrc();
-    fpsTrg = subtitleProcessor->getFPSTrg();
+    if (changeFPS)
+    {
+        fpsTrg = subtitleProcessor->getFPSTrg();
+    }
+    else
+    {
+        fpsTrg = fpsSrc;
+    }
     scaleX = subtitleProcessor->getFreeScaleX();
     scaleY = subtitleProcessor->getFreeScaleY();
     fpsSrcCertain = subtitleProcessor->getFpsSrcCertain();
