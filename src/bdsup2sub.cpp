@@ -934,6 +934,16 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     QMultiHash<QString, QVariant> parameters = options->parameters();
     QStringList positional = options->positional();
 
+    if (options->count("log-to-stderr"))
+    {
+        streamFile.open(stderr, QIODevice::WriteOnly);
+    }
+    else
+    {
+        streamFile.open(stdout, QIODevice::WriteOnly);
+    }
+    outStream.setDevice(&streamFile);
+
     if (positional.size() > 1 || options->count("h") || options->showUnrecognizedWarning(errorStream))
     {
         showUsage(outStream);
@@ -955,15 +965,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     }
     else
     {
-        if (options->count("log-to-stderr"))
-        {
-            streamFile.open(stderr, QIODevice::WriteOnly);
-        }
-        else
-        {
-            streamFile.open(stdout, QIODevice::WriteOnly);
-        }
-        outStream.setDevice(&streamFile);
         outStream << progNameVer + "\n";
         // parse parameters
         QString src = positional.size() == 1 ? positional[0] : "";
