@@ -37,8 +37,6 @@ public:
     SubPictureBD(const SubPictureBD& other);
     ~SubPictureBD() { }
 
-    int objectID() { return objectId; }
-    void setObjectID(int objectID) { objectId = objectID; }
     int paletteID() { return paletteId; }
     void setPaletteID(int paletteID) { paletteId = paletteID; }
     bool paletteUpdated() { return paletteUpdate; }
@@ -53,17 +51,37 @@ public:
     void setYWindowOffset(int yWindowOffset) { yWinOfs = yWindowOffset; }
     int subPictureType() { return type; }
     void setSubPictureType(int subPictureType) { type = subPictureType; }
+    bool isForced()
+    {
+        bool isForced = true;
+
+        for (int i = 0; i < imageObjectList.size(); ++i)
+        {
+            if (imageObjectList[i].getFragmentList().size() > 0)
+            {
+                isForced &= imageObjectList[i].isForced();
+            }
+        }
+    }
+    void setForced(bool isForced)
+    {
+        for (int i = 0; i < imageObjectList.size(); ++i)
+        {
+            if (imageObjectList[i].getFragmentList().size() > 0)
+            {
+                imageObjectList[i].setForced(isForced);
+            }
+        }
+    }
 
     QVector<ImageObject> imageObjectList;
 
     QVector<QVector<PaletteInfo> > palettes;
 
     ImageObject &getImgObj(int index) { return imageObjectList[index]; }
-    ImageObject &getImgObj() { return imageObjectList[objectId]; }
 
 private:
     int paletteId;
-    int objectId = 0;
     int winWidth = 0;
     int winHeight = 0;
     int xWinOfs = 0;

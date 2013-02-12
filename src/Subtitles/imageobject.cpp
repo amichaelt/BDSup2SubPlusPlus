@@ -30,6 +30,9 @@ ImageObject::ImageObject(const ImageObject *other) :
     h(other->h),
     xOfs(other->xOfs),
     yOfs(other->yOfs),
+    windowId(other->windowId),
+    forced(other->forced),
+    objectId(other->objectId),
     fragmentList(other->fragmentList)
 {
 }
@@ -41,6 +44,9 @@ ImageObject::ImageObject(const ImageObject &other) :
     h(other.h),
     xOfs(other.xOfs),
     yOfs(other.yOfs),
+    windowId(other.windowId),
+    forced(other.forced),
+    objectId(other.objectId),
     fragmentList(other.fragmentList)
 {
 }

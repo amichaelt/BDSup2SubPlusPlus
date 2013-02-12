@@ -25,7 +25,6 @@ SubPictureBD::SubPictureBD()
 
 SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
-    objectId(other->objectId),
     winWidth(other->winWidth),
     winHeight(other->winHeight),
     xWinOfs(other->xWinOfs),
@@ -48,7 +47,6 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
 
 SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     SubPicture(other),
-    objectId(other.objectId),
     winWidth(other.winWidth),
     winHeight(other.winHeight),
     xWinOfs(other.xWinOfs),

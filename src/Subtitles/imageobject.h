@@ -44,6 +44,12 @@ public:
     void setXOffset(int offset) { xOfs = offset; }
     int yOffset() { return yOfs; }
     void setYOffset(int offset) { yOfs = offset; }
+    int windowID() { return windowId; }
+    void setWindowID(int windowID) { windowId = windowID; }
+    bool isForced() { return forced; }
+    void setForced(bool isForced) { forced = isForced; }
+    int objectID() { return objectId; }
+    void setObjectID(int objectID) { objectId = objectID; }
 
     QVector<ImageObjectFragment> &getFragmentList() { return fragmentList; }
 
@@ -54,6 +60,9 @@ private:
     int h = 0;
     int xOfs = 0;
     int yOfs = 0;
+    int windowId = 0;
+    bool forced = false;
+    int objectId = 0;
 
     QVector<ImageObjectFragment> fragmentList;
 };

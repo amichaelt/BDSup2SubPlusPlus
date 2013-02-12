@@ -65,7 +65,7 @@ public:
 
     SubPicture *getSubPicture(int index);
 
-    QVector<uchar> createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette &pal);
+    QVector<uchar> createSupFrame(SubPicture* subPicture, int subPicIndex, Bitmap &bm, Palette &pal);
 
 signals:
     void maxProgressChanged(qint64 maxProgress);
@@ -117,8 +117,7 @@ private:
 
     double getFpsFromID(int id);
 
-    bool picMergable(SubPictureBD *a, SubPictureBD *b);
-    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
+    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg, bool forceFirst);
 
     Bitmap decodeImage(SubPictureBD *subPicture, int transIdx);
 

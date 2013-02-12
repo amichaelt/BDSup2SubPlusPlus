@@ -30,6 +30,7 @@ SubPicture::SubPicture(const SubPicture &other) :
     start(other.start),
     end(other.end),
     compositionNumber(other.compositionNumber),
+    numberCompObjects(other.numberCompObjects),
     imageWidth(other.imageWidth),
     imageHeight(other.imageHeight),
     xOfs(other.xOfs),
@@ -47,6 +48,7 @@ SubPicture::SubPicture(const SubPicture *other) :
     start(other->start),
     end(other->end),
     compositionNumber(other->compositionNumber),
+    numberCompObjects(other->numberCompObjects),
     imageWidth(other->imageWidth),
     imageHeight(other->imageHeight),
     xOfs(other->xOfs),
@@ -66,6 +68,7 @@ SubPicture* SubPicture::copy()
     sp->end = end;
     sp->forced = forced;
     sp->compositionNumber = compositionNumber;
+    sp->numberCompObjects = numberCompObjects;
     sp->setImageWidth(imageWidth);
     sp->setImageHeight(imageHeight);
     sp->setOfsX(xOfs);

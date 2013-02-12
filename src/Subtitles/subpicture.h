@@ -47,8 +47,10 @@ public:
     void setEndTime(qint64 endTime) { end = endTime; }
     int compNum() { return compositionNumber; }
     void setCompNum(int compNum) { compositionNumber = compNum; }
-    bool isForced() { return forced; }
-    void setForced(bool isForced) { forced = isForced; }
+    int numCompObjects() { return numberCompObjects; }
+    void setNumCompObjects(int numCompObjects) { numberCompObjects = numCompObjects; }
+    virtual bool isForced() { return forced; }
+    virtual void setForced(bool isForced) { forced = isForced; }
     bool wasDecoded() { return decoded; }
     void setDecoded(bool wasDecoded) { decoded = wasDecoded; }
     bool exclude() { return excluded; }
@@ -69,6 +71,7 @@ private:
     qint64 start = -1;
     qint64 end = 0;
     int compositionNumber = 0;
+    int numberCompObjects = 0;
     int imageWidth = 0;
     int imageHeight = 0;
     int xOfs = 0;
