@@ -169,19 +169,6 @@ QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int wid
     return p;
 }
 
-int QuantizeFilter::clamp(int c)
-{
-    if (c < 0)
-    {
-        return 0;
-    }
-    if (c > 255)
-    {
-        return 255;
-    }
-    return c;
-}
-
 void QuantizeFilter::OctTreeQuantizer::setup(int numColors)
 {
     maximumColors = numColors;

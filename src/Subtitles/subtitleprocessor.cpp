@@ -1016,7 +1016,7 @@ void SubtitleProcessor::writeSub(QString filename)
                     subDVD = QSharedPointer<SubDVD>(new SubDVD("", "", this));
                 }
                 QVector<uchar> buf = subDVD->createSubFrame(*subVobTrg, trgBitmap);
-                out->write(QByteArray((char*)buf.data(), buf.size()));
+                out->write((const char*)buf.constData(), buf.size());
                 offset += buf.size();
                 offsets.push_back(offset);
                 timestamps.push_back((int)subPictures[i]->startTime());
@@ -1030,7 +1030,7 @@ void SubtitleProcessor::writeSub(QString filename)
                     supDVD = QSharedPointer<SupDVD>(new SupDVD("", "", this));
                 }
                 QVector<uchar> buf = supDVD->createSupFrame(*subVobTrg, trgBitmap);
-                out->write(QByteArray((char*)buf.data(), buf.size()));
+                out->write((const char*)buf.constData(), buf.size());
             }
             else if (outMode == OutputMode::BDSUP)
             {
@@ -1041,7 +1041,7 @@ void SubtitleProcessor::writeSub(QString filename)
                     supBD = QSharedPointer<SupBD>(new SupBD("", this));
                 }
                 QVector<uchar> buf = supBD->createSupFrame(subPictures[i], i, trgBitmap, trgPal);
-                out->write(QByteArray((char*)buf.data(), buf.size()));
+                out->write((const char*)buf.constData(), buf.size());
             }
             else
             {

@@ -21,6 +21,9 @@
 #include "Filters/mitchellfilter.h"
 #include "Subtitles/bitmap.h"
 #include "Subtitles/palette.h"
+#include <algorithm>
+
+#include "xmmintrin.h"
 
 #include <cmath>
 #include <QImage>
@@ -46,7 +49,7 @@ QVector<QRgb> FilterOp::filter(Bitmap &src, Palette &palette, int w, int h)
 
     QVector<QRgb> workPixels(srcHeight * dstWidth);
     QImage inImage = src.image(palette);
-    filterHorizontally(inImage, workPixels, palette.colorTable());
+    filterHorizontally(inImage, workPixels.data(), palette.colorTable().constData());
 
     QVector<QRgb> outPixels(dstHeight * dstWidth);
     filterVertically(workPixels, outPixels);
@@ -67,7 +70,7 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
     {
         // scale down -> subsampling
         float width = fwidth / scale;
-        numContributors = (int)((width * 2.0f) + 2); // Heinz: added 1 to be save with the ceilling
+        numContributors = (int)((width * 2.0f) + 2); // Heinz: added 1 to be safe with the ceiling
         arrWeight = QVector<float>(dstSize * numContributors);
         arrPixel = QVector<int>(dstSize * numContributors);
 
@@ -75,7 +78,7 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
         //
         for (int i = 0; i < dstSize; ++i)
         {
-            arrN.replace(i, 0);
+            arrN[i] = 0;
             int subindex = i * numContributors;
             float center = i / scale;
             int left = (int)floor(center - width);
@@ -104,14 +107,14 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
                 }
 
                 int k = arrN[i];
-                arrN.replace(i, arrN[i] + 1);
+                arrN[i] = arrN[i] + 1;
                 if (n < 0 || n >= srcSize)
                 {
                     weight= 0.0f;// Flag that cell should not be used
                 }
 
-                arrPixel.replace(subindex + k, n);
-                arrWeight.replace(subindex + k, weight);
+                arrPixel[subindex + k] = n;
+                arrWeight[subindex + k] = weight;
             }
             // normalize the filter's weight's so the sum equals to 1.0, very important for avoiding box type of artifacts
             int max = arrN[i];
@@ -121,10 +124,11 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
                 tot += arrWeight[subindex + k];
             }
             if (tot != 0.0f)
-            { // 0 should never happen except bug in filter
+            {
+                // 0 should never happen except bug in filter
                 for (int k = 0; k < max; ++k)
                 {
-                    arrWeight.replace(subindex + k, arrWeight[subindex + k] / tot);
+                    arrWeight[subindex + k] = arrWeight[subindex + k] / tot;
                 }
             }
         }
@@ -138,7 +142,7 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
         //
         for (int i = 0; i < dstSize; ++i)
         {
-            arrN.replace(i, 0);
+            arrN[i] = 0;
             int subindex = i * numContributors;
             float center = i / scale;
             int left = (int)floor(center - fwidth);
@@ -165,14 +169,14 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
                 }
 
                 int k = arrN[i];
-                arrN.replace(i, arrN[i]+ 1);
+                arrN[i] = arrN[i]+ 1;
                 if (n < 0 || n >= srcSize)
                 {
                     weight= 0.0f;// Flag that cell should not be used
                 }
 
-                arrPixel.replace(subindex + k, n);
-                arrWeight.replace(subindex + k, weight);
+                arrPixel[subindex + k] = n;
+                arrWeight[subindex + k] = weight;
             }
             // normalize the filter's weights so the sum equals to 1.0, very important for avoiding box type of artifacts
             int max = arrN[i];
@@ -185,7 +189,7 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
             {
                 for (int k = 0; k < max; ++k)
                 {
-                    arrWeight.replace(subindex + k, arrWeight[subindex + k] / tot);
+                    arrWeight[subindex + k] = arrWeight[subindex + k] / tot;
                 }
             }
         }
@@ -195,6 +199,8 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
 
 void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
 {
+    const QRgb *inPixels = src.constData();
+
     for (int x = 0; x < dstWidth; ++x)
     {
         for (int y = dstHeight - 1; y >= 0 ; --y)
@@ -210,7 +216,7 @@ void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
             int index = yTimesNumContributors;
             for (int j = max - 1; j >= 0 ; --j)
             {
-                int color = src[x + (dstWidth * verticalSubsamplingData.pixelPositions[index])];
+                int color = inPixels[x + (dstWidth * verticalSubsamplingData.pixelPositions[index])];
                 float w = verticalSubsamplingData.weights[index];
                 alpha += qAlpha(color) * w;
                 red += qRed(color) * w;
@@ -218,54 +224,32 @@ void FilterOp::filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg)
                 blue += qBlue(color) * w;
                 index++;
             }
-            int ri = (int)(red);
-            if (ri < 0)
-            {
-                ri = 0;
-            }
-            else if (ri > 255)
-            {
-                ri = 255;
-            }
-            int gi = (int)(green);
-            if (gi < 0)
-            {
-                gi = 0;
-            }
-            else if (gi > 255)
-            {
-                gi = 255;
-            }
-            int bi = (int)(blue);
-            if (bi < 0)
-            {
-                bi = 0;
-            }
-            else if (bi > 255)
-            {
-                bi = 255;
-            }
-            int ai = (int)(alpha);
-            if (ai < 0)
-            {
-                ai = 0;
-            }
-            else if (ai > 255)
-            {
-                ai = 255;
-            }
+
+            int ri = std::max((int)red, 0);
+            ri = std::min(ri, 255);
+
+            int gi = std::max((int)green, 0);
+            gi = std::min(gi, 255);
+
+            int bi = std::max((int)blue, 0);
+            bi = std::min(bi, 255);
+
+            int ai = std::max((int)alpha, 0);
+            ai = std::min(ai, 255);
 
             trg[x + ofsY] = qRgba(ri, gi, bi, ai);
         }
     }
 }
 
-void FilterOp::filterHorizontally(QImage &src, QVector<QRgb>& trg, QVector<QRgb> rgba)
+void FilterOp::filterHorizontally(QImage &src, QRgb *trg, const QRgb *rgba)
 {
+    const uchar* pixels = src.constScanLine(0);
+    int sourcePitch = src.bytesPerLine();
+
     for (int k = 0; k < srcHeight; ++k)
     {
         int destOfsY = dstWidth * k;
-        uchar* pixels = src.scanLine(k);
         for (int i = dstWidth - 1; i >= 0 ; --i)
         {
             float red = 0;
@@ -287,44 +271,21 @@ void FilterOp::filterHorizontally(QImage &src, QVector<QRgb>& trg, QVector<QRgb>
                 alpha += qAlpha(rgba[palIdx]) * w;
                 index++;
             }
-            int ri = (int)(red);
-            if (ri < 0)
-            {
-                ri = 0;
-            }
-            else if (ri > 255)
-            {
-                ri = 255;
-            }
-            int gi = (int)(green);
-            if (gi < 0)
-            {
-                gi = 0;
-            }
-            else if (gi > 255)
-            {
-                gi = 255;
-            }
-            int bi = (int)(blue);
-            if (bi < 0)
-            {
-                bi = 0;
-            }
-            else if (bi > 255)
-            {
-                bi = 255;
-            }
-            int ai = (int)(alpha);
-            if (ai < 0)
-            {
-                ai = 0;
-            }
-            else if (ai > 255)
-            {
-                ai = 255;
-            }
+
+            int ri = std::max((int)red, 0);
+            ri = std::min(ri, 255);
+
+            int gi = std::max((int)green, 0);
+            gi = std::min(gi, 255);
+
+            int bi = std::max((int)blue, 0);
+            bi = std::min(bi, 255);
+
+            int ai = std::max((int)alpha, 0);
+            ai = std::min(ai, 255);
 
             trg[i + destOfsY] = qRgba(ri, gi, bi, ai);
         }
+        pixels += sourcePitch;
     }
 }

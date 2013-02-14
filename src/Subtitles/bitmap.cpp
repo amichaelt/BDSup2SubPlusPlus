@@ -302,6 +302,7 @@ Bitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter &filte
                     int rd = red - qRed(rgb[idx]);
                     int gd = green - qGreen(rgb[idx]);
                     int bd = blue - qBlue(rgb[idx]);
+
                     int distance = (rd * rd) + (gd * gd) + (bd * bd) + (ad * ad);
                     // new minimum distance ?
                     if (distance < minDistance)
@@ -350,10 +351,8 @@ PaletteBitmap Bitmap::scaleFilter(int sizeX, int sizeY, Palette &palette, Filter
     Bitmap bm(sizeX, sizeY);
     QVector<QRgb> ct = qf.quantize(trg, &bm.image(), sizeX, sizeY, 255, dither, dither);
     int size = ct.size();
-    if (size > 255)
-    {
-        size = 255;
-    }
+    size = std::min(size, 255);
+
     // create palette
     Palette trgPal(256);
     for (int i = 0; i < size; ++i)
@@ -657,10 +656,8 @@ PaletteBitmap Bitmap::scaleBilinear(int sizeX, int sizeY, Palette &palette, bool
     Bitmap bm(sizeX, sizeY, QImage::Format_Indexed8);
     QVector<QRgb> ct = qf.quantize(trg, &bm.image(), sizeX, sizeY, 255, dither, dither);
     int size = ct.size();
-    if (size > 255)
-    {
-        size = 255;
-    }
+    size = std::min(size, 255);
+
     // create palette
     Palette trgPal(256);
     for (int i = 0; i < size; ++i)
@@ -817,7 +814,6 @@ void Bitmap::setImg(QImage &newImage)
 
 int Bitmap::highestColorIndex(Palette &palette)
 {
-    // create histogram for palette
     int maxIdx = 0;
 
     int width = subtitleImage.width();
@@ -831,6 +827,7 @@ int Bitmap::highestColorIndex(Palette &palette)
         for (int x = 0; x < width; ++x)
         {
             int idx = pixels[x] & 0xff;
+
             if (palette.alpha(idx) > 0)
             {
                 if (idx > maxIdx)

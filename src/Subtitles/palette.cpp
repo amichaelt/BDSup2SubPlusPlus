@@ -179,16 +179,16 @@ QRgb Palette::YCbCr2RGB(int y, int cb, int cr, bool useBT601)
     }
 
     r = (int)(r + 0.5);
-    r = r < 0 ? 0 : r;
-    r = r > 255 ? 255 : r;
+    r = std::max((int) r, 0);
+    r = std::min((int) r, 255);
 
     g = (int)(g + 0.5);
-    g = g < 0 ? 0 : g;
-    g = g > 255 ? 255 : g;
+    g = std::max((int) g, 0);
+    g = std::min((int) g, 255);
 
     b = (int)(b + 0.5);
-    b = b < 0 ? 0 : b;
-    b = b > 255 ? 255 : b;
+    b = std::max((int) b, 0);
+    b = std::min((int) b, 255);
 
     return qRgb(r, g, b);
 }

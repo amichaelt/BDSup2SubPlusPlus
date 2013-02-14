@@ -62,7 +62,7 @@ private:
     SubSamplingData verticalSubsamplingData;
 
     void filterVertically(QVector<QRgb>& src, QVector<QRgb>& trg);
-    void filterHorizontally(QImage &src, QVector<QRgb>& trg, QVector<QRgb> rgba);
+    void filterHorizontally(QImage &src, QRgb *trg, const QRgb *rgba);
 
     SubSamplingData createSubSampling(int srcSize, int dstSize, float scale);
 };

@@ -94,7 +94,19 @@ public:
      void setDither(bool dither) { this->dither = dither; }
      void setSerpentine(bool serpentine) { this->serpentine = serpentine; }
 
-     int clamp(int c);
+     int clamp(int c)
+     {
+         if (c < 0)
+         {
+             return 0;
+         }
+         if (c > 255)
+         {
+             return 255;
+         }
+         return c;
+     }
+
      int getNumColors() { return numColors; }
 
      bool getDither() { return dither; }

@@ -26,20 +26,39 @@
 #include <QString>
 #include <QVector>
 
-static const int BUFFERSIZE = 1024*1024;
-
 class FileBuffer
 {
 public:
     FileBuffer(QString inFileName);
-    ~FileBuffer();
+    ~FileBuffer()
+    {
+        if (!file.isNull())
+        {
+            file.reset();
+        }
+    }
 
-    int getDWord(qint64 ofs);
-    int getByte(qint64 ofs);
-    int getWord(qint64 ofs);
-    void getBytes(qint64 ofs, QVector<uchar> &b, int length);
-     qint64 getSize() { return length; }
-    int getDWordLE(qint64 ofs);
+    int getDWord(uint ofs)
+    {
+        return (buf[ofs + 3] & 0xff) | ((buf[ofs + 2] & 0xff) << 8) |
+              ((buf[ofs + 1] & 0xff) <<16) | ((buf[ofs] & 0xff) << 24);
+    }
+    int getByte(uint ofs) { return (buf[ofs] & 0xff); }
+    int getWord(uint ofs) { return (buf[ofs + 1] & 0xff) | ((buf[ofs] & 0xff) << 8); }
+    void getBytes(uint ofs, QVector<uchar> &b, int length)
+    {
+        for (int i = 0; i < length; ++i)
+        {
+            b.replace(i, buf[ofs + i]);
+        }
+    }
+    int getDWordLE(uint ofs)
+    {
+        return (buf[ofs] & 0xff) | ((buf[ofs + 1] & 0xff) << 8)
+                | ((buf[ofs + 2] & 0xff) << 16) | ((buf[ofs + 3] & 0xff) << 24);
+    }
+
+    qint64 getSize() { return length; }
 
 private:
     qint64 offset = 0;
