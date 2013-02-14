@@ -61,10 +61,6 @@ QImage SupBD::getImage(Bitmap &bitmap)
 
 void SupBD::decode(int index)
 {
-    if (index == 32)
-    {
-        int breakPoint = 0;
-    }
     if (index < subPictures.size())
     {
         decode(&subPictures[index]);
@@ -337,27 +333,32 @@ void SupBD::readAllSupFrames()
 
 QVector<uchar> SupBD::encodeImage(Bitmap &bm)
 {
-    QVector<uchar> bytes;
     uchar color;
     int ofs;
     int len;
 
-    for (int y = 0; y < bm.height(); ++y)
+    int width = bm.width();
+    int height = bm.height();
+
+
+    const uchar* pixels = bm.image().constScanLine(0);
+    int sourcePitch = bm.image().bytesPerLine();
+
+    QVector<uchar> bytes;
+    bytes.reserve(height * sourcePitch);
+
+    for (int y = 0; y < height; ++y)
     {
-        uchar* pixels = bm.image().scanLine(y);
         ofs = 0;
         int x;
-        for (x = 0; x < bm.width(); x += len, ofs += len)
+        for (x = 0; x < width; x += len, ofs += len)
         {
             color = pixels[ofs];
-            for (len = 1; (x + len) < bm.width(); ++len)
+            for (len = 1; (x + len) < width && pixels[ofs + len] == color && len <= 0x3fff; ++len)
             {
-                if (pixels[ofs + len] != color)
-                {
-                    break;
-                }
             }
-            if (len <= 2 && color != 0)
+
+            if (len < 3 && color)
             {
                 // only a single occurrence -> add color
                 bytes.push_back(color);
@@ -365,45 +366,42 @@ QVector<uchar> SupBD::encodeImage(Bitmap &bm)
                 {
                     bytes.push_back(color);
                 }
+                continue;
             }
-            else
+
+            bytes.push_back(0); // rle id
+
+            if (!color)
             {
-                if (len > 0x3fff)
-                {
-                    len = 0x3fff;
-                }
-                bytes.push_back(0); // rle id
-                if (color == 0 && len < 0x40)
-                {
-                    // 00 xx -> xx times 0
-                    bytes.push_back(len);
-                }
-                else if (color == 0)
+                if (len >= 0x40)
                 {
                     // 00 4x xx -> xxx zeroes
                     bytes.push_back(0x40 | (len >> 8));
-                    bytes.push_back(len);
                 }
-                else if(len < 0x40)
+                // 00 xx -> xx times 0
+                bytes.push_back(len);
+            }
+            else
+            {
+                if (len < 0x40)
                 {
                     // 00 8x cc -> x times value cc
                     bytes.push_back(0x80 | len);
-                    bytes.push_back(color);
                 }
                 else
                 {
                     // 00 cx yy cc -> xyy times value cc
                     bytes.push_back(0xc0 | (len >> 8));
                     bytes.push_back(len);
-                    bytes.push_back(color);
                 }
+                bytes.push_back(color);
             }
         }
-        if (x == bm.width())
-        {
-            bytes.push_back(0); // rle id
-            bytes.push_back(0);
-        }
+
+        bytes.push_back(0); // rle id
+        bytes.push_back(0);
+
+        pixels += sourcePitch;
     }
     return bytes;
 }
@@ -1032,9 +1030,12 @@ void SupBD::findImageArea(SubPictureBD *subPicture)
     int pitch = image.bytesPerLine();
     QRgb color = palette.rgba(primaryColorIndex);
 
-    for (int i = 0; i < image.height(); ++i)
+    int imageHeight = image.height();
+    int imageWidth = image.width();
+
+    for (int i = 0; i < imageHeight; ++i)
     {
-        for (int j = 0; j < image.width(); ++j)
+        for (int j = 0; j < imageWidth; ++j)
         {
             if (colors[pixels[j]] == color)
             {
@@ -1050,18 +1051,18 @@ void SupBD::findImageArea(SubPictureBD *subPicture)
     }
 
 find_bottom:
-    pixels = image.constScanLine(image.height() - 1);
+    pixels = image.constScanLine(imageHeight - 1);
 
-    for (int i = image.height() - 1; i >= 0; --i)
+    for (int i = imageHeight - 1; i >= 0; --i)
     {
-        for (int j = 0; j < image.width(); ++j)
+        for (int j = 0; j < imageWidth; ++j)
         {
             if (colors[pixels[j]] == color)
             {
                 bottom = i + 20; // Pad value for borders
-                if (bottom >= image.height())
+                if (bottom >= imageHeight)
                 {
-                    bottom = image.height() - 1;
+                    bottom = imageHeight - 1;
                 }
                 goto find_left;
             }
@@ -1071,11 +1072,11 @@ find_bottom:
 
 find_left:
     pixels = image.constScanLine(top);
-    int tempLeft = image.width();
+    int tempLeft = imageWidth;
 
     for (int i = top; i <= bottom; ++i)
     {
-        for (int j = 0; j < image.width(); ++j)
+        for (int j = 0; j < imageWidth; ++j)
         {
             if (colors[pixels[j]] == color)
             {
@@ -1098,7 +1099,7 @@ find_left:
 
     for (int i = top; i <= bottom; ++i)
     {
-        for (int j = image.width() - 1; j >= 0; --j)
+        for (int j = imageWidth - 1; j >= 0; --j)
         {
             if (colors[pixels[j]] == color)
             {
@@ -1106,9 +1107,9 @@ find_left:
                 {
                     tempRight = j + 20; // Pad value for borders
                 }
-                if (tempRight >= image.width())
+                if (tempRight >= imageWidth)
                 {
-                    tempRight = image.width() - 1;
+                    tempRight = imageWidth - 1;
                 }
             }
         }
