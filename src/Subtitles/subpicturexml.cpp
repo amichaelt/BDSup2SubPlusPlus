@@ -38,3 +38,8 @@ SubPictureXML::SubPictureXML(const SubPictureXML *other) :
     filename(other->filename)
 {
 }
+
+SubPicture *SubPictureXML::copy()
+{
+    return new SubPictureXML(this);
+}

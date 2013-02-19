@@ -66,3 +66,8 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
         }
     }
 }
+
+SubPicture* SubPictureBD::copy()
+{
+    return new SubPictureBD(this);
+}

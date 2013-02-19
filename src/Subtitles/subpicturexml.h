@@ -32,6 +32,8 @@ public:
     SubPictureXML(const SubPictureXML* other);
     ~SubPictureXML() { }
 
+    SubPicture* copy();
+
     void setOriginal()
     {
         origX = getOfsX();

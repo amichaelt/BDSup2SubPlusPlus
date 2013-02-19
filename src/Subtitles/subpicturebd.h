@@ -37,6 +37,8 @@ public:
     SubPictureBD(const SubPictureBD& other);
     ~SubPictureBD() { }
 
+    SubPicture* copy();
+
     int paletteID() { return paletteId; }
     void setPaletteID(int paletteID) { paletteId = paletteID; }
     bool paletteUpdated() { return paletteUpdate; }
@@ -76,7 +78,7 @@ public:
 
     QVector<ImageObject> imageObjectList;
 
-    QVector<QVector<PaletteInfo> > palettes;
+    QVector<QVector<PaletteInfo>> palettes;
 
     ImageObject &getImgObj(int index) { return imageObjectList[index]; }
 
