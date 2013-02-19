@@ -54,7 +54,7 @@ enum class RunType : int;
 
 static QStringList resolutionNamesXml = { "480i", "576i", "720p", "1440x1080", "1080p" };
 
-static QVector<QVector<int> > resolutions = {
+static QVector<QVector<int>> resolutions = {
     {720, 480},
     {720, 576},
     {1280, 720},
@@ -70,7 +70,7 @@ static QStringList resolutionNames = {
     "1080p (1920x1080)"
 };
 
-static QVector<QVector<QString> > languages = {{
+static QVector<QVector<QString>> languages = {{
     {"German",       "de", "deu"},
     {"English",      "en", "eng"},
     {"French",       "fr", "fra"},
