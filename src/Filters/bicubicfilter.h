@@ -29,7 +29,12 @@ public:
     float value(float value);
 
 protected:
-    float a = -0.5;
+    static constexpr float a = -0.5;
+    static constexpr float a_plus_2 = a + 2.0f;
+    static constexpr float a_plus_3 = a + 3.0f;
+    static constexpr float a_times_4 = a * 4;
+    static constexpr float a_times_5 = a * 5;
+    static constexpr float a_times_8 = a * 8;
 };
 
 #endif // BICUBICFILTER_H

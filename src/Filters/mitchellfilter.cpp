@@ -18,28 +18,26 @@
  */
 
 #include "mitchellfilter.h"
+#include <cmath>
 
 float MitchellFilter::value(float value)
 {
-    if (value < 0.0f)
-    {
-        value = -value;
-    }
-    float tt = value * value;
+    value = std::abs(value);
+    float value_square = value * value;
+    float value_cubed = value_square * value;
+
     if (value < 1.0f)
     {
-        value = (((12.0f - (9.0f * B) - (6.0f * C)) * (value * tt))
-                + ((-18.0f + (12.0f * B) + (6.0f * C)) * tt)
-                + (6.0f - (2.0f * B)));
-        return value / 6.0f;
+        return ((_12_minus_9B_minus_6C * value_cubed)
+                + (_minus_18_plus_12B_plus_6C * value_square)
+                + _6_minus_2B) * divisor;
     }
     if (value < 2.0f)
     {
-        value = ((((-1.0f * B) - (6.0f * C)) * (value * tt))
-                + (((6.0f * B) + (30.0f * C)) * tt)
-                + (((-12.0f * B) - (48.0f * C)) * value)
-                + ((8.0f * B) + (24 * C)));
-        return value / 6.0f;
+        return ((_minus_B_minus_6C * value_cubed)
+                + (_6B_plus_30C * value_square)
+                + (_minus_12B_minus_48C * value)
+                + _8B_plus_24C) * divisor;
     }
     return 0.0f;
 }

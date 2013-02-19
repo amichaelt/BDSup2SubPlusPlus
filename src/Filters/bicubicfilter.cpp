@@ -18,25 +18,23 @@
  */
 
 #include "bicubicfilter.h"
+#include <cmath>
 
 float BiCubicFilter::value(float value)
 {
-    if (value == 0)
+    if (!value)
     {
         return 1.0f;
     }
-    if (value < 0.0f)
-    {
-        value = -value;
-    }
-    float vv = value * value;
+    value = std::abs(value);
+    float value_squared = value * value;
     if (value < 1.0f)
     {
-        return (a + 2.0f) * vv * value - (a + 3.0f) * vv + 1.0f;
+        return (((a_plus_2 * value_squared) * value) - (a_plus_3 * value_squared)) + 1.0f;
     }
     if (value < 2.0f)
     {
-        return a * vv * value - 5 * a * vv + 8 * a * value - 4 * a;
+        return ((a * value_squared) * value) - (a_times_5 * value_squared) + (a_times_8 * value) - a_times_4;
     }
     return 0.0f;
 }

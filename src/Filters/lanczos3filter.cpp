@@ -27,14 +27,12 @@ Lanczos3Filter::Lanczos3Filter() :
 
 float Lanczos3Filter::value(float value)
 {
-    if (value == 0)
+    if (!value)
     {
         return 1.0f;
     }
-    if (value < 0.0f)
-    {
-        value = -value;
-    }
+
+    value = std::abs(value);
     if (value < 3.0f)
     {
         value *= PI_FLOAT;
@@ -43,7 +41,7 @@ float Lanczos3Filter::value(float value)
     return 0.0f;
 }
 
-float Lanczos3Filter::sincModified(float value)
+static constexpr float sincModified(float value)
 {
-    return sin(value) / value;
+    return std::sin(value) / value;
 }

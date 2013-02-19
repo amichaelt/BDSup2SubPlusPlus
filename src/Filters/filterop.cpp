@@ -23,8 +23,6 @@
 #include "Subtitles/palette.h"
 #include <algorithm>
 
-#include "xmmintrin.h"
-
 #include <cmath>
 #include <QImage>
 

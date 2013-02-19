@@ -18,16 +18,10 @@
  */
 
 #include "trianglefilter.h"
+#include <cmath>
 
 float TriangleFilter::value(float value)
 {
-    if (value < 0.0f)
-    {
-        value = -value;
-    }
-    if (value < 1.0f)
-    {
-        return 1.0f - value;
-    }
-    return 0.0f;
+    value = std::abs(value);
+    return value < 1.0f ? 1.0f - value : 0.0f;
 }

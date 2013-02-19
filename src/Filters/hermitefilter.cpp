@@ -18,16 +18,10 @@
  */
 
 #include "hermitefilter.h"
+#include <cmath>
 
 float HermiteFilter::value(float value)
 {
-    if (value < 0.0f)
-    {
-        value = - value;
-    }
-    if (value < 1.0f)
-    {
-        return (2.0f * value - 3.0f) * value * value + 1.0f;
-    }
-    return 0.0f;
+    value = std::abs(value);
+    return value < 1.0f ? (2.0f * value - 3.0f) * value * value + 1.0f : 0.0f;
 }

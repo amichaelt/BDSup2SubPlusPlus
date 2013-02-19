@@ -18,13 +18,11 @@
  */
 
 #include "bsplinefilter.h"
+#include <cmath>
 
 float BSplineFilter::value(float value)
 {
-    if (value < 0.0f)
-    {
-        value = - value;
-    }
+    value = std::abs(value);
     if (value < 1.0f)
     {
         float tt = value * value;

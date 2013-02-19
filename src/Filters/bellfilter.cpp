@@ -18,13 +18,11 @@
  */
 
 #include "bellfilter.h"
+#include <cmath>
 
 float BellFilter::value(float value)
 {
-    if (value < 0.0f)
-    {
-        value = - value;
-    }
+    value = std::abs(value);
     if (value < 0.5f)
     {
         return 0.75f - (value * value);
