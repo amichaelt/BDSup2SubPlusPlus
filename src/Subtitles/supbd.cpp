@@ -434,15 +434,7 @@ int SupBD::getFpsId(double fps)
 
 QVector<uchar> SupBD::createSupFrame(SubPicture* subPicture, int subPicIndex, Bitmap &bm, Palette &pal)
 {
-    SubPicture *subPic = 0;
-    if (subPictures.size() > 0)
-    {
-        subPic = &subPictures[subPicIndex];
-    }
-    else
-    {
-        subPic = subPicture;
-    }
+    SubPicture *subPic = subPicture;
 
     // the last palette entry must be transparent
     if (pal.size() > 255 && pal.alpha(255) > 0)
@@ -853,7 +845,7 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
 
     if (subPicture->palettes.isEmpty())
     {
-        subPicture->palettes = QVector<QVector<PaletteInfo> >(8);
+        subPicture->palettes = QVector<QVector<PaletteInfo>>(8);
     }
     if (paletteID > 7)
     {
