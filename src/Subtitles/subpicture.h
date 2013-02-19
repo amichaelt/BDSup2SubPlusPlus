@@ -61,7 +61,7 @@ public:
     virtual int getOfsX() { return xOfs; }
     virtual int getOfsY() { return yOfs; }
 
-    SubPicture* copy();
+    virtual SubPicture* copy();
 
     QVector<ErasePatch*> erasePatch;
 
