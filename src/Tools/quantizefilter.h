@@ -82,7 +82,7 @@ class QuantizeFilter
 
         OctTreeNode* root = new OctTreeNode;
 
-        QVector<QVector<OctTreeNode*> > colorList = QVector<QVector<OctTreeNode*> >(MAX_LEVEL + 1);
+        QVector<QVector<OctTreeNode*>> colorList = QVector<QVector<OctTreeNode*>>(MAX_LEVEL + 1);
 
         void insertColor(QRgb rgb);
         void reduceTree(int numColors);
