@@ -64,10 +64,10 @@ SubPictureDVD::SubPictureDVD(const SubPictureDVD *other) :
 
 void SubPictureDVD::setOriginal()
 {
-    origWidth = getImageWidth();
-    origHeight = getImageHeight();
-    origX = getOfsX();
-    origY = getOfsY();
+    origWidth = imageWidth();
+    origHeight = imageHeight();
+    origX = x();
+    origY = y();
 
     originalAlpha = alpha;
     originalPal = pal;
@@ -75,14 +75,14 @@ void SubPictureDVD::setOriginal()
 
 void SubPictureDVD::copyInfo(SubPicture &subPicture)
 {
-    setWidth(subPicture.width());
-    setHeight(subPicture.height());
+    setScreenWidth(subPicture.screenWidth());
+    setScreenHeight(subPicture.screenHeight());
     setStartTime(subPicture.startTime());
     setEndTime(subPicture.endTime());
     setForced(subPicture.isForced());
     setCompNum(subPicture.compNum());
-    setImageWidth(subPicture.getImageWidth());
-    setImageHeight(subPicture.getImageHeight());
-    setOfsX(subPicture.getOfsX());
-    setOfsY(subPicture.getOfsY());
+    setImageWidth(subPicture.imageWidth());
+    setImageHeight(subPicture.imageHeight());
+    setX(subPicture.x());
+    setY(subPicture.y());
 }

@@ -28,9 +28,9 @@
 #include <QImage>
 
 SubstreamDVD::SubstreamDVD() :
-    bitmap(0, 0),
+    _bitmap(0, 0),
     srcPalette(defaultPalR, defaultPalG, defaultPalB, defaultAlpha, true),
-    palette(4, true)
+    _palette(4, true)
 {
 }
 
@@ -164,7 +164,7 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
     ImageObjectFragment fragment = pic.rleFragments[0];
     qint64 startOfs = fragment.imageBufferOffset();
 
-    if (width > pic.width() || height > pic.height())
+    if (width > pic.screenWidth() || height > pic.screenHeight())
     {
         subtitleProcessor->printWarning(QString("Subpicture too large: %1x%2 at offset %3\n")
                        .arg(QString::number(width))
@@ -220,13 +220,13 @@ Bitmap SubstreamDVD::decodeImage(SubPictureDVD &pic, int transIdx)
 
 void SubstreamDVD::decode(SubPictureDVD &pic, SubtitleProcessor* subtitleProcessor)
 {
-    palette = decodePalette(pic, srcPalette, subtitleProcessor->getAlphaCrop());
-    bitmap = decodeImage(pic, palette.transparentIndex());
+    _palette = decodePalette(pic, srcPalette, subtitleProcessor->getAlphaCrop());
+    _bitmap = decodeImage(pic, _palette.transparentIndex());
 
-    QRect bounds = bitmap.bounds(palette, subtitleProcessor->getAlphaCrop());
+    QRect bounds = _bitmap.bounds(_palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
-        bounds.bottomRight().x() < (bitmap.width() - 1) ||
-        bounds.bottomRight().y() < (bitmap.height() - 1))
+        bounds.bottomRight().x() < (_bitmap.width() - 1) ||
+        bounds.bottomRight().y() < (_bitmap.height() - 1))
     {
         int width = bounds.width();
         int height = bounds.height();
@@ -239,14 +239,14 @@ void SubstreamDVD::decode(SubPictureDVD &pic, SubtitleProcessor* subtitleProcess
         {
             height = 2;
         }
-        bitmap = bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
+        _bitmap = _bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         pic.setImageWidth(width);
         pic.setImageHeight(height);
-        pic.setOfsX(pic.originalX() + bounds.topLeft().x());
-        pic.setOfsY(pic.originalY() + bounds.topLeft().y());
+        pic.setX(pic.originalX() + bounds.topLeft().x());
+        pic.setY(pic.originalY() + bounds.topLeft().y());
     }
 
-    primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    _primaryColorIndex = _bitmap.primaryColorIndex(_palette, subtitleProcessor->getAlphaThreshold());
 }
 
 void SubstreamDVD::decodeLine(QVector<uchar> src, int srcOfs, int srcLen,

@@ -44,14 +44,14 @@ SubDVD::~SubDVD()
 {
 }
 
-QImage SubDVD::getImage()
+QImage SubDVD::image()
 {
-    return bitmap.image(palette);
+    return _bitmap.image(_palette);
 }
 
-QImage SubDVD::getImage(Bitmap &bitmap)
+QImage SubDVD::image(Bitmap &bitmap)
 {
-    return bitmap.image(palette);
+    return bitmap.image(_palette);
 }
 
 void SubDVD::decode(int index)
@@ -71,7 +71,7 @@ void SubDVD::setSrcPalette(Palette &palette)
     srcPalette = palette;
 }
 
-int SubDVD::getNumFrames()
+int SubDVD::numFrames()
 {
     return subPictures.size();
 }
@@ -81,22 +81,22 @@ bool SubDVD::isForced(int index)
     return subPictures[index].isForced();
 }
 
-qint64 SubDVD::getEndTime(int index)
+qint64 SubDVD::endTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-qint64 SubDVD::getStartTime(int index)
+qint64 SubDVD::startTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-qint64 SubDVD::getStartOffset(int index)
+qint64 SubDVD::startOffset(int index)
 {
     return subPictures[index].offset();
 }
 
-SubPicture *SubDVD::getSubPicture(int index)
+SubPicture *SubDVD::subPicture(int index)
 {
     return &subPictures[index];
 }
@@ -294,7 +294,7 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, qint64 endOfs)
         case 0: // forced (?)
         {
             pic.setForced(true);
-            numForcedFrames++;
+            _numForcedFrames++;
         } break;
         case 1: // start display
             break;
@@ -332,18 +332,18 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, qint64 endOfs)
         case 5: // coordinates
         {
             int xOfs = ((ctrlHeader[index] & 0xff) << 4) | ((ctrlHeader[index + 1] & 0xff) >> 4);
-            pic.setOfsX(ofsXglob + xOfs);
+            pic.setX(ofsXglob + xOfs);
             int imageWidth = ((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index + 2] & 0xff));
             pic.setImageWidth((imageWidth - xOfs) + 1);
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
-            pic.setOfsY(ofsYglob + yOfs);
+            pic.setY(ofsYglob + yOfs);
             int imageHeight = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff));
             pic.setImageHeight((imageHeight - yOfs) + 1);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
-                                     .arg(QString::number(pic.getOfsX())).arg(QString::number(pic.getOfsY()))
-                                     .arg(QString::number((pic.getOfsX() + pic.getImageWidth()) - 1))
-                                     .arg(QString::number((pic.getOfsY() + pic.getImageHeight()) - 1)));
+                                     .arg(QString::number(pic.x())).arg(QString::number(pic.y()))
+                                     .arg(QString::number((pic.x() + pic.imageWidth()) - 1))
+                                     .arg(QString::number((pic.y() + pic.imageHeight()) - 1)));
 
             index += 6;
         } break;
@@ -485,7 +485,7 @@ void SubDVD::readAllSubFrames()
 
     emit currentProgressChanged(subPictures.size());
 
-    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
+    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(_numForcedFrames)));
 }
 
 QVector<uchar> SubDVD::createSubFrame(SubPictureDVD &subPicture, Bitmap &bitmap)
@@ -531,19 +531,19 @@ QVector<uchar> SubDVD::createSubFrame(SubPictureDVD &subPicture, Bitmap &bitmap)
     controlHeader.replace(1 + 8, (uchar)(((subPicture.alpha[1] & 0xf) << 4) | (subPicture.alpha[0] & 0x0f)));
 
     /* coordinates of subtitle */
-    controlHeader.replace(1 + 10, (uchar)((subPicture.getOfsX() >> 4) & 0xff));
-    tmp = (subPicture.getOfsX() + bitmap.width()) - 1;
-    controlHeader.replace(1 + 11, (uchar)(((subPicture.getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
+    controlHeader.replace(1 + 10, (uchar)((subPicture.x() >> 4) & 0xff));
+    tmp = (subPicture.x() + bitmap.width()) - 1;
+    controlHeader.replace(1 + 11, (uchar)(((subPicture.x() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 12, (uchar)(tmp & 0xff));
 
-    int yOfs = subPicture.getOfsY() - subtitleProcessor->getCropOfsY();
+    int yOfs = subPicture.y() - subtitleProcessor->getCropOfsY();
     if (yOfs < 0)
     {
         yOfs = 0;
     }
     else
     {
-        int yMax = (subPicture.height() - subPicture.getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
+        int yMax = (subPicture.screenHeight() - subPicture.imageHeight()) - (2 * subtitleProcessor->getCropOfsY());
         if (yOfs > yMax)
         {
             yOfs = yMax;
@@ -1030,7 +1030,7 @@ void SubDVD::readIdx(int idxToRead)
                 {
                     if (id == subLanguages[i][1])
                     {
-                        languageIdx = i;
+                        _languageIdx = i;
                     }
                 }
                 streamID = temp;
@@ -1073,8 +1073,8 @@ void SubDVD::readIdx(int idxToRead)
 
                 SubPictureDVD pic;
                 pic.setOffset(hex);
-                pic.setWidth(screenWidth);
-                pic.setHeight(screenHeight);
+                pic.setScreenWidth(screenWidth);
+                pic.setScreenHeight(screenHeight);
                 pic.setStartTime(time + delayGlob);
                 subPictures.push_back(pic);
             }
@@ -1108,8 +1108,8 @@ void SubDVD::writeIdx(QString filename, SubPicture &subPicture, QVector<int> off
     out->write(QString("# Created by " + progNameVer + "\n").toLatin1());
     out->write("\n");
     out->write("# Frame size\n");
-    out->write(QString("size: " + QString::number(subPicture.width()) + "x" +
-               QString::number((subPicture.height() - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toLatin1());
+    out->write(QString("size: " + QString::number(subPicture.screenWidth()) + "x" +
+               QString::number((subPicture.screenHeight() - (2 * subtitleProcessor->getCropOfsY()))) + "\n").toLatin1());
     out->write("\n");
     out->write("# Origin - upper-left corner\n");
     out->write("org: 0, 0\n");

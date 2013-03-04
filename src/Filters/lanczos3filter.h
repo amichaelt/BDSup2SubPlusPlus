@@ -27,7 +27,7 @@ class Lanczos3Filter : public Filter
 public:
     Lanczos3Filter();
 
-    float getRadius() { return 3.0f; }
+    float radius() { return 3.0f; }
     float value(float value);
 
 private:

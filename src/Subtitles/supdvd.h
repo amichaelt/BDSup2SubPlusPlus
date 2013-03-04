@@ -44,24 +44,24 @@ public:
     void readAllSupFrames();
     void setSrcPalette(Palette &palette);
 
-    int getLanguageIdx() { return languageIdx; }
-    int getPrimaryColorIndex() { return primaryColorIndex; }
-    int getNumFrames();
-    int getNumForcedFrames() { return numForcedFrames; }
+    int languageIdx() { return _languageIdx; }
+    int primaryColorIndex() { return _primaryColorIndex; }
+    int numFrames();
+    int numForcedFrames() { return _numForcedFrames; }
 
-    qint64 getEndTime(int index);
-    qint64 getStartTime(int index);
-    qint64 getStartOffset(int index);
+    qint64 endTime(int index);
+    qint64 startTime(int index);
+    qint64 startOffset(int index);
 
     bool isForced(int index);
 
-    Bitmap &getBitmap() { return bitmap; }
+    Bitmap &bitmap() { return _bitmap; }
 
-    Palette &getPalette() { return palette; }
+    Palette &palette() { return _palette; }
     Palette &getSrcPalette() { return srcPalette; }
 
-    QImage getImage();
-    QImage getImage(Bitmap &bitmap);
+    QImage image();
+    QImage image(Bitmap &bitmap);
 
     QVector<uchar> createSupFrame(SubPictureDVD &subPicture, Bitmap &bitmap);
     QVector<int> &getFrameAlpha(int index);
@@ -69,7 +69,7 @@ public:
     QVector<int> getOriginalFrameAlpha(int index);
     QVector<int> getOriginalFramePal(int index);
 
-    SubPicture *getSubPicture(int index);
+    SubPicture *subPicture(int index);
 
 signals:
     void maxProgressChanged(qint64 maxProgress);

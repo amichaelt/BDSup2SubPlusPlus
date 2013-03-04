@@ -23,6 +23,7 @@
 #include "subpicture.h"
 
 #include <QString>
+#include <QRect>
 
 class SubPictureXML : public SubPicture
 {
@@ -36,22 +37,24 @@ public:
 
     void setOriginal()
     {
-        origX = getOfsX();
-        origY = getOfsY();
+        origX = x();
+        origY = y();
     }
 
     int originalX() { return origX; }
     void setOriginalX(int originalX) { origX = originalX; }
     int originalY() { return origY; }
     void setOriginalY(int originalY) { origY = originalY; }
-    QString fileName() { return filename; }
-    void setFileName(QString fileName) { filename = fileName; }
+    QVector<QString> fileNames() { return filenames; }
+    void setFileName(QString fileName) { filenames.push_back(fileName); }
+
+    QVector<QRect> imageRects;
 
 private:
     int origX;
     int origY;
 
-    QString filename;
+    QVector<QString> filenames;
 };
 
 #endif // SUBPICTUREXML_H

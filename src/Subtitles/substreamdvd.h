@@ -41,7 +41,7 @@ public:
     virtual void setSrcPalette(Palette &palette) = 0;
     void decode(SubPictureDVD &pic, SubtitleProcessor* subtitleProcessor);
 
-    virtual int getLanguageIdx() = 0;
+    virtual int languageIdx() = 0;
 
     virtual Palette &getSrcPalette() = 0;
     static Palette decodePalette(SubPictureDVD &pic, Palette &palette, int alphaCrop);
@@ -53,10 +53,10 @@ public:
     virtual QVector<int> getOriginalFramePal(int index) = 0;
 
 protected:
-    Bitmap bitmap;
+    Bitmap _bitmap;
 
     Palette srcPalette;
-    Palette palette;
+    Palette _palette;
 
     SubtitleProcessor* subtitleProcessor = 0;
 
@@ -70,8 +70,8 @@ protected:
     int ofsXglob = 0;
     int ofsYglob = 0;
     int delayGlob = 0;
-    int languageIdx = 0;
-    int primaryColorIndex = 0;
+    int _languageIdx = 0;
+    int _primaryColorIndex = 0;
 
 private:
     void decodeLine(QVector<uchar> src, int srcOfs, int srcLen, QImage &trg, int trgOfs, int width, int maxPixels);

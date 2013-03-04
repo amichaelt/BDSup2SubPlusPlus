@@ -37,14 +37,14 @@ SupDVD::~SupDVD()
 {
 }
 
-QImage SupDVD::getImage()
+QImage SupDVD::image()
 {
-    return bitmap.image(palette);
+    return _bitmap.image(_palette);
 }
 
-QImage SupDVD::getImage(Bitmap &bitmap)
+QImage SupDVD::image(Bitmap &bitmap)
 {
-    return bitmap.image(palette);
+    return bitmap.image(_palette);
 }
 
 void SupDVD::decode(int index)
@@ -59,7 +59,7 @@ void SupDVD::decode(int index)
     }
 }
 
-int SupDVD::getNumFrames()
+int SupDVD::numFrames()
 {
     return subPictures.size();
 }
@@ -69,22 +69,22 @@ bool SupDVD::isForced(int index)
     return subPictures[index].isForced();
 }
 
-qint64 SupDVD::getEndTime(int index)
+qint64 SupDVD::endTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-qint64 SupDVD::getStartTime(int index)
+qint64 SupDVD::startTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-qint64 SupDVD::getStartOffset(int index)
+qint64 SupDVD::startOffset(int index)
 {
     return subPictures[index].offset();
 }
 
-SubPicture *SupDVD::getSubPicture(int index)
+SubPicture *SupDVD::subPicture(int index)
 {
     return &subPictures[index];
 }
@@ -115,7 +115,7 @@ void SupDVD::readIfo()
 
     QVector<uchar> header(IFOheader.size());
 
-    fileBuffer->getBytes(0, header, IFOheader.size());
+    fileBuffer->getBytes(0, header.data(), IFOheader.size());
 
     for (int i = 0; i < IFOheader.size(); ++i)
     {
@@ -200,7 +200,7 @@ void SupDVD::readIfo()
         {
             if (language.toLower() == languages[i][1])
             {
-                languageIdx = i;
+                _languageIdx = i;
                 found = true;
                 break;
             }
@@ -242,7 +242,7 @@ void SupDVD::writeIfo(QString filename, SubPicture &subPicture, Palette &palette
 
     // video attributes
     int vidAttr;
-    if (subPicture.height() == 480)
+    if (subPicture.screenHeight() == 480)
     {
         vidAttr = 0x4f01; // NTSC
     }
@@ -330,7 +330,7 @@ void SupDVD::readAllSupFrames()
     } while (ofs < size);
     emit currentProgressChanged(i);
 
-    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
+    subtitleProcessor->printX(QString("\nDetected %1 forced captions.\n").arg(QString::number(_numForcedFrames)));
 }
 
 void SupDVD::setSrcPalette(Palette &palette)
@@ -408,19 +408,19 @@ QVector<uchar> SupDVD::createSupFrame(SubPictureDVD &subPicture, Bitmap &bitmap)
     controlHeader.replace(1 + 8, (uchar)(((subPicture.alpha[1] & 0xf) << 4) | (subPicture.alpha[0] & 0x0f)));
 
     /* coordinates of subtitle */
-    controlHeader.replace(1 + 10, (uchar)((subPicture.getOfsX() >> 4) & 0xff));
-    tmp = (subPicture.getOfsX() + bitmap.width()) - 1;
-    controlHeader.replace(1 + 11, (uchar)(((subPicture.getOfsX() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
+    controlHeader.replace(1 + 10, (uchar)((subPicture.x() >> 4) & 0xff));
+    tmp = (subPicture.x() + bitmap.width()) - 1;
+    controlHeader.replace(1 + 11, (uchar)(((subPicture.x() & 0xf) << 4) | ((tmp >> 8) & 0xf)));
     controlHeader.replace(1 + 12, (uchar)(tmp & 0xff));
 
-    int yOfs = subPicture.getOfsY() - subtitleProcessor->getCropOfsY();
+    int yOfs = subPicture.y() - subtitleProcessor->getCropOfsY();
     if (yOfs < 0)
     {
         yOfs = 0;
     }
     else
     {
-        int yMax = (subPicture.height() - subPicture.getImageHeight()) - (2 * subtitleProcessor->getCropOfsY());
+        int yMax = (subPicture.screenHeight() - subPicture.imageHeight()) - (2 * subtitleProcessor->getCropOfsY());
         if (yOfs > yMax)
         {
             yOfs = yMax;
@@ -480,8 +480,8 @@ qint64 SupDVD::readSupFrame(qint64 ofs)
     // 8 uchars PTS:  system clock reference, but use only the first 4
     SubPictureDVD pic;
     pic.setOffset(ofs);
-    pic.setWidth(screenWidth);
-    pic.setHeight(screenHeight);
+    pic.setScreenWidth(screenWidth);
+    pic.setScreenHeight(screenHeight);
 
     int pts = fileBuffer->getDWordLE(ofs += 2);
     pic.setStartTime(pts + delayGlob);
@@ -540,7 +540,7 @@ qint64 SupDVD::readSupFrame(qint64 ofs)
         case 0: // forced (?)
         {
             pic.setForced(true);
-            numForcedFrames++;
+            _numForcedFrames++;
         } break;
         case 1: // start display
             break;
@@ -581,20 +581,20 @@ qint64 SupDVD::readSupFrame(qint64 ofs)
         case 5: // coordinates
         {
             int xOfs = ((ctrlHeader[index] & 0xff) << 4) | ((ctrlHeader[index + 1] & 0xff) >> 4);
-            pic.setOfsX(ofsXglob + xOfs);
+            pic.setX(ofsXglob + xOfs);
             int imageWidth = ((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index+2] & 0xff));
             pic.setImageWidth((imageWidth - xOfs) + 1);
 
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
-            pic.setOfsY(ofsYglob + yOfs);
+            pic.setY(ofsYglob + yOfs);
             int imageHeight = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | ((ctrlHeader[index + 5] & 0xff)));
             pic.setImageHeight((imageHeight - yOfs) + 1);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
-                                     .arg(QString::number(pic.getOfsX()))
-                                     .arg(QString::number(pic.getOfsY()))
-                                     .arg(QString::number((pic.getOfsX() + pic.getImageWidth()) - 1))
-                                     .arg(QString::number((pic.getOfsY() + pic.getImageHeight()) - 1)));
+                                     .arg(QString::number(pic.x()))
+                                     .arg(QString::number(pic.y()))
+                                     .arg(QString::number((pic.x() + pic.imageWidth()) - 1))
+                                     .arg(QString::number((pic.y() + pic.imageHeight()) - 1)));
 
             index += 6;
         } break;

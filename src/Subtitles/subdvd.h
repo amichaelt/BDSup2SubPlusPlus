@@ -49,28 +49,28 @@ public:
     void readAllSubFrames();
     void setTimeOffset(QString value) { timeOffset = value; }
 
-    int getPrimaryColorIndex() { return primaryColorIndex; }
-    int getNumFrames();
-    int getNumForcedFrames() { return numForcedFrames; }
-    int getLanguageIdx() { return languageIdx; }
+    int primaryColorIndex() { return _primaryColorIndex; }
+    int numFrames();
+    int numForcedFrames() { return _numForcedFrames; }
+    int languageIdx() { return _languageIdx; }
     int getLanguageIdxRead() { return languageIdxRead; }
 
-    qint64 getEndTime(int index);
-    qint64 getStartTime(int index);
-    qint64 getStartOffset(int index);
+    qint64 endTime(int index);
+    qint64 startTime(int index);
+    qint64 startOffset(int index);
 
     bool isForced(int index);
 
-    Bitmap &getBitmap() { return bitmap; }
+    Bitmap &bitmap() { return _bitmap; }
 
-    QImage getImage();
-    QImage getImage(Bitmap &bitmap);
+    QImage image();
+    QImage image(Bitmap &bitmap);
 
-    Palette &getPalette() { return palette; }
+    Palette &palette() { return _palette; }
     Palette &getSrcPalette() { return srcPalette; }
     Palette &decodePalette(SubPictureDVD &pic, Palette &palette);
 
-    SubPicture *getSubPicture(int index);
+    SubPicture *subPicture(int index);
 
     QVector<uchar> createSubFrame(SubPictureDVD &subPicture, Bitmap &bitmap);
 

@@ -41,14 +41,14 @@ SupHD::~SupHD()
     }
 }
 
-QImage SupHD::getImage()
+QImage SupHD::image()
 {
-    return bitmap.image(palette);
+    return _bitmap.image(_palette);
 }
 
-QImage SupHD::getImage(Bitmap &bitmap)
+QImage SupHD::image(Bitmap &bitmap)
 {
-    return bitmap.image(palette);
+    return bitmap.image(_palette);
 }
 
 void SupHD::decode(int index)
@@ -63,27 +63,27 @@ void SupHD::decode(int index)
     }
 }
 
-int SupHD::getNumFrames()
+int SupHD::numFrames()
 {
     return subPictures.size();
 }
 
-qint64 SupHD::getEndTime(int index)
+qint64 SupHD::endTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-qint64 SupHD::getStartTime(int index)
+qint64 SupHD::startTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-qint64 SupHD::getStartOffset(int index)
+qint64 SupHD::startOffset(int index)
 {
     return subPictures[index].imageBufferOffsetEven();
 }
 
-SubPicture *SupHD::getSubPicture(int index)
+SubPicture *SupHD::subPicture(int index)
 {
     return &subPictures[index];
 }
@@ -114,8 +114,8 @@ void SupHD::readAllSupFrames()
             int masterIndex = index + 10; //end of header
             pic = SubPictureHD();
             // hard code size since it's not part of the format???
-            pic.setWidth(1920);
-            pic.setHeight(1080);
+            pic.setScreenWidth(1920);
+            pic.setScreenHeight(1080);
 
             subtitleProcessor->printX(QString("#%1\n").arg(QString::number(subPictures.size() + 1)));;
 
@@ -189,19 +189,19 @@ void SupHD::readAllSupFrames()
                 } break;
                 case 0x85: // area
                 {
-                    pic.setOfsX((fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4));
+                    pic.setX((fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4));
                     int imageWidth = (((fileBuffer->getByte(index + 1) &0xf) << 8) | (fileBuffer->getByte(index + 2)));
-                    pic.setImageWidth((imageWidth - pic.getOfsX()) + 1);
-                    pic.setOfsY((fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4));
+                    pic.setImageWidth((imageWidth - pic.x()) + 1);
+                    pic.setY((fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4));
                     int imageHeight = (((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5)));
-                    pic.setImageHeight((imageHeight - pic.getOfsY()) + 1);
+                    pic.setImageHeight((imageHeight - pic.y()) + 1);
 
                     subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))
-                                             .arg(QString::number(pic.getOfsX()))
-                                             .arg(QString::number(pic.getOfsY()))
-                                             .arg(QString::number(pic.getOfsX() + pic.getImageWidth()))
-                                             .arg(QString::number(pic.getOfsY() + pic.getImageHeight())));
+                                             .arg(QString::number(pic.x()))
+                                             .arg(QString::number(pic.y()))
+                                             .arg(QString::number(pic.x() + pic.imageWidth()))
+                                             .arg(QString::number(pic.y() + pic.imageHeight())));
 
                     index += 6;
                 } break;
@@ -273,9 +273,9 @@ void SupHD::readAllSupFrames()
 
 void SupHD::decode(SubPictureHD &subPicture)
 {
-    palette = decodePalette(subPicture);
-    bitmap = decodeImage(subPicture, palette.transparentIndex());
-    primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    _palette = decodePalette(subPicture);
+    _bitmap = decodeImage(subPicture, _palette.transparentIndex());
+    _primaryColorIndex = _bitmap.primaryColorIndex(_palette, subtitleProcessor->getAlphaThreshold());
 }
 
 void SupHD::decodeLine(QImage &trg, int trgOfs, int width, int maxPixels, BitStream* src)
@@ -405,11 +405,11 @@ Palette SupHD::decodePalette(SubPictureHD &subPicture)
 
 Bitmap SupHD::decodeImage(SubPictureHD &subPicture, int transparentIndex)
 {
-    int w = subPicture.getImageWidth();
-    int h = subPicture.getImageHeight();
+    int w = subPicture.imageWidth();
+    int h = subPicture.imageHeight();
     int warnings = 0;
 
-    if (w > subPicture.width() || h > subPicture.height())
+    if (w > subPicture.screenWidth() || h > subPicture.screenHeight())
     {
         throw QString("Subpicture too large: %1x%2 at offset %3")
                 .arg(QString::number(w))

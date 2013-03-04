@@ -25,7 +25,7 @@
 class BSplineFilter : public Filter
 {
 public:
-    float getRadius() { return 2.0f; }
+    float radius() { return 2.0f; }
     float value(float value);
 
     static constexpr float two_thirds = 2.0f / 3.0f;

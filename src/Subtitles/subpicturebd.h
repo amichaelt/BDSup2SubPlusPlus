@@ -25,6 +25,7 @@
 #include "paletteinfo.h"
 
 #include <QVector>
+#include <QRect>
 
 class ImageObject;
 class PaletteInfo;
@@ -39,18 +40,78 @@ public:
 
     SubPicture* copy();
 
+    void setX(int ofs, bool isMoving = false)
+    {
+        if (isMoving)
+        {
+            edited = true;
+            int diff = ofs - xOfs;
+            for (int i = 0; i < WindowSizes.size(); ++i)
+            {
+                if (WindowSizes[i].x() == ofs)
+                {
+                    continue;
+                }
+                WindowSizes[i].setX(WindowSizes[i].x() + diff);
+            }
+        }
+        xOfs = ofs;
+    }
+
+    void setY(int ofs, bool isMoving = false)
+    {
+        if (isMoving)
+        {
+            edited = true;
+            int diff = ofs - yOfs;
+            for (int i = 0; i < WindowSizes.size(); ++i)
+            {
+                if (WindowSizes[i].y() == ofs)
+                {
+                    continue;
+                }
+                WindowSizes[i].setY(WindowSizes[i].y() + diff);
+            }
+        }
+        yOfs = ofs;
+    }
+
+    virtual void setImageWidth(int w, bool isScaling = false)
+    {
+        if (isScaling)
+        {
+            edited = true;
+            for (int i = 0; i < WindowSizes.size(); ++i)
+            {
+                double scaleFactor = (double) w / imageObjectList[i].width();
+                WindowSizes[i].setWidth(WindowSizes[i].width() * scaleFactor);
+            }
+        }
+        _imageWidth = w;
+    }
+
+    virtual void setImageHeight(int h, bool isScaling = false)
+    {
+        if (isScaling)
+        {
+            edited = true;
+            for (int i = 0; i < WindowSizes.size(); ++i)
+            {
+                double scaleFactor = (double) h / imageObjectList[i].height();
+                WindowSizes[i].setHeight(WindowSizes[i].height() * scaleFactor);
+            }
+        }
+        _imageHeight = h;
+    }
+
+    long rleBufferSize() { return rleBufSize; }
+    void setRLEBufferSize(int rleBufferSize) { rleBufSize = rleBufferSize; }
     int paletteID() { return paletteId; }
     void setPaletteID(int paletteID) { paletteId = paletteID; }
     bool paletteUpdated() { return paletteUpdate; }
     void setPaletteUpdated(bool paletteUpdated) { paletteUpdate = paletteUpdated; }
-    int windowWidth() { return winWidth; }
-    void setWindowWidth(int windowWidth) { winWidth = windowWidth; }
-    int windowHeight() { return winHeight; }
-    void setWindowHeight(int windowHeight) { winHeight = windowHeight; }
-    int xWindowOffset() { return xWinOfs; }
-    void setXWindowOffset(int xWindowOffset) { xWinOfs = xWindowOffset; }
-    int yWindowOffset() { return yWinOfs; }
-    void setYWindowOffset(int yWindowOffset) { yWinOfs = yWindowOffset; }
+    int numberOfWindows() { return numWindows; }
+    void setNumberOfWindows(int numberOfWindows) { numWindows = numberOfWindows; }
     int subPictureType() { return type; }
     void setSubPictureType(int subPictureType) { type = subPictureType; }
     bool isForced()
@@ -59,38 +120,44 @@ public:
 
         for (int i = 0; i < imageObjectList.size(); ++i)
         {
-            if (imageObjectList[i].getFragmentList().size() > 0)
+            if (imageObjectList[i].fragmentList().size() > 0)
             {
                 isForced &= imageObjectList[i].isForced();
             }
         }
+        return isForced;
     }
+
     void setForced(bool isForced)
     {
         for (int i = 0; i < imageObjectList.size(); ++i)
         {
-            if (imageObjectList[i].getFragmentList().size() > 0)
+            if (imageObjectList[i].fragmentList().size() > 0)
             {
                 imageObjectList[i].setForced(isForced);
             }
         }
     }
 
+    bool supEdited() { return edited; }
+    void setEdited(bool supEdited) { edited = supEdited; }
+
     QVector<ImageObject> imageObjectList;
 
     QVector<QVector<PaletteInfo>> palettes;
 
+    QVector<QRect> WindowSizes;
+
     ImageObject &getImgObj(int index) { return imageObjectList[index]; }
 
 private:
+    qint64 rleBufSize;
     int paletteId;
-    int winWidth = 0;
-    int winHeight = 0;
-    int xWinOfs = 0;
-    int yWinOfs = 0;
     int type = 0;
+    int numWindows = 0;
 
     bool paletteUpdate;
+    bool edited = false;
 };
 
 #endif // SUBSPICTUREBD_H

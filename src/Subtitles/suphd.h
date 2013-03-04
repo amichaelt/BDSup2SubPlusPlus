@@ -45,34 +45,34 @@ public:
     void decode(int index);
     void readAllSupFrames();
 
-    int getPrimaryColorIndex() { return primaryColorIndex; }
-    int getNumFrames();
-    int getNumForcedFrames() { return 0; }
+    int primaryColorIndex() { return _primaryColorIndex; }
+    int numFrames();
+    int numForcedFrames() { return 0; }
 
-    qint64 getEndTime(int index);
-    qint64 getStartTime(int index);
-    qint64 getStartOffset(int index);
+    qint64 endTime(int index);
+    qint64 startTime(int index);
+    qint64 startOffset(int index);
     bool isForced(int index) { return false; }
 
-    Bitmap &getBitmap() { return bitmap; }
+    Bitmap &bitmap() { return _bitmap; }
 
-    Palette &getPalette() { return palette; }
+    Palette &palette() { return _palette; }
 
-    QImage getImage();
-    QImage getImage(Bitmap &bitmap);
+    QImage image();
+    QImage image(Bitmap &bitmap);
 
-    SubPicture *getSubPicture(int index);
+    SubPicture *subPicture(int index);
 
 signals:
     void maxProgressChanged(qint64 maxProgress);
     void currentProgressChanged(qint64 currentProgress);
 
 private:
-    int primaryColorIndex = 0;
+    int _primaryColorIndex = 0;
 
-    Bitmap bitmap;
+    Bitmap _bitmap;
 
-    Palette palette;
+    Palette _palette;
 
     QScopedPointer<FileBuffer> fileBuffer;
 

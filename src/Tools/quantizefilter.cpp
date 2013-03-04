@@ -25,7 +25,7 @@
 
 void QuantizeFilter::setNumColors(int numColors)
 {
-    this->numColors = std::min(std::max(numColors, 8), 256);
+    this->_numColors = std::min(std::max(numColors, 8), 256);
 }
 
 QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int width, int height,
@@ -63,7 +63,7 @@ QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int wid
             for (int x = 0; x < width; ++x)
             {
                 QRgb rgb1 = inPixels[index];
-                int idx = quantizer.getIndexForColor(rgb1);
+                int idx = quantizer.indexForColor(rgb1);
                 QRgb rgb2 = table[idx];
 
                 outPixels[index] = (uchar)(idx & 0xff);
@@ -148,7 +148,7 @@ QVector<QRgb> QuantizeFilter::quantize(QImage inImage, QImage *outImage, int wid
             }
             else
             {
-                color = table[quantizer.getIndexForColor(inPixels[x])];
+                color = table[quantizer.indexForColor(inPixels[x])];
             }
             int idx = p.size();
             if (p.contains(color))
@@ -197,7 +197,7 @@ void QuantizeFilter::OctTreeQuantizer::addPixels(QImage &image)
     }
 }
 
-int QuantizeFilter::OctTreeQuantizer::getIndexForColor(QRgb argb)
+int QuantizeFilter::OctTreeQuantizer::indexForColor(QRgb argb)
 {
     int alpha = qAlpha(argb);
     int red = qRed(argb);

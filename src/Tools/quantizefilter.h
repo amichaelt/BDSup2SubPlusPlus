@@ -68,7 +68,7 @@ class QuantizeFilter
         void buildColorTable(QVector<QRgb> inPixels, QVector<QRgb> &table);
         void setup(int numColors);
 
-        int getIndexForColor(QRgb argb);
+        int indexForColor(QRgb argb);
 
         QVector<QRgb> buildColorTable();
 
@@ -107,7 +107,7 @@ public:
          return c;
      }
 
-     int getNumColors() { return numColors; }
+     int numColors() { return _numColors; }
 
      bool getDither() { return dither; }
      bool getSerpentine() { return serpentine; }
@@ -117,7 +117,7 @@ public:
 
 private:
      static constexpr int sum = 3 + 5 + 7 + 1;
-     int numColors = 255;
+     int _numColors = 255;
 
      bool dither = false;
      bool serpentine = true;

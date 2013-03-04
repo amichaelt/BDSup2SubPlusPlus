@@ -31,6 +31,7 @@
 #include <QtXml/QXmlInputSource>
 #include <QRect>
 #include <QDir>
+#include <QPainter>
 
 SupXML::SupXML(QString fileName, SubtitleProcessor* subtitleProcessor) :
     fps(FPS_24P),
@@ -52,90 +53,133 @@ SupXML::~SupXML()
     }
 }
 
-QImage SupXML::getImage()
+QImage SupXML::image()
 {
-    return bitmap.image(palette);
+    return _bitmap.image(_palette);
 }
 
-QImage SupXML::getImage(Bitmap &bitmap)
+QImage SupXML::image(Bitmap &bitmap)
 {
-    return bitmap.image(palette);
+    return bitmap.image(_palette);
 }
 
 void SupXML::decode(int index)
 {
-    if (!QFileInfo(subPictures[index].fileName()).exists())
+    QVector<Bitmap> bitmaps;
+    QVector<Palette> palettes;
+    SubPictureXML subPic = subPictures[index];
+    for (int i = 0; i < subPic.fileNames().size(); ++i)
     {
-        throw QString("File: '%1' not found").arg(subPictures[index].fileName());
-    }
-    QImage image(subPictures[index].fileName());
-    int width = image.width();
-    int height = image.height();
-
-    palette = Palette(0, true);
-
-    // first try to read image and palette directly from imported image
-    if (image.format() == QImage::Format_Indexed8)
-    {
-        QVector<QRgb> colorTable = image.colorTable();
-        if (colorTable.size() < 255 || (image.hasAlphaChannel() && qAlpha(colorTable[255]) == 0))
+        if (!QFileInfo(subPic.fileNames()[i]).exists())
         {
+            throw QString("File: '%1' not found").arg(subPic.fileNames()[i]);
+        }
+
+        Bitmap bitmap;
+        Palette palette = Palette(0, true);
+        QImage image(subPic.fileNames()[i]);
+        int width = image.width();
+        int height = image.height();
+
+        // first try to read image and palette directly from imported image
+        if (image.format() == QImage::Format_Indexed8)
+        {
+            QVector<QRgb> colorTable = image.colorTable();
+            if (colorTable.size() <= 255 || (image.hasAlphaChannel() && qAlpha(colorTable[255]) == 0))
+            {
+                // create palette
+                palette = Palette(256);
+                for (int i = 0; i < colorTable.size(); ++i)
+                {
+                    int alpha = (colorTable[i] >> 24) & 0xff;
+                    if (alpha >= subtitleProcessor->getAlphaCrop())
+                    {
+                        palette.setARGB(i, colorTable[i]);
+                    }
+                    else
+                    {
+                        palette.setARGB(i, 0);
+                    }
+                }
+                bitmap = Bitmap(image);
+            }
+        }
+
+        // if this failed, assume RGB image and quantize palette
+        if (palette.size() == 0)
+        {
+            // quantize image
+            QuantizeFilter qf;
+            bitmap = Bitmap(image.width(), image.height());
+            QVector<QRgb> ct = qf.quantize(image, &bitmap.image(), width, height, 255, false, false);
+            int size = ct.size();
+            if (size > 255)
+            {
+                subtitleProcessor->printWarning("Quantizer failed.\n");
+                size = 255;
+            }
             // create palette
             palette = Palette(256);
-            for (int i = 0; i < colorTable.size(); ++i)
+            for (int i = 0; i < size; ++i)
             {
-                int alpha = (colorTable[i] >> 24) & 0xff;
+                int alpha = qAlpha(ct[i]);
                 if (alpha >= subtitleProcessor->getAlphaCrop())
                 {
-                    palette.setARGB(i, colorTable[i]);
+                    palette.setARGB(i, ct[i]);
                 }
                 else
                 {
                     palette.setARGB(i, 0);
                 }
             }
-            bitmap = Bitmap(image);
         }
+        bitmaps.push_back(bitmap);
+        palettes.push_back(palette);
     }
 
-    // if this failed, assume RGB image and quantize palette
-    if (palette.size() == 0)
+    //combine images
+    if (bitmaps.size() == 1)
     {
-        // quantize image
-        QuantizeFilter qf;
-        bitmap = Bitmap(image.width(), image.height());
-        QVector<QRgb> ct = qf.quantize(image, &bitmap.image(), width, height, 255, false, false);
-        int size = ct.size();
-        if (size > 255)
+        _bitmap = bitmaps[0];
+        _palette = palettes[0];
+    }
+    else
+    {
+        QImage resultImage(1920, 1080, QImage::Format_ARGB32_Premultiplied);
+        QPainter painter(&resultImage);
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
+        painter.fillRect(resultImage.rect(), Qt::transparent);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(subPic.imageRects[0].x(), subPic.imageRects[0].y(), bitmaps[0].image(palettes[0]));
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(subPic.imageRects[1].x(), subPic.imageRects[1].y(), bitmaps[1].image(palettes[1]));
+        painter.end();
+
+        resultImage = resultImage.convertToFormat(QImage::Format_Indexed8, palettes[0].colorTable());
+
+        _bitmap = Bitmap(resultImage);
+        _palette = palettes[0];
+
+        if (subPic.imageRects[0].y() > subPic.imageRects[1].y())
         {
-            subtitleProcessor->printWarning("Quantizer failed.\n");
-            size = 255;
+            subPictures[index].setImageHeight(subPic.imageRects[0].y() + subPic.imageRects[0].height());
         }
-        // create palette
-        palette= Palette(256);
-        for (int i = 0; i < size; ++i)
+        else
         {
-            int alpha = qAlpha(ct[i]);
-            if (alpha >= subtitleProcessor->getAlphaCrop())
-            {
-                palette.setARGB(i, ct[i]);
-            }
-            else
-            {
-                palette.setARGB(i, 0);
-            }
+            subPictures[index].setImageHeight(subPic.imageRects[1].y() + subPic.imageRects[1].height());
         }
+        subPic.setImageHeight(subPictures[index].imageHeight());
     }
 
-    primaryColorIndex = bitmap.primaryColorIndex(palette, subtitleProcessor->getAlphaThreshold());
+    _primaryColorIndex = _bitmap.primaryColorIndex(_palette, subtitleProcessor->getAlphaThreshold());
     // crop
-    QRect bounds = bitmap.bounds(palette, subtitleProcessor->getAlphaCrop());
+    QRect bounds = _bitmap.bounds(_palette, subtitleProcessor->getAlphaCrop());
     if (bounds.topLeft().y() > 0 || bounds.topLeft().x() > 0 ||
-        bounds.bottomRight().x() < (bitmap.width() - 1) ||
-        bounds.bottomRight().y() < (bitmap.height() - 1))
+        bounds.bottomRight().x() < (_bitmap.width() - 1) ||
+        bounds.bottomRight().y() < (_bitmap.height() - 1))
     {
-        width = bounds.width();
-        height = bounds.height();
+        int width = bounds.width();
+        int height = bounds.height();
 
         if (width < 2)
         {
@@ -145,17 +189,17 @@ void SupXML::decode(int index)
         {
             height = 2;
         }
-        bitmap = bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
+        _bitmap = _bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         // update picture
-        SubPictureXML pic(subPictures[index]);
+        SubPictureXML pic(subPic);
         pic.setImageWidth(width);
         pic.setImageHeight(height);
-        pic.setOfsX(pic.originalX() + bounds.topLeft().x());
-        pic.setOfsY(pic.originalY() + bounds.topLeft().y());
+        pic.setX(pic.originalX() + bounds.topLeft().x());
+        pic.setY(pic.originalY() + bounds.topLeft().y());
     }
 }
 
-int SupXML::getNumFrames()
+int SupXML::numFrames()
 {
     return subPictures.size();
 }
@@ -165,17 +209,17 @@ bool SupXML::isForced(int index)
     return subPictures[index].isForced();
 }
 
-qint64 SupXML::getEndTime(int index)
+qint64 SupXML::endTime(int index)
 {
     return subPictures[index].endTime();
 }
 
-qint64 SupXML::getStartTime(int index)
+qint64 SupXML::startTime(int index)
 {
     return subPictures[index].startTime();
 }
 
-SubPicture *SupXML::getSubPicture(int index)
+SubPicture *SupXML::subPicture(int index)
 {
     return &subPictures[index];
 }
@@ -194,7 +238,7 @@ void SupXML::readAllImages()
         throw QString("Failed to parse file: '%1'").arg(xmlFileName);
     }
 
-    subtitleProcessor->print(QString("\nDetected %1 forced captions.\n").arg(QString::number(numForcedFrames)));
+    subtitleProcessor->print(QString("\nDetected %1 forced captions.\n").arg(QString::number(_numForcedFrames)));
 }
 
 QString SupXML::getPNGname(QString filename, int idx)
@@ -255,8 +299,8 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
         out->write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toLatin1());
 
         QString pname = QFileInfo(getPNGname(name, idx + 1)).fileName();
-        out->write(QString("      <Graphic Width=\"" + QString::number(p->getImageWidth()) + "\" Height=\"" + QString::number(p->getImageHeight()) +
-                          "\" X=\"" + QString::number(p->getOfsX()) + "\" Y=\"" + QString::number(p->getOfsY()) + "\">" + pname + "</Graphic>\n").toLatin1());
+        out->write(QString("      <Graphic Width=\"" + QString::number(p->imageWidth()) + "\" Height=\"" + QString::number(p->imageHeight()) +
+                          "\" X=\"" + QString::number(p->x()) + "\" Y=\"" + QString::number(p->y()) + "\">" + pname + "</Graphic>\n").toLatin1());
         out->write("    </Event>\n");
     }
     out->write("  </Events>\n");
@@ -400,6 +444,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
 
         emit parent->currentProgressChanged(num);
         at = atts.value("InTC");
+
         if (!at.isEmpty())
         {
             subPicture->setStartTime(TimeUtil::timeStrXmlToPTS(at, parent->fpsXml));
@@ -435,31 +480,47 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         }
         if (subPicture->isForced())
         {
-            parent->numForcedFrames++;
+            parent->_numForcedFrames++;
         }
         QVector<int> dim = parent->subtitleProcessor->getResolutions(parent->resolution);
-        subPicture->setWidth(dim.at(0));
-        subPicture->setHeight(dim.at(1));
+        subPicture->setScreenWidth(dim.at(0));
+        subPicture->setScreenHeight(dim.at(1));
     } break;
     case (int)SupXML::XmlHandler::XmlState::GRAPHIC:
     {
+        bool hasGraphic = subPicture->fileNames().size() == 1;
         bool ok;
         int width = atts.value("Width").toInt(&ok);
         width = ok ? width : -1;
-        subPicture->setImageWidth(width);
+        if (!hasGraphic || width > subPicture->imageWidth())
+        {
+            subPicture->setImageWidth(width);
+        }
 
         int height = atts.value("Height").toInt(&ok);
         height = ok ? height : -1;
-        subPicture->setImageHeight(height);
+        if (!hasGraphic || height > subPicture->imageHeight())
+        {
+            subPicture->setImageHeight(height);
+        }
 
         int x = atts.value("X").toInt(&ok);
         x = ok ? x : -1;
-        subPicture->setOfsX(x);
+        if (!hasGraphic || x < subPicture->x())
+        {
+            subPicture->setX(x);
+        }
 
         int y = atts.value("Y").toInt(&ok);
         y = ok ? y : -1;
-        subPicture->setOfsY(y);
+        if (!hasGraphic || y < subPicture->y())
+        {
+            subPicture->setY(y);
+        }
         subPicture->setOriginal();
+
+        QRect rect(x, y, width, height);
+        subPicture->imageRects.push_back(rect);
     } break;
     }
 

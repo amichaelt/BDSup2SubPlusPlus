@@ -23,7 +23,7 @@
 class Filter
 {
 public:
-    virtual float getRadius() = 0;
+    virtual float radius() = 0;
     virtual float value(float value) = 0;
 };
 

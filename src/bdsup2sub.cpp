@@ -890,8 +890,8 @@ void BDSup2Sub::addCLIOptions()
     options->add("swap",              "\tSwap Cr/Cb components.");
     options->add("no-fix-invisible",  "\tDo not fix zero alpha frame palette.");
     options->add("fix-invisible",     "\tFix zero alpha frame palette.");
-    options->add("no-verbatim",       "\tSwitch off verbose console output mode.");
-    options->add("verbatim",          "\tSwitch on verbose console output mode.");
+    options->add("no-verbose",        "\tSwitch off verbose console output mode.");
+    options->add("verbose",           "\tSwitch on verbose console output mode.");
     options->add("log-to-stderr",     "\tSwitch to change progress output to standard error.");
 
     options->addSection("Options only for SUB/IDX or SUP/IFO as target");

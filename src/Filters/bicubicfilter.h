@@ -25,7 +25,7 @@
 class BiCubicFilter : public Filter
 {
 public:
-    float getRadius() { return 2.0f; }
+    float radius() { return 2.0f; }
     float value(float value);
 
 protected:

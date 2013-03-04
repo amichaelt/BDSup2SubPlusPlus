@@ -131,11 +131,11 @@ void EditDialog::setIndex(int value)
     ui->horizontalSlider->blockSignals(true);
     ui->verticalSlider->blockSignals(true);
 
-    ui->horizontalSlider->setMaximum(subPicture->width());
-    ui->horizontalSlider->setValue(subPicture->getOfsX());
+    ui->horizontalSlider->setMaximum(subPicture->screenWidth());
+    ui->horizontalSlider->setValue(subPicture->x());
 
-    ui->verticalSlider->setMaximum(subPicture->height());
-    ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
+    ui->verticalSlider->setMaximum(subPicture->screenHeight());
+    ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
 
     ui->horizontalSlider->blockSignals(false);
     ui->verticalSlider->blockSignals(false);
@@ -151,8 +151,8 @@ void EditDialog::setIndex(int value)
     ui->endTimeLineEdit->setText(TimeUtil::ptsToTimeStr(subPicture->endTime()));
     ui->durationLineEdit->setText(QString::number((subPicture->endTime() - subPicture->startTime()) / 90.0, 'g', 6));
 
-    ui->xOffsetLineEdit->setText(QString::number(subPicture->getOfsX()));
-    ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
+    ui->xOffsetLineEdit->setText(QString::number(subPicture->x()));
+    ui->yOffsetLineEdit->setText(QString::number(subPicture->y()));
 
     ui->startTimeLineEdit->blockSignals(false);
     ui->endTimeLineEdit->blockSignals(false);
@@ -160,10 +160,10 @@ void EditDialog::setIndex(int value)
     ui->xOffsetLineEdit->blockSignals(false);
     ui->yOffsetLineEdit->blockSignals(false);
 
-    ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
-    ui->subtitleImage->setDimension(subPicture->width(), subPicture->height());
+    ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
+    ui->subtitleImage->setDimension(subPicture->screenWidth(), subPicture->screenHeight());
     ui->subtitleImage->setCropOfsY(subtitleProcessor->getCropOfsY());
-    ui->subtitleImage->setImage(image, subPicture->getImageWidth(), subPicture->getImageHeight());
+    ui->subtitleImage->setImage(image, subPicture->imageWidth(), subPicture->imageHeight());
     ui->subtitleImage->update();
     ui->subtitleImage->setExcluded(subPicture->exclude());
 
@@ -259,14 +259,14 @@ void EditDialog::on_maxButton_clicked()
 
 void EditDialog::on_centerButton_clicked()
 {
-    subPicture->setOfsX((subPicture->width() - subPicture->getImageWidth()) / 2);
+    subPicture->setX((subPicture->screenWidth() - subPicture->imageWidth()) / 2);
 
     ui->horizontalSlider->blockSignals(true);
 
-    ui->horizontalSlider->setValue(subPicture->getOfsX());
-    ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+    ui->horizontalSlider->setValue(subPicture->x());
+    ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
     ui->subtitleImage->update();
-    ui->xOffsetLineEdit->setText(QString::number(subPicture->getOfsX()));
+    ui->xOffsetLineEdit->setText(QString::number(subPicture->x()));
     setEdited(true);
 
     ui->horizontalSlider->blockSignals(false);
@@ -275,8 +275,8 @@ void EditDialog::on_centerButton_clicked()
 
 void EditDialog::on_topButton_clicked()
 {
-    int cineH = (subPicture->height() * 5) / 42;
-    int y = cineH - subPicture->getImageHeight();
+    int cineH = (subPicture->screenHeight() * 5) / 42;
+    int y = cineH - subPicture->imageHeight();
     if (y < 10)
     {
         y = 10;
@@ -287,11 +287,11 @@ void EditDialog::on_topButton_clicked()
     }
     ui->verticalSlider->blockSignals(true);
 
-    subPicture->setOfsY(y);
-    ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
-    ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+    subPicture->setY(y);
+    ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
+    ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
     ui->subtitleImage->update();
-    ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
+    ui->yOffsetLineEdit->setText(QString::number(subPicture->y()));
     setEdited(true);
 
     ui->verticalSlider->blockSignals(false);
@@ -299,18 +299,18 @@ void EditDialog::on_topButton_clicked()
 
 void EditDialog::on_bottomButton_clicked()
 {
-    int cineH = (subPicture->height() * 5) / 42;
-    int y = subPicture->height() - cineH;
-    if ((y + subPicture->getImageHeight()) > (subPicture->height() - subtitleProcessor->getCropOfsY()))
+    int cineH = (subPicture->screenHeight() * 5) / 42;
+    int y = subPicture->screenHeight() - cineH;
+    if ((y + subPicture->imageHeight()) > (subPicture->screenHeight() - subtitleProcessor->getCropOfsY()))
     {
-        y = (subPicture->height() - subPicture->getImageHeight()) - 10;
+        y = (subPicture->screenHeight() - subPicture->imageHeight()) - 10;
     }
 
     ui->verticalSlider->blockSignals(true);
 
-    subPicture->setOfsY(y);
-    ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
-    ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+    subPicture->setY(y);
+    ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
+    ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
     ui->subtitleImage->update();
     setEdited(true);
 
@@ -351,7 +351,7 @@ void EditDialog::on_addErasePatchButton_clicked()
         ui->undoAllErasePatchesButton->setEnabled(true);
 
         image = subtitleProcessor->getTrgImagePatched(subPicture);
-        ui->subtitleImage->setImage(image, subPicture->getImageWidth(), subPicture->getImageHeight());
+        ui->subtitleImage->setImage(image, subPicture->imageWidth(), subPicture->imageHeight());
 
         setEdited(true);
     }
@@ -371,7 +371,7 @@ void EditDialog::on_undoErasePatchButton_clicked()
             ui->undoAllErasePatchesButton->setEnabled(false);
         }
         image = subtitleProcessor->getTrgImagePatched(subPicture);
-        ui->subtitleImage->setImage(image, subPicture->getImageWidth(), subPicture->getImageHeight());
+        ui->subtitleImage->setImage(image, subPicture->imageWidth(), subPicture->imageHeight());
         ui->subtitleImage->update();
         setEdited(true);
     }
@@ -381,7 +381,7 @@ void EditDialog::on_undoAllErasePatchesButton_clicked()
 {
     subPicture->erasePatch.clear();
     image = subtitleProcessor->getTrgImagePatched(subPicture);
-    ui->subtitleImage->setImage(image, subPicture->getImageWidth(), subPicture->getImageHeight());
+    ui->subtitleImage->setImage(image, subPicture->imageWidth(), subPicture->imageHeight());
     ui->subtitleImage->update();
     setEdited(true);
     ui->undoErasePatchButton->setEnabled(false);
@@ -399,8 +399,8 @@ void EditDialog::store()
     SubPicture* subPic = subtitleProcessor->getSubPictureTrg(index);
     subPic->setEndTime(subPicture->endTime());
     subPic->setStartTime(subPicture->startTime());
-    subPic->setOfsX(subPicture->getOfsX());
-    subPic->setOfsY(subPicture->getOfsY());
+    subPic->setX(subPicture->x(), true);
+    subPic->setY(subPicture->y(), true);
     subPic->setForced(subPicture->isForced());
     subPic->setExclude(subPicture->exclude());
     subPic->erasePatch = subPicture->erasePatch;
@@ -496,18 +496,18 @@ void EditDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
     if (!isReady) return;
 
     int x = ui->xOffsetLineEdit->text().toInt();
-    if (x > subPicture->width() - subPicture->getImageWidth())
+    if (x > subPicture->screenWidth() - subPicture->imageWidth())
     {
         ui->xOffsetLineEdit->setPalette(*errorBackground);
     }
     else
     {
-        if (x != subPicture->getOfsX())
+        if (x != subPicture->x())
         {
             ui->horizontalSlider->blockSignals(true);
-            subPicture->setOfsX(x);
-            ui->horizontalSlider->setValue(subPicture->getOfsX());
-            ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+            subPicture->setX(x);
+            ui->horizontalSlider->setValue(subPicture->x());
+            ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
             ui->subtitleImage->update();
             setEdited(true);
             ui->horizontalSlider->blockSignals(false);
@@ -521,18 +521,18 @@ void EditDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
     if (!isReady) return;
 
     int y = ui->yOffsetLineEdit->text().toInt();
-    if (y < subtitleProcessor->getCropOfsY() || y > ((subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
+    if (y < subtitleProcessor->getCropOfsY() || y > ((subPicture->screenHeight() - subPicture->imageHeight()) - subtitleProcessor->getCropOfsY()))
     {
         ui->yOffsetLineEdit->setPalette(*errorBackground);
     }
     else
     {
-        if (y != subPicture->getOfsY())
+        if (y != subPicture->y())
         {
             ui->verticalSlider->blockSignals(true);
-            subPicture->setOfsY(y);
-            ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
-            ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+            subPicture->setY(y);
+            ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
+            ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
             ui->subtitleImage->update();
             setEdited(true);
             ui->verticalSlider->blockSignals(false);
@@ -545,22 +545,22 @@ void EditDialog::on_verticalSlider_valueChanged(int value)
 {
     if (!isReady) return;
 
-    int y = subPicture->height() - value;
+    int y = subPicture->screenHeight() - value;
 
     if (y < subtitleProcessor->getCropOfsY())
     {
         y = subtitleProcessor->getCropOfsY();
     }
-    else if (y > ((subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
+    else if (y > ((subPicture->screenHeight() - subPicture->imageHeight()) - subtitleProcessor->getCropOfsY()))
     {
-        y = (subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY();
+        y = (subPicture->screenHeight() - subPicture->imageHeight()) - subtitleProcessor->getCropOfsY();
     }
 
-    if (y != subPicture->getOfsY())
+    if (y != subPicture->y())
     {
-        subPicture->setOfsY(y);
-        ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
-        ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+        subPicture->setY(y);
+        ui->yOffsetLineEdit->setText(QString::number(subPicture->y()));
+        ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->setScreenRatio(21.0 / 9);
         ui->subtitleImage->update();
         setEdited(true);
@@ -577,16 +577,16 @@ void EditDialog::on_horizontalSlider_valueChanged(int value)
     {
         x = 0;
     }
-    else if (x > subPicture->width() - subPicture->getImageWidth())
+    else if (x > subPicture->screenWidth() - subPicture->imageWidth())
     {
-        x = subPicture->width() - subPicture->getImageWidth();
+        x = subPicture->screenWidth() - subPicture->imageWidth();
     }
 
-    if (x != subPicture->getOfsX())
+    if (x != subPicture->x())
     {
-        subPicture->setOfsX(x);
-        ui->xOffsetLineEdit->setText(QString::number(subPicture->getOfsX()));
-        ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+        subPicture->setX(x);
+        ui->xOffsetLineEdit->setText(QString::number(subPicture->x()));
+        ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->update();
         setEdited(true);
     }
@@ -687,22 +687,22 @@ void EditDialog::on_xOffsetLineEdit_editingFinished()
     {
         x = 0;
     }
-    else if (x > subPicture->width() - subPicture->getImageWidth())
+    else if (x > subPicture->screenWidth() - subPicture->imageWidth())
     {
-        x = subPicture->width() - subPicture->getImageWidth();
+        x = subPicture->screenWidth() - subPicture->imageWidth();
     }
 
-    if (x != subPicture->getOfsX())
+    if (x != subPicture->x())
     {
         ui->horizontalSlider->blockSignals(true);
-        subPicture->setOfsX(x);
-        ui->horizontalSlider->setValue(subPicture->getOfsX());
-        ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+        subPicture->setX(x);
+        ui->horizontalSlider->setValue(subPicture->x());
+        ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->update();
         setEdited(true);
         ui->horizontalSlider->blockSignals(false);
     }
-    ui->xOffsetLineEdit->setText(QString::number(subPicture->getOfsX()));
+    ui->xOffsetLineEdit->setText(QString::number(subPicture->x()));
     ui->xOffsetLineEdit->setPalette(*okBackground);
 }
 
@@ -713,22 +713,22 @@ void EditDialog::on_yOffsetLineEdit_editingFinished()
     {
         y = subtitleProcessor->getCropOfsY();
     }
-    else if (y > ((subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY()))
+    else if (y > ((subPicture->screenHeight() - subPicture->imageHeight()) - subtitleProcessor->getCropOfsY()))
     {
-        y = (subPicture->height() - subPicture->getImageHeight()) - subtitleProcessor->getCropOfsY();
+        y = (subPicture->screenHeight() - subPicture->imageHeight()) - subtitleProcessor->getCropOfsY();
     }
 
-    if (y != subPicture->getOfsY())
+    if (y != subPicture->y())
     {
         ui->verticalSlider->blockSignals(true);
-        subPicture->setOfsY(y);
-        ui->verticalSlider->setValue(subPicture->height() - subPicture->getOfsY());
-        ui->subtitleImage->setOffsets(subPicture->getOfsX(), subPicture->getOfsY());
+        subPicture->setY(y);
+        ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
+        ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->update();
         setEdited(true);
         ui->verticalSlider->blockSignals(false);
     }
-    ui->yOffsetLineEdit->setText(QString::number(subPicture->getOfsY()));
+    ui->yOffsetLineEdit->setText(QString::number(subPicture->y()));
     ui->yOffsetLineEdit->setPalette(*okBackground);
 }
 

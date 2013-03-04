@@ -62,7 +62,7 @@ FilterOp::SubSamplingData FilterOp::createSubSampling(int srcSize, int dstSize, 
     QVector<float> arrWeight;
     QVector<int> arrPixel;
 
-    float fwidth = internalFilter.getRadius();
+    float fwidth = internalFilter.radius();
 
     if (scale < 1.0f)
     {

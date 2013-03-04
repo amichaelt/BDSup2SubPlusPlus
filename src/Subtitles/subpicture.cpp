@@ -25,14 +25,14 @@ SubPicture::SubPicture()
 
 SubPicture::SubPicture(const SubPicture &other) :
     erasePatch(other.erasePatch),
-    screenWidth(other.screenWidth),
-    screenHeight(other.screenHeight),
+    _screenWidth(other._screenWidth),
+    _screenHeight(other._screenHeight),
     start(other.start),
     end(other.end),
     compositionNumber(other.compositionNumber),
     numberCompObjects(other.numberCompObjects),
-    imageWidth(other.imageWidth),
-    imageHeight(other.imageHeight),
+    _imageWidth(other._imageWidth),
+    _imageHeight(other._imageHeight),
     xOfs(other.xOfs),
     yOfs(other.yOfs),
     forced(other.forced),
@@ -43,14 +43,14 @@ SubPicture::SubPicture(const SubPicture &other) :
 
 SubPicture::SubPicture(const SubPicture *other) :
     erasePatch(other->erasePatch),
-    screenWidth(other->screenWidth),
-    screenHeight(other->screenHeight),
+    _screenWidth(other->_screenWidth),
+    _screenHeight(other->_screenHeight),
     start(other->start),
     end(other->end),
     compositionNumber(other->compositionNumber),
     numberCompObjects(other->numberCompObjects),
-    imageWidth(other->imageWidth),
-    imageHeight(other->imageHeight),
+    _imageWidth(other->_imageWidth),
+    _imageHeight(other->_imageHeight),
     xOfs(other->xOfs),
     yOfs(other->yOfs),
     forced(other->forced),
@@ -62,17 +62,17 @@ SubPicture::SubPicture(const SubPicture *other) :
 SubPicture* SubPicture::copy()
 {
     SubPicture* sp = new SubPicture;
-    sp->screenHeight = screenHeight;
-    sp->screenWidth = screenWidth;
+    sp->_screenHeight = _screenHeight;
+    sp->_screenWidth = _screenWidth;
     sp->start = start;
     sp->end = end;
     sp->forced = forced;
     sp->compositionNumber = compositionNumber;
     sp->numberCompObjects = numberCompObjects;
-    sp->setImageWidth(imageWidth);
-    sp->setImageHeight(imageHeight);
-    sp->setOfsX(xOfs);
-    sp->setOfsY(xOfs);
+    sp->setImageWidth(_imageWidth);
+    sp->setImageHeight(_imageHeight);
+    sp->setX(xOfs);
+    sp->setY(xOfs);
     sp->excluded = excluded;
     sp->decoded = decoded;
     if (!erasePatch.empty())

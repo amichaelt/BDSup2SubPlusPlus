@@ -37,27 +37,27 @@ public:
 
     virtual void decode(int index) = 0;
 
-    virtual int getPrimaryColorIndex() = 0;
-    virtual int getNumFrames() = 0;
-    virtual int getNumForcedFrames() = 0;
+    virtual int primaryColorIndex() = 0;
+    virtual int numFrames() = 0;
+    virtual int numForcedFrames() = 0;
 
-    virtual qint64 getEndTime(int index) = 0;
-    virtual qint64 getStartTime(int index) = 0;
-    virtual qint64 getStartOffset(int index) = 0;
+    virtual qint64 endTime(int index) = 0;
+    virtual qint64 startTime(int index) = 0;
+    virtual qint64 startOffset(int index) = 0;
 
     virtual bool isForced(int index) = 0;
 
-    virtual Bitmap &getBitmap() = 0;
+    virtual Bitmap &bitmap() = 0;
 
-    virtual Palette &getPalette() = 0;
+    virtual Palette &palette() = 0;
 
-    virtual SubPicture *getSubPicture(int index) = 0;
+    virtual SubPicture *subPicture(int index) = 0;
 
-    virtual QImage getImage() = 0;
-    virtual QImage getImage(Bitmap &bitmap) = 0;
+    virtual QImage image() = 0;
+    virtual QImage image(Bitmap &bitmap) = 0;
 
 protected:
-    int numForcedFrames = 0;
+    int _numForcedFrames = 0;
 };
 
 #endif // SUBSTREAM_H

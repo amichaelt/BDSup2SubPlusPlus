@@ -83,43 +83,43 @@ public:
     void readAllImages();
     void writeXml(QString filename, QVector<SubPicture*> pics);
 
-    int getPrimaryColorIndex() { return primaryColorIndex; }
-    int getNumFrames();
-    int getNumForcedFrames() { return numForcedFrames; }
+    int primaryColorIndex() { return _primaryColorIndex; }
+    int numFrames();
+    int numForcedFrames() { return _numForcedFrames; }
 
-    qint64 getEndTime(int index);
-    qint64 getStartTime(int index);
-    qint64 getStartOffset(int index) { return 0; }
+    qint64 endTime(int index);
+    qint64 startTime(int index);
+    qint64 startOffset(int index) { return 0; }
 
     double getFps() { return fps; }
 
     bool isForced(int index);
 
-    Bitmap &getBitmap() { return bitmap; }
+    Bitmap &bitmap() { return _bitmap; }
 
-    Palette &getPalette() { return palette; }
+    Palette &palette() { return _palette; }
 
-    QImage getImage();
-    QImage getImage(Bitmap &bitmap);
+    QImage image();
+    QImage image(Bitmap &bitmap);
 
     QString getLanguage() { return language; }
     QString getPNGname(QString filename, int idx);
 
-    SubPicture *getSubPicture(int index);
+    SubPicture *subPicture(int index);
 
 signals:
     void maxProgressChanged(qint64 maxProgress);
     void currentProgressChanged(qint64 currentProgress);
 
 private:
-    int primaryColorIndex = 0;
+    int _primaryColorIndex = 0;
     int numToImport = 0;
     double fps;
     double fpsXml;
 
-    Bitmap bitmap;
+    Bitmap _bitmap;
 
-    Palette palette;
+    Palette _palette;
 
     QScopedPointer<QFile> xmlFile;
 

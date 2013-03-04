@@ -45,12 +45,9 @@ public:
     }
     int getByte(uint ofs) { return (buf[ofs] & 0xff); }
     int getWord(uint ofs) { return (buf[ofs + 1] & 0xff) | ((buf[ofs] & 0xff) << 8); }
-    void getBytes(uint ofs, QVector<uchar> &b, int length)
+    void getBytes(uint ofs, uchar *b, int length)
     {
-        for (int i = 0; i < length; ++i)
-        {
-            b.replace(i, buf[ofs + i]);
-        }
+        memcpy(b, (buf.data() + ofs), length);
     }
     int getDWordLE(uint ofs)
     {

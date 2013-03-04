@@ -68,7 +68,7 @@ ConversionDialog::ConversionDialog(QWidget *parent, SubtitleProcessor *subtitleP
 
     if (!changeResolution && subtitleProcessor->getNumberOfFrames() > 0)
     {
-        resolution = subtitleProcessor->getResolution(subtitleProcessor->getSubPictureSrc(0)->width(), subtitleProcessor->getSubPictureSrc(0)->height());
+        resolution = subtitleProcessor->getResolution(subtitleProcessor->getSubPictureSrc(0)->screenWidth(), subtitleProcessor->getSubPictureSrc(0)->screenHeight());
     }
     else
     {

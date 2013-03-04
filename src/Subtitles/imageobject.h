@@ -30,28 +30,42 @@ public:
     ImageObject();
     ImageObject(const ImageObject* other);
     ImageObject(const ImageObject& other);
-    ~ImageObject() { fragmentList.clear(); }
+    ~ImageObject() { fragments.clear(); }
 
     int paletteID() { return paletteId; }
     void setPaletteID(int id) { paletteId = id; }
+
     int bufferSize() { return bufSize; }
     void setBufferSize(int size) { bufSize = size; }
+
     int width() { return w; }
     void setWidth(int width) { w = width; }
+
     int height() { return h; }
     void setHeight(int height) { h = height; }
-    int xOffset() { return xOfs; }
-    void setXOffset(int offset) { xOfs = offset; }
-    int yOffset() { return yOfs; }
-    void setYOffset(int offset) { yOfs = offset; }
+
+    int x() { return xOfs; }
+    void setX(int offset) { xOfs = offset; }
+
+    int y() { return yOfs; }
+    void setY(int offset) { yOfs = offset; }
+
     int windowID() { return windowId; }
     void setWindowID(int windowID) { windowId = windowID; }
+
     bool isForced() { return forced; }
     void setForced(bool isForced) { forced = isForced; }
+
     int objectID() { return objectId; }
     void setObjectID(int objectID) { objectId = objectID; }
 
-    QVector<ImageObjectFragment> &getFragmentList() { return fragmentList; }
+    int objectVersion() { return objVer; }
+    void setObjectVersion(int objectVersion) { objVer = objectVersion; }
+
+    int objectSequence() { return objSeq; }
+    void setObjectSequence(int objectSequence) { objSeq = objectSequence; }
+
+    QVector<ImageObjectFragment> &fragmentList() { return fragments; }
 
 private:
     int paletteId = 0;
@@ -63,8 +77,10 @@ private:
     int windowId = 0;
     bool forced = false;
     int objectId = 0;
+    int objVer = 0;
+    int objSeq = 0;
 
-    QVector<ImageObjectFragment> fragmentList;
+    QVector<ImageObjectFragment> fragments;
 };
 
 #endif // IMAGEOBJECT_H
