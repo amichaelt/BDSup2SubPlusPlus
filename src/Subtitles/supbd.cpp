@@ -247,7 +247,7 @@ void SupBD::readAllSupFrames()
 
                         for (int i = 0; i < pic.numberOfWindows(); ++i)
                         {
-                            subtitleProcessor->print(QString(", windows %1 dim: %1*%2\n")
+                            subtitleProcessor->print(QString(", windows %1 dim: %2*%3\n")
                                                      .arg(QString::number(i))
                                                      .arg(QString::number(pic.WindowSizes[i].width()))
                                                      .arg(QString::number(pic.WindowSizes[i].height())));
