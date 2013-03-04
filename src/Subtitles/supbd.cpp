@@ -954,6 +954,7 @@ void SupBD::parseWDS(SupSegment* segment, SubPictureBD *subPicture)
 
     // 8bit: window id (0..1)
     int numWindows = fileBuffer->getByte(index);
+    subPicture->setNumberOfWindows(numWindows);
 
     for (int i = 0; i < numWindows; ++i)
     {
@@ -1134,7 +1135,7 @@ Palette SupBD::decodePalette(SubPictureBD *subPicture)
     bool fadeOut = false;
     int palIndex = 0;
 
-    int objectId;
+    int objectId = 0;
     for (int i = 0; i < subPicture->imageObjectList.size(); ++i)
     {
         if (subPicture->imageObjectList[i].fragmentList().size() > 0)
