@@ -1467,28 +1467,15 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
         ImageObject imageObject = subPicture->getImgObj(objectIdxes[0]);
 
         subPicture->setX(imageObject.x());
-        //subPicture->WindowSizes[0].setX(imageObject.x());
         subPicture->setY(imageObject.y());
-        //subPicture->WindowSizes[0].setY(imageObject.y());
         subPicture->setImageWidth(imageObject.width());
-        //subPicture->WindowSizes[0].setWidth(imageObject.width());
         subPicture->setImageHeight(imageObject.height());
-        //subPicture->WindowSizes[0].setHeight(imageObject.height());
         return bitmaps[0];
     }
     else
     {
         ImageObject imgObj1 = subPicture->getImgObj(objectIdxes[0]);
         ImageObject imgObj2 = subPicture->getImgObj(objectIdxes[1]);
-
-        //subPicture->WindowSizes[0].setX(imgObj1.x());
-        //subPicture->WindowSizes[1].setX(imgObj1.x());
-        //subPicture->WindowSizes[0].setY(imgObj1.y());
-        //subPicture->WindowSizes[1].setY(imgObj1.y());
-        //subPicture->WindowSizes[0].setWidth(imgObj1.width());
-        //subPicture->WindowSizes[1].setWidth(imgObj1.width());
-        //subPicture->WindowSizes[0].setHeight(imgObj1.height());
-        //subPicture->WindowSizes[1].setHeight(imgObj1.height());
 
         int imgObj1XOfs = imgObj1.x();
         int imgObj2XOfs = imgObj2.x();
