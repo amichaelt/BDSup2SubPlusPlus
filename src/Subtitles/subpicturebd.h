@@ -40,66 +40,6 @@ public:
 
     SubPicture* copy();
 
-    void setX(int ofs, bool isMoving = false)
-    {
-        if (isMoving)
-        {
-            int diff = ofs - xOfs;
-            for (int i = 0; i < WindowSizes.size(); ++i)
-            {
-                if (WindowSizes[i].x() == ofs)
-                {
-                    continue;
-                }
-                WindowSizes[i].setX(WindowSizes[i].x() + diff);
-            }
-        }
-        xOfs = ofs;
-    }
-
-    void setY(int ofs, bool isMoving = false)
-    {
-        if (isMoving)
-        {
-            int diff = ofs - yOfs;
-            for (int i = 0; i < WindowSizes.size(); ++i)
-            {
-                if (WindowSizes[i].y() == ofs)
-                {
-                    continue;
-                }
-                WindowSizes[i].setY(WindowSizes[i].y() + diff);
-            }
-        }
-        yOfs = ofs;
-    }
-
-    virtual void setImageWidth(int w, bool isScaling = false)
-    {
-        if (isScaling)
-        {
-            for (int i = 0; i < WindowSizes.size(); ++i)
-            {
-                double scaleFactor = (double) w / imageObjectList[i].width();
-                WindowSizes[i].setWidth(WindowSizes[i].width() * scaleFactor);
-            }
-        }
-        _imageWidth = w;
-    }
-
-    virtual void setImageHeight(int h, bool isScaling = false)
-    {
-        if (isScaling)
-        {
-            for (int i = 0; i < WindowSizes.size(); ++i)
-            {
-                double scaleFactor = (double) h / imageObjectList[i].height();
-                WindowSizes[i].setHeight(WindowSizes[i].height() * scaleFactor);
-            }
-        }
-        _imageHeight = h;
-    }
-
     bool paletteUpdated() { return paletteUpdate; }
     void setPaletteUpdated(bool paletteUpdated) { paletteUpdate = paletteUpdated; }
     int numberOfWindows() { return numWindows; }
