@@ -25,9 +25,10 @@ SubPictureBD::SubPictureBD()
 
 SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
-    type(other->type),
     WindowSizes(other->WindowSizes),
-    numWindows(other->numWindows)
+    type(other->type),
+    numWindows(other->numWindows),
+    paletteUpdate(other->paletteUpdate)
 {
     for (int i = 0; i < other->imageObjectList.size(); ++i)
     {
@@ -45,9 +46,10 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
 
 SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     SubPicture(other),
-    type(other.type),
     WindowSizes(other.WindowSizes),
-    numWindows(other.numWindows)
+    type(other.type),
+    numWindows(other.numWindows),
+    paletteUpdate(other.paletteUpdate)
 {
     for (int i = 0; i < other.imageObjectList.size(); ++i)
     {

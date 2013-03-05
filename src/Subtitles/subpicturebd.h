@@ -44,7 +44,6 @@ public:
     {
         if (isMoving)
         {
-            edited = true;
             int diff = ofs - xOfs;
             for (int i = 0; i < WindowSizes.size(); ++i)
             {
@@ -62,7 +61,6 @@ public:
     {
         if (isMoving)
         {
-            edited = true;
             int diff = ofs - yOfs;
             for (int i = 0; i < WindowSizes.size(); ++i)
             {
@@ -80,7 +78,6 @@ public:
     {
         if (isScaling)
         {
-            edited = true;
             for (int i = 0; i < WindowSizes.size(); ++i)
             {
                 double scaleFactor = (double) w / imageObjectList[i].width();
@@ -94,7 +91,6 @@ public:
     {
         if (isScaling)
         {
-            edited = true;
             for (int i = 0; i < WindowSizes.size(); ++i)
             {
                 double scaleFactor = (double) h / imageObjectList[i].height();
@@ -104,16 +100,13 @@ public:
         _imageHeight = h;
     }
 
-    long rleBufferSize() { return rleBufSize; }
-    void setRLEBufferSize(int rleBufferSize) { rleBufSize = rleBufferSize; }
-    int paletteID() { return paletteId; }
-    void setPaletteID(int paletteID) { paletteId = paletteID; }
     bool paletteUpdated() { return paletteUpdate; }
     void setPaletteUpdated(bool paletteUpdated) { paletteUpdate = paletteUpdated; }
     int numberOfWindows() { return numWindows; }
     void setNumberOfWindows(int numberOfWindows) { numWindows = numberOfWindows; }
     int subPictureType() { return type; }
     void setSubPictureType(int subPictureType) { type = subPictureType; }
+
     bool isForced()
     {
         bool isForced = true;
@@ -139,9 +132,6 @@ public:
         }
     }
 
-    bool supEdited() { return edited; }
-    void setEdited(bool supEdited) { edited = supEdited; }
-
     QVector<ImageObject> imageObjectList;
 
     QVector<QVector<PaletteInfo>> palettes;
@@ -151,13 +141,9 @@ public:
     ImageObject &getImgObj(int index) { return imageObjectList[index]; }
 
 private:
-    qint64 rleBufSize;
-    int paletteId;
     int type = 0;
     int numWindows = 0;
-
     bool paletteUpdate;
-    bool edited = false;
 };
 
 #endif // SUBSPICTUREBD_H
