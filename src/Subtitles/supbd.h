@@ -155,6 +155,14 @@ private:
         0x00, 0x00, 0x00, 0x00              // 15: composition_object_horizontal_position, composition_object_vertical_position
     };
 
+    QVector<uchar> headerPCSNext =
+    {
+        0x00, 0x01,                         // 11: 16bit object_id_ref
+        0x01,                               // 13: window_id_ref (0..1)
+        0x00,                               // 14: object_cropped_flag: 0x80, forced_on_flag = 0x040, 6bit reserved
+        0x00, 0x00, 0x00, 0x00              // 15: composition_object_horizontal_position, composition_object_vertical_position
+    };
+
     QVector<uchar> headerPCSEnd =
     {
         0x00, 0x00, 0x00, 0x00,             // 0: video_width, video_height
@@ -185,8 +193,15 @@ private:
 
     QVector<uchar> headerWDS =
     {
-        0x01,                               // 0 : number of windows (currently assumed 1, 0..2 is legal)
+        0x00,                               // 0 : number of windows (currently assumed 1, 0..2 is legal)
         0x00,                               // 1 : window id (0..1)
+        0x00, 0x00, 0x00, 0x00,             // 2 : x-ofs, y-ofs
+        0x00, 0x00, 0x00, 0x00              // 6 : width, height
+    };
+
+    QVector<uchar> headerWDSNext =
+    {
+        0x01,                               // 1 : window id (0..1)
         0x00, 0x00, 0x00, 0x00,             // 2 : x-ofs, y-ofs
         0x00, 0x00, 0x00, 0x00              // 6 : width, height
     };
