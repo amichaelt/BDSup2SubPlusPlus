@@ -904,7 +904,6 @@ void SupBD::parsePCS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
                 imgObj.setPaletteID(palID);
                 imgObj.setWindowID(windowId);
                 imgObj.setObjectID(objID);
-                subPicture->setPaletteID(palID);
 
                 if (segment->size >= 0x13)
                 {
@@ -946,8 +945,6 @@ int SupBD::parsePDS(SupSegment *segment, SubPictureBD *subPicture, QString &msg)
     {
         return 0;
     }
-
-    subPicture->setPaletteID(paletteID);
 
     if (subPicture->palettes.isEmpty())
     {
@@ -1000,10 +997,6 @@ bool SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg
 
     if (imgObj.fragmentList().isEmpty() || first)    // 8bit  object_version_number
     {
-        subPicture->setRLEBufferSize(((fileBuffer->getByte(index + 4) & 0xff) << 16) +
-                                     ((fileBuffer->getByte(index + 5) & 0xff) << 8) +
-                                      (fileBuffer->getByte(index + 6) & 0xff));
-
         int width  = fileBuffer->getWord(index + 7);    // object_width
         int height = fileBuffer->getWord(index + 9);    // object_height
 
