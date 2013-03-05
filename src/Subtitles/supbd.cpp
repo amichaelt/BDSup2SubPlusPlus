@@ -102,6 +102,7 @@ qint64 SupBD::startOffset(int index)
             return subPictures[index].getImgObj(i).fragmentList()[0].imageBufferOffset();
         }
     }
+    return 0;
 }
 
 SubPicture *SupBD::subPicture(int index)
