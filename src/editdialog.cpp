@@ -399,8 +399,8 @@ void EditDialog::store()
     SubPicture* subPic = subtitleProcessor->getSubPictureTrg(index);
     subPic->setEndTime(subPicture->endTime());
     subPic->setStartTime(subPicture->startTime());
-    subPic->setX(subPicture->x(), true);
-    subPic->setY(subPicture->y(), true);
+    subPic->setX(subPicture->x());
+    subPic->setY(subPicture->y());
     subPic->setForced(subPicture->isForced());
     subPic->setExclude(subPicture->exclude());
     subPic->erasePatch = subPicture->erasePatch;
