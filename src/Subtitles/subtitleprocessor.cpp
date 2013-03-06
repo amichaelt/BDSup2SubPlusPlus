@@ -485,8 +485,8 @@ void SubtitleProcessor::scanSubtitles()
             height = picTrg->screenHeight();
         }
 
-        picTrg->setImageWidth(width, convertResolution);
-        picTrg->setImageHeight(height, convertResolution);
+        picTrg->setImageWidth(width);
+        picTrg->setImageHeight(height);
 
         int xOfs = (int)((picSrc->x() * scaleX) + 0.5);
         int spaceSrc = (int)(((picSrc->screenWidth() - picSrc->imageWidth()) * scaleX) + 0.5);
@@ -659,8 +659,8 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
             fsYNew = ((double)h / (double)picSrc->imageHeight()) / scaleY;
         }
 
-        subPictures[i]->setImageWidth(w, convertResolution);
-        subPictures[i]->setImageHeight(h, convertResolution);
+        subPictures[i]->setImageWidth(w);
+        subPictures[i]->setImageHeight(h);
 
         // correct ratio change
         int xOfs = (int)((picOld->x() * factX) + 0.5);
@@ -941,7 +941,6 @@ void SubtitleProcessor::createSubtitleStream()
 
     emit progressDialogVisibilityChanged(false);
     emit writingSubtitleFinished(returnMessage);
-
 }
 
 void SubtitleProcessor::writeSub(QString filename)
