@@ -1489,12 +1489,12 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             outStream << QString("OPTION: Set palette mode to %1").arg(value) << endl;
         }
 
-        if (options->count("verbatim"))
+        if (options->count("verbose"))
         {
             subtitleProcessor->setVerbatim(true);
             outStream << QString("OPTION: Enabled verbose output.") << endl;
         }
-        if (options->count("no-verbatim"))
+        if (options->count("no-verbose"))
         {
             subtitleProcessor->setVerbatim(false);
             outStream << QString("OPTION: Disabled verbose output.") << endl;
