@@ -150,9 +150,9 @@ void SupXML::decode(int index)
         painter.setCompositionMode(QPainter::CompositionMode_Source);
         painter.fillRect(resultImage.rect(), Qt::transparent);
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-        painter.drawImage(subPic.imageRects[0].x(), subPic.imageRects[0].y(), bitmaps[0].image(palettes[0]));
+        painter.drawImage(subPic.windowSizes()[0].x(), subPic.windowSizes()[0].y(), bitmaps[0].image(palettes[0]));
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-        painter.drawImage(subPic.imageRects[1].x(), subPic.imageRects[1].y(), bitmaps[1].image(palettes[1]));
+        painter.drawImage(subPic.windowSizes()[1].x(), subPic.windowSizes()[1].y(), bitmaps[1].image(palettes[1]));
         painter.end();
 
         resultImage = resultImage.convertToFormat(QImage::Format_Indexed8, palettes[0].colorTable());
@@ -160,13 +160,13 @@ void SupXML::decode(int index)
         _bitmap = Bitmap(resultImage);
         _palette = palettes[0];
 
-        if (subPic.imageRects[0].y() > subPic.imageRects[1].y())
+        if (subPic.windowSizes()[0].y() > subPic.windowSizes()[1].y())
         {
-            subPictures[index].setImageHeight(subPic.imageRects[0].y() + subPic.imageRects[0].height());
+            subPictures[index].setImageHeight(subPic.windowSizes()[0].y() + subPic.windowSizes()[0].height());
         }
         else
         {
-            subPictures[index].setImageHeight(subPic.imageRects[1].y() + subPic.imageRects[1].height());
+            subPictures[index].setImageHeight(subPic.windowSizes()[1].y() + subPic.windowSizes()[1].height());
         }
         subPic.setImageHeight(subPictures[index].imageHeight());
     }
@@ -521,6 +521,7 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
 
         QRect rect(x, y, width, height);
         subPicture->imageRects.push_back(rect);
+        subPicture->scaledImageRects.push_back(rect);
     } break;
     }
 
