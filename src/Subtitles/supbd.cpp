@@ -257,8 +257,8 @@ void SupBD::readAllSupFrames()
                         {
                             subtitleProcessor->print(QString(", windows %1 dim: %2*%3\n")
                                                      .arg(QString::number(i))
-                                                     .arg(QString::number(pic.WindowSizes[i].width()))
-                                                     .arg(QString::number(pic.WindowSizes[i].height())));
+                                                     .arg(QString::number(pic.windowSizes()[i].width()))
+                                                     .arg(QString::number(pic.windowSizes()[i].height())));
                         }
                     }
                 }
@@ -511,8 +511,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
                 ++numberOfImageObjects;
             }
         }
-        numberOfWindows = subPic->WindowSizes.size();
-        WindowSizes = subPic->WindowSizes;
+        numberOfWindows = subPic->windowSizes().size();
+        WindowSizes = subPic->windowSizes();
     }
     else if(dynamic_cast<SubPictureXML*>(subPicture) != nullptr)
     {
@@ -1090,7 +1090,7 @@ void SupBD::parseWDS(SupSegment* segment, SubPictureBD *subPicture)
                    width,                           // window_width
                    height);                         // window_height
 
-        subPicture->WindowSizes.push_back(rect);
+        subPicture->windowSizes().push_back(rect);
 
         index += 9;                                 // Skip 9 bytes to read next window info
     }
@@ -1225,13 +1225,13 @@ find_left:
     int height = (bottom - top) + 1;
     int width = (right - left) + 1;
 
-    subPicture->WindowSizes[0].setX(left);
-    subPicture->WindowSizes[0].setY(top);
+    subPicture->windowSizes()[0].setX(left);
+    subPicture->windowSizes()[0].setY(top);
     subPicture->setX(left);
     subPicture->setY(top);
 
-    subPicture->WindowSizes[0].setHeight(height);
-    subPicture->WindowSizes[0].setWidth(width);
+    subPicture->windowSizes()[0].setHeight(height);
+    subPicture->windowSizes()[0].setWidth(width);
 
     subPicture->setImageHeight(height);
     subPicture->setImageWidth(width);

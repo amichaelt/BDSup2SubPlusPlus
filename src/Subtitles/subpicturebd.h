@@ -76,7 +76,9 @@ public:
 
     QVector<QVector<PaletteInfo>> palettes;
 
-    QVector<QRect> WindowSizes;
+    QVector<QRect> &windowSizes() { return windows; }
+    void setWindowSizes(QVector<QRect> windowSizes) { windows = scaledWindows = windowSizes; }
+
 
     ImageObject &getImgObj(int index) { return imageObjectList[index]; }
 
@@ -84,6 +86,9 @@ private:
     int type = 0;
     int numWindows = 0;
     bool paletteUpdate;
+
+    QVector<QRect> scaledWindows;
+    QVector<QRect> windows;
 };
 
 #endif // SUBSPICTUREBD_H
