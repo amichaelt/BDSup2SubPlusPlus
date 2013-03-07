@@ -40,10 +40,76 @@ public:
 
     SubPicture* copy();
 
+    virtual void setImageWidth(int w, double scaleFactor = 1)
+    {
+        if (scaleFactor != 1.0d)
+        {
+            for (int i = 0; i < scaledWindows.size(); ++i)
+            {
+                scaledWindows[i].setWidth((int)((scaledWindows[i].width() * scaleFactor) + 0.5));
+            }
+        }
+        else
+        {
+            scaledWindows = windows;
+        }
+        _imageWidth = w;
+    }
+
+    virtual void setImageHeight(int h, double scaleFactor = 1)
+    {
+        if (scaleFactor != 1.0d)
+        {
+            for (int i = 0; i < scaledWindows.size(); ++i)
+            {
+                scaledWindows[i].setHeight((int)((scaledWindows[i].height() * scaleFactor) + 0.5));
+            }
+        }
+        else
+        {
+            scaledWindows = windows;
+        }
+        _imageHeight = h;
+    }
+
+    virtual void setX(int ofs, double scaleFactor = 1)
+    {
+        if (scaleFactor != 1.0d)
+        {
+            for (int i = 0; i < scaledWindows.size(); ++i)
+            {
+                scaledWindows[i].setX((int)((scaledWindows[i].x() * scaleFactor) + 0.5));
+            }
+        }
+        else
+        {
+            scaledWindows = windows;
+        }
+        xOfs = ofs;
+    }
+
+    virtual void setY(int ofs, double scaleFactor = 1)
+    {
+        if (scaleFactor != 1.0d)
+        {
+            for (int i = 0; i < scaledWindows.size(); ++i)
+            {
+                scaledWindows[i].setY((int)((scaledWindows[i].y() * scaleFactor) + 0.5));
+            }
+        }
+        else
+        {
+            scaledWindows = windows;
+        }
+        yOfs = ofs;
+    }
+
     bool paletteUpdated() { return paletteUpdate; }
     void setPaletteUpdated(bool paletteUpdated) { paletteUpdate = paletteUpdated; }
+
     int numberOfWindows() { return numWindows; }
     void setNumberOfWindows(int numberOfWindows) { numWindows = numberOfWindows; }
+
     int subPictureType() { return type; }
     void setSubPictureType(int subPictureType) { type = subPictureType; }
 
@@ -76,7 +142,7 @@ public:
 
     QVector<QVector<PaletteInfo>> palettes;
 
-    QVector<QRect> &windowSizes() { return windows; }
+    QVector<QRect> &windowSizes() { return scaledWindows; }
     void setWindowSizes(QVector<QRect> windowSizes) { windows = scaledWindows = windowSizes; }
 
 
