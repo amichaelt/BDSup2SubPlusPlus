@@ -485,8 +485,8 @@ void SubtitleProcessor::scanSubtitles()
             height = picTrg->screenHeight();
         }
 
-        picTrg->setImageWidth(width);
-        picTrg->setImageHeight(height);
+        picTrg->setImageWidth(width, width == 0 ? 1.0d : width / picSrc->imageWidth());
+        picTrg->setImageHeight(height, height == 0 ? 1.0d : height / picSrc->imageHeight());
 
         int xOfs = (int)((picSrc->x() * scaleX) + 0.5);
         int spaceSrc = (int)(((picSrc->screenWidth() - picSrc->imageWidth()) * scaleX) + 0.5);
@@ -500,7 +500,7 @@ void SubtitleProcessor::scanSubtitles()
         {
             xOfs = picTrg->screenWidth() - width;
         }
-        picTrg->setX(xOfs);
+        picTrg->setX(xOfs, xOfs == 0 ? 1.0d : xOfs / picSrc->x());
 
         int yOfs = (int)(picSrc->y() * scaleY + 0.5);
         spaceSrc = (int)((picSrc->screenHeight() - picSrc->imageHeight()) * scaleY + 0.5);
@@ -510,7 +510,7 @@ void SubtitleProcessor::scanSubtitles()
         {
             yOfs = picTrg->screenHeight() - height;
         }
-        picTrg->setY(yOfs);
+        picTrg->setY(yOfs, yOfs == 0 ? 1.0d : yOfs / picSrc->y());
     }
 
     // 2nd run: validate times
@@ -659,8 +659,8 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
             fsYNew = ((double)h / (double)picSrc->imageHeight()) / scaleY;
         }
 
-        subPictures[i]->setImageWidth(w);
-        subPictures[i]->setImageHeight(h);
+        subPictures[i]->setImageWidth(w, w == 0 ? 1.0d : w / picSrc->imageWidth());
+        subPictures[i]->setImageHeight(h, h == 0 ? 1.0d : h / picSrc->imageHeight());
 
         // correct ratio change
         int xOfs = (int)((picOld->x() * factX) + 0.5);
@@ -678,7 +678,7 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
             xOfs = subPictures[i]->screenWidth() - w;
         }
-        subPictures[i]->setX(xOfs);
+        subPictures[i]->setX(xOfs, xOfs == 0 ? 1.0d : xOfs / picOld->x());
 
         int yOfs = (int)((picOld->y() * factY) + 0.5);
         if (fsYNew != fsYOld)
@@ -695,7 +695,7 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
             yOfs = subPictures[i]->screenHeight() - h;
         }
-        subPictures[i]->setY(yOfs);
+        subPictures[i]->setY(yOfs, yOfs == 0 ? 1.0d : yOfs / picOld->y());
 
         // fix erase patches
         double fx = (factX * fsXNew) / fsXOld;
@@ -1573,8 +1573,8 @@ bool SubtitleProcessor::updateTrgPic(int index)
     {
         hNew = picTrg->screenHeight();
     }
-    picTrg->setImageWidth(wNew);
-    picTrg->setImageHeight(hNew);
+    picTrg->setImageWidth(wNew, wNew == 0 ? 1.0d : wNew / picSrc->imageWidth());
+    picTrg->setImageHeight(hNew, hNew == 0 ? 1.0d : hNew / picSrc->imageHeight());
     if (wNew != wOld)
     {
         int xOfs = (int)((picSrc->x() * scaleX) + 0.5);
@@ -1589,7 +1589,7 @@ bool SubtitleProcessor::updateTrgPic(int index)
         {
             xOfs = picTrg->screenWidth() - wNew;
         }
-        picTrg->setX(xOfs);
+        picTrg->setX(xOfs, xOfs == 0 ? 1.0d : xOfs / picSrc->x());
     }
     if (hNew != hOld)
     {
@@ -1601,7 +1601,7 @@ bool SubtitleProcessor::updateTrgPic(int index)
         {
             yOfs = picTrg->screenHeight() - hNew;
         }
-        picTrg->setY(yOfs);
+        picTrg->setY(yOfs, yOfs == 0 ? 1.0d : yOfs / picSrc->y());
     }
     // was image cropped?
     return (wNew != wOld) || (hNew != hOld);
