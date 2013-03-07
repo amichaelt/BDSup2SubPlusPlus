@@ -39,16 +39,16 @@ public:
     void setScreenHeight(int height) { _screenHeight = height; }
 
     virtual int imageWidth() { return _imageWidth; }
-    virtual void setImageWidth(int w) { _imageWidth = w; }
+    virtual void setImageWidth(int w, double scaleFactor = 1) { _imageWidth = w; }
 
     virtual int imageHeight() {  return _imageHeight; }
-    virtual void setImageHeight(int h) { _imageHeight = h; }
+    virtual void setImageHeight(int h, double scaleFactor = 1) { _imageHeight = h; }
 
     virtual int x() { return xOfs; }
-    virtual void setX(int ofs) { xOfs = ofs; }
+    virtual void setX(int ofs, double scaleFactor = 1) { xOfs = ofs; }
 
     virtual int y() { return yOfs; }
-    virtual void setY(int ofs) { yOfs = ofs; }
+    virtual void setY(int ofs, double scaleFactor = 1) { yOfs = ofs; }
 
     qint64 startTime() { return start; }
     void setStartTime(qint64 startTime) { start = startTime; }
