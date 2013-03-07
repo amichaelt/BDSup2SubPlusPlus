@@ -518,7 +518,7 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     {
         SubPictureXML* subPic = static_cast<SubPictureXML*>(subPicture);
         numberOfImageObjects = numberOfWindows = subPic->fileNames().size();
-        WindowSizes = subPic->imageRects;
+        WindowSizes = subPic->windowSizes();
     }
     else
     {
@@ -1077,6 +1077,7 @@ void SupBD::parseWDS(SupSegment* segment, SubPictureBD *subPicture)
     // 8bit: window id (0..1)
     int numWindows = fileBuffer->getByte(index);
     subPicture->setNumberOfWindows(numWindows);
+    QVector<QRect> windows;
 
     for (int i = 0; i < numWindows; ++i)
     {
@@ -1090,10 +1091,12 @@ void SupBD::parseWDS(SupSegment* segment, SubPictureBD *subPicture)
                    width,                           // window_width
                    height);                         // window_height
 
-        subPicture->windowSizes().push_back(rect);
+        windows.push_back(rect);
 
         index += 9;                                 // Skip 9 bytes to read next window info
     }
+
+    subPicture->setWindowSizes(windows);
 }
 
 SupBD::CompositionState SupBD::getCompositionState(SupBD::SupSegment *segment)
