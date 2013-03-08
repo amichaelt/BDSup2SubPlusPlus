@@ -23,7 +23,6 @@
 #include "subpicture.h"
 
 #include <QString>
-#include <QRect>
 
 class SubPictureXML : public SubPicture
 {
@@ -34,70 +33,6 @@ public:
     ~SubPictureXML() { }
 
     SubPicture* copy();
-
-    virtual void setImageWidth(int w, double scaleFactor = 1)
-    {
-        if (scaleFactor != 1.0d)
-        {
-            for (int i = 0; i < scaledImageRects.size(); ++i)
-            {
-                scaledImageRects[i].setWidth((int)((scaledImageRects[i].width() * scaleFactor) + 0.5));
-            }
-        }
-        else
-        {
-            scaledImageRects = imageRects;
-        }
-        _imageWidth = w;
-    }
-
-    virtual void setImageHeight(int h, double scaleFactor = 1)
-    {
-        if (scaleFactor != 1.0d)
-        {
-            for (int i = 0; i < scaledImageRects.size(); ++i)
-            {
-                scaledImageRects[i].setHeight((int)((scaledImageRects[i].height() * scaleFactor) + 0.5));
-            }
-        }
-        else
-        {
-            scaledImageRects = imageRects;
-        }
-        _imageHeight = h;
-    }
-
-    virtual void setX(int ofs, double scaleFactor = 1)
-    {
-        if (scaleFactor != 1.0d)
-        {
-            for (int i = 0; i < scaledImageRects.size(); ++i)
-            {
-                scaledImageRects[i].setX((int)((scaledImageRects[i].x() * scaleFactor) + 0.5));
-            }
-        }
-        else
-        {
-            scaledImageRects = imageRects;
-        }
-        xOfs = ofs;
-    }
-
-    virtual void setY(int ofs, double scaleFactor = 1)
-    {
-        if (scaleFactor != 1.0d)
-        {
-            for (int i = 0; i < scaledImageRects.size(); ++i)
-            {
-                scaledImageRects[i].setY((int)((scaledImageRects[i].y() * scaleFactor) + 0.5));
-            }
-        }
-        else
-        {
-            scaledImageRects = imageRects;
-        }
-        yOfs = ofs;
-    }
 
     void setOriginal()
     {
@@ -112,18 +47,11 @@ public:
     QVector<QString> fileNames() { return filenames; }
     void setFileName(QString fileName) { filenames.push_back(fileName); }
 
-    QVector<QRect> &windowSizes() { return scaledImageRects; }
-    void setWindowSizes(QVector<QRect> rects) { scaledImageRects = imageRects = rects; }
-
-
 private:
     int origX;
     int origY;
 
     QVector<QString> filenames;
-
-    QVector<QRect> scaledImageRects;
-    QVector<QRect> imageRects;
 
     friend class SupXML;
 };

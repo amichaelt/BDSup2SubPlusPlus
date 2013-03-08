@@ -25,8 +25,6 @@ SubPictureBD::SubPictureBD()
 
 SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
-    scaledWindows(other->scaledWindows),
-    windows(other->windows),
     type(other->type),
     numWindows(other->numWindows),
     paletteUpdate(other->paletteUpdate)
@@ -47,8 +45,6 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
 
 SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     SubPicture(other),
-    scaledWindows(other.scaledWindows),
-    windows(other.windows),
     type(other.type),
     numWindows(other.numWindows),
     paletteUpdate(other.paletteUpdate)
