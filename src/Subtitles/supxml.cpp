@@ -298,9 +298,28 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
         QString forced = p->isForced() ? "True": "False";
         out->write(QString("    <Event InTC=\"" + ts + "\" OutTC=\"" + te + "\" Forced=\"" + forced + "\">\n").toLatin1());
 
-        QString pname = QFileInfo(getPNGname(name, idx + 1)).fileName();
-        out->write(QString("      <Graphic Width=\"" + QString::number(p->imageWidth()) + "\" Height=\"" + QString::number(p->imageHeight()) +
-                          "\" X=\"" + QString::number(p->x()) + "\" Y=\"" + QString::number(p->y()) + "\">" + pname + "</Graphic>\n").toLatin1());
+        QString pname = getPNGname(name, idx + 1);
+        int numberOfImages = 1;
+        QVector<QRect> imageRects = pics[idx]->windowSizes();
+
+        if (imageRects.size() > numberOfImages)
+        {
+            numberOfImages = imageRects.size();
+        }
+
+        for (int j = 0; j < numberOfImages; ++j)
+        {
+            QFileInfo info(pname);
+            out->write((QString("      <Graphic Width=\"%1\" Height=\"%2\" X=\"%3\" Y=\"%4\">%5</Graphic>\n")
+                        .arg(QString::number(imageRects[j].width()))
+                        .arg(QString::number(imageRects[j].height()))
+                        .arg(QString::number(imageRects[j].x()))
+                        .arg(QString::number(imageRects[j].y()))
+                        .arg(QString("%1_%2.png")
+                             .arg(info.completeBaseName())
+                             .arg(QString::number(j))))
+                       .toLatin1());
+        }
         out->write("    </Event>\n");
     }
     out->write("  </Events>\n");
@@ -517,6 +536,19 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         {
             subPicture->setY(y);
         }
+
+        if (hasGraphic)
+        {
+            if (y < subPicture->imageRects[0].y())
+            {
+                subPicture->setImageHeight(subPicture->imageRects[0].y() + subPicture->imageRects[0].height());
+            }
+            else
+            {
+                subPicture->setImageHeight(y + height);
+            }
+        }
+
         subPicture->setOriginal();
 
         QRect rect(x, y, width, height);
