@@ -612,11 +612,11 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     NumberUtil::setWord(headerPCSStart, 0, subPicture->screenWidth());
     NumberUtil::setWord(headerPCSStart, 2, h);                                      // cropped height
     NumberUtil::setByte(headerPCSStart, 4, fpsId);
-    NumberUtil::setWord(headerPCSStart, 5, subPicture->compNum());                  // cropped height
+    NumberUtil::setWord(headerPCSStart, 5, subPicture->compNum());
     NumberUtil::setByte(headerPCSStart, 10, numberOfImageObjects);
     headerPCSStart.replace(14, (subPicture->isForced() ? (uchar)0x40 : 0));
-    NumberUtil::setWord(headerPCSStart, 15, subPicture->x() + xOffset1);
-    NumberUtil::setWord(headerPCSStart, 17, yOfs + yOffset1);
+    NumberUtil::setWord(headerPCSStart, 15, WindowSizes[0].x());
+    NumberUtil::setWord(headerPCSStart, 17, WindowSizes[0].y());
     for (int i = 0; i < headerPCSStart.size(); ++i)
     {
         buf.replace(index++, headerPCSStart[i]);
@@ -624,8 +624,8 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     if (numberOfImageObjects > 1)
     {
         headerPCSNext.replace(3, (subPicture->isForced() ? (uchar)0x40 : 0));
-        NumberUtil::setWord(headerPCSNext, 4, subPicture->x() + xOffset2);
-        NumberUtil::setWord(headerPCSNext, 6, yOfs + yOffset2);
+        NumberUtil::setWord(headerPCSNext, 4, WindowSizes[1].x());
+        NumberUtil::setWord(headerPCSNext, 6, WindowSizes[1].y());
         for (int i = 0; i < headerPCSNext.size(); ++i)
         {
             buf.replace(index++, headerPCSNext[i]);
