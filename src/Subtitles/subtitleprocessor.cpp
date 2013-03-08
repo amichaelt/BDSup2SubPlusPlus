@@ -485,8 +485,14 @@ void SubtitleProcessor::scanSubtitles()
             height = picTrg->screenHeight();
         }
 
-        picTrg->setImageWidth(width, width == 0 ? 1.0d : width / picSrc->imageWidth());
-        picTrg->setImageHeight(height, height == 0 ? 1.0d : height / picSrc->imageHeight());
+        picTrg->setImageWidth(width);
+        picTrg->setImageHeight(height);
+
+        int numberOfWindows = 1;
+        if (picTrg->windowSizes().size() > numberOfWindows)
+        {
+            numberOfWindows = picTrg->windowSizes().size();
+        }
 
         int xOfs = (int)((picSrc->x() * scaleX) + 0.5);
         int spaceSrc = (int)(((picSrc->screenWidth() - picSrc->imageWidth()) * scaleX) + 0.5);
@@ -496,21 +502,22 @@ void SubtitleProcessor::scanSubtitles()
         {
             xOfs = 0;
         }
-        else if (xOfs + width > picTrg->screenWidth())
+        else if (numberOfWindows == 1 && ((xOfs + width) > picTrg->screenWidth()))
         {
             xOfs = picTrg->screenWidth() - width;
         }
-        picTrg->setX(xOfs, xOfs == 0 ? 1.0d : xOfs / picSrc->x());
+        picTrg->setX(xOfs);
 
-        int yOfs = (int)(picSrc->y() * scaleY + 0.5);
+        int yOfs = (int)((picSrc->y() * scaleY) + 0.5);
         spaceSrc = (int)((picSrc->screenHeight() - picSrc->imageHeight()) * scaleY + 0.5);
         spaceTrg = picTrg->screenHeight() - height;
         yOfs += ((spaceTrg - spaceSrc) / 2);
-        if (yOfs+height > picTrg->screenHeight())
+
+        if (numberOfWindows == 1 && (yOfs + height) > picTrg->screenHeight())
         {
             yOfs = picTrg->screenHeight() - height;
         }
-        picTrg->setY(yOfs, yOfs == 0 ? 1.0d : yOfs / picSrc->y());
+        picTrg->setY(yOfs);
     }
 
     // 2nd run: validate times
@@ -659,8 +666,14 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
             fsYNew = ((double)h / (double)picSrc->imageHeight()) / scaleY;
         }
 
-        subPictures[i]->setImageWidth(w, w == 0 ? 1.0d : w / picSrc->imageWidth());
-        subPictures[i]->setImageHeight(h, h == 0 ? 1.0d : h / picSrc->imageHeight());
+        subPictures[i]->setImageWidth(w);
+        subPictures[i]->setImageHeight(h);
+
+        int numberOfWindows = 1;
+        if (subPictures[i]->windowSizes().size() > numberOfWindows)
+        {
+            numberOfWindows = subPictures[i]->windowSizes().size();
+        }
 
         // correct ratio change
         int xOfs = (int)((picOld->x() * factX) + 0.5);
@@ -674,11 +687,11 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
             xOfs = 0;
         }
-        else if ((xOfs + w) > subPictures[i]->screenWidth())
+        else if (numberOfWindows == 1 && (xOfs + w) > subPictures[i]->screenWidth())
         {
             xOfs = subPictures[i]->screenWidth() - w;
         }
-        subPictures[i]->setX(xOfs, xOfs == 0 ? 1.0d : xOfs / picOld->x());
+        subPictures[i]->setX(xOfs);
 
         int yOfs = (int)((picOld->y() * factY) + 0.5);
         if (fsYNew != fsYOld)
@@ -691,11 +704,11 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
         {
             yOfs = 0;
         }
-        if ((yOfs + h) > subPictures[i]->screenHeight())
+        if (numberOfWindows == 1 && (yOfs + h) > subPictures[i]->screenHeight())
         {
             yOfs = subPictures[i]->screenHeight() - h;
         }
-        subPictures[i]->setY(yOfs, yOfs == 0 ? 1.0d : yOfs / picOld->y());
+        subPictures[i]->setY(yOfs);
 
         // fix erase patches
         double fx = (factX * fsXNew) / fsXOld;
@@ -1052,7 +1065,63 @@ void SubtitleProcessor::writeSub(QString filename)
                     supXML = QSharedPointer<SupXML>(new SupXML("", this));
                 }
                 QString fnp = supXML->getPNGname(fn, i + 1);
-                trgBitmap.image(trgPal).save(fnp, "PNG");
+                int numberOfImages = 1;
+                QVector<QRect> imageRects = subPictures[i]->windowSizes();
+
+                if (imageRects.size() > numberOfImages)
+                {
+                    numberOfImages = imageRects.size();
+                }
+
+                if (numberOfImages == 1)
+                {
+                    QFileInfo info(fnp);
+                    trgBitmap.image(trgPal).save(QString("%1/%2_0.png")
+                                                 .arg(info.absolutePath())
+                                                 .arg(info.completeBaseName()), "PNG");
+                }
+                else
+                {
+                    int xOffset1 = 0, xOffset2 = 0, yOffset1 = 0, yOffset2 = 0;
+                    if (imageRects[0].x() < imageRects[1].x())
+                    {
+                        if (imageRects[0].y() < imageRects[1].y())
+                        {
+                            xOffset2 = imageRects[1].x() - imageRects[0].x();
+                            yOffset2 = imageRects[1].y() - imageRects[0].y();
+                        }
+                        else
+                        {
+                            yOffset1 = imageRects[0].y() - imageRects[1].y();
+                            xOffset2 = imageRects[1].x() - imageRects[0].x();
+                        }
+                    }
+                    else
+                    {
+                        if (imageRects[0].y() < imageRects[1].y())
+                        {
+                            xOffset1 = imageRects[0].x() - imageRects[1].x();
+                            yOffset2 = imageRects[1].y() - imageRects[0].y();
+                        }
+                        else
+                        {
+                            xOffset1 = imageRects[0].x() - imageRects[1].x();
+                            yOffset1 = imageRects[0].y() - imageRects[1].y();
+                        }
+                    }
+
+                    QFileInfo info(fnp);
+                    trgBitmap.image(trgPal).copy(xOffset1, yOffset1,
+                                                 imageRects[0].width(), imageRects[0].height())
+                                           .save(QString("%1/%2_0.png")
+                                                 .arg(info.absolutePath())
+                                                 .arg(info.completeBaseName()), "PNG");
+                    trgBitmap.image(trgPal).copy(xOffset2, yOffset2,
+                                                 imageRects[1].width(), imageRects[1].height())
+                                           .save(QString("%1/%2_1.png")
+                                                 .arg(info.absolutePath())
+                                                 .arg(info.completeBaseName()), "PNG");
+                }
             }
             frameNum += 2;
         }
@@ -1573,10 +1642,16 @@ bool SubtitleProcessor::updateTrgPic(int index)
     {
         hNew = picTrg->screenHeight();
     }
-    picTrg->setImageWidth(wNew, wNew == 0 ? 1.0d : wNew / picSrc->imageWidth());
-    picTrg->setImageHeight(hNew, hNew == 0 ? 1.0d : hNew / picSrc->imageHeight());
+
+    int numberOfWindows = 1;
+    if (picTrg->windowSizes().size() > numberOfWindows)
+    {
+        numberOfWindows = picTrg->windowSizes().size();
+    }
+
     if (wNew != wOld)
     {
+        picTrg->setImageWidth(wNew);
         int xOfs = (int)((picSrc->x() * scaleX) + 0.5);
         int spaceSrc = (int)(((picSrc->screenWidth() - picSrc->imageWidth()) * scaleX) + 0.5);
         int spaceTrg = picTrg->screenWidth() - wNew;
@@ -1585,23 +1660,24 @@ bool SubtitleProcessor::updateTrgPic(int index)
         {
             xOfs = 0;
         }
-        else if (xOfs + wNew > picTrg->screenWidth())
+        else if (numberOfWindows == 1 && ((xOfs + wNew) > picTrg->screenWidth()))
         {
             xOfs = picTrg->screenWidth() - wNew;
         }
-        picTrg->setX(xOfs, xOfs == 0 ? 1.0d : xOfs / picSrc->x());
+        picTrg->setX(xOfs);
     }
     if (hNew != hOld)
     {
+        picTrg->setImageHeight(hNew);
         int yOfs = (int)((picSrc->y() * scaleY) + 0.5);
         int spaceSrc = (int)(((picSrc->screenHeight() - picSrc->imageHeight()) * scaleY) + 0.5);
         int spaceTrg = picTrg->screenHeight() - hNew;
         yOfs += (spaceTrg - spaceSrc) / 2;
-        if (yOfs + hNew > picTrg->screenHeight())
+        if (numberOfWindows == 1 && ((yOfs + hNew > picTrg->screenHeight())))
         {
             yOfs = picTrg->screenHeight() - hNew;
         }
-        picTrg->setY(yOfs, yOfs == 0 ? 1.0d : yOfs / picSrc->y());
+        picTrg->setY(yOfs);
     }
     // was image cropped?
     return (wNew != wOld) || (hNew != hOld);
