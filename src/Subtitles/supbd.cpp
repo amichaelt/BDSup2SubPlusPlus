@@ -19,7 +19,6 @@
 
 #include "supbd.h"
 
-#include "Subtitles/subpicturexml.h"
 #include "subtitleprocessor.h"
 #include "Tools/filebuffer.h"
 #include "Tools/timeutil.h"
@@ -487,42 +486,25 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     else
     {
         int yMax = (subPicture->screenHeight() - subPicture->imageHeight()) - (2 * subtitleProcessor->getCropOfsY());
-        if (yOfs > yMax)
+        if (subPicture->windowSizes().size() == 1 && yOfs > yMax)
         {
             yOfs = yMax;
         }
     }
 
     QVector<QVector<uchar>> rleBuf;
-    QVector<QRect> WindowSizes;
     int rleBufSize = 0;
 
-    int numberOfWindows = 0;
-    int numberOfImageObjects = 0;
-    if (dynamic_cast<SubPictureBD*>(subPicture) != nullptr)
-    {
-        SubPictureBD* subPic = static_cast<SubPictureBD*>(subPicture);
+    QVector<QRect> WindowSizes;
+    int numberOfWindows = 1, numberOfImageObjects = 1;
 
-        QVector<ImageObject> imageObjectList = subPic->imageObjectList;
-        for (int i = 0; i < imageObjectList.size(); ++i)
-        {
-            if (imageObjectList[i].bufferSize() != 0)
-            {
-                ++numberOfImageObjects;
-            }
-        }
-        numberOfWindows = subPic->windowSizes().size();
-        WindowSizes = subPic->windowSizes();
-    }
-    else if(dynamic_cast<SubPictureXML*>(subPicture) != nullptr)
+    if (subPicture->windowSizes().size() >= 1)
     {
-        SubPictureXML* subPic = static_cast<SubPictureXML*>(subPicture);
-        numberOfImageObjects = numberOfWindows = subPic->fileNames().size();
-        WindowSizes = subPic->windowSizes();
+        WindowSizes = subPicture->windowSizes();
+        numberOfWindows = numberOfImageObjects = WindowSizes.size();
     }
     else
     {
-        numberOfImageObjects = numberOfWindows = 1;
         WindowSizes.push_back(QRect(subPicture->x(), yOfs,
                                     bm.width(), bm.height()));
     }
