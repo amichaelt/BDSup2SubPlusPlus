@@ -75,6 +75,26 @@ public:
     QVector<QRect> &windowSizes() { return scaledImageRects; }
     void setWindowSizes(QVector<QRect> rects) { scaledImageRects = imageRects = rects; }
 
+    void scaleWindows(double scaleXFactor, double scaleYFactor)
+    {
+        if (imageRects.size() == 0) return;
+
+        if (scaleXFactor == 1.0d && scaleYFactor)
+        {
+            scaledImageRects = imageRects;
+        }
+        else
+        {
+            for (int i = 0; i < imageRects.size(); ++i)
+            {
+                scaledImageRects[i].setX((int) ((imageRects[i].x() * scaleXFactor) + .5));
+                scaledImageRects[i].setY((int) ((imageRects[i].y() * scaleYFactor) + .5));
+                scaledImageRects[i].setWidth((int) ((imageRects[i].width() * scaleXFactor) + .5));
+                scaledImageRects[i].setHeight((int) ((imageRects[i].height() * scaleYFactor) + .5));
+            }
+        }
+    }
+
     virtual SubPicture* copy();
 
     QVector<ErasePatch*> erasePatch;

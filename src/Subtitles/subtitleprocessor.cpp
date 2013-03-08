@@ -465,6 +465,8 @@ void SubtitleProcessor::scanSubtitles()
             scaleY = 1.0;
         }
 
+        picTrg->scaleWindows(scaleX * fx, scaleY * fy);
+
         int width = (int)(((picSrc->imageWidth() * scaleX) * fx) + 0.5);
         if (width < minDim)
         {
@@ -644,6 +646,8 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
             scaleX = 1.0;
             scaleY = 1.0;
         }
+
+        subPictures[i]->scaleWindows(scaleX * fsXNew, scaleY * fsYNew);
 
         int w = (int)(((picSrc->imageWidth() * scaleX) * fsXNew) + 0.5);
         if (w < minDim)
@@ -1621,6 +1625,8 @@ bool SubtitleProcessor::updateTrgPic(int index)
         fx = 1.0;
         fy = 1.0;
     }
+
+    picTrg->scaleWindows(scaleX * fx, scaleY * fy);
 
     int wOld = picTrg->imageWidth();
     int hOld = picTrg->imageHeight();
