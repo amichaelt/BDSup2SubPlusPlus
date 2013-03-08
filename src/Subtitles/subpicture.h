@@ -23,6 +23,7 @@
 #include "erasepatch.h"
 
 #include <QVector>
+#include <QRect>
 
 class SubPicture
 {
@@ -39,16 +40,16 @@ public:
     void setScreenHeight(int height) { _screenHeight = height; }
 
     virtual int imageWidth() { return _imageWidth; }
-    virtual void setImageWidth(int w, double scaleFactor = 1) { _imageWidth = w; }
+    void setImageWidth(int w) { _imageWidth = w; }
 
     virtual int imageHeight() {  return _imageHeight; }
-    virtual void setImageHeight(int h, double scaleFactor = 1) { _imageHeight = h; }
+    void setImageHeight(int h) { _imageHeight = h; }
 
     virtual int x() { return xOfs; }
-    virtual void setX(int ofs, double scaleFactor = 1) { xOfs = ofs; }
+    void setX(int ofs) { xOfs = ofs; }
 
     virtual int y() { return yOfs; }
-    virtual void setY(int ofs, double scaleFactor = 1) { yOfs = ofs; }
+    void setY(int ofs) { yOfs = ofs; }
 
     qint64 startTime() { return start; }
     void setStartTime(qint64 startTime) { start = startTime; }
@@ -71,6 +72,9 @@ public:
     bool exclude() { return excluded; }
     void setExclude(bool exclude) { excluded = exclude; }
 
+    QVector<QRect> &windowSizes() { return scaledImageRects; }
+    void setWindowSizes(QVector<QRect> rects) { scaledImageRects = imageRects = rects; }
+
     virtual SubPicture* copy();
 
     QVector<ErasePatch*> erasePatch;
@@ -80,6 +84,9 @@ protected:
     int _imageHeight = 0;
     int xOfs = 0;
     int yOfs = 0;
+
+    QVector<QRect> scaledImageRects;
+    QVector<QRect> imageRects;
 
 private:
     int _screenWidth = 0;

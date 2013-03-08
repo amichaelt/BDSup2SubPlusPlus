@@ -37,7 +37,9 @@ SubPicture::SubPicture(const SubPicture &other) :
     yOfs(other.yOfs),
     forced(other.forced),
     decoded(other.decoded),
-    excluded(other.excluded)
+    excluded(other.excluded),
+    scaledImageRects(other.scaledImageRects),
+    imageRects(other.imageRects)
 {
 }
 
@@ -55,7 +57,9 @@ SubPicture::SubPicture(const SubPicture *other) :
     yOfs(other->yOfs),
     forced(other->forced),
     decoded(other->decoded),
-    excluded(other->excluded)
+    excluded(other->excluded),
+    scaledImageRects(other->scaledImageRects),
+    imageRects(other->imageRects)
 {
 }
 
@@ -75,6 +79,8 @@ SubPicture* SubPicture::copy()
     sp->setY(xOfs);
     sp->excluded = excluded;
     sp->decoded = decoded;
+    sp->scaledImageRects = scaledImageRects;
+    sp->imageRects = imageRects;
     if (!erasePatch.empty())
     {
         for (int i = 0; i < erasePatch.size(); ++i)
