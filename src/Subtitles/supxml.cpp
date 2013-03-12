@@ -67,7 +67,7 @@ void SupXML::decode(int index)
 {
     QVector<Bitmap> bitmaps;
     QVector<Palette> palettes;
-    SubPictureXML subPic = subPictures[index];
+    SubPictureXML &subPic = subPictures[index];
     for (int i = 0; i < subPic.fileNames().size(); ++i)
     {
         if (!QFileInfo(subPic.fileNames()[i]).exists())
@@ -191,11 +191,10 @@ void SupXML::decode(int index)
         }
         _bitmap = _bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
         // update picture
-        SubPictureXML pic(subPic);
-        pic.setImageWidth(width);
-        pic.setImageHeight(height);
-        pic.setX(pic.originalX() + bounds.topLeft().x());
-        pic.setY(pic.originalY() + bounds.topLeft().y());
+        subPic.setImageWidth(width);
+        subPic.setImageHeight(height);
+        subPic.setX(subPic.originalX() + bounds.topLeft().x());
+        subPic.setY(subPic.originalY() + bounds.topLeft().y());
     }
 }
 
