@@ -240,10 +240,12 @@ void SubstreamDVD::decode(SubPictureDVD &pic, SubtitleProcessor* subtitleProcess
             height = 2;
         }
         _bitmap = _bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
-        pic.setImageWidth(width);
-        pic.setImageHeight(height);
-        pic.setX(pic.originalX() + bounds.topLeft().x());
-        pic.setY(pic.originalY() + bounds.topLeft().y());
+        QVector<QRect> imageRects = { QRect(pic.originalX() + bounds.topLeft().x(),
+                                            pic.originalY() + bounds.topLeft().y(),
+                                            width,
+                                            height)
+                                    };
+        pic.setWindowSizes(imageRects);
     }
 
     _primaryColorIndex = _bitmap.primaryColorIndex(_palette, subtitleProcessor->getAlphaThreshold());
