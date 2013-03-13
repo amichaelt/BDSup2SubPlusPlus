@@ -189,12 +189,17 @@ void SupHD::readAllSupFrames()
                 } break;
                 case 0x85: // area
                 {
-                    pic.setX((fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4));
+                    int x = (fileBuffer->getByte(index) << 4) | (fileBuffer->getByte(index + 1) >> 4);
                     int imageWidth = (((fileBuffer->getByte(index + 1) &0xf) << 8) | (fileBuffer->getByte(index + 2)));
-                    pic.setImageWidth((imageWidth - pic.x()) + 1);
-                    pic.setY((fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4));
+                    int y = (fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4);
                     int imageHeight = (((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5)));
-                    pic.setImageHeight((imageHeight - pic.y()) + 1);
+
+                    QVector<QRect> imageRects = { QRect(x,
+                                                        y,
+                                                        (imageWidth - pic.x()) + 1,
+                                                        (imageHeight - pic.y()) + 1),
+                                                };
+                    pic.setWindowSizes(imageRects);
 
                     subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))
