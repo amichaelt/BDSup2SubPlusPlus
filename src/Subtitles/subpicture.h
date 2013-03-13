@@ -39,17 +39,55 @@ public:
     int screenHeight() { return _screenHeight; }
     void setScreenHeight(int height) { _screenHeight = height; }
 
-    virtual int imageWidth() { return _imageWidth; }
-    void setImageWidth(int w) { _imageWidth = w; }
+    int imageWidth()
+    {
+        if (scaledImageRects.size() == 1)
+        {
+            return scaledImageRects[0].width();
+        }
+        return scaledImageRects[0].width() > scaledImageRects[1].width() ?
+               scaledImageRects[0].width() : scaledImageRects[1].width();
+    }
+    //void setImageWidth(int w) { _imageWidth = w; }
 
-    virtual int imageHeight() {  return _imageHeight; }
-    void setImageHeight(int h) { _imageHeight = h; }
+    int imageHeight()
+    {
+        if (scaledImageRects.size() == 1)
+        {
+            return scaledImageRects[0].height();
+        }
+        else if (scaledImageRects[0].y() < scaledImageRects[1].y())
+        {
+            return ((scaledImageRects[1].y() + scaledImageRects[1].height()) - scaledImageRects[0].y());
+        }
+        else
+        {
+            return ((scaledImageRects[0].y() + scaledImageRects[0].height()) - scaledImageRects[1].y());
+        }
+    }
+    //void setImageHeight(int h) { _imageHeight = h; }
 
-    virtual int x() { return xOfs; }
-    void setX(int ofs) { xOfs = ofs; }
+    int x()
+    {
+        if (scaledImageRects.size() == 1)
+        {
+            return scaledImageRects[0].x();
+        }
+        return scaledImageRects[0].x() < scaledImageRects[1].x() ?
+                scaledImageRects[0].x() : scaledImageRects[1].x();
+    }
+    //void setX(int ofs) { xOfs = ofs; }
 
-    virtual int y() { return yOfs; }
-    void setY(int ofs) { yOfs = ofs; }
+    int y()
+    {
+        if (scaledImageRects.size() == 1)
+        {
+            return scaledImageRects[0].y();
+        }
+        return scaledImageRects[0].y() < scaledImageRects[1].y() ?
+                scaledImageRects[0].y() : scaledImageRects[1].y();
+    }
+    //void setY(int ofs) { yOfs = ofs; }
 
     qint64 startTime() { return start; }
     void setStartTime(qint64 startTime) { start = startTime; }
@@ -74,26 +112,6 @@ public:
 
     QVector<QRect> &windowSizes() { return scaledImageRects; }
     void setWindowSizes(QVector<QRect> rects) { scaledImageRects = imageRects = rects; }
-
-    void scaleWindows(double scaleXFactor, double scaleYFactor)
-    {
-        if (imageRects.size() == 0) return;
-
-        if (scaleXFactor == 1.0d && scaleYFactor)
-        {
-            scaledImageRects = imageRects;
-        }
-        else
-        {
-            for (int i = 0; i < imageRects.size(); ++i)
-            {
-                scaledImageRects[i].setX((int) ((imageRects[i].x() * scaleXFactor) + .5));
-                scaledImageRects[i].setY((int) ((imageRects[i].y() * scaleYFactor) + .5));
-                scaledImageRects[i].setWidth((int) ((imageRects[i].width() * scaleXFactor) + .5));
-                scaledImageRects[i].setHeight((int) ((imageRects[i].height() * scaleYFactor) + .5));
-            }
-        }
-    }
 
     virtual SubPicture* copy();
 
