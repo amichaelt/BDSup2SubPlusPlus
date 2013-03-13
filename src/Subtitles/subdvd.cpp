@@ -332,13 +332,16 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, qint64 endOfs)
         case 5: // coordinates
         {
             int xOfs = ((ctrlHeader[index] & 0xff) << 4) | ((ctrlHeader[index + 1] & 0xff) >> 4);
-            pic.setX(ofsXglob + xOfs);
             int imageWidth = ((((ctrlHeader[index + 1] & 0xff) & 0xf) << 8) | (ctrlHeader[index + 2] & 0xff));
-            pic.setImageWidth((imageWidth - xOfs) + 1);
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
-            pic.setY(ofsYglob + yOfs);
             int imageHeight = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | (ctrlHeader[index+5] & 0xff));
-            pic.setImageHeight((imageHeight - yOfs) + 1);
+            QVector<QRect> imageRects = { QRect(ofsXglob + xOfs,
+                                               ofsYglob + yOfs,
+                                               (imageWidth - xOfs) + 1,
+                                               (imageHeight - yOfs) + 1)
+                                       };
+
+            pic.setWindowSizes(imageRects);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
                                      .arg(QString::number(pic.x())).arg(QString::number(pic.y()))
