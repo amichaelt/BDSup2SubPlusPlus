@@ -73,10 +73,10 @@ SubPicture* SubPicture::copy()
     sp->forced = forced;
     sp->compositionNumber = compositionNumber;
     sp->numberCompObjects = numberCompObjects;
-    sp->setImageWidth(_imageWidth);
-    sp->setImageHeight(_imageHeight);
-    sp->setX(xOfs);
-    sp->setY(xOfs);
+    sp->_imageWidth = _imageWidth;
+    sp->_imageHeight = _imageHeight;
+    sp->xOfs = xOfs;
+    sp->yOfs = xOfs;
     sp->excluded = excluded;
     sp->decoded = decoded;
     sp->scaledImageRects = scaledImageRects;
