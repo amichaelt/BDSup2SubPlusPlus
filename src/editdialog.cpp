@@ -259,7 +259,15 @@ void EditDialog::on_maxButton_clicked()
 
 void EditDialog::on_centerButton_clicked()
 {
-    subPicture->setX((subPicture->screenWidth() - subPicture->imageWidth()) / 2);
+    QVector<QRect> &imageRects = subPicture->windowSizes();
+    int dx = ((subPicture->screenWidth() - subPicture->imageWidth()) / 2) - subPicture->x();
+
+    for (int i = 0; i < imageRects.size(); ++i)
+    {
+        int width = imageRects[i].width();
+        imageRects[i].setX(imageRects[i].x() + dx);
+        imageRects[i].setWidth(width);
+    }
 
     ui->horizontalSlider->blockSignals(true);
 
@@ -287,7 +295,16 @@ void EditDialog::on_topButton_clicked()
     }
     ui->verticalSlider->blockSignals(true);
 
-    subPicture->setY(y);
+    QVector<QRect> &imageRects = subPicture->windowSizes();
+    int dy = y - subPicture->y();
+
+    for (int i = 0; i < imageRects.size(); ++i)
+    {
+        int height = imageRects[i].height();
+        imageRects[i].setY(imageRects[i].y() + dy);
+        imageRects[i].setHeight(height);
+    }
+
     ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
     ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
     ui->subtitleImage->update();
@@ -308,7 +325,16 @@ void EditDialog::on_bottomButton_clicked()
 
     ui->verticalSlider->blockSignals(true);
 
-    subPicture->setY(y);
+    QVector<QRect> &imageRects = subPicture->windowSizes();
+    int dy = y - subPicture->y();
+
+    for (int i = 0; i < imageRects.size(); ++i)
+    {
+        int height = imageRects[i].height();
+        imageRects[i].setY(imageRects[i].y() + dy);
+        imageRects[i].setHeight(height);
+    }
+
     ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
     ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
     ui->subtitleImage->update();
@@ -399,8 +425,22 @@ void EditDialog::store()
     SubPicture* subPic = subtitleProcessor->getSubPictureTrg(index);
     subPic->setEndTime(subPicture->endTime());
     subPic->setStartTime(subPicture->startTime());
-    subPic->setX(subPicture->x());
-    subPic->setY(subPicture->y());
+
+    QVector<QRect> &imageRects = subPic->windowSizes();
+    int dx = subPicture->x() - subPic->x();
+    int dy = subPicture->y() - subPic->y();
+
+    for (int i = 0; i < imageRects.size(); ++i)
+    {
+        int width = imageRects[i].width();
+        imageRects[i].setX(imageRects[i].x() + dx);
+        imageRects[i].setWidth(width);
+
+        int height = imageRects[i].height();
+        imageRects[i].setY(imageRects[i].y() + dy);
+        imageRects[i].setHeight(height);
+    }
+
     subPic->setForced(subPicture->isForced());
     subPic->setExclude(subPicture->exclude());
     subPic->erasePatch = subPicture->erasePatch;
@@ -505,7 +545,17 @@ void EditDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
         if (x != subPicture->x())
         {
             ui->horizontalSlider->blockSignals(true);
-            subPicture->setX(x);
+
+            QVector<QRect> &imageRects = subPicture->windowSizes();
+            int dx = x - subPicture->x();
+
+            for (int i = 0; i < imageRects.size(); ++i)
+            {
+                int width = imageRects[i].width();
+                imageRects[i].setX(imageRects[i].x() + dx);
+                imageRects[i].setWidth(width);
+            }
+
             ui->horizontalSlider->setValue(subPicture->x());
             ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
             ui->subtitleImage->update();
@@ -530,7 +580,17 @@ void EditDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
         if (y != subPicture->y())
         {
             ui->verticalSlider->blockSignals(true);
-            subPicture->setY(y);
+
+            QVector<QRect> &imageRects = subPicture->windowSizes();
+            int dy = y - subPicture->y();
+
+            for (int i = 0; i < imageRects.size(); ++i)
+            {
+                int height = imageRects[i].height();
+                imageRects[i].setY(imageRects[i].y() + dy);
+                imageRects[i].setHeight(height);
+            }
+
             ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
             ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
             ui->subtitleImage->update();
@@ -558,7 +618,16 @@ void EditDialog::on_verticalSlider_valueChanged(int value)
 
     if (y != subPicture->y())
     {
-        subPicture->setY(y);
+        QVector<QRect> &imageRects = subPicture->windowSizes();
+        int dy = y - subPicture->y();
+
+        for (int i = 0; i < imageRects.size(); ++i)
+        {
+            int height = imageRects[i].height();
+            imageRects[i].setY(imageRects[i].y() + dy);
+            imageRects[i].setHeight(height);
+        }
+
         ui->yOffsetLineEdit->setText(QString::number(subPicture->y()));
         ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->setScreenRatio(21.0 / 9);
@@ -584,7 +653,16 @@ void EditDialog::on_horizontalSlider_valueChanged(int value)
 
     if (x != subPicture->x())
     {
-        subPicture->setX(x);
+        QVector<QRect> &imageRects = subPicture->windowSizes();
+        int dx = x - subPicture->x();
+
+        for (int i = 0; i < imageRects.size(); ++i)
+        {
+            int width = imageRects[i].width();
+            imageRects[i].setX(imageRects[i].x() + dx);
+            imageRects[i].setWidth(width);
+        }
+
         ui->xOffsetLineEdit->setText(QString::number(subPicture->x()));
         ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->update();
@@ -695,7 +773,17 @@ void EditDialog::on_xOffsetLineEdit_editingFinished()
     if (x != subPicture->x())
     {
         ui->horizontalSlider->blockSignals(true);
-        subPicture->setX(x);
+
+        QVector<QRect> &imageRects = subPicture->windowSizes();
+        int dx = x - subPicture->x();
+
+        for (int i = 0; i < imageRects.size(); ++i)
+        {
+            int width = imageRects[i].width();
+            imageRects[i].setX(imageRects[i].x() + dx);
+            imageRects[i].setWidth(width);
+        }
+
         ui->horizontalSlider->setValue(subPicture->x());
         ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->update();
@@ -721,7 +809,17 @@ void EditDialog::on_yOffsetLineEdit_editingFinished()
     if (y != subPicture->y())
     {
         ui->verticalSlider->blockSignals(true);
-        subPicture->setY(y);
+
+        QVector<QRect> &imageRects = subPicture->windowSizes();
+        int dy = y - subPicture->y();
+
+        for (int i = 0; i < imageRects.size(); ++i)
+        {
+            int height = imageRects[i].height();
+            imageRects[i].setY(imageRects[i].y() + dy);
+            imageRects[i].setHeight(height);
+        }
+
         ui->verticalSlider->setValue(subPicture->screenHeight() - subPicture->y());
         ui->subtitleImage->setOffsets(subPicture->x(), subPicture->y());
         ui->subtitleImage->update();
