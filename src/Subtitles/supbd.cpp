@@ -1212,14 +1212,8 @@ find_left:
 
     subPicture->windowSizes()[0].setX(left);
     subPicture->windowSizes()[0].setY(top);
-    subPicture->setX(left);
-    subPicture->setY(top);
-
     subPicture->windowSizes()[0].setHeight(height);
     subPicture->windowSizes()[0].setWidth(width);
-
-    subPicture->setImageHeight(height);
-    subPicture->setImageWidth(width);
 
     QImage newImage = image.copy(left, top, width, height);
     _bitmap.setImg(newImage);
@@ -1451,10 +1445,12 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
     {
         ImageObject imageObject = subPicture->getImgObj(objectIdxes[0]);
 
-        subPicture->setX(imageObject.x());
-        subPicture->setY(imageObject.y());
-        subPicture->setImageWidth(imageObject.width());
-        subPicture->setImageHeight(imageObject.height());
+        QVector<QRect> imageRects = { QRect(imageObject.x(),
+                                            imageObject.y(),
+                                            imageObject.width(),
+                                            imageObject.height())
+                                    };
+        subPicture->setWindowSizes(imageRects);
         return bitmaps[0];
     }
     else
@@ -1499,10 +1495,17 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
         resultImage = resultImage.convertToFormat(QImage::Format_Indexed8, _palette.colorTable());
         resultImage = resultImage.copy(resultXOffset, resultYOffset, resultWidth, resultHeight);
 
-        subPicture->setX(resultXOffset);
-        subPicture->setY(resultYOffset);
-        subPicture->setImageWidth(resultWidth);
-        subPicture->setImageHeight(resultHeight);
+        QVector<QRect> imageRects = { QRect(imgObj1XOfs,
+                                            imgObj1YOfs,
+                                            imgObj1Width,
+                                            imgObj1.height()),
+                                      QRect(imgObj2XOfs,
+                                            imgObj2YOfs,
+                                            imgObj2Width,
+                                            imgObj2.height()),
+                                    };
+        subPicture->setWindowSizes(imageRects);
+
         Bitmap result = Bitmap(resultImage);
 
         return result;
