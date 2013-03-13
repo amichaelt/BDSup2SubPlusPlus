@@ -145,6 +145,21 @@ void SupXML::decode(int index)
     }
     else
     {
+        QVector<QRect> &windows = subPic.windowSizes();
+        int resultXOffset = windows[0].x() > windows[1].x() ? windows[1].x() : windows[0].x();
+        int resultYOffset = windows[0].y() > windows[1].y() ? windows[1].y() : windows[0].y();
+        int width = 0, height = 0;
+
+        if (windows[0].y() > windows[1].y())
+        {
+            height = (windows[0].y() + windows[0].height()) - windows[1].y();
+        }
+        else
+        {
+            height = (windows[1].y() + windows[1].height()) - windows[0].y();
+        }
+        width = windows[0].width() > windows[1].width() ? windows[0].width() : windows[1].width();
+
         QImage resultImage(1920, 1080, QImage::Format_ARGB32_Premultiplied);
         QPainter painter(&resultImage);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
@@ -156,19 +171,10 @@ void SupXML::decode(int index)
         painter.end();
 
         resultImage = resultImage.convertToFormat(QImage::Format_Indexed8, palettes[0].colorTable());
+        resultImage = resultImage.copy(resultXOffset, resultYOffset, width, height);
 
         _bitmap = Bitmap(resultImage);
         _palette = palettes[0];
-
-        if (subPic.windowSizes()[0].y() > subPic.windowSizes()[1].y())
-        {
-            subPictures[index].setImageHeight(subPic.windowSizes()[0].y() + subPic.windowSizes()[0].height());
-        }
-        else
-        {
-            subPictures[index].setImageHeight(subPic.windowSizes()[1].y() + subPic.windowSizes()[1].height());
-        }
-        subPic.setImageHeight(subPictures[index].imageHeight());
     }
 
     _primaryColorIndex = _bitmap.primaryColorIndex(_palette, subtitleProcessor->getAlphaThreshold());
@@ -190,11 +196,21 @@ void SupXML::decode(int index)
             height = 2;
         }
         _bitmap = _bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
+        QVector<QRect> &imageRects = subPic.windowSizes();
+
+        int newX = subPic.x() - (subPic.originalX() + bounds.topLeft().x());
+        int newY = subPic.y() - (subPic.originalY() + bounds.topLeft().y());
+        double widthScale = (double) width / subPic.imageWidth();
+        double heightScale = (double) height / subPic.imageHeight();
+
         // update picture
-        subPic.setImageWidth(width);
-        subPic.setImageHeight(height);
-        subPic.setX(subPic.originalX() + bounds.topLeft().x());
-        subPic.setY(subPic.originalY() + bounds.topLeft().y());
+        for (int i = 0; i < imageRects.size(); ++i)
+        {
+            imageRects[i].setX(imageRects[i].x() + newX);
+            imageRects[i].setY(imageRects[i].y() + newY);
+            imageRects[i].setWidth((int) ((imageRects[i].width() * widthScale) + .5));
+            imageRects[i].setHeight((int) ((imageRects[i].height() * heightScale) + .5));
+        }
     }
 }
 
@@ -299,7 +315,7 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
 
         QString pname = getPNGname(name, idx + 1);
         int numberOfImages = 1;
-        QVector<QRect> imageRects = pics[idx]->windowSizes();
+        QVector<QRect> &imageRects = pics[idx]->windowSizes();
 
         if (imageRects.size() > numberOfImages)
         {
@@ -506,53 +522,24 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
     } break;
     case (int)SupXML::XmlHandler::XmlState::GRAPHIC:
     {
-        bool hasGraphic = subPicture->fileNames().size() == 1;
         bool ok;
         int width = atts.value("Width").toInt(&ok);
         width = ok ? width : -1;
-        if (!hasGraphic || width > subPicture->imageWidth())
-        {
-            subPicture->setImageWidth(width);
-        }
 
         int height = atts.value("Height").toInt(&ok);
         height = ok ? height : -1;
-        if (!hasGraphic || height > subPicture->imageHeight())
-        {
-            subPicture->setImageHeight(height);
-        }
 
         int x = atts.value("X").toInt(&ok);
         x = ok ? x : -1;
-        if (!hasGraphic || x < subPicture->x())
-        {
-            subPicture->setX(x);
-        }
 
         int y = atts.value("Y").toInt(&ok);
         y = ok ? y : -1;
-        if (!hasGraphic || y < subPicture->y())
-        {
-            subPicture->setY(y);
-        }
-
-        if (hasGraphic)
-        {
-            if (y < subPicture->imageRects[0].y())
-            {
-                subPicture->setImageHeight(subPicture->imageRects[0].y() + subPicture->imageRects[0].height());
-            }
-            else
-            {
-                subPicture->setImageHeight(y + height);
-            }
-        }
-
-        subPicture->setOriginal();
 
         QRect rect(x, y, width, height);
         subPicture->imageRects.push_back(rect);
         subPicture->scaledImageRects.push_back(rect);
+
+        subPicture->setOriginal();
     } break;
     }
 
