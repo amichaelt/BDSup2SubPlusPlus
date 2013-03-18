@@ -301,4 +301,18 @@ constexpr double FPS_PAL_I  = 50.0;
 /** Frames per seconds for NTSC interlaced (59.94) */
 constexpr double FPS_NTSC_I = 60000.0/1001;
 
+enum class CompositionState
+{
+    /** normal: doesn't have to be complete */
+    NORMAL,
+    /** acquisition point */
+    ACQU_POINT,
+    /** epoch start - clears the screen */
+    EPOCH_START,
+    /** epoch continue */
+    EPOCH_CONTINUE,
+    /** unknown value */
+    INVALID
+};
+
 #endif // TYPES_H
