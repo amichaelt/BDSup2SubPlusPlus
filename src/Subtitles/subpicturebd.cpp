@@ -27,7 +27,9 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
     type(other->type),
     numWindows(other->numWindows),
-    paletteUpdate(other->paletteUpdate)
+    paletteUpdate(other->paletteUpdate),
+    compState(other->compState),
+    paletteID(other->paletteID)
 {
     for (int i = 0; i < other->imageObjectList.size(); ++i)
     {
@@ -47,7 +49,9 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     SubPicture(other),
     type(other.type),
     numWindows(other.numWindows),
-    paletteUpdate(other.paletteUpdate)
+    paletteUpdate(other.paletteUpdate),
+    compState(other.compState),
+    paletteID(other.paletteID)
 {
     for (int i = 0; i < other.imageObjectList.size(); ++i)
     {
