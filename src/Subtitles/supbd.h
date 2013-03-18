@@ -23,6 +23,7 @@
 #include "substream.h"
 #include "bitmap.h"
 #include "palette.h"
+#include "types.h"
 
 #include <QObject>
 #include <QString>
@@ -80,20 +81,6 @@ private:
         int offset = 0;
     };
 
-    enum class CompositionState
-    {
-        /** normal: doesn't have to be complete */
-        NORMAL,
-        /** acquisition point */
-        ACQU_POINT,
-        /** epoch start - clears the screen */
-        EPOCH_START,
-        /** epoch continue */
-        EPOCH_CONTINUE,
-        /** unknown value */
-        INVALID
-    };
-
     int _primaryColorIndex = 0;
 
     Bitmap _bitmap;
@@ -117,7 +104,7 @@ private:
 
     double getFpsFromID(int id);
 
-    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg, bool forceFirst);
+    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg, bool forceFirst, bool &isFirst);
 
     Bitmap decodeImage(SubPictureBD *subPicture, int transIdx);
 
