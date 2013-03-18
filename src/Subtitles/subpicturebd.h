@@ -23,6 +23,7 @@
 #include "subpicture.h"
 #include "imageobject.h"
 #include "paletteinfo.h"
+#include "../types.h"
 
 #include <QVector>
 
@@ -38,6 +39,12 @@ public:
     ~SubPictureBD() { }
 
     SubPicture* copy();
+
+    CompositionState compositionState() { return compState; }
+    void setCompositionState(CompositionState compositionState) { compState = compositionState; }
+
+    int paletteId() { return paletteID; }
+    void setPaletteId(int paletteId) { paletteID = paletteId; }
 
     bool paletteUpdated() { return paletteUpdate; }
     void setPaletteUpdated(bool paletteUpdated) { paletteUpdate = paletteUpdated; }
@@ -83,6 +90,9 @@ private:
     int type = 0;
     int numWindows = 0;
     bool paletteUpdate;
+    CompositionState compState;
+    int paletteID;
+
 };
 
 #endif // SUBSPICTUREBD_H
