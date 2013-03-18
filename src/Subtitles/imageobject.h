@@ -68,15 +68,15 @@ public:
     QVector<ImageObjectFragment> &fragmentList() { return fragments; }
 
 private:
-    int paletteId = 0;
+    int paletteId = -1;
     int bufSize = 0;
     int w = 0;
     int h = 0;
     int xOfs = 0;
     int yOfs = 0;
-    int windowId = 0;
+    int windowId = -1;
     bool forced = false;
-    int objectId = 0;
+    int objectId = -1;
     int objVer = 0;
     int objSeq = 0;
 
