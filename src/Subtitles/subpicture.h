@@ -41,14 +41,21 @@ public:
 
     int imageWidth()
     {
+        int width;
         if (scaledImageRects.size() == 1)
         {
-            return scaledImageRects[0].width();
+            width = scaledImageRects[0].width();
         }
-        return scaledImageRects[0].width() > scaledImageRects[1].width() ?
-               scaledImageRects[0].width() : scaledImageRects[1].width();
+        else
+        {
+            int left = scaledImageRects[0].x() < scaledImageRects[1].x() ?
+                       scaledImageRects[0].x() : scaledImageRects[1].x();
+            int right = scaledImageRects[0].right() > scaledImageRects[1].right() ?
+                        scaledImageRects[0].right() : scaledImageRects[1].right();
+            width = (right - left) + 1;
+        }
+        return width;
     }
-    //void setImageWidth(int w) { _imageWidth = w; }
 
     int imageHeight()
     {
@@ -65,7 +72,6 @@ public:
             return ((scaledImageRects[0].y() + scaledImageRects[0].height()) - scaledImageRects[1].y());
         }
     }
-    //void setImageHeight(int h) { _imageHeight = h; }
 
     int x()
     {
@@ -76,7 +82,6 @@ public:
         return scaledImageRects[0].x() < scaledImageRects[1].x() ?
                 scaledImageRects[0].x() : scaledImageRects[1].x();
     }
-    //void setX(int ofs) { xOfs = ofs; }
 
     int y()
     {
@@ -87,7 +92,6 @@ public:
         return scaledImageRects[0].y() < scaledImageRects[1].y() ?
                 scaledImageRects[0].y() : scaledImageRects[1].y();
     }
-    //void setY(int ofs) { yOfs = ofs; }
 
     qint64 startTime() { return start; }
     void setStartTime(qint64 startTime) { start = startTime; }
