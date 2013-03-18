@@ -1504,8 +1504,18 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
         {
             value = options->value("filter").toString().toLower();
 
-            value[0] = value[0].toUpper();
-            int idx = scalingFilters.indexOf(value);
+            value[0] = value[0].toLower();
+            int idx = -1;
+
+            for (int i = 0; i < scalingFilters.size(); ++i)
+            {
+                if (value.compare(scalingFilters[i], Qt::CaseInsensitive))
+                {
+                    idx = i;
+                    break;
+                }
+            }
+
             if (idx != -1)
             {
                 subtitleProcessor->setScalingFilter((ScalingFilters)idx);
