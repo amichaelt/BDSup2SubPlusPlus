@@ -97,14 +97,14 @@ private:
 
     void decode(SubPictureBD *subPicture);
     void parsePCS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
-    void parseWDS(SupSegment* segment, SubPictureBD *subPicture);
+    QVector<QRect> parseWDS(SupSegment* segment, SubPictureBD *subPicture);
 
     int getFpsId(double fps);
     int parsePDS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
 
     double getFpsFromID(int id);
 
-    bool parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg, bool forceFirst, bool &isFirst);
+    int parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg, bool forceFirst, bool &isFirst);
 
     Bitmap decodeImage(SubPictureBD *subPicture, int transIdx);
 
