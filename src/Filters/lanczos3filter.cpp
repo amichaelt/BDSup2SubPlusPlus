@@ -37,12 +37,7 @@ float Lanczos3Filter::value(float value)
     {
         value *= PI_FLOAT;
         double value_divided_by_3 = value / 3.0f;
-        return sincModified(value) * sincModified();
+        return (std::sin(value) / value) * (std::sin(value_divided_by_3) / value_divided_by_3);
     }
     return 0.0f;
-}
-
-static constexpr float sincModified(float value)
-{
-    return std::sin(value) / value;
 }
