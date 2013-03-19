@@ -36,7 +36,8 @@ float Lanczos3Filter::value(float value)
     if (value < 3.0f)
     {
         value *= PI_FLOAT;
-        return sincModified(value) * sincModified(value / 3.0f);
+        double value_divided_by_3 = value / 3.0f;
+        return sincModified(value) * sincModified();
     }
     return 0.0f;
 }
