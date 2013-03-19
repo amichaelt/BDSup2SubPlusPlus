@@ -34,6 +34,4 @@ private:
     const float PI_FLOAT;
 };
 
-static constexpr float sincModified(float value);
-
 #endif // LANCZOS3FILTER_H
