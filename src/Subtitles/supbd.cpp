@@ -200,9 +200,9 @@ void SupBD::readAllSupFrames()
 
                     if (!pic.paletteUpdated())
                     {
-                        if (isFirst && objectId != -1)
+                        if (objectId != -1)
                         {
-                            imageObjects.insert(objectId, pic.imageObjectList[objectId]);
+                            imageObjects[objectId] = pic.imageObjectList[objectId];
 
                             subtitleProcessor->print(QString("%1, img size: %2*%3\n")
                                                      .arg(out)
@@ -1138,7 +1138,7 @@ int SupBD::parseODS(SupSegment *segment, SubPictureBD *subPicture, QString &msg,
             subPicture->imageObjectList.replace(objID, imgObj);
         }
 
-        return -1;
+        return objID;
     }
 }
 
@@ -1326,16 +1326,6 @@ Palette SupBD::decodePalette(SubPictureBD *subPicture)
 {
     bool fadeOut = false;
     int palIndex = 0;
-
-    int objectId = 0;
-    for (int i = 0; i < subPicture->imageObjectList.size(); ++i)
-    {
-        if (subPicture->imageObjectList[i].fragmentList().size() > 0)
-        {
-            objectId = subPicture->imageObjectList[i].objectID();
-            break;
-        }
-    }
 
     QVector<PaletteInfo> pl = subPicture->palettes[subPicture->paletteId()];
 
