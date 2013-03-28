@@ -199,7 +199,10 @@ void SupHD::readAllSupFrames()
                     imageRects[0] = rect;
 
                     pic.setWindowSizes(imageRects);
+                    pic.setNumCompObjects(imageRects.size());
                     pic.setImageSizes(imageRects);
+                    pic.setNumberOfWindows(imageRects.size());
+                    pic.objectIDs().push_back(0);
 
                     subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))
