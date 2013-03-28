@@ -24,6 +24,7 @@
 
 #include <QVector>
 #include <QRect>
+#include <QMap>
 
 class SubPicture
 {
@@ -39,10 +40,10 @@ public:
     int screenHeight() { return _screenHeight; }
     void setScreenHeight(int height) { _screenHeight = height; }
 
-    int imageWidth()
+    virtual int imageWidth()
     {
         int width;
-        if (scaledImageRects.size() == 1)
+        if (numberCompObjects == 1)
         {
             width = scaledImageRects[0].width();
         }
@@ -57,9 +58,9 @@ public:
         return width;
     }
 
-    int imageHeight()
+    virtual int imageHeight()
     {
-        if (scaledImageRects.size() == 1)
+        if (numberCompObjects == 1)
         {
             return scaledImageRects[0].height();
         }
@@ -73,9 +74,9 @@ public:
         }
     }
 
-    int x()
+    virtual int x()
     {
-        if (scaledImageRects.size() == 1)
+        if (numberCompObjects == 1)
         {
             return scaledImageRects[0].x();
         }
@@ -83,9 +84,9 @@ public:
                 scaledImageRects[0].x() : scaledImageRects[1].x();
     }
 
-    int y()
+    virtual int y()
     {
-        if (scaledImageRects.size() == 1)
+        if (numberCompObjects == 1)
         {
             return scaledImageRects[0].y();
         }
@@ -105,6 +106,9 @@ public:
     int numCompObjects() { return numberCompObjects; }
     void setNumCompObjects(int numCompObjects) { numberCompObjects = numCompObjects; }
 
+    int numberOfWindows() { return numWindows; }
+    void setNumberOfWindows(int num) { numWindows = num; }
+
     virtual bool isForced() { return forced; }
     virtual void setForced(bool isForced) { forced = isForced; }
 
@@ -114,8 +118,13 @@ public:
     bool exclude() { return excluded; }
     void setExclude(bool exclude) { excluded = exclude; }
 
-    QVector<QRect> &windowSizes() { return scaledImageRects; }
-    void setWindowSizes(QVector<QRect> rects) { scaledImageRects = imageRects = rects; }
+    QMap<int, QRect> &imageSizes() { return scaledImageRects; }
+    void setImageSizes(QMap<int, QRect> rects) { imageRects = rects; scaledImageRects = rects; }
+
+    QMap<int, QRect> &windowSizes() { return scaledWindowRects; }
+    void setWindowSizes(QMap<int, QRect> rects) { windowRects = rects; scaledWindowRects = rects; }
+
+    QVector<int> &objectIDs() { return objectIds; }
 
     virtual SubPicture* copy();
 
@@ -127,20 +136,23 @@ protected:
     int xOfs = 0;
     int yOfs = 0;
 
-    QVector<QRect> scaledImageRects;
-    QVector<QRect> imageRects;
+    QMap<int, QRect> scaledImageRects;
+    QMap<int, QRect> imageRects;
+    QMap<int, QRect> scaledWindowRects;
+    QMap<int, QRect> windowRects;
 
-private:
     int _screenWidth = 0;
     int _screenHeight = 0;
     qint64 start = -1;
     qint64 end = 0;
     int compositionNumber = 0;
     int numberCompObjects = 0;
+    int numWindows = 0;
 
     bool forced = false;
     bool decoded = false;
     bool excluded = false;
+    QVector<int> objectIds;
 };
 
 #endif // SUBPICTURE_H
