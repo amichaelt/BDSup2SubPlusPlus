@@ -589,7 +589,10 @@ qint64 SupDVD::readSupFrame(qint64 ofs)
             QRect rect = QRect(ofsXglob + xOfs, ofsYglob + yOfs, (imageWidth - xOfs) + 1, (imageHeight - yOfs) + 1);
             imageRects[0] = rect;
             pic.setWindowSizes(imageRects);
+            pic.setNumCompObjects(imageRects.size());
             pic.setImageSizes(imageRects);
+            pic.setNumberOfWindows(imageRects.size());
+            pic.objectIDs().push_back(0);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
                                      .arg(QString::number(pic.x()))
