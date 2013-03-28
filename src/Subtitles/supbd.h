@@ -24,6 +24,7 @@
 #include "bitmap.h"
 #include "palette.h"
 #include "types.h"
+#include "imageobject.h"
 
 #include <QObject>
 #include <QString>
@@ -33,6 +34,11 @@
 class SubtitleProcessor;
 class SubPictureBD;
 class FileBuffer;
+
+struct ODS;
+struct PDS;
+struct WDS;
+struct PCS;
 
 class SupBD : public QObject, public Substream
 {
@@ -96,15 +102,15 @@ private:
     SubtitleProcessor* subtitleProcessor = 0;
 
     void decode(SubPictureBD *subPicture);
-    void parsePCS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
-    QVector<QRect> parseWDS(SupSegment* segment, SubPictureBD *subPicture);
+    PCS parsePCS(SupSegment* segment, QString &msg);
+    WDS parseWDS(SupSegment* segment);
 
     int getFpsId(double fps);
-    int parsePDS(SupSegment* segment, SubPictureBD *subPicture, QString &msg);
+    PDS parsePDS(SupSegment* segment, QString &msg);
 
     double getFpsFromID(int id);
 
-    int parseODS(SupSegment* segment, SubPictureBD *subPicture, QString &msg, bool forceFirst, bool &isFirst);
+    ODS parseODS(SupSegment* segment, QString &msg, bool forceFirst, bool &isFirst);
 
     Bitmap decodeImage(SubPictureBD *subPicture, int transIdx);
 
@@ -180,7 +186,7 @@ private:
 
     QVector<uchar> headerWDS =
     {
-        0x00,                               // 0 : number of windows (currently assumed 1, 0..2 is legal)
+        0x00,                               // 0 : number of windows (0..2)
         0x00,                               // 1 : window id (0..1)
         0x00, 0x00, 0x00, 0x00,             // 2 : x-ofs, y-ofs
         0x00, 0x00, 0x00, 0x00              // 6 : width, height
