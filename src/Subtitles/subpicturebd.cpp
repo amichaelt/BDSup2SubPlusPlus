@@ -34,12 +34,15 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     {
         imageObjectList[imageObject.objectID()] = imageObject;
     }
-    for (int i = 0; i < other->palettes.size(); ++i)
+    QList<int> keys = other->palettes.keys();
+    int i = 0;
+    for (QVector<PaletteInfo> paletteInfos : other->palettes)
     {
-        for (int j = 0; j < other->palettes[i].size(); ++j)
+        for (PaletteInfo paletteInfo : paletteInfos)
         {
-            palettes[i].push_back(PaletteInfo(other->palettes[i][j]));
+            palettes[keys[i]].push_back(PaletteInfo(paletteInfo));
         }
+        ++i;
     }
 }
 
@@ -54,12 +57,15 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     {
         imageObjectList[imageObject.objectID()] = imageObject;
     }
-    for (int i = 0; i < other.palettes.size(); ++i)
+    QList<int> keys = other.palettes.keys();
+    int i = 0;
+    for (QVector<PaletteInfo> paletteInfos : other.palettes)
     {
-        for (int j = 0; j < other.palettes[i].size(); ++j)
+        for (PaletteInfo paletteInfo : paletteInfos)
         {
-            palettes[i].push_back(PaletteInfo(other.palettes[i][j]));
+            palettes[keys[i]].push_back(PaletteInfo(paletteInfo));
         }
+        ++i;
     }
 }
 
