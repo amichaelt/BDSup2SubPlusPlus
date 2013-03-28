@@ -33,8 +33,8 @@ public:
     void setPaletteSize(int paletteSize) { size = paletteSize; }
 
 private:
-    int offset = 0;
-    int size = 0;
+    int offset = -1;
+    int size = -1;
 };
 
 #endif // PALETTEINFO_H
