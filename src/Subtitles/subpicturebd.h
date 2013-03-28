@@ -26,9 +26,54 @@
 #include "../types.h"
 
 #include <QVector>
+#include <QMap>
 
 class ImageObject;
 class PaletteInfo;
+
+struct PCS
+{
+    long pts = -1;
+    int videoWidth;
+    int videoHeight;
+    int frameRate;
+    int compositionNumber;
+    CompositionState compositionState;
+    bool paletteUpdate;
+    int paletteId;
+    int numberOfCompositionObjects;
+    QVector<int> objectIds;
+    QMap<int, int> windowIds;       // map of object id to window id
+    QMap<int, int> forcedFlags;     // map of object id to forced flag
+    QMap<int, int> xPositions;      // map of object id to x position
+    QMap<int, int> yPositions;      // map of object id to y position
+};
+
+struct WDS
+{
+    int numberOfWindows;
+    QVector<int> windowIds;
+    QMap<int, QRect> windows;
+};
+
+struct PDS
+{
+    int paletteId;
+    int paletteVersion;
+    int paletteSize;
+    PaletteInfo paletteInfo;
+};
+
+struct ODS
+{
+    int objectId;
+    int objectVersion;
+    int objectSequence;
+    int rleLength;
+    int width;
+    int height;
+    ImageObjectFragment fragment;
+};
 
 class SubPictureBD : public SubPicture
 {
@@ -39,6 +84,60 @@ public:
     ~SubPictureBD() { }
 
     SubPicture* copy();
+
+    int imageWidth()
+    {
+        int width;
+        if (numberCompObjects == 1)
+        {
+            width = scaledImageRects[objectIds[0]].width();
+        }
+        else
+        {
+            int left = scaledImageRects[objectIds[0]].x() < scaledImageRects[objectIds[1]].x() ?
+                       scaledImageRects[objectIds[0]].x() : scaledImageRects[objectIds[1]].x();
+            int right = scaledImageRects[objectIds[0]].right() > scaledImageRects[objectIds[1]].right() ?
+                        scaledImageRects[objectIds[0]].right() : scaledImageRects[objectIds[1]].right();
+            width = (right - left) + 1;
+        }
+        return width;
+    }
+
+    int imageHeight()
+    {
+        if (numberCompObjects == 1)
+        {
+            return scaledImageRects[objectIds[0]].height();
+        }
+        else if (scaledImageRects[objectIds[0]].y() < scaledImageRects[objectIds[1]].y())
+        {
+            return ((scaledImageRects[objectIds[1]].y() + scaledImageRects[objectIds[1]].height()) - scaledImageRects[objectIds[0]].y());
+        }
+        else
+        {
+            return ((scaledImageRects[objectIds[0]].y() + scaledImageRects[objectIds[0]].height()) - scaledImageRects[objectIds[1]].y());
+        }
+    }
+
+    int x()
+    {
+        if (numberCompObjects == 1)
+        {
+            return scaledImageRects[objectIds[0]].x();
+        }
+        return scaledImageRects[objectIds[0]].x() < scaledImageRects[objectIds[1]].x() ?
+                scaledImageRects[objectIds[0]].x() : scaledImageRects[objectIds[1]].x();
+    }
+
+    int y()
+    {
+        if (numberCompObjects == 1)
+        {
+            return scaledImageRects[objectIds[0]].y();
+        }
+        return scaledImageRects[objectIds[0]].y() < scaledImageRects[objectIds[1]].y() ?
+                scaledImageRects[objectIds[0]].y() : scaledImageRects[objectIds[1]].y();
+    }
 
     CompositionState compositionState() { return compState; }
     void setCompositionState(CompositionState compositionState) { compState = compositionState; }
@@ -75,24 +174,22 @@ public:
         {
             if (imageObjectList[i].fragmentList().size() > 0)
             {
-                imageObjectList[i].setForced(isForced);
+                imageObjectList[i].setForcedFlags(0x40);
             }
         }
     }
 
-    QVector<ImageObject> imageObjectList;
+    void setData(PCS pcs, QMap<int, QVector<ODS>> ods, QMap<int, QVector<PaletteInfo>> pds, WDS wds);
 
-    QVector<QVector<PaletteInfo>> palettes;
+    QMap<int, ImageObject> imageObjectList;
 
-    ImageObject &getImgObj(int index) { return imageObjectList[index]; }
+    QMap<int, QVector<PaletteInfo>> palettes;
 
 private:
     int type = 0;
-    int numWindows = 0;
     bool paletteUpdate;
     CompositionState compState;
     int paletteID;
-
 };
 
 #endif // SUBSPICTUREBD_H
