@@ -508,7 +508,8 @@ void SubtitleProcessor::scanSubtitles()
             yOfs = (double) picTrg->screenHeight() - height;
         }
 
-        QVector<QRect> &imageRects = picTrg->windowSizes();
+        QMap<int, QRect> &imageRects = picTrg->imageSizes();
+        QMap<int, QRect> &windowRects = picTrg->windowSizes();
 
         double widthScale = (double) width / picTrg->imageWidth();
         double heightScale = (double) height / picTrg->imageHeight();
@@ -524,6 +525,16 @@ void SubtitleProcessor::scanSubtitles()
             int oldHeight = imageRects[i].height();
             imageRects[i].setY((int) ((imageRects[i].y() * yScale) + 0.5));
             imageRects[i].setHeight((int) ((oldHeight * heightScale) + 0.5));
+        }
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int oldWidth = windowRects[i].width();
+            windowRects[i].setX((int) ((windowRects[i].x() * xScale) + 0.5));
+            windowRects[i].setWidth((int) ((oldWidth * widthScale) + 0.5));
+\
+            int oldHeight = windowRects[i].height();
+            windowRects[i].setY((int) ((windowRects[i].y() * yScale) + 0.5));
+            windowRects[i].setHeight((int) ((oldHeight * heightScale) + 0.5));
         }
     }
 
@@ -707,7 +718,8 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
             yOfs = subPictures[i]->screenHeight() - h;
         }
 
-        QVector<QRect> &imageRects = subPictures[i]->windowSizes();
+        QMap<int, QRect> &imageRects = subPictures[i]->imageSizes();
+        QMap<int, QRect> &windowRects = subPictures[i]->windowSizes();
 
         double widthScale = (double) w / subPictures[i]->imageWidth();
         double heightScale = (double) h / subPictures[i]->imageHeight();
@@ -724,6 +736,16 @@ void SubtitleProcessor::reScanSubtitles(Resolution oldResolution, double fpsTrgO
             int oldHeight = imageRects[i].height();
             imageRects[i].setY((int) ((imageRects[i].y() * yScale) + 0.5));
             imageRects[i].setHeight((int) ((oldHeight * heightScale) + 0.5));
+        }
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int oldWidth = windowRects[i].width();
+            windowRects[i].setX((int) ((windowRects[i].x() * xScale) + 0.5));
+            windowRects[i].setWidth((int) ((oldWidth * widthScale) + 0.5));
+\
+            int oldHeight = windowRects[i].height();
+            windowRects[i].setY((int) ((windowRects[i].y() * yScale) + 0.5));
+            windowRects[i].setHeight((int) ((oldHeight * heightScale) + 0.5));
         }
 
         // fix erase patches
@@ -1039,6 +1061,7 @@ void SubtitleProcessor::writeSub(QString filename)
             if (outMode == OutputMode::VOBSUB)
             {
                 convertSup(i, (frameNum / 2) + 1, maxNum);
+                SubPictureDVD* sub = subVobTrg;
                 subVobTrg->copyInfo(*subPictures[i]);
                 if (subDVD.isNull())
                 {
@@ -1082,7 +1105,7 @@ void SubtitleProcessor::writeSub(QString filename)
                 }
                 QString fnp = supXML->getPNGname(fn, i + 1);
                 int numberOfImages = 1;
-                QVector<QRect> &imageRects = subPictures[i]->windowSizes();
+                QMap<int, QRect> &imageRects = subPictures[i]->imageSizes();
 
                 if (imageRects.size() > numberOfImages)
                 {
@@ -1660,7 +1683,8 @@ bool SubtitleProcessor::updateTrgPic(int index)
         hNew = picTrg->screenHeight();
     }
 
-    QVector<QRect> &imageRects = picTrg->windowSizes();
+    QMap<int, QRect> &imageRects = picTrg->imageSizes();
+    QMap<int, QRect> &windowRects = picTrg->windowSizes();
 
     if (std::abs((wNew + 0.5) - wOld) > .5)
     {
@@ -1685,6 +1709,12 @@ bool SubtitleProcessor::updateTrgPic(int index)
             imageRects[i].setX((int) ((imageRects[i].x() * xScale) + 0.5));
             imageRects[i].setWidth((int) ((oldWidth * widthScale) + 0.5));
         }
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int oldWidth = windowRects[i].width();
+            windowRects[i].setX((int) ((windowRects[i].x() * xScale) + 0.5));
+            windowRects[i].setWidth((int) ((oldWidth * widthScale) + 0.5));
+        }
     }
     if (std::abs((hNew + 0.5) - hOld) > .5)
     {
@@ -1704,6 +1734,12 @@ bool SubtitleProcessor::updateTrgPic(int index)
             int oldHeight = imageRects[i].height();
             imageRects[i].setY((int) ((imageRects[i].y() * yScale) + 0.5));
             imageRects[i].setHeight((int) ((oldHeight * heightScale) + 0.5));
+        }
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int oldHeight = windowRects[i].height();
+            windowRects[i].setY((int) ((windowRects[i].y() * yScale) + 0.5));
+            windowRects[i].setHeight((int) ((oldHeight * heightScale) + 0.5));
         }
     }
     // was image cropped?
@@ -1760,7 +1796,8 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
     int hi = picture->imageHeight();
     int wi = picture->imageWidth();
     int y2 = y1 + hi;
-    QVector<QRect> &imageRects = picture->windowSizes();
+    QMap<int, QRect> &imageRects = picture->imageSizes();
+    QMap<int, QRect> &windowRects = picture->windowSizes();
     CaptionType c;
 
     if (mmy != MoveModeY::KEEP)
@@ -1810,6 +1847,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
                 imageRects[i].setHeight(height);
             }
 
+            for (int i = 0; i < windowRects.size(); ++i)
+            {
+                int height = windowRects[i].height();
+                windowRects[i].setY(windowRects[i].y() + dy);
+                windowRects[i].setHeight(height);
+            }
+
             print(QString("Caption %1 moved to y position %2\n")
                   .arg(QString::number(index))
                   .arg(QString::number(picture->y())));
@@ -1837,6 +1881,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
                 imageRects[i].setHeight(height);
             }
 
+            for (int i = 0; i < windowRects.size(); ++i)
+            {
+                int height = windowRects[i].height();
+                windowRects[i].setY(windowRects[i].y() + dy);
+                windowRects[i].setHeight(height);
+            }
+
             print(QString("Caption %1 moved to y position %2\n")
                   .arg(QString::number(index))
                   .arg(QString::number(picture->y())));
@@ -1853,11 +1904,19 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             if (picture->y() > yMax)
             {
                 int dy = yMax - y1;
+
                 for (int i = 0; i < imageRects.size(); ++i)
                 {
                     int height = imageRects[i].height();
                     imageRects[i].setY(imageRects[i].y() + dy);
                     imageRects[i].setHeight(height);
+                }
+
+                for (int i = 0; i < windowRects.size(); ++i)
+                {
+                    int height = windowRects[i].height();
+                    windowRects[i].setY(windowRects[i].y() + dy);
+                    windowRects[i].setHeight(height);
                 }
             }
         }
@@ -1887,6 +1946,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             imageRects[i].setX(imageRects[i].x() + dx);
             imageRects[i].setWidth(width);
         }
+
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int width = windowRects[i].width();
+            windowRects[i].setX(windowRects[i].x() + dx);
+            windowRects[i].setWidth(width);
+        }
     } break;
     case (int)MoveModeX::LEFT:
     {
@@ -1905,6 +1971,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             int width = imageRects[i].width();
             imageRects[i].setX(imageRects[i].x() + dx);
             imageRects[i].setWidth(width);
+        }
+
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int width = windowRects[i].width();
+            windowRects[i].setX(windowRects[i].x() + dx);
+            windowRects[i].setWidth(width);
         }
     } break;
     case (int)MoveModeX::RIGHT:
@@ -1925,6 +1998,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             imageRects[i].setX(imageRects[i].x() + dx);
             imageRects[i].setWidth(width);
         }
+
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int width = windowRects[i].width();
+            windowRects[i].setX(windowRects[i].x() + dx);
+            windowRects[i].setWidth(width);
+        }
     } break;
     case (int)MoveModeX::CENTER:
     {
@@ -1935,6 +2015,13 @@ void SubtitleProcessor::moveToBounds(SubPicture *picture, int index, double barF
             int width = imageRects[i].width();
             imageRects[i].setX(imageRects[i].x() + dx);
             imageRects[i].setWidth(width);
+        }
+
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int width = windowRects[i].width();
+            windowRects[i].setX(windowRects[i].x() + dx);
+            windowRects[i].setWidth(width);
         }
     } break;
     }
