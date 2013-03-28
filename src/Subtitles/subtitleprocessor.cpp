@@ -1061,7 +1061,6 @@ void SubtitleProcessor::writeSub(QString filename)
             if (outMode == OutputMode::VOBSUB)
             {
                 convertSup(i, (frameNum / 2) + 1, maxNum);
-                SubPictureDVD* sub = subVobTrg;
                 subVobTrg->copyInfo(*subPictures[i]);
                 if (subDVD.isNull())
                 {
