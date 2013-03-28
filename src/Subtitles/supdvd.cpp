@@ -585,12 +585,11 @@ qint64 SupDVD::readSupFrame(qint64 ofs)
             int yOfs = ((ctrlHeader[index + 3] & 0xff) << 4) | ((ctrlHeader[index + 4] & 0xff) >> 4);
             int imageHeight = ((((ctrlHeader[index + 4] & 0xff) & 0xf) << 8) | ((ctrlHeader[index + 5] & 0xff)));
 
-            QVector<QRect> imageRects = { QRect(ofsXglob + xOfs,
-                                                ofsYglob + yOfs,
-                                                (imageWidth - xOfs) + 1,
-                                                (imageHeight - yOfs) + 1),
-                                        };
+            QMap<int, QRect> imageRects;
+            QRect rect = QRect(ofsXglob + xOfs, ofsYglob + yOfs, (imageWidth - xOfs) + 1, (imageHeight - yOfs) + 1);
+            imageRects[0] = rect;
             pic.setWindowSizes(imageRects);
+            pic.setImageSizes(imageRects);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
                                      .arg(QString::number(pic.x()))

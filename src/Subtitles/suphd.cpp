@@ -194,12 +194,12 @@ void SupHD::readAllSupFrames()
                     int y = (fileBuffer->getByte(index + 3) <<4 ) | (fileBuffer->getByte(index + 4) >> 4);
                     int imageHeight = (((fileBuffer->getByte(index + 4) &0xf) << 8) | (fileBuffer->getByte(index + 5)));
 
-                    QVector<QRect> imageRects = { QRect(x,
-                                                        y,
-                                                        (imageWidth - pic.x()) + 1,
-                                                        (imageHeight - pic.y()) + 1),
-                                                };
+                    QMap<int, QRect> imageRects;
+                    QRect rect = QRect(x, y, (imageWidth - pic.x()) + 1, (imageHeight - pic.y()) + 1);
+                    imageRects[0] = rect;
+
                     pic.setWindowSizes(imageRects);
+                    pic.setImageSizes(imageRects);
 
                     subtitleProcessor->print(QString("Area info     ofs: %1  (%2, %3) - (%4, %5)\n")
                                              .arg(QString::number(index, 16), 8, QChar('0'))
