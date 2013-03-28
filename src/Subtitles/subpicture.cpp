@@ -31,6 +31,7 @@ SubPicture::SubPicture(const SubPicture &other) :
     end(other.end),
     compositionNumber(other.compositionNumber),
     numberCompObjects(other.numberCompObjects),
+    numWindows(other.numWindows),
     _imageWidth(other._imageWidth),
     _imageHeight(other._imageHeight),
     xOfs(other.xOfs),
@@ -39,7 +40,10 @@ SubPicture::SubPicture(const SubPicture &other) :
     decoded(other.decoded),
     excluded(other.excluded),
     scaledImageRects(other.scaledImageRects),
-    imageRects(other.imageRects)
+    imageRects(other.imageRects),
+    scaledWindowRects(other.scaledWindowRects),
+    windowRects(other.windowRects),
+    objectIds(other.objectIds)
 {
 }
 
@@ -51,6 +55,7 @@ SubPicture::SubPicture(const SubPicture *other) :
     end(other->end),
     compositionNumber(other->compositionNumber),
     numberCompObjects(other->numberCompObjects),
+    numWindows(other->numWindows),
     _imageWidth(other->_imageWidth),
     _imageHeight(other->_imageHeight),
     xOfs(other->xOfs),
@@ -59,7 +64,10 @@ SubPicture::SubPicture(const SubPicture *other) :
     decoded(other->decoded),
     excluded(other->excluded),
     scaledImageRects(other->scaledImageRects),
-    imageRects(other->imageRects)
+    imageRects(other->imageRects),
+    scaledWindowRects(other->scaledWindowRects),
+    windowRects(other->windowRects),
+    objectIds(other->objectIds)
 {
 }
 
@@ -73,6 +81,7 @@ SubPicture* SubPicture::copy()
     sp->forced = forced;
     sp->compositionNumber = compositionNumber;
     sp->numberCompObjects = numberCompObjects;
+    sp->numWindows = numWindows;
     sp->_imageWidth = _imageWidth;
     sp->_imageHeight = _imageHeight;
     sp->xOfs = xOfs;
@@ -81,6 +90,9 @@ SubPicture* SubPicture::copy()
     sp->decoded = decoded;
     sp->scaledImageRects = scaledImageRects;
     sp->imageRects = imageRects;
+    sp->scaledWindowRects = scaledWindowRects;
+    sp->windowRects = windowRects;
+    sp->objectIds = objectIds;
     if (!erasePatch.empty())
     {
         for (int i = 0; i < erasePatch.size(); ++i)
