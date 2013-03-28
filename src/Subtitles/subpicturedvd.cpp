@@ -81,10 +81,9 @@ void SubPictureDVD::copyInfo(SubPicture &subPicture)
     setEndTime(subPicture.endTime());
     setForced(subPicture.isForced());
     setCompNum(subPicture.compNum());
-    QVector<QRect> imageRects = { QRect(subPicture.x(),
-                                        subPicture.y(),
-                                        subPicture.imageWidth(),
-                                        subPicture.imageHeight())
-                                };
+    QMap<int, QRect> imageRects;
+    QRect rect = QRect(subPicture.x(), subPicture.y(), subPicture.imageWidth(), subPicture.imageHeight());
+    imageRects[0] = rect;
     setWindowSizes(imageRects);
+    setImageSizes(imageRects);
 }
