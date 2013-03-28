@@ -246,7 +246,10 @@ void SubstreamDVD::decode(SubPictureDVD &pic, SubtitleProcessor* subtitleProcess
                            width, height);
         imageRects[0] = rect;
         pic.setWindowSizes(imageRects);
+        pic.setNumCompObjects(imageRects.size());
         pic.setImageSizes(imageRects);
+        pic.setNumberOfWindows(imageRects.size());
+        pic.objectIDs().push_back(0);
     }
 
     _primaryColorIndex = _bitmap.primaryColorIndex(_palette, subtitleProcessor->getAlphaThreshold());
