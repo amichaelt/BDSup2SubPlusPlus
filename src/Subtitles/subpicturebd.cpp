@@ -26,16 +26,14 @@ SubPictureBD::SubPictureBD()
 SubPictureBD::SubPictureBD(const SubPictureBD *other) :
     SubPicture(other),
     type(other->type),
-    numWindows(other->numWindows),
     paletteUpdate(other->paletteUpdate),
     compState(other->compState),
     paletteID(other->paletteID)
 {
-    for (int i = 0; i < other->imageObjectList.size(); ++i)
+    for (ImageObject imageObject : other->imageObjectList)
     {
-        imageObjectList.push_back(ImageObject(other->imageObjectList[i]));
+        imageObjectList[imageObject.objectID()] = imageObject;
     }
-    palettes.resize(other->palettes.size());
     for (int i = 0; i < other->palettes.size(); ++i)
     {
         for (int j = 0; j < other->palettes[i].size(); ++j)
@@ -48,16 +46,14 @@ SubPictureBD::SubPictureBD(const SubPictureBD *other) :
 SubPictureBD::SubPictureBD(const SubPictureBD &other) :
     SubPicture(other),
     type(other.type),
-    numWindows(other.numWindows),
     paletteUpdate(other.paletteUpdate),
     compState(other.compState),
     paletteID(other.paletteID)
 {
-    for (int i = 0; i < other.imageObjectList.size(); ++i)
+    for (ImageObject imageObject : other.imageObjectList)
     {
-        imageObjectList.push_back(ImageObject(other.imageObjectList[i]));
+        imageObjectList[imageObject.objectID()] = imageObject;
     }
-    palettes.resize(other.palettes.size());
     for (int i = 0; i < other.palettes.size(); ++i)
     {
         for (int j = 0; j < other.palettes[i].size(); ++j)
@@ -70,4 +66,51 @@ SubPictureBD::SubPictureBD(const SubPictureBD &other) :
 SubPicture* SubPictureBD::copy()
 {
     return new SubPictureBD(this);
+}
+
+void SubPictureBD::setData(PCS pcs, QMap<int, QVector<ODS>> ods, QMap<int, QVector<PaletteInfo>> pds, WDS wds)
+{
+    start = pcs.pts;
+    _screenWidth = pcs.videoWidth;
+    _screenHeight = pcs.videoHeight;
+    type = pcs.frameRate;
+    compositionNumber = pcs.compositionNumber;
+    compState = pcs.compositionState;
+    paletteUpdate = pcs.paletteUpdate;
+    paletteID = pcs.paletteId;
+    numberCompObjects = pcs.numberOfCompositionObjects;
+
+    QMap<int, QRect> imageRects;
+
+    objectIds = pcs.objectIds;
+
+    for (int objectId : objectIds)
+    {
+        ImageObject object;
+        if (ods[objectId][0].width == 0 || ods[objectId][0].height == 0)
+        {
+            continue;
+        }
+        object.setObjectID(objectId);
+        object.setWindowID(pcs.windowIds[objectId]);
+        object.setForcedFlags(pcs.forcedFlags[objectId]);
+        object.setX(pcs.xPositions[objectId]);
+        object.setY(pcs.yPositions[objectId]);
+        object.setWidth(ods[objectId][0].width);
+        object.setHeight(ods[objectId][0].height);
+        object.setObjectVersion(ods[objectId][0].objectVersion);
+        for (ODS odsData : ods[objectId])
+        {
+            object.setBufferSize(object.bufferSize() + odsData.fragment.imagePacketSize());
+            object.fragmentList().push_back(odsData.fragment);
+        }
+        imageObjectList[objectId] = object;
+        imageRects[objectId] = QRect(pcs.xPositions[objectId], pcs.yPositions[objectId],
+                                     ods[objectId][0].width, ods[objectId][0].height);
+    }
+    palettes = pds;
+
+    numWindows = wds.numberOfWindows;
+    setWindowSizes(wds.windows);
+    setImageSizes(imageRects);
 }
