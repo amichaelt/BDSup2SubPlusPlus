@@ -32,9 +32,6 @@ public:
     ImageObject(const ImageObject& other);
     ~ImageObject() { fragments.clear(); }
 
-    int paletteID() { return paletteId; }
-    void setPaletteID(int id) { paletteId = id; }
-
     int bufferSize() { return bufSize; }
     void setBufferSize(int size) { bufSize = size; }
 
@@ -53,6 +50,13 @@ public:
     int windowID() { return windowId; }
     void setWindowID(int windowID) { windowId = windowID; }
 
+    int forcedFlags() { return _forcedFlags; }
+    void setForcedFlags(int forcedFlags)
+    {
+        _forcedFlags = forcedFlags;
+        forced = ((_forcedFlags & 0x40) == 0x40);
+    }
+
     bool isForced() { return forced; }
     void setForced(bool isForced) { forced = isForced; }
 
@@ -61,9 +65,6 @@ public:
 
     int objectVersion() { return objVer; }
     void setObjectVersion(int objectVersion) { objVer = objectVersion; }
-
-    int objectSequence() { return objSeq; }
-    void setObjectSequence(int objectSequence) { objSeq = objectSequence; }
 
     QVector<ImageObjectFragment> &fragmentList() { return fragments; }
 
@@ -76,6 +77,7 @@ private:
     int yOfs = 0;
     int windowId = -1;
     bool forced = false;
+    int _forcedFlags;
     int objectId = -1;
     int objVer = 0;
     int objSeq = 0;
