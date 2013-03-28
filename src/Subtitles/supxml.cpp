@@ -145,29 +145,29 @@ void SupXML::decode(int index)
     }
     else
     {
-        QVector<QRect> &windows = subPic.windowSizes();
-        int resultXOffset = windows[0].x() > windows[1].x() ? windows[1].x() : windows[0].x();
-        int resultYOffset = windows[0].y() > windows[1].y() ? windows[1].y() : windows[0].y();
+        QMap<int, QRect> &imageRects = subPic.imageSizes();
+        int resultXOffset = imageRects[0].x() > imageRects[1].x() ? imageRects[1].x() : imageRects[0].x();
+        int resultYOffset = imageRects[0].y() > imageRects[1].y() ? imageRects[1].y() : imageRects[0].y();
         int width = 0, height = 0;
 
-        if (windows[0].y() > windows[1].y())
+        if (imageRects[0].y() > imageRects[1].y())
         {
-            height = (windows[0].y() + windows[0].height()) - windows[1].y();
+            height = (imageRects[0].y() + imageRects[0].height()) - imageRects[1].y();
         }
         else
         {
-            height = (windows[1].y() + windows[1].height()) - windows[0].y();
+            height = (imageRects[1].y() + imageRects[1].height()) - imageRects[0].y();
         }
-        width = windows[0].width() > windows[1].width() ? windows[0].width() : windows[1].width();
+        width = imageRects[0].width() > imageRects[1].width() ? imageRects[0].width() : imageRects[1].width();
 
         QImage resultImage(1920, 1080, QImage::Format_ARGB32_Premultiplied);
         QPainter painter(&resultImage);
         painter.setCompositionMode(QPainter::CompositionMode_Source);
         painter.fillRect(resultImage.rect(), Qt::transparent);
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-        painter.drawImage(subPic.windowSizes()[0].x(), subPic.windowSizes()[0].y(), bitmaps[0].image(palettes[0]));
+        painter.drawImage(subPic.imageSizes()[0].x(), subPic.imageSizes()[0].y(), bitmaps[0].image(palettes[0]));
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-        painter.drawImage(subPic.windowSizes()[1].x(), subPic.windowSizes()[1].y(), bitmaps[1].image(palettes[1]));
+        painter.drawImage(subPic.imageSizes()[1].x(), subPic.imageSizes()[1].y(), bitmaps[1].image(palettes[1]));
         painter.end();
 
         resultImage = resultImage.convertToFormat(QImage::Format_Indexed8, palettes[0].colorTable());
@@ -196,7 +196,8 @@ void SupXML::decode(int index)
             height = 2;
         }
         _bitmap = _bitmap.crop(bounds.topLeft().x(), bounds.topLeft().y(), width, height);
-        QVector<QRect> &imageRects = subPic.windowSizes();
+        QMap<int, QRect> &imageRects = subPic.imageSizes();
+        QMap<int, QRect> &windowRects = subPic.windowSizes();
 
         int newX = subPic.x() - (subPic.originalX() + bounds.topLeft().x());
         int newY = subPic.y() - (subPic.originalY() + bounds.topLeft().y());
@@ -210,6 +211,15 @@ void SupXML::decode(int index)
             imageRects[i].setY(imageRects[i].y() + newY);
             imageRects[i].setWidth((int) ((imageRects[i].width() * widthScale) + .5));
             imageRects[i].setHeight((int) ((imageRects[i].height() * heightScale) + .5));
+        }
+
+        // update picture
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            windowRects[i].setX(windowRects[i].x() + newX);
+            windowRects[i].setY(windowRects[i].y() + newY);
+            windowRects[i].setWidth((int) ((windowRects[i].width() * widthScale) + .5));
+            windowRects[i].setHeight((int) ((windowRects[i].height() * heightScale) + .5));
         }
     }
 }
@@ -315,7 +325,7 @@ void SupXML::writeXml(QString filename, QVector<SubPicture*> pics)
 
         QString pname = getPNGname(name, idx + 1);
         int numberOfImages = 1;
-        QVector<QRect> &imageRects = pics[idx]->windowSizes();
+        QMap<int, QRect> &imageRects = pics[idx]->imageSizes();
 
         if (imageRects.size() > numberOfImages)
         {
@@ -536,8 +546,14 @@ bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString
         y = ok ? y : -1;
 
         QRect rect(x, y, width, height);
-        subPicture->imageRects.push_back(rect);
-        subPicture->scaledImageRects.push_back(rect);
+        subPicture->setNumCompObjects(subPicture->numCompObjects() + 1);
+        subPicture->setNumberOfWindows(subPicture->numberOfWindows() + 1);
+        int objectId = subPicture->numCompObjects() - 1;
+        subPicture->objectIDs().push_back(objectId);
+        subPicture->imageRects[objectId] = rect;
+        subPicture->scaledImageRects[objectId] = rect;
+        subPicture->windowRects[objectId] = rect;
+        subPicture->scaledWindowRects[objectId] = rect;
 
         subPicture->setOriginal();
     } break;
