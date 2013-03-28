@@ -340,7 +340,10 @@ void SubDVD::readSubFrame(SubPictureDVD &pic, qint64 endOfs)
             imageRects[0] = rect;
 
             pic.setWindowSizes(imageRects);
+            pic.setNumCompObjects(imageRects.size());
             pic.setImageSizes(imageRects);
+            pic.setNumberOfWindows(imageRects.size());
+            pic.objectIDs().push_back(0);
 
             subtitleProcessor->print(QString("Area info: (%1, %2) - (%3, %4)\n")
                                      .arg(QString::number(pic.x())).arg(QString::number(pic.y()))
