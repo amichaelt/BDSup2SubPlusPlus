@@ -211,7 +211,8 @@ void MoveDialog::on_keepXPositionRadioButton_clicked()
 {
     moveModeX = MoveModeX::KEEP;
 
-    QVector<QRect> &imageRects = subPicture->windowSizes();
+    QMap<int, QRect> &imageRects = subPicture->imageSizes();
+    QMap<int, QRect> &windowRects = subPicture->windowSizes();
     int dx = originalX - subPicture->x();
 
     for (int i = 0; i < imageRects.size(); ++i)
@@ -219,6 +220,13 @@ void MoveDialog::on_keepXPositionRadioButton_clicked()
         int width = imageRects[i].width();
         imageRects[i].setX(imageRects[i].x() + dx);
         imageRects[i].setWidth(width);
+    }
+
+    for (int i = 0; i < windowRects.size(); ++i)
+    {
+        int width = windowRects[i].width();
+        windowRects[i].setX(windowRects[i].x() + dx);
+        windowRects[i].setWidth(width);
     }
 
     on_xOffsetLineEdit_editingFinished();
@@ -229,7 +237,8 @@ void MoveDialog::on_moveFromXPositionRadioButton_clicked()
 {
     moveModeX = MoveModeX::ORIGIN;
 
-    QVector<QRect> &imageRects = subPicture->windowSizes();
+    QMap<int, QRect> &imageRects = subPicture->imageSizes();
+    QMap<int, QRect> &windowRects = subPicture->windowSizes();
     int dx = originalX - subPicture->x();
 
     for (int i = 0; i < imageRects.size(); ++i)
@@ -237,6 +246,13 @@ void MoveDialog::on_moveFromXPositionRadioButton_clicked()
         int width = imageRects[i].width();
         imageRects[i].setX(imageRects[i].x() + dx);
         imageRects[i].setWidth(width);
+    }
+
+    for (int i = 0; i < windowRects.size(); ++i)
+    {
+        int width = windowRects[i].width();
+        windowRects[i].setX(windowRects[i].x() + dx);
+        windowRects[i].setWidth(width);
     }
 
     on_xOffsetLineEdit_editingFinished();
@@ -268,7 +284,8 @@ void MoveDialog::on_keepYPositionRadioButton_clicked()
 {
     moveModeY = MoveModeY::KEEP;
 
-    QVector<QRect> &imageRects = subPicture->windowSizes();
+    QMap<int, QRect> &imageRects = subPicture->imageSizes();
+    QMap<int, QRect> &windowRects = subPicture->windowSizes();
     int dy = originalY - subPicture->y();
 
     for (int i = 0; i < imageRects.size(); ++i)
@@ -276,6 +293,13 @@ void MoveDialog::on_keepYPositionRadioButton_clicked()
         int height = imageRects[i].height();
         imageRects[i].setY(imageRects[i].y() + dy);
         imageRects[i].setHeight(height);
+    }
+
+    for (int i = 0; i < windowRects.size(); ++i)
+    {
+        int height = windowRects[i].height();
+        windowRects[i].setY(windowRects[i].y() + dy);
+        windowRects[i].setHeight(height);
     }
 
     on_yOffsetLineEdit_editingFinished();
@@ -286,7 +310,8 @@ void MoveDialog::on_moveFromYPositionRadioButton_clicked()
 {
     moveModeY = MoveModeY::ORIGIN;
 
-    QVector<QRect> &imageRects = subPicture->windowSizes();
+    QMap<int, QRect> &imageRects = subPicture->imageSizes();
+    QMap<int, QRect> &windowRects = subPicture->windowSizes();
     int dy = originalY - subPicture->y();
 
     for (int i = 0; i < imageRects.size(); ++i)
@@ -294,6 +319,13 @@ void MoveDialog::on_moveFromYPositionRadioButton_clicked()
         int height = imageRects[i].height();
         imageRects[i].setY(imageRects[i].y() + dy);
         imageRects[i].setHeight(height);
+    }
+
+    for (int i = 0; i < windowRects.size(); ++i)
+    {
+        int height = windowRects[i].height();
+        windowRects[i].setY(windowRects[i].y() + dy);
+        windowRects[i].setHeight(height);
     }
 
     on_yOffsetLineEdit_editingFinished();
@@ -335,7 +367,8 @@ void MoveDialog::on_xOffsetLineEdit_editingFinished()
         {
             offsetX = x;
 
-            QVector<QRect> &imageRects = subPicture->windowSizes();
+            QMap<int, QRect> &imageRects = subPicture->imageSizes();
+            QMap<int, QRect> &windowRects = subPicture->windowSizes();
             int dx = originalX - subPicture->x();
 
             for (int i = 0; i < imageRects.size(); ++i)
@@ -343,6 +376,13 @@ void MoveDialog::on_xOffsetLineEdit_editingFinished()
                 int width = imageRects[i].width();
                 imageRects[i].setX(imageRects[i].x() + dx);
                 imageRects[i].setWidth(width);
+            }
+
+            for (int i = 0; i < windowRects.size(); ++i)
+            {
+                int width = windowRects[i].width();
+                windowRects[i].setX(windowRects[i].x() + dx);
+                windowRects[i].setWidth(width);
             }
 
             setRatio(screenRatioTrg);
@@ -386,7 +426,8 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
             {
                 offsetX = x;
 
-                QVector<QRect> &imageRects = subPicture->windowSizes();
+                QMap<int, QRect> &imageRects = subPicture->imageSizes();
+                QMap<int, QRect> &windowRects = subPicture->windowSizes();
                 int dx = originalX - subPicture->x();
 
                 for (int i = 0; i < imageRects.size(); ++i)
@@ -394,6 +435,13 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
                     int width = imageRects[i].width();
                     imageRects[i].setX(imageRects[i].x() + dx);
                     imageRects[i].setWidth(width);
+                }
+
+                for (int i = 0; i < windowRects.size(); ++i)
+                {
+                    int width = windowRects[i].width();
+                    windowRects[i].setX(windowRects[i].x() + dx);
+                    windowRects[i].setWidth(width);
                 }
 
                 setRatio(screenRatioTrg);
@@ -441,7 +489,8 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
         {
             offsetY = y;
 
-            QVector<QRect> &imageRects = subPicture->windowSizes();
+            QMap<int, QRect> &imageRects = subPicture->imageSizes();
+            QMap<int, QRect> &windowRects = subPicture->windowSizes();
             int dy = originalY - subPicture->y();
 
             for (int i = 0; i < imageRects.size(); ++i)
@@ -449,6 +498,13 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
                 int height = imageRects[i].height();
                 imageRects[i].setY(imageRects[i].y() + dy);
                 imageRects[i].setHeight(height);
+            }
+
+            for (int i = 0; i < windowRects.size(); ++i)
+            {
+                int height = windowRects[i].height();
+                windowRects[i].setY(windowRects[i].y() + dy);
+                windowRects[i].setHeight(height);
             }
 
             setRatio(screenRatioTrg);
@@ -494,7 +550,8 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
         {
             offsetY = y;
 
-            QVector<QRect> &imageRects = subPicture->windowSizes();
+            QMap<int, QRect> &imageRects = subPicture->imageSizes();
+            QMap<int, QRect> &windowRects = subPicture->windowSizes();
             int dy = originalY - subPicture->y();
 
             for (int i = 0; i < imageRects.size(); ++i)
@@ -502,6 +559,13 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
                 int height = imageRects[i].height();
                 imageRects[i].setY(imageRects[i].y() + dy);
                 imageRects[i].setHeight(height);
+            }
+
+            for (int i = 0; i < windowRects.size(); ++i)
+            {
+                int height = windowRects[i].height();
+                windowRects[i].setY(windowRects[i].y() + dy);
+                windowRects[i].setHeight(height);
             }
 
             setRatio(screenRatioTrg);
