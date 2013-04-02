@@ -77,6 +77,11 @@ SubtitleProcessor::~SubtitleProcessor()
     }
 }
 
+void SubtitleProcessor::setOutputStreamToStdError()
+{
+    outStream = new QTextStream(stderr);
+}
+
 void SubtitleProcessor::SetValuesFromSettings()
 {
     QStringList keys = settings->allKeys();
@@ -1298,6 +1303,7 @@ void SubtitleProcessor::printX(const QString &message)
     else
     {
         *outStream << message;
+        outStream->flush();
     }
 }
 
@@ -2432,6 +2438,7 @@ void SubtitleProcessor::readSup()
     {
         if (substream == supBD.data())
         {
+            double srcFps = supBD->getFps(0);
             fpsSrc = supBD->getFps(0);
             fpsSrcCertain = true;
             if (keepFps)

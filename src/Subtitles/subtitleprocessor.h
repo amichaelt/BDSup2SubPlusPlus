@@ -268,6 +268,8 @@ public:
     QSettings* settings;
     QTextStream* outStream;
 
+    void setOutputStreamToStdError();
+
     void convertSup(int index, int displayNumber, int displayMax, bool skipScaling = false);
     void setActive(bool value) { isActive = value; }
     QVector<QVector<QString>>& getLanguages() { return languages; }
