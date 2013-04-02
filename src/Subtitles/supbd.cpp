@@ -371,7 +371,6 @@ void SupBD::readAllSupFrames()
         pic = SubPictureBD();
     }
 
-    QVector<SubPictureBD> &subPics = subPictures;
     for (int i = 1; i < subPictures.size(); ++i)
     {
         subPictures[i - 1].setEndTime(subPictures[i].startTime());
