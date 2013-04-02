@@ -1234,12 +1234,20 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 errorStream << QString("ERROR: No palette file found at: %1").arg(value) << endl;
                 exit(1);
             }
-            QSettings colorSettings(value, QSettings::IniFormat);
-            if (!colorSettings.allKeys().contains("Color_0"))
+
+            // check if valid palette file
+            QFile file(value);
+            file.open(QIODevice::ReadOnly);
+            QTextStream readFile(&file);
+            QString header = readFile.read(4);
+            if (header != "#COL")
             {
                 errorStream << "ERROR: Not a valid palette file" << endl;
                 exit(1);
             }
+            file.close();
+
+            QSettings colorSettings(value, QSettings::IniFormat);
 
             setImportedPalette = true;
             importedPalette = new Palette(subtitleProcessor->getDefaultDVDPalette());

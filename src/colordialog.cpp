@@ -30,6 +30,8 @@
 #include <QFileDialog>
 #endif
 
+#include <QMessageBox>
+#include <QTextStream>
 #include <QPixmap>
 #include <QPainter>
 #include <QStandardItemModel>
@@ -138,6 +140,18 @@ void ColorDialog::on_loadPaletteButton_clicked()
                                                     &selectedFilter);
 
     if (filePath.isNull() || filePath.isEmpty()) return;
+
+    // check if valid palette file
+    QFile file(filePath);
+    file.open(QIODevice::ReadOnly);
+    QTextStream readFile(&file);
+    QString header = readFile.read(4);
+    if (header != "#COL")
+    {
+        QMessageBox::warning(this, "Error", "This is not a valid palette file");
+        return;
+    }
+    file.close();
 
     QPixmap* pixmap;
     QStandardItemModel* model = new QStandardItemModel(colorNames.size(), 2);
