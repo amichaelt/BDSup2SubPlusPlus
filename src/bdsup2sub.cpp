@@ -1240,12 +1240,12 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             file.open(QIODevice::ReadOnly);
             QTextStream readFile(&file);
             QString header = readFile.read(4);
+            file.close();
             if (header != "#COL")
             {
                 errorStream << "ERROR: Not a valid palette file" << endl;
                 exit(1);
             }
-            file.close();
 
             QSettings colorSettings(value, QSettings::IniFormat);
 
