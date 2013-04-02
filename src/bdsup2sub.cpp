@@ -937,6 +937,7 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
     if (options->count("log-to-stderr"))
     {
         streamFile.open(stderr, QIODevice::WriteOnly);
+        subtitleProcessor->setOutputStreamToStdError();
     }
     else
     {
@@ -1315,6 +1316,14 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                              .arg(QString::number(subtitleProcessor->getFPSSrc(), 'g', 6))
                              .arg(QString::number(subtitleProcessor->getFPSTrg(), 'g', 6)) << endl;
             }
+            else
+            {
+                subtitleProcessor->setKeepFps(true);
+            }
+        }
+        else
+        {
+            subtitleProcessor->setKeepFps(true);
         }
 
         if (options->count("delay"))
@@ -1751,19 +1760,6 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
 
                 printWarnings(outStream);
 
-                subtitleProcessor->scanSubtitles();
-
-                if (subtitleProcessor->getMoveModeX() != MoveModeX::KEEP || subtitleProcessor->getMoveModeY() != MoveModeY::KEEP)
-                {
-                    subtitleProcessor->setCineBarFactor((1.0 - (16.0 / 9) / screenRatio) / 2.0);
-                    subtitleProcessor->moveAllToBounds();
-                }
-                if (subtitleProcessor->getExportForced() && subtitleProcessor->getNumForcedFrames()==0)
-                {
-                    errorStream << "No forced subtitles found." << endl;
-                    exit(1);
-                }
-
                 QVector<int> lumaThr = subtitleProcessor->getLuminanceThreshold();
                 if (lumThr1 > 0)
                 {
@@ -1782,6 +1778,20 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
                 {
                     subtitleProcessor->setLanguageIdx(langIdx);
                 }
+
+                subtitleProcessor->scanSubtitles();
+
+                if (subtitleProcessor->getMoveModeX() != MoveModeX::KEEP || subtitleProcessor->getMoveModeY() != MoveModeY::KEEP)
+                {
+                    subtitleProcessor->setCineBarFactor((1.0 - (16.0 / 9) / screenRatio) / 2.0);
+                    subtitleProcessor->moveAllToBounds();
+                }
+                if (subtitleProcessor->getExportForced() && subtitleProcessor->getNumForcedFrames()==0)
+                {
+                    errorStream << "No forced subtitles found." << endl;
+                    exit(1);
+                }
+
                 subtitleProcessor->writeSub(trg);
             }
             catch(QString e)
