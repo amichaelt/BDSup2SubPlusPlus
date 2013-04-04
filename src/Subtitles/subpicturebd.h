@@ -156,13 +156,13 @@ public:
 
     bool isForced()
     {
-        bool isForced = true;
+        bool isForced = false;
 
         for (int i = 0; i < imageObjectList.size(); ++i)
         {
             if (imageObjectList[i].fragmentList().size() > 0)
             {
-                isForced &= imageObjectList[i].isForced();
+                isForced |= imageObjectList[i].isForced();
             }
         }
         return isForced;
