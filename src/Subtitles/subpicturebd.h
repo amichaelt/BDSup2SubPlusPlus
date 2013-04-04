@@ -174,7 +174,8 @@ public:
         {
             if (imageObjectList[i].fragmentList().size() > 0)
             {
-                imageObjectList[i].setForcedFlags(0x40);
+                imageObjectList[i].setForcedFlags(imageObjectList[i].forcedFlags() | 0x40);
+                forcedFlags[i] = imageObjectList[i].forcedFlags();
             }
         }
     }

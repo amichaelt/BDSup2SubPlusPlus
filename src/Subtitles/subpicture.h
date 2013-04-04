@@ -112,7 +112,12 @@ public:
     void setNumberOfWindows(int num) { numWindows = num; }
 
     virtual bool isForced() { return forced; }
-    virtual void setForced(bool isForced) { forced = isForced; }
+    virtual void setForced(bool isForced)
+    {
+        forced = isForced;
+        forcedFlags[0] |= 0x40;
+        forcedFlags[1] |= 0x40;
+    }
 
     bool wasDecoded() { return decoded; }
     void setDecoded(bool wasDecoded) { decoded = wasDecoded; }
