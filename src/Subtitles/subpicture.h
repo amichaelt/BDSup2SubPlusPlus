@@ -45,14 +45,14 @@ public:
         int width;
         if (numberCompObjects == 1)
         {
-            width = scaledImageRects[0].width();
+            width = scaledImageRects[scaledImageRects.keys()[0]].width();
         }
         else
         {
-            int left = scaledImageRects[0].x() < scaledImageRects[1].x() ?
-                       scaledImageRects[0].x() : scaledImageRects[1].x();
-            int right = scaledImageRects[0].right() > scaledImageRects[1].right() ?
-                        scaledImageRects[0].right() : scaledImageRects[1].right();
+            int left = scaledImageRects[scaledImageRects.keys()[0]].x() < scaledImageRects[scaledImageRects.keys()[1]].x() ?
+                       scaledImageRects[scaledImageRects.keys()[0]].x() : scaledImageRects[scaledImageRects.keys()[1]].x();
+            int right = scaledImageRects[scaledImageRects.keys()[0]].right() > scaledImageRects[scaledImageRects.keys()[1]].right() ?
+                        scaledImageRects[scaledImageRects.keys()[0]].right() : scaledImageRects[scaledImageRects.keys()[1]].right();
             width = (right - left) + 1;
         }
         return width;
@@ -62,15 +62,17 @@ public:
     {
         if (numberCompObjects == 1)
         {
-            return scaledImageRects[0].height();
+            return scaledImageRects[scaledImageRects.keys()[0]].height();
         }
-        else if (scaledImageRects[0].y() < scaledImageRects[1].y())
+        else if (scaledImageRects[scaledImageRects.keys()[0]].y() < scaledImageRects[scaledImageRects.keys()[1]].y())
         {
-            return ((scaledImageRects[1].y() + scaledImageRects[1].height()) - scaledImageRects[0].y());
+            return ((scaledImageRects[scaledImageRects.keys()[1]].y() +
+                    scaledImageRects[scaledImageRects.keys()[1]].height()) - scaledImageRects[scaledImageRects.keys()[0]].y());
         }
         else
         {
-            return ((scaledImageRects[0].y() + scaledImageRects[0].height()) - scaledImageRects[1].y());
+            return ((scaledImageRects[scaledImageRects.keys()[0]].y() +
+                    scaledImageRects[scaledImageRects.keys()[0]].height()) - scaledImageRects[scaledImageRects.keys()[1]].y());
         }
     }
 
@@ -78,20 +80,20 @@ public:
     {
         if (numberCompObjects == 1)
         {
-            return scaledImageRects[0].x();
+            return scaledImageRects[scaledImageRects.keys()[0]].x();
         }
-        return scaledImageRects[0].x() < scaledImageRects[1].x() ?
-                scaledImageRects[0].x() : scaledImageRects[1].x();
+        return scaledImageRects[scaledImageRects.keys()[0]].x() < scaledImageRects[scaledImageRects.keys()[1]].x() ?
+                scaledImageRects[scaledImageRects.keys()[0]].x() : scaledImageRects[scaledImageRects.keys()[1]].x();
     }
 
     virtual int y()
     {
         if (numberCompObjects == 1)
         {
-            return scaledImageRects[0].y();
+            return scaledImageRects[scaledImageRects.keys()[0]].y();
         }
-        return scaledImageRects[0].y() < scaledImageRects[1].y() ?
-                scaledImageRects[0].y() : scaledImageRects[1].y();
+        return scaledImageRects[scaledImageRects.keys()[0]].y() < scaledImageRects[scaledImageRects.keys()[1]].y() ?
+                scaledImageRects[scaledImageRects.keys()[0]].y() : scaledImageRects[scaledImageRects.keys()[1]].y();
     }
 
     qint64 startTime() { return start; }
@@ -125,6 +127,8 @@ public:
     void setWindowSizes(QMap<int, QRect> rects) { windowRects = rects; scaledWindowRects = rects; }
 
     QVector<int> &objectIDs() { return objectIds; }
+
+    QMap<int, int> forcedFlags;
 
     virtual SubPicture* copy();
 
