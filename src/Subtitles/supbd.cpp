@@ -253,11 +253,19 @@ void SupBD::readAllSupFrames()
                 so = QString("");
                 pcs = parsePCS(&segment, so);
 
-                out = QString("PCS ofs:0x%1, START, size:0x%2, comp#: %3, forced: %4")
+
+                out = QString("PCS ofs:0x%1, START, size:0x%2, comp#: %3")
                                             .arg(QString::number(index, 16), 8, QChar('0'))
                                             .arg(QString::number(segment.size, 16), 4, QChar('0'))
-                                            .arg(QString::number(pcs.compositionNumber))
-                                            .arg(pic.isForced() ? "true" : "false");
+                                            .arg(QString::number(pcs.compositionNumber));
+
+                for (int i = 0; i < pcs.forcedFlags.keys().size(); ++i)
+                {
+                    bool forced = (pcs.forcedFlags[pcs.forcedFlags.keys()[i]] & 0x40) == 0x40;
+                    out += QString(", Object Id: %1, forced: %2")
+                            .arg(QString::number(pcs.forcedFlags.keys()[i]))
+                            .arg(forced ? "true" : "false");
+                }
 
                 if (pcs.compositionState == CompositionState::EPOCH_START)
                 {
@@ -275,6 +283,7 @@ void SupBD::readAllSupFrames()
                 }
                 out += QString("PTS start: %1").arg(TimeUtil::ptsToTimeStr(pcs.pts));
                 out += QString(", screen size: %1*%2\n").arg(QString::number(pcs.videoWidth)).arg(QString::number(pcs.videoHeight));
+                subtitleProcessor->print(out);
             } break;
             case 0x17:
             {
@@ -501,7 +510,7 @@ int SupBD::getFpsId(double fps)
     return 0x10;
 }
 
-QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette &pal)
+QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette &pal, bool forcedOnly)
 {
     // the last palette entry must be transparent
     if (pal.size() > 255 && pal.alpha(255) > 0)
@@ -614,6 +623,27 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
         bitmaps.push_back(bm.crop(xOffset2, yOffset2, imageSizes[1].width(), imageSizes[1].height()));
     }
 
+    QVector<int> forcedFlags;
+
+    if (forcedOnly)
+    {
+        for (int i = 0; i < subPicture->objectIDs().size(); ++i)
+        {
+            if ((subPicture->forcedFlags[subPicture->forcedFlags.keys()[i]] & 0x40) != 0x40)
+            {
+                bitmaps.remove(i);
+                imageSizes.remove(i);
+                windows.remove(i);
+            }
+            else
+            {
+                forcedFlags.push_back(subPicture->forcedFlags[subPicture->forcedFlags.keys()[i]]);
+            }
+        }
+        numberOfWindows = windows.size();
+        numberOfImageObjects = imageSizes.size();
+    }
+
     for (int i = 0; i < bitmaps.size(); ++i)
     {
         QVector<uchar> buf = encodeImage(bitmaps[i]);
@@ -679,23 +709,24 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     {
         buf.replace(index++, packetHeader[i]);
     }
+    QList<int> imageSizeKeys = imageSizes.keys();
     NumberUtil::setWord(headerPCSStart, 0, subPicture->screenWidth());
     NumberUtil::setWord(headerPCSStart, 2, h);                                      // cropped height
     NumberUtil::setByte(headerPCSStart, 4, fpsId);
     NumberUtil::setWord(headerPCSStart, 5, subPicture->compNum());
     NumberUtil::setByte(headerPCSStart, 10, numberOfImageObjects);
-    headerPCSStart.replace(14, (subPicture->isForced() ? (uchar)0x40 : 0));
-    NumberUtil::setWord(headerPCSStart, 15, imageSizes[0].x());
-    NumberUtil::setWord(headerPCSStart, 17, imageSizes[0].y());
+    headerPCSStart.replace(14, forcedFlags[0]);
+    NumberUtil::setWord(headerPCSStart, 15, imageSizes[imageSizeKeys[0]].x());
+    NumberUtil::setWord(headerPCSStart, 17, imageSizes[imageSizeKeys[0]].y());
     for (int i = 0; i < headerPCSStart.size(); ++i)
     {
         buf.replace(index++, headerPCSStart[i]);
     }
     if (numberOfImageObjects > 1)
     {
-        headerPCSNext.replace(3, (subPicture->isForced() ? (uchar)0x40 : 0));
-        NumberUtil::setWord(headerPCSNext, 4, imageSizes[1].x());
-        NumberUtil::setWord(headerPCSNext, 6, imageSizes[1].y());
+        headerPCSNext.replace(3, forcedFlags[1]);
+        NumberUtil::setWord(headerPCSNext, 4, imageSizes[imageSizeKeys[1]].x());
+        NumberUtil::setWord(headerPCSNext, 6, imageSizes[imageSizeKeys[1]].y());
         for (int i = 0; i < headerPCSNext.size(); ++i)
         {
             buf.replace(index++, headerPCSNext[i]);
@@ -713,21 +744,22 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
     {
         buf.replace(index++, packetHeader[i]);
     }
+    QList<int> windowsKeys = windows.keys();
     NumberUtil::setByte(headerWDS, 0, numberOfWindows);
-    NumberUtil::setWord(headerWDS, 2, windows[0].x());
-    NumberUtil::setWord(headerWDS, 4, windows[0].y());
-    NumberUtil::setWord(headerWDS, 6, windows[0].width());
-    NumberUtil::setWord(headerWDS, 8, windows[0].height());
+    NumberUtil::setWord(headerWDS, 2, windows[windowsKeys[0]].x());
+    NumberUtil::setWord(headerWDS, 4, windows[windowsKeys[0]].y());
+    NumberUtil::setWord(headerWDS, 6, windows[windowsKeys[0]].width());
+    NumberUtil::setWord(headerWDS, 8, windows[windowsKeys[0]].height());
     for (int i = 0; i < headerWDS.size(); ++i)
     {
         buf.replace(index++, headerWDS[i]);
     }
     if (numberOfWindows > 1)
     {
-        NumberUtil::setWord(headerWDSNext, 1, windows[1].x());
-        NumberUtil::setWord(headerWDSNext, 3, windows[1].y());
-        NumberUtil::setWord(headerWDSNext, 5, windows[1].width());
-        NumberUtil::setWord(headerWDSNext, 7, windows[1].height());
+        NumberUtil::setWord(headerWDSNext, 1, windows[windowsKeys[1]].x());
+        NumberUtil::setWord(headerWDSNext, 3, windows[windowsKeys[1]].y());
+        NumberUtil::setWord(headerWDSNext, 5, windows[windowsKeys[1]].width());
+        NumberUtil::setWord(headerWDSNext, 7, windows[windowsKeys[1]].height());
         for (int i = 0; i < headerWDSNext.size(); ++i)
         {
             buf.replace(index++, headerWDSNext[i]);
@@ -854,20 +886,20 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
         buf.replace(index++, packetHeader[i]);
     }
     NumberUtil::setByte(headerWDS, 0, numberOfWindows);
-    NumberUtil::setWord(headerWDS, 2, windows[0].x());
-    NumberUtil::setWord(headerWDS, 4, windows[0].y());
-    NumberUtil::setWord(headerWDS, 6, windows[0].width());
-    NumberUtil::setWord(headerWDS, 8, windows[0].height());
+    NumberUtil::setWord(headerWDS, 2, windows[windowsKeys[0]].x());
+    NumberUtil::setWord(headerWDS, 4, windows[windowsKeys[0]].y());
+    NumberUtil::setWord(headerWDS, 6, windows[windowsKeys[0]].width());
+    NumberUtil::setWord(headerWDS, 8, windows[windowsKeys[0]].height());
     for (int i = 0; i < headerWDS.size(); ++i)
     {
         buf.replace(index++, headerWDS[i]);
     }
     if (numberOfWindows > 1)
     {
-        NumberUtil::setWord(headerWDSNext, 1, windows[1].x());
-        NumberUtil::setWord(headerWDSNext, 3, windows[1].y());
-        NumberUtil::setWord(headerWDSNext, 5, windows[1].width());
-        NumberUtil::setWord(headerWDSNext, 7, windows[1].height());
+        NumberUtil::setWord(headerWDSNext, 1, windows[windowsKeys[1]].x());
+        NumberUtil::setWord(headerWDSNext, 3, windows[windowsKeys[1]].y());
+        NumberUtil::setWord(headerWDSNext, 5, windows[windowsKeys[1]].width());
+        NumberUtil::setWord(headerWDSNext, 7, windows[windowsKeys[1]].height());
         for (int i = 0; i < headerWDSNext.size(); ++i)
         {
             buf.replace(index++, headerWDSNext[i]);
