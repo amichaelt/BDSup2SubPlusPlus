@@ -1096,7 +1096,7 @@ void SubtitleProcessor::writeSub(QString filename)
                 {
                     supBD = QSharedPointer<SupBD>(new SupBD("", this));
                 }
-                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal);
+                QVector<uchar> buf = supBD->createSupFrame(subPictures[i], trgBitmap, trgPal, exportForced);
                 out->write((const char*)buf.constData(), buf.size());
             }
             else
