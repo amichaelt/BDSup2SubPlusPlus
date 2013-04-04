@@ -72,7 +72,7 @@ public:
 
     SubPicture *subPicture(int index);
 
-    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap &bm, Palette &pal);
+    QVector<uchar> createSupFrame(SubPicture* subPicture, Bitmap &bm, Palette &pal, bool forcedOnly);
 
 signals:
     void maxProgressChanged(qint64 maxProgress);
