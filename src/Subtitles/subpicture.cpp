@@ -43,7 +43,8 @@ SubPicture::SubPicture(const SubPicture &other) :
     imageRects(other.imageRects),
     scaledWindowRects(other.scaledWindowRects),
     windowRects(other.windowRects),
-    objectIds(other.objectIds)
+    objectIds(other.objectIds),
+    forcedFlags(other.forcedFlags)
 {
 }
 
@@ -67,7 +68,8 @@ SubPicture::SubPicture(const SubPicture *other) :
     imageRects(other->imageRects),
     scaledWindowRects(other->scaledWindowRects),
     windowRects(other->windowRects),
-    objectIds(other->objectIds)
+    objectIds(other->objectIds),
+    forcedFlags(other->forcedFlags)
 {
 }
 
@@ -93,6 +95,7 @@ SubPicture* SubPicture::copy()
     sp->scaledWindowRects = scaledWindowRects;
     sp->windowRects = windowRects;
     sp->objectIds = objectIds;
+    sp->forcedFlags = forcedFlags;
     if (!erasePatch.empty())
     {
         for (int i = 0; i < erasePatch.size(); ++i)

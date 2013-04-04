@@ -85,6 +85,7 @@ void SubPictureBD::setData(PCS pcs, QMap<int, QVector<ODS>> ods, QMap<int, QVect
     paletteUpdate = pcs.paletteUpdate;
     paletteID = pcs.paletteId;
     numberCompObjects = pcs.numberOfCompositionObjects;
+    forcedFlags.clear();
 
     QMap<int, QRect> imageRects;
 
@@ -100,6 +101,7 @@ void SubPictureBD::setData(PCS pcs, QMap<int, QVector<ODS>> ods, QMap<int, QVect
         object.setObjectID(objectId);
         object.setWindowID(pcs.windowIds[objectId]);
         object.setForcedFlags(pcs.forcedFlags[objectId]);
+        forcedFlags[objectId] = pcs.forcedFlags[objectId];
         object.setX(pcs.xPositions[objectId]);
         object.setY(pcs.yPositions[objectId]);
         object.setWidth(ods[objectId][0].width);
