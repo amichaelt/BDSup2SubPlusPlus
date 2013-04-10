@@ -643,6 +643,13 @@ QVector<uchar> SupBD::createSupFrame(SubPicture *subPicture, Bitmap &bm, Palette
         numberOfWindows = windows.size();
         numberOfImageObjects = imageSizes.size();
     }
+    else
+    {
+        for (int i = 0; i < subPicture->objectIDs().size(); ++i)
+        {
+            forcedFlags.push_back(subPicture->forcedFlags[subPicture->forcedFlags.keys()[i]]);
+        }
+    }
 
     for (int i = 0; i < bitmaps.size(); ++i)
     {
