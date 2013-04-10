@@ -395,7 +395,7 @@ void MoveDialog::on_xOffsetLineEdit_editingFinished()
         {
             x = 0;
         }
-        else if (x > subPicture->screenWidth() / 3)
+        else if (x > (subPicture->screenWidth() / 3))
         {
             x = subPicture->screenWidth() / 3;
         }
@@ -451,7 +451,7 @@ void MoveDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
     }
     else
     {
-        if (x < 0 || x > subPicture->screenWidth() / 3)
+        if (x < 0 || x > (subPicture->screenWidth() / 3))
         {
             ui->xOffsetLineEdit->setPalette(*errorBackground);
         }
@@ -473,42 +473,38 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
 
     if (moveModeY == MoveModeY::ORIGIN)
     {
-        int scaledY = subPicture->screenHeight() - ((subPicture->imageHeight() + originalY) - y);
+        int scaledY = originalY - y;
 
-        if (scaledY < 0)
+        if (scaledY < (subPicture->screenHeight() / 3))
         {
-            y = -(subPicture->screenHeight() - (subPicture->imageHeight() + originalY));
+            y = originalY - (subPicture->screenHeight() / 3);
         }
-        else if (scaledY > subPicture->screenHeight() / 3)
+        else if ((subPicture->imageHeight() + scaledY) > subPicture->screenHeight())
         {
-            scaledY = subPicture->screenHeight() / 3;
-            y = (subPicture->screenHeight() - originalY) - scaledY;
+            y = (subPicture->imageHeight() + originalY) - subPicture->screenHeight();
         }
 
-        if (y != offsetY)
+        offsetY = -y;
+
+        QMap<int, QRect> &imageRects = subPicture->imageSizes();
+        QMap<int, QRect> &windowRects = subPicture->windowSizes();
+        int dy = originalY - subPicture->y();
+
+        for (int i = 0; i < imageRects.size(); ++i)
         {
-            offsetY = y;
-
-            QMap<int, QRect> &imageRects = subPicture->imageSizes();
-            QMap<int, QRect> &windowRects = subPicture->windowSizes();
-            int dy = originalY - subPicture->y();
-
-            for (int i = 0; i < imageRects.size(); ++i)
-            {
-                int height = imageRects[i].height();
-                imageRects[i].setY(imageRects[i].y() + dy);
-                imageRects[i].setHeight(height);
-            }
-
-            for (int i = 0; i < windowRects.size(); ++i)
-            {
-                int height = windowRects[i].height();
-                windowRects[i].setY(windowRects[i].y() + dy);
-                windowRects[i].setHeight(height);
-            }
-
-            setRatio(screenRatioTrg);
+            int height = imageRects[i].height();
+            imageRects[i].setY(imageRects[i].y() + dy);
+            imageRects[i].setHeight(height);
         }
+
+        for (int i = 0; i < windowRects.size(); ++i)
+        {
+            int height = windowRects[i].height();
+            windowRects[i].setY(windowRects[i].y() + dy);
+            windowRects[i].setHeight(height);
+        }
+
+        setRatio(screenRatioTrg);
         ui->yOffsetLineEdit->setText(QString::number(y));
     }
     else
@@ -517,7 +513,7 @@ void MoveDialog::on_yOffsetLineEdit_editingFinished()
         {
             y = 0;
         }
-        else if (y > subPicture->screenHeight() / 3)
+        else if (y > (subPicture->screenHeight() / 3))
         {
             y = subPicture->screenHeight() / 3;
         }
@@ -537,18 +533,15 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
 
     if (moveModeY == MoveModeY::ORIGIN)
     {
-        int yPos = subPicture->imageHeight() + originalY - y;
-        y = subPicture->screenHeight() - yPos;
-    }
-    if (y < 0 || y > subPicture->screenHeight() / 3)
-    {
-        ui->yOffsetLineEdit->setPalette(*errorBackground);
-    }
-    else
-    {
-        if (y != offsetY)
+        int scaledY = originalY - y;
+
+        if (scaledY < (subPicture->screenHeight() / 3) || (subPicture->imageHeight() + scaledY) > subPicture->screenHeight())
         {
-            offsetY = y;
+            ui->yOffsetLineEdit->setPalette(*errorBackground);
+        }
+        else
+        {
+            offsetY = -y;
 
             QMap<int, QRect> &imageRects = subPicture->imageSizes();
             QMap<int, QRect> &windowRects = subPicture->windowSizes();
@@ -569,8 +562,25 @@ void MoveDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
             }
 
             setRatio(screenRatioTrg);
+
+            ui->yOffsetLineEdit->setPalette(*okBackground);
         }
-        ui->yOffsetLineEdit->setPalette(*okBackground);
+    }
+    else
+    {
+        if ( y < 0 || y > (subPicture->imageHeight() / 3))
+        {
+            ui->yOffsetLineEdit->setPalette(*errorBackground);
+        }
+        else
+        {
+            if (y != offsetY)
+            {
+                offsetY = y;
+                setRatio(screenRatioTrg);
+            }
+            ui->yOffsetLineEdit->setPalette(*okBackground);
+        }
     }
 }
 
