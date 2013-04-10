@@ -866,9 +866,12 @@ void BDSup2Sub::addCLIOptions()
                  QxtCommandOptions::ValueRequired, 1);
     options->add("move-out-ratio",    "\tMove captions from outside screen ratio <x>.",
                  QxtCommandOptions::ValueRequired, 1);
+    options->add("move-y-origin",     "\tMove captions from the original Y position."
+                                      "\tSupported values: up, down.",
+                 QxtCommandOptions::ValueRequired, 1);
     options->add("move-y-offset",     "\tSet optional +/- offset to move captions by.",
                  QxtCommandOptions::ValueRequired);
-    options->add("move-x",            "\tMove captions horizontally from specified position. "
+    options->add("move-x",            "\tMove captions horizontally from specified position."
                                       "\tSupported values: left, right, center, origin.",
                  QxtCommandOptions::ValueRequired);
     options->add("move-x-offset",     "\tSet optional +/- offset to move captions by.",
@@ -1416,6 +1419,31 @@ bool BDSup2Sub::execCLI(int argc, char** argv)
             outStream << QString("OPTION: Moving captions %1 %2:1 plus/minus %3 pixels")
                          .arg(sm)
                          .arg(QString::number(screenRatio, 'g', 6))
+                         .arg(QString::number(subtitleProcessor->getMoveOffsetY())) << endl;
+        }
+
+        if (options->count("move-y-origin"))
+        {
+            subtitleProcessor->setMoveModeY(MoveModeY::ORIGIN);
+            QString sm = options->value("move-y-origin").toString().toLower();
+            value = options->value("move-in-ratio").toString();
+            if (options->count("move-y-offset"))
+            {
+                bool ok;
+                value = options->value("move-y-offset").toString();
+                int moveOffsetY = value.toInt(&ok);
+                if (!ok)
+                {
+                    errorStream << QString("ERROR: Invalid pixel offset: %1").arg(value) << endl;
+                    exit(1);
+                }
+                if (sm == "up")
+                {
+                    moveOffsetY = -moveOffsetY;
+                }
+                subtitleProcessor->setMoveOffsetY(moveOffsetY);
+            }
+            outStream << QString("OPTION: Moving captions from the original Y position plus/minus %1 pixels")
                          .arg(QString::number(subtitleProcessor->getMoveOffsetY())) << endl;
         }
 
