@@ -347,7 +347,7 @@ void BDSup2Sub::init()
 
     ui->consoleOutput->insertPlainText(progNameVer + " - a converter from Blu-Ray/HD-DVD SUP to DVD SUB/IDX and more\n");
     ui->consoleOutput->insertPlainText(authorDate + "\n");
-    ui->consoleOutput->insertPlainText("Official thread at Doom9: https://forum.doom9.org/showthread.php?t=165416\n\n");
+    ui->consoleOutput->insertPlainText("Official thread at Doom9: https://forum.doom9.org/showthread.php?t=167051\n\n");
 
     if (subtitleProcessor == 0)
     {
