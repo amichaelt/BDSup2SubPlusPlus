@@ -840,13 +840,13 @@ void BDSup2Sub::addCLIOptions()
                  QxtCommandOptions::ValueRequired, 1);
     options->add("move-out-ratio",    "\tMove captions from outside screen ratio <x>.",
                  QxtCommandOptions::ValueRequired, 1);
-    options->add("move-y-origin",     "\tMove captions from the original Y position."
-                                      "\tSupported values: up, down.",
+    options->add("move-y-origin",     "\tMove captions from the original vertical position. "
+                                      "\tSupported values: up, down. ",
                  QxtCommandOptions::ValueRequired, 1);
     options->add("move-y-offset",     "\tSet optional +/- offset to move captions by.",
                  QxtCommandOptions::ValueRequired);
-    options->add("move-x",            "\tMove captions horizontally from specified position."
-                                      "\tSupported values: left, right, center, origin.",
+    options->add("move-x",            "\tMove captions horizontally from specified position. "
+                                      "\tSupported values: left, right, center, origin. ",
                  QxtCommandOptions::ValueRequired);
     options->add("move-x-offset",     "\tSet optional +/- offset to move captions by.",
                  QxtCommandOptions::ValueRequired);
