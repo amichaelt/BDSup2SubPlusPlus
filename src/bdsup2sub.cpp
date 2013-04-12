@@ -386,41 +386,15 @@ void BDSup2Sub::init()
 
 void BDSup2Sub::loadSettings()
 {
-    //Rename INI file to name matching the new program name
-    QString oldIniFilePath = QString("%1/%2").arg(QApplication::applicationDirPath()).arg(oldIniName);
-    QString newIniFilePath = QString("%1/%2").arg(QApplication::applicationDirPath()).arg(iniName);
-    QFileInfo oldIniFileInfo = QFileInfo(oldIniFilePath);
-    if (oldIniFileInfo.exists())
-    {
-        QDir dir = oldIniFileInfo.absoluteDir();
-        dir.rename(oldIniFilePath, newIniFilePath);
-        settings = new QSettings(newIniFilePath, QSettings::IniFormat);
-
-        //Fix mangled Windows path names written by Java in INI files imported from original BDSup2Sub
+    QString iniPath;
 #ifdef Q_OS_WIN
-        QString fixPath;
-        if (settings->allKeys().contains("loadPath"))
-        {
-            fixPath = settings->value("loadPath").toString();
-            fixPath.insert(1, ":");
-            settings->setValue("loadPath", QVariant(fixPath));
-        }
-        for (auto key : settings->allKeys())
-        {
-            if (key.contains("recent"))
-            {
-                fixPath = settings->value(key).toString();
-                fixPath.insert(1, ":");
-                settings->setValue(key, QVariant(fixPath));
-            }
-        }
-        settings->sync();
+    iniPath = QString(getenv("APPDATA"));
 #endif
-    }
-    else
-    {
-        settings = new QSettings(newIniFilePath, QSettings::IniFormat);
-    }
+#ifndef Q_OS_WIN
+    ini_path = QString(getenv("HOME"));
+#endif
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, iniPath);
+    settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "bdsup2sub++", "bdsup2sub++");
 
     if (!fromCLI)
     {
