@@ -147,10 +147,6 @@ void SupBD::readAllSupFrames()
                                                             .arg(QString::number(segment.size, 16), 4, QChar('0'));
 
                     so = QString("");
-                    if (pcs.pts == 3007080)
-                    {
-                        int breakPoint = 1;
-                    }
                     pds = parsePDS(&segment, so);
 
                     if (pds.paletteSize >= 0)
