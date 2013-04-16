@@ -168,7 +168,7 @@ void SupBD::readAllSupFrames()
                         }
                         else
                         {
-                            if (pic.paletteUpdated())
+                            if (pcs.paletteUpdate || pds.paletteVersion)
                             {
                                 palettes[palId].remove(palettes[palId].size() - 1);
                             }
