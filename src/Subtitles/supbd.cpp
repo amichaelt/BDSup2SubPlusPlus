@@ -122,6 +122,7 @@ void SupBD::readAllSupFrames()
     WDS wds;
     PCS pcs;
     PDS pds;
+    int prevPalVersion = 0;
 
     try
     {
@@ -168,7 +169,7 @@ void SupBD::readAllSupFrames()
                         }
                         else
                         {
-                            if (pcs.paletteUpdate || pds.paletteVersion)
+                            if (pcs.paletteUpdate || pds.paletteVersion > prevPalVersion)
                             {
                                 palettes[palId].remove(palettes[palId].size() - 1);
                             }
@@ -325,6 +326,7 @@ void SupBD::readAllSupFrames()
                                                   .arg(TimeUtil::ptsToTimeStr(pcs.pts)));
                     }
 
+                    prevPalVersion = pds.paletteVersion;
                     subPictures.push_back(pic);
                     pic = SubPictureBD();
                     pcs = PCS();
