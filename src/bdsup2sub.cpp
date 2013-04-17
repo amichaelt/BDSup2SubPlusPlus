@@ -391,7 +391,7 @@ void BDSup2Sub::loadSettings()
     iniPath = QString(getenv("APPDATA"));
 #endif
 #ifndef Q_OS_WIN
-    ini_path = QString(getenv("HOME"));
+    iniPath = QString(getenv("HOME"));
 #endif
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, iniPath);
     settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "bdsup2sub++", "bdsup2sub++");
