@@ -1375,7 +1375,6 @@ Bitmap SupBD::decodeImage(SubPictureBD *subPicture, int transparentIndex)
         int ofs = 0;
         int size = 0;
         int xpos = 0;
-        int line = 0;
 
         // just for multi-packet support, copy all of the image data in one common buffer
         QVector<uchar> buf = QVector<uchar>(imageObject.bufferSize());

@@ -2438,7 +2438,6 @@ void SubtitleProcessor::readSup()
     {
         if (substream == supBD.data())
         {
-            double srcFps = supBD->getFps(0);
             fpsSrc = supBD->getFps(0);
             fpsSrcCertain = true;
             if (keepFps)
