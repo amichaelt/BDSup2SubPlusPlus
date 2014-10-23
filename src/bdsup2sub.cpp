@@ -889,7 +889,7 @@ void BDSup2Sub::addCLIOptions()
     options->alias("o", "output");
 }
 
-bool BDSup2Sub::execCLI(int argc, char** argv)
+bool BDSup2Sub::execCLI()
 {
     Redirect_console();
 

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     bool isGUI = argc == 1;
 
-    if (isGUI || !w.execCLI(argc, argv))
+    if (isGUI || !w.execCLI())
     {
 #ifdef Q_OS_WIN
         FreeConsole();

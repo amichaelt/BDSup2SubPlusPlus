@@ -33,13 +33,6 @@ public:
     SubPictureDVD(const SubPictureDVD *other);
     ~SubPictureDVD() { }
 
-    QVector<int> originalAlpha = QVector<int>(4);
-    QVector<int> originalPal = QVector<int>(4);
-    QVector<int> alpha = QVector<int>(4);
-    QVector<int> pal = QVector<int>(4);
-
-    QVector<ImageObjectFragment> rleFragments;
-
     void setOriginal();
     void copyInfo(SubPicture &subPicture);
 
@@ -69,6 +62,13 @@ private:
     int origHeight = 0;
     int origX = 0;
     int origY = 0;
+
+public:
+    QVector<ImageObjectFragment> rleFragments;
+    QVector<int> originalAlpha = QVector<int>(4);
+    QVector<int> originalPal = QVector<int>(4);
+    QVector<int> alpha = QVector<int>(4);
+    QVector<int> pal = QVector<int>(4);
 };
 
 #endif // SUBPICTUREDVD_H

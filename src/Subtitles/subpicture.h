@@ -133,35 +133,39 @@ public:
 
     QVector<int> &objectIDs() { return objectIds; }
 
-    QMap<int, int> forcedFlags;
-
     virtual SubPicture* copy();
 
     QVector<ErasePatch*> erasePatch;
 
 protected:
+    int _screenWidth = 0;
+    int _screenHeight = 0;
+
+    qint64 start = -1;
+    qint64 end = 0;
+
+    int compositionNumber = 0;
+    int numberCompObjects = 0;
+    int numWindows = 0;
+
     int _imageWidth = 0;
     int _imageHeight = 0;
     int xOfs = 0;
     int yOfs = 0;
+
+    bool forced = false;
+    bool decoded = false;
+    bool excluded = false;
 
     QMap<int, QRect> scaledImageRects;
     QMap<int, QRect> imageRects;
     QMap<int, QRect> scaledWindowRects;
     QMap<int, QRect> windowRects;
 
-    int _screenWidth = 0;
-    int _screenHeight = 0;
-    qint64 start = -1;
-    qint64 end = 0;
-    int compositionNumber = 0;
-    int numberCompObjects = 0;
-    int numWindows = 0;
-
-    bool forced = false;
-    bool decoded = false;
-    bool excluded = false;
     QVector<int> objectIds;
+
+public:
+    QMap<int, int> forcedFlags;
 };
 
 #endif // SUBPICTURE_H

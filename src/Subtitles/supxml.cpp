@@ -380,7 +380,7 @@ bool SupXML::XmlHandler::characters(const QString &ch)
 }
 
 
-bool SupXML::XmlHandler::endElement(const QString &namespaceURI, const QString &localName, const QString &qName)
+bool SupXML::XmlHandler::endElement(const QString const QString &qName)
 {
     XmlState endState = findState(qName.toLower());
     if (state == XmlState::GRAPHIC && endState == XmlState::GRAPHIC)
@@ -390,8 +390,7 @@ bool SupXML::XmlHandler::endElement(const QString &namespaceURI, const QString &
     return true;
 }
 
-bool SupXML::XmlHandler::startElement(const QString &namespaceURI, const QString &localName,
-                                      const QString &qName, const QXmlAttributes &atts)
+bool SupXML::XmlHandler::startElement(const QString &qName, const QXmlAttributes &atts)
 {
     state = findState(qName.toLower());
     QString at;
