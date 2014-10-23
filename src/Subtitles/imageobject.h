@@ -79,10 +79,9 @@ private:
     bool forced = false;
     int _forcedFlags;
     int objectId = -1;
+    QVector<ImageObjectFragment> fragments;
     int objVer = 0;
     int objSeq = 0;
-
-    QVector<ImageObjectFragment> fragments;
 };
 
 #endif // IMAGEOBJECT_H
