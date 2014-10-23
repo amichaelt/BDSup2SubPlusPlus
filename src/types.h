@@ -28,8 +28,12 @@
 const QString progName = "BDSup2Sub++";
 const QString progNameVer = progName + " 1.0.2";
 const QString authorDate = "0xdeadbeef, mjuhasz, Adam T.";
-const QString oldIniName = "bdsup2sub.ini";
-const QString iniName = "bdsup2sub++.ini";
+#ifdef Q_OS_WIN
+    const QString iniName = "bdsup2sub++";
+#endif
+#ifndef Q_OS_WIN
+    const QString iniName = "config";
+#endif
 
 const QStringList scalingFilters = {
     "Bilinear", "Triangle", "Bicubic", "Bell", "B-Spline", "Hermite", "Lanczos3", "Mitchell"
