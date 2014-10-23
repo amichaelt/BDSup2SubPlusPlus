@@ -50,8 +50,8 @@ class SupXML : public QObject, public Substream
         XmlHandler(SupXML* parent) { this->parent = parent; }
 
         bool characters(const QString &ch);
-        bool endElement(const QString &namespaceURI, const QString &localName, const QString &qName);
-        bool startElement(const QString &namespaceURI, const QString &localName, const QString &qName, const QXmlAttributes &atts);
+        bool endElement(const QString &qName);
+        bool startElement(const QString &qName, const QXmlAttributes &atts);
 
     private:
 

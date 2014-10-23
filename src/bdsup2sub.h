@@ -47,7 +47,7 @@ class BDSup2Sub : public QMainWindow
 public:
     explicit BDSup2Sub(QWidget *parent = 0);
     ~BDSup2Sub();
-    bool execCLI(int argc, char** argv);
+    bool execCLI();
 
 public slots:
     void changeWindowTitle(QString newTitle);

@@ -565,7 +565,7 @@ void EditDialog::on_durationLineEdit_textChanged(const QString &arg1)
     }
 }
 
-void EditDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
+void EditDialog::on_xOffsetLineEdit_textChanged()
 {
     if (!isReady) return;
 
@@ -608,7 +608,7 @@ void EditDialog::on_xOffsetLineEdit_textChanged(const QString &arg1)
     }
 }
 
-void EditDialog::on_yOffsetLineEdit_textChanged(const QString &arg1)
+void EditDialog::on_yOffsetLineEdit_textChanged()
 {
     if (!isReady) return;
 

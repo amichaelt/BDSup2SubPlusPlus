@@ -75,8 +75,8 @@ private slots:
     void on_startTimeLineEdit_textChanged(const QString &arg1);
     void on_endTimeLineEdit_textChanged(const QString &arg1);
     void on_durationLineEdit_textChanged(const QString &arg1);
-    void on_xOffsetLineEdit_textChanged(const QString &arg1);
-    void on_yOffsetLineEdit_textChanged(const QString &arg1);
+    void on_xOffsetLineEdit_textChanged();
+    void on_yOffsetLineEdit_textChanged();
 
     void on_startTimeLineEdit_editingFinished();
     void on_endTimeLineEdit_editingFinished();
