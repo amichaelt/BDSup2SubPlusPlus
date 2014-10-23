@@ -712,11 +712,13 @@
     <string>&amp;Verbose Output</string>
    </property>
   </action>
+<!--
   <action name="action_Help">
    <property name="text">
     <string>&amp;Help</string>
    </property>
   </action>
+-->
   <action name="actionHello">
    <property name="text">
     <string>hello</string>
