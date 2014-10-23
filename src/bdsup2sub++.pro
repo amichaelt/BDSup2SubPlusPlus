@@ -66,7 +66,7 @@ SOURCES += main.cpp\
     exportdialog.cpp \
     Tools/numberutil.cpp \
     editdialog.cpp \
-    helpdialog.cpp \
+#   helpdialog.cpp \
     colordialog.cpp \
     framepalettedialog.cpp \
     movedialog.cpp \
@@ -115,7 +115,7 @@ HEADERS  += bdsup2sub.h \
     exportdialog.h \
     Tools/numberutil.h \
     editdialog.h \
-    helpdialog.h \
+#   helpdialog.h \
     colordialog.h \
     framepalettedialog.h \
     movedialog.h
@@ -125,7 +125,7 @@ FORMS    += bdsup2sub.ui \
     conversiondialog.ui \
     exportdialog.ui \
     editdialog.ui \
-    helpdialog.ui \
+#   helpdialog.ui \
     colordialog.ui \
     framepalettedialog.ui \
     movedialog.ui

@@ -131,7 +131,7 @@ private slots:
     void onRecentItemClicked();
     void onEditPaneClicked(QMouseEvent *event);
     void loadEditPane();
-    void loadHelpDialog();
+//  void loadHelpDialog();
     void swapCrCb_toggled(bool checked);
     void fixInvisibleFrames_toggled(bool checked);
     void verbatimOutput_toggled(bool checked);

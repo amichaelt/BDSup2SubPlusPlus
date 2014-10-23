@@ -25,7 +25,7 @@
 #include "progressdialog.h"
 #include "exportdialog.h"
 #include "editdialog.h"
-#include "helpdialog.h"
+// #include "helpdialog.h"
 #include "colordialog.h"
 #include "framepalettedialog.h"
 #include "movedialog.h"
@@ -1940,11 +1940,13 @@ void BDSup2Sub::loadEditPane()
     ui->subtitleNumberComboBox->setCurrentIndex(subIndex);
 }
 
+/*
 void BDSup2Sub::loadHelpDialog()
 {
     HelpDialog helpDialog(this);
     helpDialog.exec();
 }
+*/
 
 void BDSup2Sub::swapCrCb_toggled(bool checked)
 {
