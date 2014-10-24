@@ -1,0 +1,7 @@
+language: cpp
+compiler: gcc
+before_install:
+ - "sudo apt-get update -qq"
+ - "sudo apt-get install -qq libqt4-dev libqxt-dev"
+script:
+ - "qmake-qt4 src/bdsup2sub++.pro && make"
