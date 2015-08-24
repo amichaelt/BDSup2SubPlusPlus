@@ -369,7 +369,7 @@ void BDSup2Sub::init()
     connect(ui->action_Conversion_Settings, SIGNAL(triggered()), this, SLOT(openConversionSettings()));
     connect(ui->subtitleImage, SIGNAL(onMouseClicked(QMouseEvent*)), this, SLOT(onEditPaneClicked(QMouseEvent*)));
     connect(ui->action_Edit_Frame, SIGNAL(triggered()), this, SLOT(loadEditPane()));
-    //connect(ui->action_Help, SIGNAL(triggered()), this, SLOT(loadHelpDialog()));
+    connect(ui->action_Help, SIGNAL(triggered()), this, SLOT(loadHelpDialog()));
     connect(ui->action_Swap_Cr_Cb, SIGNAL(toggled(bool)), this, SLOT(swapCrCb_toggled(bool)));
     connect(ui->action_Verbose_Output, SIGNAL(toggled(bool)), this, SLOT(verbatimOutput_toggled(bool)));
     connect(ui->action_Fix_invisible_frames, SIGNAL(toggled(bool)), this, SLOT(fixInvisibleFrames_toggled(bool)));
