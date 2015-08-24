@@ -609,6 +609,7 @@
      <string>&amp;About</string>
     </property>
     <addaction name="actionAbout_Qt"/>
+    <addaction name="action_Help"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
